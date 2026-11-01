@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Year 5 Science</title>
+<meta name="description" content="Year 5 science interactives and practice questions – Cambridge International School Bratislava.">
+<link rel="icon" href="hub/mascot.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Source+Serif+4:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  /* ================= Shared look (matches the interactives) + a nod to the CIS brand ================= */
+  :root {
+    --ink: #1d2340; --muted: #5b6386; --soft: #eef2ff; --line: #d3dbf7;
+    --yellow: #ffc83d; --blue: #3d7bff; --coral: #ff5f6d; --green: #22b07d; --orange: #f0892e; --purple: #8b5cf6;
+    --space: #070d24;
+    /* Cambridge International School */
+    --cis-blue: #002199; --cis-blue-dark: #00145c; --cis-lavender: #dacCF5; --cis-lavender-light: #f0ebfb; --cis-green: #06b820;
+    --serif: 'Setup Serif', 'Sitka Display', 'Source Serif 4', Georgia, serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    color: var(--ink); font-family: 'Fredoka', system-ui, sans-serif; font-size: 18px; line-height: 1.4;
+    background: var(--cis-lavender-light); -webkit-tap-highlight-color: transparent; overflow-x: hidden;
+  }
+  a { color: inherit; }
+  :focus-visible { outline: 3px solid var(--yellow); outline-offset: 3px; }
+
+  /* ---------- Header ---------- */
+  .hero {
+    position: relative; overflow: hidden; color: #fff;
+    background:
+      radial-gradient(900px 500px at 10% -20%, #1f43c9 0%, transparent 60%),
+      var(--cis-blue);
+    padding: 26px 16px 110px;
+  }
+  /* little stars, like the space backgrounds in the tools */
+  .hero::before {
+    content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .55;
+    background-image:
+      radial-gradient(1.6px 1.6px at 12% 22%, #fff 50%, transparent 51%),
+      radial-gradient(1.2px 1.2px at 28% 70%, #fff 50%, transparent 51%),
+      radial-gradient(2px 2px at 44% 18%, #fff 50%, transparent 51%),
+      radial-gradient(1.2px 1.2px at 52% 58%, #fff 50%, transparent 51%),
+      radial-gradient(1.6px 1.6px at 66% 30%, #fff 50%, transparent 51%),
+      radial-gradient(1.2px 1.2px at 6% 82%, #fff 50%, transparent 51%),
+      radial-gradient(1.8px 1.8px at 36% 44%, #fff 50%, transparent 51%),
+      radial-gradient(1.2px 1.2px at 58% 86%, #fff 50%, transparent 51%);
+  }
+  .lion {
+    position: absolute; right: -120px; bottom: -150px; width: 440px; opacity: .14; pointer-events: none;
+  }
+  .hero-inner { position: relative; max-width: 1180px; margin: 0 auto; }
+  .topline { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .logo { width: 220px; height: auto; display: block; }
+  .year-pill {
+    font-weight: 700; font-size: 16px; background: var(--yellow); color: #3a2400;
+    padding: 6px 14px; border-radius: 999px; box-shadow: 0 3px 0 rgba(0,0,0,.2);
+  }
+  .hero-text { margin-top: 44px; max-width: 640px; }
+  .eyebrow { font-family: var(--serif); font-weight: 700; font-size: 15px; letter-spacing: .08em; text-transform: uppercase; color: var(--cis-lavender); margin: 0 0 8px; }
+  h1 { font-size: clamp(44px, 7vw, 76px); line-height: 1; margin: 0; font-weight: 700; text-shadow: 0 4px 0 rgba(0,0,0,.18); }
+  h1 .wiggle { display: inline-block; color: var(--yellow); }
+  .tagline { font-size: clamp(20px, 2.6vw, 26px); font-weight: 600; margin: 14px 0 6px; }
+  .tagline span:nth-child(1) { color: #8fb0ff; }
+  .tagline span:nth-child(2) { color: #7ee2b8; }
+  .tagline span:nth-child(3) { color: #ffd77a; }
+  .sub { margin: 0; color: #d9e0ff; font-size: 18px; max-width: 520px; }
+
+  /* floating bubbles of the tools' icons */
+  .bubbles { position: absolute; right: max(250px, calc(50% - 360px)); top: 64px; width: 440px; height: 260px; pointer-events: none; }
+  @media (max-width: 1100px) { .bubbles { display: none; } }
+  .bubble {
+    position: absolute; width: 74px; height: 74px; border-radius: 50%;
+    background: rgba(255,255,255,.95); box-shadow: 0 6px 0 rgba(0,0,0,.18);
+    display: grid; place-items: center; font-size: 38px;
+    animation: float 6s ease-in-out infinite;
+  }
+  .bubble.sm { width: 58px; height: 58px; font-size: 30px; }
+  @keyframes float { 50% { transform: translateY(-12px) rotate(4deg); } }
+
+  .wave { position: absolute; left: 0; right: 0; bottom: -1px; width: 100%; height: 70px; display: block; }
+
+  /* ---------- Tiles ---------- */
+  main { max-width: 1180px; margin: -64px auto 0; padding: 0 16px 40px; position: relative; }
+  .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 26px; list-style: none; margin: 0; padding: 0; }
+  @media (max-width: 960px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .bubbles { display: none; } }
+  @media (max-width: 620px) { .grid { grid-template-columns: 1fr; } }
+
+  .tile {
+    --accent: var(--blue);
+    position: relative; display: flex; flex-direction: column;
+    background: #fff; border-radius: 26px; padding: 12px 12px 16px;
+    border: 3px solid #fff;
+    box-shadow: 0 6px 0 var(--line), 0 14px 30px rgba(0, 33, 153, .08);
+    transition: transform .18s ease-out, box-shadow .18s ease-out, border-color .18s;
+  }
+  .tile:hover { transform: translateY(-6px) rotate(-.6deg); border-color: var(--accent); box-shadow: 0 10px 0 var(--accent), 0 22px 36px rgba(0, 33, 153, .14); }
+  .tile:nth-child(even):hover { transform: translateY(-6px) rotate(.6deg); }
+  .tile:active { transform: translateY(-2px); }
+
+  .shot {
+    position: relative; border-radius: 18px; overflow: hidden; aspect-ratio: 16 / 10;
+    background: var(--accent); padding: 6px;
+  }
+  .shot img {
+    display: block; width: 100%; height: 100%; object-fit: cover; object-position: left top;
+    border-radius: 13px; transition: transform .35s ease-out;
+  }
+  .tile:hover .shot img { transform: scale(1.06); }
+  .icon {
+    position: absolute; left: 14px; bottom: -26px; z-index: 1;
+    width: 62px; height: 62px; border-radius: 50%; background: #fff; border: 4px solid var(--accent);
+    display: grid; place-items: center; font-size: 32px; box-shadow: 0 4px 0 rgba(0,0,0,.12);
+    transition: transform .25s ease-out;
+  }
+  .tile:hover .icon { transform: rotate(-12deg) scale(1.08); }
+  .head { position: relative; }
+
+  .body { padding: 34px 6px 0; display: flex; flex-direction: column; flex: 1; }
+  .strand {
+    position: absolute; right: 18px; bottom: -14px; z-index: 1;
+    font-size: 13px; font-weight: 700; padding: 4px 11px; border-radius: 999px; color: #fff; background: var(--ink);
+    box-shadow: 0 3px 0 rgba(0,0,0,.15);
+  }
+  .strand.bio { background: var(--green); }
+  .strand.chem { background: var(--purple); }
+  .strand.phys { background: var(--orange); }
+  .strand.earth { background: var(--blue); }
+  .strand.all { background: var(--coral); }
+  h2 { margin: 0; font-size: 25px; line-height: 1.15; }
+  h2 a { text-decoration: none; }
+  /* makes the whole tile open the interactive; the practise button sits above it */
+  h2 a::after { content: ""; position: absolute; inset: 0; border-radius: 26px; z-index: 0; }
+  .desc { margin: 6px 0 12px; color: var(--muted); font-size: 17px; flex: 1; }
+  .meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .chip { font-size: 14px; font-weight: 600; background: var(--soft); padding: 5px 10px; border-radius: 999px; }
+  .chip { margin-right: auto; }
+  .tile:not(.practice) .meta > * { flex: 1; text-align: center; }
+  .codes { font-size: 13px; color: var(--muted); margin: 2px 0 0; letter-spacing: .02em; }
+  .explore {
+    order: 2; white-space: nowrap; border-radius: 14px; padding: 8px 13px; font-weight: 700; font-size: 16px;
+    background: var(--accent); color: #fff; box-shadow: 0 3px 0 rgba(0,0,0,.18); text-shadow: 0 1px 0 rgba(0,0,0,.15);
+  }
+  .tile.practice .explore { color: #3a2400; text-shadow: none; }
+  .tile[style*="--yellow"] .explore { color: #3a2400; text-shadow: none; }
+  .btn {
+    position: relative; z-index: 2; text-decoration: none; white-space: nowrap;
+    border-radius: 14px; padding: 8px 13px; font-weight: 600; font-size: 16px;
+    background: var(--soft); color: var(--ink); box-shadow: 0 3px 0 rgba(0,0,0,.12);
+    transition: transform .08s, filter .15s;
+  }
+  .btn:hover { filter: brightness(1.05); }
+  .btn:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,.18); }
+
+  /* the practice tile is dressed like the practice page */
+  .tile.practice { background: var(--space); border-color: var(--space); color: #fff; box-shadow: 0 6px 0 #2a3566, 0 14px 30px rgba(0, 33, 153, .12); }
+  .tile.practice .desc { color: #c3cbea; }
+  .tile.practice .chip { background: rgba(255,255,255,.12); }
+  .tile.practice:hover { box-shadow: 0 10px 0 var(--accent), 0 22px 36px rgba(0, 33, 153, .18); }
+
+  /* ---------- Footer ---------- */
+  footer {
+    max-width: 1180px; margin: 0 auto; padding: 10px 16px 40px;
+    display: flex; align-items: center; gap: 14px; color: var(--cis-blue);
+  }
+  footer img { width: 40px; height: auto; }
+  footer p { margin: 0; font-family: var(--serif); font-size: 16px; }
+  footer p b { display: block; font-size: 18px; }
+
+  @media (max-width: 620px) {
+    .hero { padding-bottom: 96px; }
+    .hero-text { margin-top: 30px; }
+    .lion { width: 300px; right: -80px; bottom: -70px; }
+    .logo { width: 180px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .bubble { animation: none; }
+    .tile, .tile:hover, .tile:nth-child(even):hover { transform: none; }
+    .tile:hover .shot img, .tile:hover .icon { transform: none; }
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <img class="lion" src="hub/mascot-white.svg" alt="">
+  <div class="bubbles" aria-hidden="true">
+    <div class="bubble" style="left: 40px; top: 10px; animation-delay: -1s">🌍</div>
+    <div class="bubble sm" style="left: 160px; top: 90px; animation-delay: -3s">🫧</div>
+    <div class="bubble" style="left: 260px; top: 0; animation-delay: -2s">🦊</div>
+    <div class="bubble sm" style="left: 360px; top: 110px; animation-delay: -4.5s">🛝</div>
+    <div class="bubble sm" style="left: 60px; top: 150px; animation-delay: -5s">🌱</div>
+    <div class="bubble" style="left: 230px; top: 170px; animation-delay: -.5s">🍎</div>
+  </div>
+  <div class="hero-inner">
+    <div class="topline">
+      <img class="logo" src="hub/logo-horizontal-white.png" alt="Cambridge International School Bratislava">
+      <span class="year-pill">Year 5</span>
+    </div>
+    <div class="hero-text">
+      <p class="eyebrow">Cambridge Primary Science</p>
+      <h1>Science <span class="wiggle">Hub</span></h1>
+      <p class="tagline"><span>Explore it.</span> <span>Try it.</span> <span>Practise it.</span></p>
+      <p class="sub">Pick an interactive to explore, finish the missions, then practise what you have learned.</p>
+    </div>
+  </div>
+  <svg class="wave" viewBox="0 0 1440 70" preserveAspectRatio="none" aria-hidden="true">
+    <path d="M0 40 C 240 0, 480 70, 720 36 S 1200 0, 1440 34 V70 H0 Z" fill="#f0ebfb"/>
+  </svg>
+</header>
+
+<main>
+  <ul class="grid">
+    <li class="tile" style="--accent: var(--blue)">
+      <div class="head">
+        <div class="shot"><img src="hub/thumbs/earth-seasons.jpg" alt="The Earth travelling around the Sun in Seasons Explorer"></div>
+        <span class="icon" aria-hidden="true">🌍</span>
+        <span class="strand earth">Earth and space</span>
+      </div>
+      <div class="body">
+        <h2><a href="earth-seasons/index.html">Seasons Explorer</a></h2>
+        <p class="codes">🚀 8 missions · 5ESs.01–03</p>
+        <p class="desc">Spin the Earth around the Sun and find out why we have seasons.</p>
+        <div class="meta">
+          <span class="explore" aria-hidden="true">Explore ▶</span>
+          <a class="btn" href="practice/index.html#earth-space">✏️ Practise</a>
+        </div>
+      </div>
+    </li>
+
+    <li class="tile" style="--accent: var(--orange)">
+      <div class="head">
+        <div class="shot"><img src="hub/thumbs/forces-playground.jpg" alt="A parachute about to drop in Forces Playground"></div>
+        <span class="icon" aria-hidden="true">🛝</span>
+        <span class="strand phys">Physics</span>
+      </div>
+      <div class="body">
+        <h2><a href="forces-playground/index.html">Forces Playground</a></h2>
+        <p class="codes">🚀 8 missions · 5Pf.01–03</p>
+        <p class="desc">Draw force arrows, drop parachutes and test friction on a ramp.</p>
+        <div class="meta">
+          <span class="explore" aria-hidden="true">Explore ▶</span>
+          <a class="btn" href="practice/index.html#forces">✏️ Practise</a>
+        </div>
+      </div>
+    </li>
+
+    <li class="tile" style="--accent: var(--purple)">
+      <div class="head">
+        <div class="shot"><img src="hub/thumbs/particle-playground.jpg" alt="Water particles spreading out as a gas in Particle Playground"></div>
+        <span class="icon" aria-hidden="true">🫧</span>
+        <span class="strand chem">Chemistry</span>
+      </div>
+      <div class="body">
+        <h2><a href="particle-playground/index.html">Particle Playground</a></h2>
+        <p class="codes">🚀 10 missions · 5Cm.01 · 5Cm.02 · 5Cc.01 · 5Cp.02</p>
+        <p class="desc">Heat it up, cool it down and watch the particles in solids, liquids and gases.</p>
+        <div class="meta">
+          <span class="explore" aria-hidden="true">Explore ▶</span>
+          <a class="btn" href="practice/index.html#particles">✏️ Practise</a>
+        </div>
+      </div>
+    </li>
+
+    <li class="tile" style="--accent: #4aa8e8">
+      <div class="head">
+        <div class="shot"><img src="hub/thumbs/air-and-water.jpg" alt="100 particles of air, coloured by gas, in Air and Water"></div>
+        <span class="icon" aria-hidden="true">💨</span>
+        <span class="strand earth">Earth and space</span>
+      </div>
+      <div class="body">
+        <h2><a href="air-and-water/index.html">Air and Water</a></h2>
+        <p class="codes">🚀 12 missions · 5ESp.01–03 · 5Cm.02 · 5ESc.01</p>
+        <p class="desc">Count the gases in air, climb through the atmosphere and follow the water cycle.</p>
+        <div class="meta">
+          <span class="explore" aria-hidden="true">Explore ▶</span>
+          <a class="btn" href="practice/index.html#air-water">✏️ Practise</a>
+        </div>
+      </div>
+    </li>
+
+    <li class="tile" style="--accent: var(--coral)">
+      <div class="head">
+        <div class="shot"><img src="hub/thumbs/adaptation-studio.jpg" alt="Designing a desert creature in Adaptation Studio"></div>
+        <span class="icon" aria-hidden="true">🦊</span>
+        <span class="strand bio">Biology</span>
+      </div>
+      <div class="body">
+        <h2><a href="adaptation-studio/index.html">Adaptation Studio</a></h2>
+        <p class="codes">🚀 11 missions · 5Be.01 · 5Be.03</p>
+        <p class="desc">Design a creature for the desert, the Arctic or the rainforest. Will it survive?</p>
+        <div class="meta">
+          <span class="explore" aria-hidden="true">Explore ▶</span>
+          <a class="btn" href="practice/index.html#adaptations">✏️ Practise</a>
+        </div>
+      </div>
+    </li>
+
+    <li class="tile" style="--accent: var(--green)">
+      <div class="head">
+        <div class="shot"><img src="hub/thumbs/seed-lab.jpg" alt="Seeds falling under a tree and spreading far away in Seed Lab"></div>
+        <span class="icon" aria-hidden="true">🌱</span>
+        <span class="strand bio">Biology</span>
+      </div>
+      <div class="body">
+        <h2><a href="seed-lab/index.html">Seed Lab</a></h2>
+        <p class="codes">🚀 9 missions · 5Bp.03 · 5Bp.04</p>
+        <p class="desc">Plan a fair test with bean seeds and find out how seeds travel.</p>
+        <div class="meta">
+          <span class="explore" aria-hidden="true">Explore ▶</span>
+          <a class="btn" href="practice/index.html#seeds">✏️ Practise</a>
+        </div>
+      </div>
+    </li>
+
+    <li class="tile" style="--accent: var(--yellow)">
+      <div class="head">
+        <div class="shot"><img src="hub/thumbs/balanced-plate.jpg" alt="Breakfast foods sorted onto a food-group plate in Balanced Plate"></div>
+        <span class="icon" aria-hidden="true">🍽️</span>
+        <span class="strand bio">Biology</span>
+      </div>
+      <div class="body">
+        <h2><a href="balanced-plate/index.html">Balanced Plate</a></h2>
+        <p class="codes">🚀 10 missions · 5Bp.01</p>
+        <p class="desc">Fill Sam's plate, pack a lunchbox, read food labels and feed the zoo.</p>
+        <div class="meta">
+          <span class="explore" aria-hidden="true">Explore ▶</span>
+          <a class="btn" href="practice/index.html#diet">✏️ Practise</a>
+        </div>
+      </div>
+    </li>
+
+    <li class="tile" style="--accent: #f2617a">
+      <div class="head">
+        <div class="shot"><img src="hub/thumbs/digestion-journey.jpg" alt="A labelled diagram of the digestive system in Digestion Journey"></div>
+        <span class="icon" aria-hidden="true">🍎</span>
+        <span class="strand bio">Biology</span>
+      </div>
+      <div class="body">
+        <h2><a href="digestion-journey/index.html">Digestion Journey</a></h2>
+        <p class="codes">🚀 9 missions · 5Bs.04</p>
+        <p class="desc">Follow your food all the way through the digestive system.</p>
+        <div class="meta">
+          <span class="explore" aria-hidden="true">Explore ▶</span>
+          <a class="btn" href="practice/index.html#digestion">✏️ Practise</a>
+        </div>
+      </div>
+    </li>
+
+    <li class="tile practice" style="--accent: var(--yellow)">
+      <div class="head">
+        <div class="shot"><img src="hub/thumbs/practice.jpg" alt="The topic list in Science Practice"></div>
+        <span class="icon" aria-hidden="true">✏️</span>
+        <span class="strand all">All topics</span>
+      </div>
+      <div class="body">
+        <h2><a href="practice/index.html">Science Practice</a></h2>
+        <p class="desc">Label, sort, match and order. Practise every topic and collect stars.</p>
+        <div class="meta">
+          <span class="chip">⭐ 8 topics</span>
+          <span class="explore" aria-hidden="true">Let's go ▶</span>
+        </div>
+      </div>
+    </li>
+  </ul>
+</main>
+
+<footer>
+  <img src="hub/mascot.svg" alt="">
+  <p><b>Cambridge International School Bratislava</b>Year 5 Science. Works on tablets and laptops.</p>
+</footer>
+
+</body>
+</html>

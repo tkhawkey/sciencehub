@@ -1,0 +1,1159 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Balanced Plate</title>
+<meta name="description" content="Build a balanced plate, find out what food is for, and feed the zoo – an interactive tool for Year 5.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ================= Shared look (matches Forces Playground) ================= */
+  :root {
+    --ink: #1d2340; --muted: #5b6386; --soft: #eef2ff;
+    --yellow: #ffc83d; --blue: #3d7bff; --coral: #ff5f6d; --green: #22b07d; --orange: #f0892e; --grey: #8a93ad;
+    --space: #070d24; --drawerW: 360px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: var(--space); color: var(--ink); font-family: 'Fredoka', system-ui, sans-serif; font-size: 17px; line-height: 1.35; -webkit-tap-highlight-color: transparent; }
+  body { display: flex; flex-direction: column; }
+  button { font: inherit; color: inherit; }
+  b { font-weight: 700; }
+  .btn { border: 0; border-radius: 14px; padding: 9px 14px; min-height: 44px; cursor: pointer; background: #fff; color: var(--ink); font-weight: 600; font-size: 16px; box-shadow: 0 3px 0 rgba(0,0,0,.18); }
+  .btn:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,.18); }
+  .btn.active { background: var(--yellow); }
+  .btn:focus-visible { outline: 3px solid var(--yellow); outline-offset: 2px; }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .btn.go { background: var(--green); color: #fff; font-size: 19px; flex: 1; }
+  .btn.primary { background: var(--green); color: #fff; }
+  a.btn { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
+  #drawer a.btn { color: #fff; }
+
+  /* ---------- Top bar ---------- */
+  .topbar { flex: none; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 8px 10px; background: rgba(7,13,36,.95); z-index: 15; }
+  .brand { color: #fff; font-size: 21px; font-weight: 700; margin-right: auto; white-space: nowrap; }
+  .hub-link { flex: none; display: grid; place-items: center; width: 38px; height: 38px; border-radius: 12px; text-decoration: none; font-size: 20px; background: rgba(255,255,255,.14); box-shadow: 0 3px 0 rgba(0,0,0,.25); transition: background .15s, transform .08s; }
+  .hub-link:hover { background: rgba(255,255,255,.26); }
+  .hub-link:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,.25); }
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+  .btn.missions { background: var(--blue); color: #fff; }
+  .tabs .btn { padding: 9px 11px; }
+  @media (max-width: 1399px) {
+    .topbar .long { display: none; }
+    .brand { font-size: 18px; }
+    .topbar, .tabs { gap: 4px; }
+    .tabs .btn { padding: 9px 8px; font-size: 14.5px; }
+  }
+
+  /* ---------- Main area: stage on the left, drawer on the right ---------- */
+  main { position: relative; flex: 1; min-height: 0; }
+  #stage { position: absolute; top: 0; bottom: 0; left: 0; right: var(--drawerW); overflow: hidden; background: #fdf0dc; display: flex; align-items: center; justify-content: center; }
+  #stage > svg { width: 100%; height: 100%; display: block; }
+  #drawer { position: absolute; top: 0; right: 0; bottom: 0; width: var(--drawerW); background: #dfe6ff; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+  .card { background: #fff; border-radius: 16px; padding: 12px 14px; }
+  .card h2 { margin: 0 0 4px; font-size: 21px; line-height: 1.2; }
+  .card h3 { margin: 0 0 6px; font-size: 17px; }
+  .card p { margin: 4px 0; }
+  .muted { color: var(--muted); font-size: 14.5px; }
+  .term { background: #fff3c4; border-radius: 6px; padding: 0 4px; font-weight: 600; }
+  .navrow { display: flex; gap: 8px; }
+  .opt { border: 2px solid #d3dbf7; background: #fff; border-radius: 12px; padding: 6px 10px; min-height: 44px; font-weight: 600; font-size: 15px; cursor: pointer; }
+  .opt.on { background: var(--yellow); border-color: #e0a800; }
+  .opt:disabled { opacity: .45; cursor: default; }
+  .stops { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tick { color: var(--green); }
+  .spot { background: #fff3c4; border-radius: 12px; padding: 8px 10px; margin-top: 6px !important; }
+  .job { font-size: 16px; background: #c9f2df; border-radius: 12px; padding: 8px 10px; }
+
+  /* ---------- Food chips (tap to add, or drag onto the picture) ---------- */
+  .shelf { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+  .chip { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; border: 2px solid #d3dbf7; background: #fff; border-radius: 12px; padding: 4px 2px; min-height: 58px; font-weight: 600; font-size: 13px; line-height: 1.1; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; text-align: center; }
+  .chip .em { font-size: 26px; line-height: 1; }
+  .chip.on { background: #c9f2df; border-color: var(--green); }
+  .chip.sel { background: var(--yellow); border-color: #e0a800; }
+  .chip:disabled { opacity: .35; cursor: default; }
+  .chip-ghost { position: fixed; z-index: 30; pointer-events: none; transform: translate(-50%, -50%) rotate(-3deg); box-shadow: 0 8px 18px rgba(0,0,0,.3); }
+
+  /* ---------- Plate builder ---------- */
+  .svgtext { font-family: 'Fredoka', system-ui, sans-serif; }
+  .food { cursor: pointer; }
+  .food text { font-size: 48px; }
+  .food.spill text { filter: drop-shadow(0 0 4px #ff5f6d) drop-shadow(0 0 2px #ff5f6d); }
+  .slabel { font-family: 'Fredoka', system-ui, sans-serif; font-size: 21px; font-weight: 700; paint-order: stroke; stroke: #fdf0dc; stroke-width: 6px; stroke-linejoin: round; }
+  .scount { font-size: 17px; fill: var(--ink); }
+  .food.pop { animation: pop .35s ease-out; transform-box: fill-box; transform-origin: center; }
+  @keyframes pop { 0% { transform: scale(.3); } 70% { transform: scale(1.15); } 100% { transform: scale(1); } }
+  .wlabel { font-family: 'Fredoka', system-ui, sans-serif; font-size: 18px; font-weight: 600; fill: var(--muted); }
+  .key { list-style: none; padding: 0; margin: 4px 0 0; display: grid; gap: 3px; }
+  .key li { display: flex; align-items: center; gap: 8px; font-size: 15px; }
+  .key .n { margin-left: auto; font-weight: 700; }
+  .sw { width: 16px; height: 16px; border-radius: 5px; flex: none; }
+  .says { border: 3px solid var(--yellow); }
+  /* Check stays in reach at the bottom of the drawer */
+  .checkbar { position: sticky; bottom: -10px; z-index: 2; display: flex; margin: 0 -10px; padding: 6px 10px 10px; background: #dfe6ff; }
+  .says.good { border-color: var(--green); background: #effbf5; }
+  .says ul { margin: 6px 0 0; padding-left: 20px; }
+  .says li { margin: 4px 0; }
+
+  /* ---------- Drawn icons, meal tabs and the pyramid ---------- */
+  .ic { width: 28px; height: 28px; display: block; }
+  .opt .ic { width: 22px; height: 22px; display: inline-block; vertical-align: -5px; }
+  .mealtabs { margin: 6px 0 8px; }
+  .mealtabs .opt { flex: 1; padding: 4px 6px; font-size: 14px; }
+  .plabel { font-family: 'Fredoka', system-ui, sans-serif; font-size: 17px; font-weight: 600; fill: var(--muted); }
+
+  /* ---------- Lunchbox and labels ---------- */
+  .bubble { position: absolute; left: 12px; top: 12px; max-width: min(420px, 60%); display: flex; gap: 10px; align-items: center; background: #fff; border-radius: 18px; padding: 10px 14px; box-shadow: 0 6px 16px rgba(0,0,0,.18); font-size: 17px; line-height: 1.3; z-index: 3; }
+  .bubble .who { font-size: 46px; line-height: 1; }
+  .swrow { margin: 6px 0; }
+  .swrow > span { font-weight: 700; font-size: 14px; color: var(--muted); display: block; margin-bottom: 3px; }
+  .opt.sm { font-size: 13.5px; padding: 4px 8px; }
+  .lpair { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 8px 0; }
+  .nlabel { border: 2px solid var(--ink); border-radius: 8px; padding: 6px 7px; font-size: 13.5px; background: #fff; }
+  .nlabel .nname { font-weight: 700; font-size: 14.5px; }
+  .nlabel .nhead { background: var(--ink); color: #fff; font-size: 12px; padding: 2px 5px; margin: 3px 0; border-radius: 3px; }
+  .nlabel table { width: 100%; border-collapse: collapse; }
+  .nlabel td { border-top: 1px solid #c9d0e4; padding: 2px 0; }
+  .nlabel td:last-child { text-align: right; font-weight: 700; }
+  .lq p { margin: 0 0 6px; }
+  /* Labels tab: four packs with big labels on the stage */
+  .lstage { width: 100%; height: 100%; overflow: auto; padding: 16px; background: #e9d2b0; }
+  .lgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; max-width: 900px; margin: 0 auto; }
+  .pack { background: #fff; border-radius: 18px; padding: 12px 14px; box-shadow: 0 4px 10px rgba(0,0,0,.12); }
+  .pk-top { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 20px; }
+  .pk-ic { font-size: 40px; line-height: 1; } .pk-ic .ic { width: 44px; height: 44px; }
+  .pk-size { font-size: 15px; color: var(--muted); }
+  .nlabel.big { font-size: 19px; padding: 8px 10px; }
+  .nlabel.big .nhead { font-size: 15px; padding: 3px 7px; }
+  .nlabel.big td { padding: 4px 0; }
+  /* What a food on the plate gives you */
+  .ftip { position: absolute; z-index: 5; width: 230px; background: #fff; border: 3px solid var(--yellow); border-radius: 14px; padding: 9px 11px; box-shadow: 0 6px 18px rgba(0,0,0,.22); font-size: 15px; line-height: 1.3; }
+  .ftip.hidden { display: none; }
+  .ftip p { margin: 6px 0 0; }
+  .ftip .tname { display: flex; align-items: center; gap: 8px; font-size: 18px; }
+  .ftip .tpic { font-size: 30px; line-height: 1; } .ftip .tpic .ic { width: 32px; height: 32px; }
+  .ftip .tgrp { display: inline-block; margin-top: 4px; color: #fff; font-weight: 700; font-size: 13px; border-radius: 8px; padding: 1px 8px; }
+  .ftip .btn { margin-top: 8px; width: 100%; font-size: 15px; }
+  @media (max-width: 760px) { .lgrid { gap: 8px; } .pack { padding: 8px; } .pk-top { font-size: 15px; } .pk-ic { font-size: 28px; } .nlabel.big { font-size: 14px; } }
+  .opt.wrong { background: #ffe0e3; border-color: var(--coral); }
+  .opt.done:disabled { opacity: 1; }
+  .sjobtxt { font-family: 'Fredoka', system-ui, sans-serif; font-size: 17px; color: var(--muted); line-height: 1.25; }
+
+  /* ---------- What is food for? ---------- */
+  .station { cursor: pointer; }
+  .station .panel { fill: #fff; stroke: #d3dbf7; stroke-width: 4; transition: stroke .2s; }
+  .station.ready .panel { stroke: var(--yellow); stroke-dasharray: 10 7; }
+  .station.yes .panel { stroke: var(--green); }
+  .station.no .panel { stroke: var(--coral); animation: shake .4s; }
+  .stitle { font-family: 'Fredoka', system-ui, sans-serif; font-size: 26px; font-weight: 700; fill: var(--ink); }
+  .sjob { font-family: 'Fredoka', system-ui, sans-serif; font-size: 17px; fill: var(--muted); }
+  @keyframes shake { 20%, 60% { transform: translateX(-6px); } 40%, 80% { transform: translateX(6px); } }
+
+  /* ---------- Feed the zoo ---------- */
+  .aname { font-family: 'Fredoka', system-ui, sans-serif; font-size: 34px; font-weight: 700; fill: var(--ink); paint-order: stroke; stroke: #fff; stroke-width: 8px; stroke-linejoin: round; }
+  .opt.done { background: #c9f2df; border-color: var(--green); }
+
+  /* ---------- Missions and pop-ups ---------- */
+  .banner { position: absolute; top: 10px; right: 10px; width: calc(var(--drawerW) - 20px); z-index: 6; background: #fff; border: 3px solid var(--yellow); border-radius: 16px; padding: 9px 44px 9px 14px; box-shadow: 0 6px 16px rgba(0,0,0,.18); }
+  .banner.hidden { display: none; }
+  .banner .kicker { font-size: 12.5px; font-weight: 700; color: var(--blue); text-transform: uppercase; letter-spacing: .04em; }
+  .banner .close { position: absolute; top: 6px; right: 6px; border: 0; background: var(--soft); border-radius: 50%; width: 32px; height: 32px; cursor: pointer; }
+  .banner .hint { margin-top: 4px; color: var(--muted); font-size: 15px; }
+  .banner .hint.hidden { display: none; }
+  .linkbtn { border: 0; background: none; color: var(--blue); font-weight: 600; cursor: pointer; padding: 4px 0; font-size: 15px; min-height: 32px; }
+  .modal-box ul.icons { list-style: none; padding: 0; margin: 0 0 14px; }
+  .icons li { display: flex; gap: 10px; padding: 6px 0; line-height: 1.35; }
+  .icons .em { font-size: 24px; width: 32px; flex: none; text-align: center; }
+  .modal { position: fixed; inset: 0; background: rgba(5,10,30,.6); display: flex; align-items: center; justify-content: center; z-index: 20; padding: 16px; }
+  .modal.hidden { display: none; }
+  .modal-box { background: #fff; border-radius: 24px; padding: 20px; width: min(580px, 100%); max-height: calc(100vh - 32px); overflow-y: auto; }
+  .modal-box h2 { margin: 0 0 8px; font-size: 25px; }
+  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+  .mission-list { display: grid; gap: 8px; margin-bottom: 14px; }
+  .mission-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; min-height: 52px; border-radius: 16px; background: var(--soft); border: 0; text-align: left; cursor: pointer; font-size: 16px; }
+  .mission-item .em { font-size: 25px; } .mission-item .t { flex: 1; font-weight: 600; }
+  .mission-item .star { font-size: 21px; filter: grayscale(1); opacity: .35; }
+  .mission-item.done .star { filter: none; opacity: 1; }
+  .win-emoji { font-size: 56px; text-align: center; }
+  .win-text { font-size: 17.5px; line-height: 1.5; margin-bottom: 14px; }
+  .confetti { position: fixed; top: -40px; font-size: 26px; z-index: 40; pointer-events: none; animation: fall linear forwards; }
+  @keyframes fall { to { transform: translateY(110vh) rotate(540deg); } }
+
+  /* ---------- Narrow screens: stage on top, drawer below ---------- */
+  @media (max-width: 760px) {
+    :root { --drawerW: 0px; }
+    #stage { bottom: 42%; right: 0; }
+    #drawer { top: 58%; width: 100%; }
+    .banner { top: calc(58% + 8px); left: 8px; right: 8px; width: auto; }
+    .brand { font-size: 18px; }
+    .tl { display: none; }
+    .bubble { left: 6px; top: 6px; max-width: 78%; padding: 5px 9px; font-size: 13.5px; gap: 6px; }
+    .bubble .who { font-size: 28px; }
+  }
+</style>
+</head>
+<body>
+<!-- Drawn icons for foods that have no emoji -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="ic-yoghurt" viewBox="0 0 64 64"><path d="M14 18 H50 L45 58 H19 Z" fill="#fff" stroke="#9fb2e8" stroke-width="3" stroke-linejoin="round"/><rect x="11" y="10" width="42" height="10" rx="3" fill="#5fa8e8"/><path d="M17 32 H47" stroke="#5fa8e8" stroke-width="5"/><circle cx="32" cy="44" r="5" fill="#dfe9fb"/></symbol>
+  <symbol id="ic-yoghurt2" viewBox="0 0 64 64"><path d="M14 18 H50 L45 58 H19 Z" fill="#fff" stroke="#f3a3b5" stroke-width="3" stroke-linejoin="round"/><rect x="11" y="10" width="42" height="10" rx="3" fill="#ef6f8f"/><path d="M17 32 H47" stroke="#ef6f8f" stroke-width="5"/><path d="M32 39 c-6 0 -7 9 0 14 c7 -5 6 -14 0 -14z" fill="#e8414f"/></symbol>
+  <symbol id="ic-porridge" viewBox="0 0 64 64"><path d="M6 28 H58 Q56 54 32 56 Q8 54 6 28 Z" fill="#7fb6f0" stroke="#4f8ccc" stroke-width="3"/><ellipse cx="32" cy="28" rx="26" ry="8" fill="#f1dfb8"/><circle cx="24" cy="27" r="2.5" fill="#d8bf8c"/><circle cx="34" cy="25" r="2.5" fill="#d8bf8c"/><circle cx="41" cy="29" r="2.5" fill="#d8bf8c"/><circle cx="30" cy="30" r="2" fill="#5b3fa8"/><circle cx="37" cy="27" r="2" fill="#5b3fa8"/></symbol>
+  <symbol id="ic-hummus" viewBox="0 0 64 64"><path d="M6 30 H58 Q56 54 32 56 Q8 54 6 30 Z" fill="#fff" stroke="#c9b48e" stroke-width="3"/><ellipse cx="32" cy="30" rx="26" ry="8" fill="#e8cf9a"/><path d="M18 30 Q32 22 46 30 Q32 36 22 30" fill="none" stroke="#c9a463" stroke-width="2.5"/><circle cx="32" cy="29" r="3" fill="#a3b84a"/><circle cx="26" cy="31" r="2.2" fill="#d6a14a"/><circle cx="39" cy="31" r="2.2" fill="#d6a14a"/></symbol>
+  <symbol id="ic-oatbar" viewBox="0 0 64 64"><rect x="6" y="22" width="52" height="22" rx="6" fill="#d9a85c" stroke="#a8763a" stroke-width="3"/><circle cx="16" cy="30" r="2.5" fill="#f1dfb8"/><circle cx="27" cy="36" r="2.5" fill="#f1dfb8"/><circle cx="38" cy="29" r="2.5" fill="#f1dfb8"/><circle cx="48" cy="36" r="2.5" fill="#f1dfb8"/><circle cx="21" cy="38" r="2" fill="#8a5a2b"/><circle cx="43" cy="31" r="2" fill="#8a5a2b"/></symbol>
+</svg>
+<div class="topbar">
+  <a class="hub-link" href="../index.html" title="Back to the Science Hub" aria-label="Back to the Science Hub">🏠</a>
+  <div class="brand">🍽️ Balanced Plate</div>
+  <div class="tabs" id="tabs"></div>
+  <button class="btn missions" data-act="missions" title="Missions">🚀 <span class="long">Missions </span><span id="starCount"></span></button>
+  <button class="btn" data-act="model" title="How is this model different from real life?">🤔<span class="long"> Real life?</span></button>
+  <button class="btn" id="helpBtn" data-act="view" data-view="help" aria-label="How to use">❓</button>
+</div>
+<main>
+  <div id="stage"></div>
+  <div id="drawer"></div>
+  <div id="banner" class="banner hidden" role="status">
+    <div class="kicker" id="bannerKicker"></div>
+    <div id="bannerText"></div>
+    <button class="linkbtn" data-act="hint" id="hintBtn">💡 Show a hint</button>
+    <div class="hint hidden" id="bannerHint"></div>
+    <button class="close" data-act="stopMission" aria-label="Stop this mission">✖</button>
+  </div>
+</main>
+<div id="missionsModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="missionsTitle">
+  <div class="modal-box">
+    <h2 id="missionsTitle">🚀 Missions</h2>
+    <div class="mission-list" id="missionList"></div>
+    <div class="modal-actions"><button class="btn" data-act="resetStars">Reset stars</button><button class="btn primary" data-act="closeModals">Close</button></div>
+  </div>
+</div>
+<div id="modelModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modelTitle">
+  <div class="modal-box">
+    <h2 id="modelTitle">🤔 How is this model different from real life?</h2>
+    <p style="margin-top:0">A <span class="term">model</span> shows some important features of something real – but not everything.</p>
+    <ul class="icons">
+      <li><span class="em">🧩</span><span>Each food is put in <b>one group</b>, but most real foods contain several things. Beans have protein <b>and</b> fibre; cheese has protein <b>and</b> fat.</span></li>
+      <li><span class="em">🍽️</span><span>Sam's plate shows a <b>whole day's</b> food at once. In real life, it is spread over breakfast, lunch, dinner and snacks.</span></li>
+      <li><span class="em">⚖️</span><span>Every picture counts as <b>one portion</b>. Real portions are different sizes, and different people need different amounts: an active footballer needs more energy food than someone who is resting.</span></li>
+      <li><span class="em">🔺</span><span>The <b>plate</b> and the <b>food pyramid</b> are two different models of a balanced diet. They don't quite agree: the pyramid puts starchy foods at the bottom, but the plate gives fruit and vegetables just as much room.</span></li>
+      <li><span class="em">🏷️</span><span>The food labels are made up, but real labels work the same way: they show what is in every 100 g or 100 ml.</span></li>
+      <li><span class="em">🦁</span><span>Real zoo animals get carefully planned diets, often with extra vitamins and minerals. The zoo here only shows their <b>main foods</b>.</span></li>
+      <li><span class="em">🖼️</span><span>The pictures are simple and are <b>not to scale</b>.</span></li>
+    </ul>
+    <div class="modal-actions"><button class="btn primary" data-act="closeModals">Got it!</button></div>
+  </div>
+</div>
+<div id="winModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="winTitle">
+  <div class="modal-box">
+    <div class="win-emoji">⭐</div>
+    <h2 id="winTitle" style="text-align:center">Mission complete!</h2>
+    <div class="win-text" id="winText"></div>
+    <div class="modal-actions"><button class="btn" data-act="closeModals">Keep exploring</button><a class="btn primary" id="winPractise" href="../practice/index.html#diet">✏️ Practise this</a><button class="btn primary" id="winNext" data-act="nextMission">Next mission ▶</button></div>
+  </div>
+</div>
+
+<script>
+// ================= Utilities =================
+const $ = (s, r = document) => r.querySelector(s);
+// Saved progress; private windows can block storage, so failures are ignored
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+};
+const polar = (cx, cy, r, a) => [cx + r * Math.sin(a * Math.PI / 180), cy - r * Math.cos(a * Math.PI / 180)];
+// n places for pictures, gathered as close as possible around (cx, cy) on a honeycomb grid, all inside the area.
+// The group is then shifted so its middle sits on (cx, cy), so adding a food re-centres the whole group.
+// extra: places to try as well, for areas too thin for the grid.
+function cluster(n, cx, cy, inside, extra = [], step = 60) {
+  if (!n) return [];
+  const pts = [];
+  for (let j = -8; j <= 8; j++) for (let i = -10; i <= 10; i++) {
+    const x = cx + (i + (j & 1) / 2) * step, y = cy + j * step * .866;
+    if (inside(x, y)) pts.push([x, y]);
+  }
+  extra.forEach(p => { if (inside(...p) && pts.every(q => Math.hypot(q[0] - p[0], q[1] - p[1]) > step * .8)) pts.push(p); });
+  pts.sort((a, b) => Math.hypot(a[0] - cx, a[1] - cy) - Math.hypot(b[0] - cx, b[1] - cy));
+  const pick = pts.slice(0, n);
+  if (!pick.length) return pick;
+  const dx = cx - pick.reduce((t, p) => t + p[0], 0) / pick.length, dy = cy - pick.reduce((t, p) => t + p[1], 0) / pick.length;
+  const moved = pick.map(([x, y]) => [x + dx, y + dy]);
+  return moved.every(p => inside(...p)) ? moved : pick;
+}
+// A food's picture: an emoji, or one of the drawn icons (ic-…) for foods that have no emoji, like yoghurt
+const isIc = em => em.startsWith('ic-');
+const picHTML = em => isIc(em) ? `<svg class="ic" viewBox="0 0 64 64" aria-hidden="true"><use href="#${em}"/></svg>` : em;
+const picSVG = (em, x, y, size) => isIc(em)
+  ? `<use href="#${em}" x="${(x - size * .55).toFixed(0)}" y="${(y - size * .55).toFixed(0)}" width="${(size * 1.1).toFixed(0)}" height="${(size * 1.1).toFixed(0)}"/>`
+  : `<text x="${x.toFixed(0)}" y="${(y + size * .36).toFixed(0)}" text-anchor="middle" style="font-size:${size}px">${em}</text>`;
+
+// ================= Food =================
+// The food groups of a balanced plate. share is how much of the plate each group's section fills (like a healthy-eating plate guide).
+// most is how many pictures fit in the section; any more spill over the edge of the plate.
+const GROUPS = {
+  fv:    { name: 'Fruit and vegetables', c: '#3faa4f', share: .38, most: 8 },
+  st:    { name: 'Starchy foods',        c: '#f2b632', share: .37, most: 5 },
+  pr:    { name: 'Protein',              c: '#e5735f', share: .13, most: 3 },
+  da:    { name: 'Dairy',                c: '#5fa8e8', share: .08, most: 2 },
+  oil:   { name: 'Oils and spreads',     c: '#a066d3', share: .04, most: 1 }
+};
+// [picture, name, group, and for fruit and vegetables: f = fruit, v = vegetable]
+const FOODS = {
+  cereal: ['🥣', 'Cereal', 'st'], porridge: ['ic-porridge', 'Porridge', 'st'], toast: ['🍞', 'Toast', 'st'], roll: ['🥖', 'Bread roll', 'st'], pitta: ['🫓', 'Pitta bread', 'st'],
+  pasta: ['🍝', 'Pasta', 'st'], rice: ['🍚', 'Rice', 'st'], potato: ['🥔', 'Potato', 'st'], noodles: ['🍜', 'Noodles', 'st'],
+  egg: ['🥚', 'Egg', 'pr'], bacon: ['🥓', 'Bacon', 'pr'], chicken: ['🍗', 'Chicken', 'pr'], hummus: ['ic-hummus', 'Hummus', 'pr'], steak: ['🥩', 'Steak', 'pr'],
+  fish: ['🐟', 'Fish', 'pr'], prawns: ['🦐', 'Prawns', 'pr'], beans: ['🫘', 'Beans', 'pr'], nuts: ['🥜', 'Nuts', 'pr'],
+  yoghurt: ['ic-yoghurt', 'Yoghurt', 'da'], cheese: ['🧀', 'Cheese', 'da'],
+  butter: ['🧈', 'Butter', 'oil'], olive: ['🫒', 'Olive oil', 'oil'],
+  banana: ['🍌', 'Banana', 'fv', 'f'], strawberries: ['🍓', 'Strawberries', 'fv', 'f'], blueberries: ['🫐', 'Blueberries', 'fv', 'f'], orange: ['🍊', 'Orange', 'fv', 'f'],
+  apple: ['🍎', 'Apple', 'fv', 'f'], grapes: ['🍇', 'Grapes', 'fv', 'f'], pear: ['🍐', 'Pear', 'fv', 'f'], watermelon: ['🍉', 'Watermelon', 'fv', 'f'],
+  pineapple: ['🍍', 'Pineapple', 'fv', 'f'], kiwi: ['🥝', 'Kiwi', 'fv', 'f'], cherries: ['🍒', 'Cherries', 'fv', 'f'],
+  cucumber: ['🥒', 'Cucumber', 'fv', 'v'], tomato: ['🍅', 'Tomato', 'fv', 'v'], pepper: ['🫑', 'Pepper', 'fv', 'v'], carrot: ['🥕', 'Carrot', 'fv', 'v'],
+  broccoli: ['🥦', 'Broccoli', 'fv', 'v'], corn: ['🌽', 'Sweetcorn', 'fv', 'v'], cabbage: ['🥬', 'Cabbage', 'fv', 'v'], onion: ['🧅', 'Onion', 'fv', 'v'],
+  doughnut: ['🍩', 'Doughnut', 'tr'], biscuit: ['🍪', 'Biscuit', 'tr'], chips: ['🍟', 'Chips', 'tr'], cake: ['🍰', 'Cake', 'tr'],
+  chocolate: ['🍫', 'Chocolate', 'tr'], sweets: ['🍬', 'Sweets', 'tr'], icecream: ['🍦', 'Ice cream', 'tr']
+};
+// The shelf is split by meal, not by food group, so children still work out the groups themselves. Each meal mixes the groups.
+const MEALS = {
+  breakfast: ['🌅', 'Breakfast', ['cereal', 'banana', 'egg', 'yoghurt', 'toast', 'strawberries', 'butter', 'porridge', 'bacon', 'blueberries', 'doughnut', 'orange']],
+  lunch:     ['🥪', 'Lunch',     ['roll', 'cucumber', 'cheese', 'apple', 'chicken', 'tomato', 'pitta', 'grapes', 'hummus', 'biscuit', 'pepper', 'carrot']],
+  dinner:    ['🍝', 'Dinner',    ['pasta', 'broccoli', 'fish', 'potato', 'beans', 'corn', 'chips', 'rice', 'steak', 'cabbage', 'olive', 'noodles', 'prawns', 'onion']],
+  snacks:    ['🍎', 'Snacks',    ['pear', 'nuts', 'cake', 'yoghurt', 'watermelon', 'chocolate', 'kiwi', 'cheese', 'sweets', 'pineapple', 'icecream', 'cherries']]
+};
+const MEAT = ['chicken', 'bacon', 'steak', 'fish', 'prawns'];
+// What a food gives you: its group's main job, unless the food has something special to say
+const GIVES = {
+  fv: 'Vitamins and minerals to keep you healthy, and fibre to help your digestion.',
+  st: 'Carbohydrates for energy.',
+  pr: 'Protein to help you grow and repair your body.',
+  da: 'Calcium for strong bones and teeth, and protein too.',
+  oil: 'Fat: a store of energy. You only need a little.',
+  tr: 'Lots of sugar or fat. Fine sometimes, in small amounts.'
+};
+const GIVES_FOOD = {
+  porridge: 'Carbohydrates for energy, and lots of fibre.', toast: 'Carbohydrates for energy. Wholemeal bread has fibre too.',
+  potato: 'Carbohydrates for energy. The skin has fibre.', beans: 'Protein, and lots of fibre.', hummus: 'Protein and fibre. It is made from chickpeas.',
+  nuts: 'Protein, and healthy fats.', fish: 'Protein. Oily fish, like salmon, has healthy fats too.', egg: 'Protein, and some vitamins.',
+  bacon: 'Protein, but lots of salt. Best not every day.', cheese: 'Calcium for strong bones and teeth, protein, and quite a lot of fat.',
+  chips: 'Carbohydrates, but lots of fat from frying. Fine sometimes.', orange: 'Vitamin C to keep you healthy, and fibre.'
+};
+const DRINKS = {
+  water: ['💧', 'Water', '#bfe6fa'], milk: ['🥛', 'Milk', '#ffffff'], juice: ['🧃', 'Fruit juice', '#ffb341'], fizzy: ['🥤', 'Fizzy drink', '#7a4a2a']
+};
+const MAXFOOD = 14;
+// Each group's section of the plate, as angles clockwise from the top
+const SECT = (() => { let a = 0; const o = {}; for (const [id, g] of Object.entries(GROUPS)) { o[id] = [a, a + g.share * 360]; a += g.share * 360; } return o; })();
+
+// ================= State =================
+const freshLunch = brief => ({ brief, box: [], drink: null, sw: { bread: null, fill: null, salad: 'none' }, said: null });
+const state = { view: 'plate', plate: [], drink: null, said: null, justAdded: null, meal: 'breakfast', model: 'plate',
+  lunch: freshLunch('leo'), packed: [], labels: { set: 'yog', answers: {} },
+  jobs: { placed: {}, sel: null, mistakes: 0, msg: null },
+  zoo: { animal: 'panda', bowl: { panda: [], lion: [], cow: [], bird: [] }, water: {}, fed: [], msg: null },
+  mission: null, mseen: new Set(), done: store.get('bp-done', []) };
+
+// ================= Plate builder =================
+const PL = {
+  CX: 400, CY: 360, R: 250,
+  counts() {
+    const c = { fv: 0, st: 0, pr: 0, da: 0, oil: 0, tr: 0, f: 0, v: 0 };
+    state.plate.forEach(id => { const F = FOODS[id]; c[F[2]]++; if (F[3]) c[F[3]]++; });
+    if (state.drink === 'milk') c.da++;
+    return c;
+  },
+  // What Sam says about the plate. Each problem is a short, kind message; no problems means a balanced day.
+  // Sam only says the first three things, so the most important come first.
+  judge() {
+    const c = PL.counts(), n = state.plate.length, d = state.drink, m = [];
+    if (n < 8) m.push('That isn\'t <b>enough food</b> for a whole day. I\'ll be hungry and tired!');
+    if (c.fv === 0) m.push('I\'m missing <b>fruit and vegetables</b> today! They have vitamins and minerals to keep me healthy, and fibre to help my digestion.');
+    else if (c.fv < 5) m.push(`Can I have more <b>fruit and vegetables</b>? I've only got ${c.fv}. Try for at least <b>5 a day</b>.`);
+    if (c.tr > 1) m.push('Yum, but that\'s a lot of <b>treats</b>! Cake, sweets and chips are fine sometimes, in small amounts.');
+    if (!d) m.push('I\'m thirsty! What can I <b>drink</b>?');
+    else if (d === 'fizzy') m.push('Fizzy drinks have lots of <b>sugar</b>. <b>Water</b> is the best drink.');
+    if (c.st === 0) m.push('I need some <b>starchy food</b>, like bread, rice, pasta or potatoes. It gives me energy.');
+    else if (c.st > GROUPS.st.most) m.push('That\'s too much <b>starchy food</b>: it\'s spilling off the plate! Could you swap some for fruit and vegetables?');
+    if (c.pr === 0) m.push('Where\'s my <b>protein</b>? Meat, fish, eggs, beans or nuts help me grow and repair my body.');
+    else if (c.pr > GROUPS.pr.most) m.push('That\'s too much <b>protein</b> food: it\'s spilling off the plate! A smaller amount is enough.');
+    if (c.da === 0) m.push('Some <b>milk, cheese or yoghurt</b> would help keep my bones and teeth strong.');
+    if (c.oil > GROUPS.oil.most) m.push('<b>Oils and spreads</b> only need a tiny part of the plate. One is enough.');
+    // Variety: fruit and vegetables have different vitamins and minerals, so a mix is best
+    if (c.fv >= 3 && !c.v) m.push('Lots of fruit, but <b>no vegetables</b>! They have different vitamins and minerals. Try to eat a rainbow.');
+    else if (c.fv >= 3 && !c.f) m.push('Lots of vegetables, but <b>no fruit</b>! A mix of both is best. Try to eat a rainbow.');
+    const ok = m.length === 0;
+    return { ok, msgs: m, text: ok ? `That's a <b>balanced diet</b>! Plenty of fruit and vegetables, energy food, protein, dairy and ${d === 'milk' ? 'milk' : 'water'} to drink${c.tr ? ', and a little treat too' : ''}. It will keep me healthy.` : '' };
+  },
+  sam(mood) {
+    // mood: 'wait' (not checked yet), 'happy' or 'think'
+    const mouth = mood === 'happy' ? '<path d="M-22 18 Q0 40 22 18" fill="#b5303b"/>' : mood === 'think' ? '<path d="M-16 26 Q0 18 18 24" fill="none" stroke="#6b3f22" stroke-width="5" stroke-linecap="round"/>' : '<path d="M-16 22 Q0 32 16 22" fill="none" stroke="#6b3f22" stroke-width="5" stroke-linecap="round"/>';
+    const brow = mood === 'think' ? '<path d="M-30 -22 l16 -6 M14 -26 l16 4" stroke="#6b3f22" stroke-width="5" stroke-linecap="round"/>' : '';
+    return `<g transform="translate(870 560) scale(.78)">
+      <path d="M-70 160 Q-70 80 0 80 Q70 80 70 160 Z" fill="#3d7bff"/>
+      <circle r="66" fill="#f2c19b"/><path d="M-66 -6 Q-70 -70 0 -70 Q70 -70 66 -6 Q48 -46 0 -44 Q-40 -46 -66 -6 Z" fill="#6b3f22"/>
+      <circle cx="-22" cy="-4" r="7" fill="#1d2340"/><circle cx="22" cy="-4" r="7" fill="#1d2340"/>${brow}${mouth}
+      <circle cx="-40" cy="16" r="9" fill="#f59b8f" opacity=".6"/><circle cx="40" cy="16" r="9" fill="#f59b8f" opacity=".6"/>
+      <text y="-84" text-anchor="middle" class="wlabel" style="font-size:22px;fill:var(--ink)">Sam</text></g>`;
+  },
+  cup(id, x, y) {
+    const d = DRINKS[id];
+    return `<g transform="translate(${x} ${y}) scale(.85)">
+      <path d="M-34 -70 L34 -70 L26 50 L-26 50 Z" fill="#fff" fill-opacity=".6" stroke="#9fb2e8" stroke-width="4" stroke-linejoin="round"/>
+      ${d ? `<path d="M-30 -40 L30 -40 L26 46 L-26 46 Z" fill="${d[2]}" stroke="${id === 'milk' ? '#d3dbf7' : 'none'}"/>
+        ${id === 'fizzy' ? '<circle cx="-8" cy="-10" r="4" fill="#fff" opacity=".7"/><circle cx="10" cy="10" r="3" fill="#fff" opacity=".7"/><circle cx="0" cy="30" r="4" fill="#fff" opacity=".7"/>' : ''}` : ''}
+      <text y="88" text-anchor="middle" class="wlabel">${d ? d[1] : 'No drink'}</text></g>`;
+  },
+  // n places in one group's section, gathered around the section's middle (its centre of mass).
+  // Thin sections are widest near the rim, so their middle is pushed out towards it.
+  layout(grp, n) {
+    const [a0, a1] = SECT[grp], th = (a1 - a0) * Math.PI / 180, mid = (a0 + a1) / 2, R = PL.R - 30;
+    const rc = Math.max(4 * R * Math.sin(th / 2) / (3 * th), th < .5 ? 175 : 0);
+    const [cx, cy] = polar(PL.CX, PL.CY, rc, mid);
+    const inside = (x, y) => {
+      const dx = x - PL.CX, dy = PL.CY - y, r = Math.hypot(dx, dy);
+      if (r < 40 || r > PL.R - 30) return false;
+      let a = Math.atan2(dx, dy) * 180 / Math.PI; if (a < 0) a += 360;
+      if (a < a0 || a > a1) return false;
+      const edge = d => r * Math.sin(Math.min(90, d) * Math.PI / 180);
+      return edge(a - a0) >= 24 && edge(a1 - a) >= 24;
+    };
+    return cluster(n, cx, cy, inside, [100, 140, 180, 215].map(r => polar(PL.CX, PL.CY, r, mid)));
+  },
+  stage() {
+    const verdict = state.said, c = PL.counts(), R = PL.R;
+    const model = state.model === 'pyramid' ? PY.draw(c) : (() => {
+      const sects = Object.entries(GROUPS).map(([id, g]) => {
+        const [a0, a1] = SECT[id], [x0, y0] = polar(PL.CX, PL.CY, R, a0), [x1, y1] = polar(PL.CX, PL.CY, R, a1);
+        const mid = (a0 + a1) / 2, [lx, ly] = polar(PL.CX, PL.CY, R + 44, mid), s = Math.sin(mid * Math.PI / 180);
+        const anchor = s > .35 ? 'start' : s < -.35 ? 'end' : 'middle';
+        return `<path d="M${PL.CX} ${PL.CY} L${x0.toFixed(1)} ${y0.toFixed(1)} A${R} ${R} 0 ${a1 - a0 > 180 ? 1 : 0} 1 ${x1.toFixed(1)} ${y1.toFixed(1)} Z" fill="${g.c}" fill-opacity="${c[id] ? .42 : .2}" stroke="#fff" stroke-width="6"/>
+          <text x="${lx.toFixed(0)}" y="${(ly + 6).toFixed(0)}" text-anchor="${anchor}" class="slabel" fill="${g.c}">${g.name} <tspan class="scount">${c[id]}</tspan></text>`;
+      }).join('');
+      return `<circle cx="${PL.CX + 6}" cy="${PL.CY + 10}" r="${R + 14}" fill="#000" opacity=".08"/>
+        <circle cx="${PL.CX}" cy="${PL.CY}" r="${R + 14}" fill="#fff" stroke="#e3e8f5" stroke-width="10"/>${sects}
+        <g transform="translate(870 130)"><circle r="78" fill="#fff" stroke="#e3e8f5" stroke-width="8"/><circle r="62" fill="#ddd" fill-opacity=".35"/>
+          <text y="-94" text-anchor="middle" class="slabel" fill="#8a7a6a">Sometimes foods <tspan class="scount">${c.tr}</tspan></text></g>`;
+    })();
+    return `<svg viewBox="0 0 1000 680" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Sam's food for one day, shown as a ${state.model === 'pyramid' ? 'food pyramid' : 'plate split into food groups'}">
+      <defs><pattern id="cloth" width="80" height="80" patternUnits="userSpaceOnUse"><rect width="80" height="80" fill="#fdf0dc"/><rect width="40" height="40" fill="#f8e1bf"/><rect x="40" y="40" width="40" height="40" fill="#f8e1bf"/></pattern></defs>
+      <rect x="-700" y="-300" width="2400" height="1300" fill="url(#cloth)"/>
+      ${model}<g id="foods"></g>
+      ${PL.cup(state.drink, 870, 330)}
+      ${PL.sam(verdict ? (verdict.ok ? 'happy' : 'think') : 'wait')}</svg>
+      <div id="ftip" class="ftip hidden" role="status"></div>`;
+  },
+  // Each food goes in its own group's part of the plate (or pyramid), gathered around the middle of that part.
+  // Too many for that part, and the extras spill over the edge.
+  foods() {
+    const g = $('#foods'); if (!g) return;
+    const pyr = state.model === 'pyramid', part = id => { const grp = FOODS[id][2]; return pyr && (grp === 'oil' || grp === 'tr') ? 'top' : grp; };
+    const lists = {}, places = {}, pics = [];
+    state.plate.forEach(id => (lists[part(id)] = lists[part(id)] || []).push(id));
+    for (const [pt, list] of Object.entries(lists)) {
+      places[pt] = pyr ? PY.layout(pt, list.length) : pt === 'tr' ? list.map((_, k) => polar(870, 130, k === 0 ? 0 : 46, (k - 1) * 72))
+        : PL.layout(pt, Math.min(list.length, GROUPS[pt].most));
+    }
+    state.plate.forEach(id => {
+      const F = FOODS[id], pt = part(id), k = lists[pt].indexOf(id), sp = places[pt];
+      let x, y, spill = false;
+      if (sp[k]) [x, y] = sp[k];
+      else if (pyr) { spill = true; [x, y] = PY.spill(pt, k - sp.length); }
+      else { spill = true; const [a0, a1] = SECT[pt]; [x, y] = polar(PL.CX, PL.CY, PL.R + 8, (a0 + a1) / 2 + (k - sp.length) * 9 - 4); }
+      pics.push(`<g class="food${id === state.justAdded ? ' pop' : ''}${spill ? ' spill' : ''}" data-act="pinfo" data-id="${id}" role="button" aria-label="${F[1]}: what it gives you">
+        <circle cx="${x.toFixed(0)}" cy="${y.toFixed(0)}" r="28" fill="transparent"/>${picSVG(F[0], x, y, pyr ? 42 : 48)}</g>`);
+    });
+    g.innerHTML = pics.join('');
+    state.justAdded = null;
+  },
+  add(id) {
+    if (state.plate.includes(id)) return PL.remove(id);
+    if (state.plate.length >= MAXFOOD) { state.said = { ok: false, msgs: ['My plate is <b>full</b>! Take something off first.'] }; return render(); }
+    state.plate.push(id); state.justAdded = id; state.said = null; render();
+  },
+  remove(id) { state.plate = state.plate.filter(x => x !== id); state.said = null; render(); },
+  // A card next to a food on the plate: what it gives you. Pointing at it with a mouse shows the card;
+  // tapping it keeps the card open, with a button to take the food off.
+  tip(id, el, pinned) {
+    const t = $('#ftip'); if (!t) return;
+    const F = FOODS[id], G = GROUPS[F[2]], box = $('#stage').getBoundingClientRect(), r = el.getBoundingClientRect();
+    t.innerHTML = `<div class="tname"><span class="tpic">${picHTML(F[0])}</span><b>${F[1]}</b></div>
+      <span class="tgrp" style="background:${G ? G.c : '#8a7a6a'}">${G ? G.name : 'Sometimes food'}</span>
+      <p><b>Gives you:</b> ${GIVES_FOOD[id] || GIVES[F[2]]}</p>
+      ${pinned ? `<button class="btn" data-act="premove" data-id="${id}">✖ Take it off</button>` : ''}`;
+    t.classList.remove('hidden'); t.dataset.pinned = pinned ? '1' : '';
+    const w = t.offsetWidth, left = r.right - box.left + 10 + w < box.width ? r.right - box.left + 10 : r.left - box.left - 10 - w;
+    t.style.left = `${Math.max(6, left)}px`; t.style.top = `${Math.max(6, Math.min(box.height - t.offsetHeight - 6, r.top - box.top - 10))}px`;
+  },
+  hideTip(force) { const t = $('#ftip'); if (t && (force || !t.dataset.pinned)) t.classList.add('hidden'); },
+  check() {
+    state.said = PL.judge(); render(); $('#drawer').scrollTop = 0;
+    emit('plate', { ok: state.said.ok, plate: state.plate.slice() });
+  }
+};
+
+// ================= Food pyramid =================
+// Another model of the same day's food: eat most of what is at the bottom and least of what is at the top.
+// Tiers from the top: fats, oils and sweets; protein beside dairy; fruit and vegetables; starchy foods.
+const PY = {
+  CX: 430, TOP: 50, BASE: 640, HALF: 340, Y: [50, 170, 330, 480, 640],
+  half: y => PY.HALF * (y - PY.TOP) / (PY.BASE - PY.TOP),
+  // Each tier's area for pictures: below its name, and clear of the sloping sides. Protein and dairy share a tier, split down the middle.
+  AREA: { st: [534, 616], fv: [384, 458], pr: [220, 306], da: [220, 306] },
+  inside(pt, x, y) {
+    const [y0, y1] = PY.AREA[pt], C = PY.CX;
+    if (y < y0 || y > y1 || Math.abs(x - C) > PY.half(y - 21) - 22) return false;
+    return pt === 'pr' ? x <= C - 26 : pt === 'da' ? x >= C + 26 : true;
+  },
+  layout(pt, n) {
+    // The point of the pyramid is too narrow for a grid, so it has set places for 1, 2 or 3 foods
+    if (pt === 'top') return [[[PY.CX, 146]], [[PY.CX - 23, 148], [PY.CX + 23, 148]], [[PY.CX - 23, 150], [PY.CX + 23, 150], [PY.CX, 108]]][Math.min(n, 3) - 1] || [];
+    const [y0, y1] = PY.AREA[pt], cy = (y0 + y1) / 2, C = PY.CX, w = PY.half(cy - 21) - 22;
+    const cx = pt === 'pr' ? C - (w + 26) / 2 : pt === 'da' ? C + (w + 26) / 2 : C;
+    // Tiers are short, so try the honeycomb rows in two positions and keep whichever fits more foods
+    const ins = (x, y) => PY.inside(pt, x, y), dy = [0, -21, 21].sort((a, b) => cluster(99, cx, cy + b, ins, [], 50).length - cluster(99, cx, cy + a, ins, [], 50).length)[0];
+    return cluster(n, cx, cy + dy, ins, [], 50);
+  },
+  // Foods that don't fit wait just outside the tier, on the left
+  spill(pt, k) {
+    const y = pt === 'top' ? 150 : (PY.AREA[pt][0] + PY.AREA[pt][1]) / 2;
+    return [PY.CX - PY.half(y) - 40 - k * 52, y];
+  },
+  draw(c) {
+    const C = PY.CX, Y = PY.Y, pt = y => [C - PY.half(y), C + PY.half(y)];
+    const tier = (y0, y1, x0f, x1f, col, op) => {
+      const [a, b] = pt(y0), [d, e] = pt(y1), L0 = x0f ? C : a, R0 = x1f ? C : b, L1 = x0f ? C : d, R1 = x1f ? C : e;
+      return `<path d="M${L0} ${y0} L${R0} ${y0} L${R1} ${y1} L${L1} ${y1} Z" fill="${col}" fill-opacity="${op}" stroke="#fff" stroke-width="6" stroke-linejoin="round"/>`;
+    };
+    const op = n => n ? .45 : .2;
+    return `${tier(Y[0], Y[1], false, false, '#a066d3', op(c.oil + c.tr))}${tier(Y[1], Y[2], false, true, '#e5735f', op(c.pr))}${tier(Y[1], Y[2], true, false, '#5fa8e8', op(c.da))}
+      ${tier(Y[2], Y[3], false, false, '#3faa4f', op(c.fv))}${tier(Y[3], Y[4], false, false, '#f2b632', op(c.st))}
+      <text x="${C + PY.half(110) + 16}" y="102" class="slabel" fill="#a066d3">Fats, oils and sweets <tspan class="scount">${c.oil + c.tr}</tspan></text>
+      <text x="${C + PY.half(110) + 16}" y="128" class="plabel">Eat the least</text>
+      <text x="${C - PY.half(194) / 2}" y="196" text-anchor="middle" class="slabel" fill="#e5735f">Protein <tspan class="scount">${c.pr}</tspan></text>
+      <text x="${C + PY.half(194) / 2}" y="196" text-anchor="middle" class="slabel" fill="#5fa8e8">Dairy <tspan class="scount">${c.da}</tspan></text>
+      <text x="${C}" y="356" text-anchor="middle" class="slabel" fill="#3faa4f">Fruit and vegetables <tspan class="scount">${c.fv}</tspan></text>
+      <text x="${C}" y="506" text-anchor="middle" class="slabel" fill="#c99200">Starchy foods <tspan class="scount">${c.st}</tspan></text>
+      <text x="${C}" y="668" text-anchor="middle" class="plabel">Eat the most</text>`;
+  }
+};
+
+// ================= Lunchbox =================
+// One meal with only 5 spaces, packed for a child with a particular need. A sandwich takes one space but counts for several groups.
+const LB = {
+  SPACES: 5,
+  ITEMS: {
+    apple: ['🍎', 'Apple', 'fv'], egg: ['🥚', 'Boiled egg', 'pr'], cheese: ['🧀', 'Cheese', 'da'], pasta: ['🍝', 'Pasta salad', 'st'], drumstick: ['🍗', 'Chicken drumstick', 'pr'],
+    carrot: ['🥕', 'Carrot sticks', 'fv'], yogNat: ['ic-yoghurt', 'Natural yoghurt', 'da'], falafel: ['🧆', 'Falafel', 'pr'], banana: ['🍌', 'Banana', 'fv'], chocbar: ['🍫', 'Chocolate bar', 'tr'],
+    hummusDip: ['ic-hummus', 'Hummus dip', 'pr'], ricecake: ['🍘', 'Rice cakes', 'st'], tomato: ['🍅', 'Cherry tomatoes', 'fv'], tunaSalad: ['🐟', 'Tuna salad', 'pr'], yogFruit: ['ic-yoghurt2', 'Fruity yoghurt', 'da'],
+    grapes: ['🍇', 'Grapes', 'fv'], beanSalad: ['🫘', 'Bean salad', 'pr'], oatbar: ['ic-oatbar', 'Oat bar', 'st'], cucumber: ['🥒', 'Cucumber', 'fv'], nuts: ['🥜', 'Nuts', 'pr'],
+    biscuit: ['🍪', 'Biscuit', 'tr'], cupcake: ['🧁', 'Cupcake', 'tr']
+  },
+  DRINKS: { water: ['💧', 'Water', '#bfe6fa'], milk: ['🥛', 'Milk', '#ffffff'], juice: ['🧃', 'Orange juice', '#ffb341'], fizzy: ['🥤', 'Fizzy orange', '#ff8a3d'] },
+  BREAD: { white: ['🍞', 'White bread'], brown: ['🍞', 'Wholemeal bread'], wrap: ['🫓', 'Wrap'] },
+  FILL: { cheese: ['🧀', 'Cheese', 'da'], egg: ['🥚', 'Egg', 'pr'], chicken: ['🍗', 'Chicken', 'pr'], tuna: ['🐟', 'Tuna', 'pr'], hummus: ['ic-hummus', 'Hummus', 'pr'], pb: ['🥜', 'Peanut butter', 'pr'] },
+  SALAD: { none: ['➖', 'No salad'], lettuce: ['🥬', 'Lettuce'], tomato: ['🍅', 'Tomato'], cucumber: ['🥒', 'Cucumber'] },
+  BRIEFS: {
+    leo: { em: '👦', name: 'Leo', text: 'Leo has <b>football</b> after school, so he needs plenty of energy.',
+      rule: (c, l) => c.st < 2 ? 'Leo needs <b>extra energy</b> for football. Pack <b>2 starchy foods</b> (a sandwich counts as one).' : null,
+      win: 'Leo has <b>extra starchy food</b> for energy, and everything else he needs too. Active people need more energy food.' },
+    aisha: { em: '👧', name: 'Aisha', text: 'Aisha is <b>vegetarian</b>: she doesn\'t eat meat or fish.',
+      rule: (c, l) => ['chicken', 'tuna'].includes(l.fill) || l.box.some(id => ['drumstick', 'tunaSalad'].includes(id))
+        ? 'Aisha is vegetarian, so <b>no meat or fish</b>! Eggs, falafel, beans and hummus have protein instead.' : null,
+      win: 'Aisha has <b>protein without meat or fish</b>. Eggs, falafel, beans and hummus all help her grow and repair her body.' },
+    maya: { em: '🧒', name: 'Maya', text: 'Maya\'s school is <b>nut-free</b>, to keep children with nut allergies safe.',
+      rule: (c, l) => l.box.includes('nuts') || l.fill === 'pb' ? 'Maya\'s school is <b>nut-free</b>! Nuts and peanut butter can make some children very ill. Choose a different protein.' : null,
+      win: 'Maya has a balanced lunch with <b>no nuts</b>, so it\'s safe for her whole class.' },
+    ben: { em: '🧑', name: 'Ben', text: 'Ben doesn\'t like <b>cheese</b>.',
+      rule: (c, l) => l.box.includes('cheese') || l.fill === 'cheese' ? 'Ben doesn\'t like <b>cheese</b>! Find another dairy food, like yoghurt or milk.' : null,
+      win: 'Ben gets his dairy from <b>yoghurt or milk</b> instead of cheese. There\'s usually more than one way to balance a meal.' }
+  },
+  pic(id) { return id === 'sandwich' ? '🥪' : LB.ITEMS[id][0]; },
+  name(id) { const l = state.lunch; return id === 'sandwich' ? `${LB.FILL[l.sw.fill][1]} sandwich` : LB.ITEMS[id][1]; },
+  // A sandwich is bread (starchy), its filling, and maybe some salad (a vegetable)
+  counts() {
+    const l = state.lunch, c = { fv: 0, st: 0, pr: 0, da: 0, oil: 0, tr: 0 };
+    l.box.forEach(id => {
+      if (id === 'sandwich') { c.st++; c[LB.FILL[l.sw.fill][2]]++; if (l.sw.salad !== 'none') c.fv++; }
+      else c[LB.ITEMS[id][2]]++;
+    });
+    if (l.drink === 'milk') c.da++;
+    return c;
+  },
+  judge() {
+    const l = state.lunch, c = LB.counts(), B = LB.BRIEFS[l.brief], m = [];
+    const brief = B.rule(c, { ...l, fill: l.box.includes('sandwich') ? l.sw.fill : null });
+    if (brief) m.push(brief);
+    if (c.st === 0) m.push('A lunch needs some <b>starchy food</b> for energy, like a sandwich, pasta salad or rice cakes.');
+    if (c.pr === 0) m.push('Add some <b>protein</b> to help growing bodies: a boiled egg, a chicken drumstick, falafel or hummus. A sandwich filling like egg or tuna counts too.');
+    if (c.fv < 2) m.push(`Pack at least <b>2 fruit or vegetables</b>${c.fv ? ' (salad in a sandwich counts as one)' : ''}.`);
+    if (c.da === 0) m.push('Add some <b>dairy</b> for strong bones and teeth: yoghurt, cheese or milk.');
+    if (c.tr > 1) m.push('One small treat is plenty. Swap the others for something more filling.');
+    if (!l.drink) m.push('Don\'t forget a <b>drink</b>!');
+    else if (l.drink === 'fizzy') m.push('Fizzy orange has lots of <b>sugar</b>. Check its label! Water or milk would be better.');
+    const ok = m.length === 0;
+    return { ok, msgs: m, text: ok ? `${B.win} A balanced lunch!` : '' };
+  },
+  stage() {
+    const l = state.lunch, B = LB.BRIEFS[l.brief];
+    const at = [[300, 345], [450, 345], [600, 345], [375, 470], [525, 470]];
+    const items = l.box.map((id, k) => `<g class="food" data-act="lremove" data-id="${id}" role="button" aria-label="Take out ${LB.name(id)}">
+      <circle cx="${at[k][0]}" cy="${at[k][1]}" r="50" fill="transparent"/>${picSVG(LB.pic(id), at[k][0], at[k][1], 72)}</g>`).join('');
+    const free = at.slice(l.box.length).map(([x, y]) => `<rect x="${x - 55}" y="${y - 50}" width="110" height="100" rx="18" fill="none" stroke="#fff" stroke-width="3" stroke-dasharray="8 7" opacity=".8"/>`).join('');
+    const d = LB.DRINKS[l.drink];
+    return `<svg viewBox="0 0 1000 680" preserveAspectRatio="xMidYMid meet" role="img" aria-label="A lunchbox for ${B.name}">
+      <rect x="-700" y="-300" width="2400" height="1300" fill="#e9d2b0"/>
+      <path d="M-700 0 H1700" stroke="#d9bd94" stroke-width="2"/>${Array.from({ length: 12 }, (_, i) => `<line x1="-700" y1="${i * 60}" x2="1700" y2="${i * 60}" stroke="#dcc29b" stroke-width="2"/>`).join('')}
+      <rect x="230" y="160" width="440" height="110" rx="24" fill="#7fb6f0" stroke="#4f8ccc" stroke-width="5" transform="skewX(-8) translate(30 0)"/>
+      <rect x="215" y="262" width="470" height="300" rx="28" fill="#5fa2ea" stroke="#3f7fc4" stroke-width="6"/>
+      <rect x="235" y="282" width="430" height="260" rx="20" fill="#8cc0f5"/>
+      ${free}${items}
+      <g transform="translate(830 440)">
+        <rect x="-38" y="-110" width="76" height="200" rx="28" fill="#fff" fill-opacity=".7" stroke="#9fb2e8" stroke-width="5"/>
+        <rect x="-20" y="-140" width="40" height="34" rx="8" fill="#3d7bff"/>
+        ${d ? `<rect x="-32" y="-60" width="64" height="144" rx="22" fill="${d[2]}" stroke="${l.drink === 'milk' ? '#d3dbf7' : 'none'}"/>` : ''}
+        <text y="122" text-anchor="middle" class="wlabel">${d ? d[1] : 'No drink'}</text></g>
+      <text x="450" y="610" text-anchor="middle" class="wlabel" style="fill:var(--ink)">${l.box.length} of ${LB.SPACES} spaces used</text></svg>
+      <div class="bubble"><span class="who">${B.em}</span><div><b>${B.name}'s lunchbox</b><br>${B.text}</div></div>`;
+  },
+  add(id) {
+    const l = state.lunch;
+    if (l.box.includes(id)) return LB.remove(id);
+    if (l.box.length >= LB.SPACES) { l.said = { ok: false, msgs: ['The lunchbox is <b>full</b>! Take something out first.'] }; return render(); }
+    l.box.push(id); l.said = null; render();
+  },
+  remove(id) { const l = state.lunch; l.box = l.box.filter(x => x !== id); l.said = null; render(); },
+  sandwich() {
+    const l = state.lunch;
+    if (!l.sw.bread || !l.sw.fill) { l.said = { ok: false, msgs: ['Choose the <b>bread</b> and a <b>filling</b> first.'] }; return render(); }
+    if (l.box.includes('sandwich')) { l.said = null; return render(); }
+    LB.add('sandwich');
+  },
+  check() {
+    const l = state.lunch;
+    l.said = LB.judge(); render(); $('#drawer').scrollTop = 0;
+    if (l.said.ok && !state.packed.includes(l.brief)) state.packed.push(l.brief);
+    emit('lunch', { ok: l.said.ok, brief: l.brief });
+  }
+};
+
+// ================= Food labels =================
+// Four products in each set, with three amounts on each label. Amounts are in every 100 g (or 100 ml);
+// packs are 50 g, 200 g, 300 ml and so on, so the sums are halves, doubles and simple multiples.
+const LABELS = {
+  yog: { tab: '🥄 Yoghurts', per: '100 g', rows: ['Protein', 'Fat', 'Sugar'],
+    items: [{ name: 'Natural yoghurt', em: 'ic-yoghurt', pack: 'Pot: 100 g', v: [5, 3, 5] }, { name: 'Greek yoghurt', em: 'ic-yoghurt', pack: 'Pot: 100 g', v: [9, 10, 4] },
+      { name: 'Strawberry yoghurt', em: 'ic-yoghurt2', pack: 'Pot: 200 g', v: [4, 3, 13] }, { name: 'Chocolate pudding', em: '🍮', pack: 'Pot: 50 g', v: [3, 6, 20] }],
+    qs: [{ q: 'Which one has the <b>most protein</b>?', a: 1, hint: 'Find the <b>Protein</b> row on each label, then find the biggest number.', why: 'Greek yoghurt has 9 g of protein in every 100 g.' },
+      { q: 'Which one has the <b>most sugar</b>?', a: 3, hint: 'Find the <b>Sugar</b> row on each label, then find the biggest number.', why: 'Chocolate pudding has 20 g of sugar in every 100 g. It\'s more of a treat than a yoghurt!' },
+      { q: 'The strawberry yoghurt pot is <b>200 g</b>. How much sugar is in the whole pot?', opts: ['13 g', '26 g', '39 g', '200 g'], a: 1, hint: 'The label shows 100 g. How many lots of 100 g are in 200 g?', why: '200 g is double 100 g, so 13 g × 2 = 26 g.' }] },
+  bar: { tab: '🍫 Snack bars', per: '100 g', rows: ['Protein', 'Fibre', 'Sugar'],
+    items: [{ name: 'Oat bar', em: 'ic-oatbar', pack: 'Bar: 50 g', v: [7, 8, 20] }, { name: 'Cereal bar', em: '🥣', pack: 'Bar: 50 g', v: [5, 4, 30] },
+      { name: 'Fruit and nut bar', em: '🥜', pack: 'Bar: 50 g', v: [10, 6, 25] }, { name: 'Chocolate bar', em: '🍫', pack: 'Bar: 50 g', v: [6, 2, 50] }],
+    qs: [{ q: 'Which bar has the <b>most fibre</b>?', a: 0, hint: 'Find the <b>Fibre</b> row on each label, then find the biggest number.', why: 'The oat bar has 8 g of fibre in every 100 g.' },
+      { q: 'Which bar has the <b>most protein</b>?', a: 2, hint: 'Find the <b>Protein</b> row on each label, then find the biggest number.', why: 'The fruit and nut bar has 10 g. Nuts are a good source of protein.' },
+      { q: 'Each bar weighs <b>50 g</b>. How much sugar is in one chocolate bar?', opts: ['5 g', '25 g', '50 g', '100 g'], a: 1, hint: '50 g is half of 100 g. What is half of the sugar on the label?', why: '50 g is half of 100 g, so half of 50 g = 25 g.' }] },
+  drink: { tab: '🥤 Drinks', per: '100 ml', rows: ['Protein', 'Fat', 'Sugar'],
+    items: [{ name: 'Water', em: '💧', pack: 'Bottle: 500 ml', v: [0, 0, 0] }, { name: 'Milk', em: '🥛', pack: 'Carton: 200 ml', v: [3, 2, 5] },
+      { name: 'Orange juice', em: '🧃', pack: 'Carton: 200 ml', v: [1, 0, 9] }, { name: 'Lemonade', em: '🥤', pack: 'Can: 300 ml', v: [0, 0, 10] }],
+    qs: [{ q: 'Which drink has the <b>most protein</b>?', a: 1, hint: 'Find the <b>Protein</b> row on each label, then find the biggest number.', why: 'Milk has 3 g of protein in every 100 ml. It also has calcium for your bones.' },
+      { q: 'A can of lemonade is <b>300 ml</b>. How much sugar is in the whole can?', opts: ['10 g', '13 g', '30 g', '300 g'], a: 2, hint: 'The label shows 100 ml. How many lots of 100 ml are in 300 ml?', why: '300 ml is 3 lots of 100 ml, so 10 g × 3 = 30 g. That\'s more than 7 sugar cubes!' },
+      { q: 'How much <b>more sugar</b> is in 100 ml of orange juice than in 100 ml of milk?', opts: ['4 g', '5 g', '9 g', '14 g'], a: 0, hint: 'Find the sugar in each one, then take the smaller number away from the bigger one.', why: '9 g − 5 g = 4 g more.' }] },
+  bread: { tab: '🍞 Breads', per: '100 g', rows: ['Fibre', 'Sugar', 'Salt'],
+    items: [{ name: 'White bread', em: '🍞', pack: 'Loaf: 800 g', v: [3, 3, '1.0'] }, { name: 'Wholemeal bread', em: '🍞', pack: 'Loaf: 800 g', v: [7, 3, '0.9'] },
+      { name: 'Seeded bread', em: '🥖', pack: 'Loaf: 800 g', v: [6, 4, '1.1'] }, { name: 'Brioche', em: '🥐', pack: 'Pack: 400 g', v: [2, 12, '0.8'] }],
+    qs: [{ q: 'Which bread has the <b>most fibre</b>?', a: 1, hint: 'Find the <b>Fibre</b> row on each label, then find the biggest number.', why: 'Wholemeal bread has 7 g of fibre in every 100 g. It is made from the whole grain.' },
+      { q: 'Which bread has the <b>most sugar</b>?', a: 3, hint: 'Find the <b>Sugar</b> row on each label, then find the biggest number.', why: 'Brioche has 12 g of sugar in every 100 g. It is a sweet bread.' },
+      { q: 'Ana eats one slice of seeded bread. It weighs <b>50 g</b>. How much fibre does she get?', opts: ['3 g', '6 g', '12 g', '50 g'], a: 0, hint: '50 g is half of 100 g. What is half of the fibre on the label?', why: '50 g is half of 100 g, so half of 6 g = 3 g.' }] }
+};
+const QCOUNT = Object.values(LABELS).reduce((t, x) => t + x.qs.length, 0);
+const LBL = {
+  solved: () => Object.entries(LABELS).reduce((t, [id, x]) => t + x.qs.filter((_, i) => state.labels.answers[`${id}${i}`] === 'right').length, 0),
+  // The labels are big on the stage, like real packs lined up on a table
+  stage() {
+    const S = LABELS[state.labels.set];
+    return `<div class="lstage"><div class="lgrid">${S.items.map(it => `<div class="pack">
+      <div class="pk-top"><span class="pk-ic">${picHTML(it.em)}</span><div><b>${it.name}</b><div class="pk-size">${it.pack}</div></div></div>
+      <div class="nlabel big"><div class="nhead">Each ${S.per} contains</div>
+        <table>${S.rows.map((r, i) => `<tr><td>${r}</td><td>${it.v[i]} g</td></tr>`).join('')}</table></div></div>`).join('')}</div></div>`;
+  },
+  drawer() {
+    const L = state.labels, S = LABELS[L.set];
+    const tabs = Object.entries(LABELS).map(([id, x]) => {
+      const solved = x.qs.every((_, i) => L.answers[`${id}${i}`] === 'right');
+      return `<button class="opt${id === L.set ? ' on' : ''}" data-act="lset" data-s="${id}">${x.tab}${solved ? ' <span class="tick">✔</span>' : ''}</button>`;
+    }).join('');
+    const qs = S.qs.map((q, i) => {
+      const key = `${L.set}${i}`, st = L.answers[key], opts = q.opts || S.items.map(it => it.name);
+      return `<div class="card lq"><p><b>${i + 1}.</b> ${q.q}</p><div class="stops">${opts.map((o, k) => `<button class="opt${st === 'right' && k === q.a ? ' done' : ''}" data-act="lans" data-q="${i}" data-k="${k}"${st === 'right' ? ' disabled' : ''}>${o}</button>`).join('')}</div>
+        ${st === 'right' ? `<p class="job">✅ ${q.why}</p>` : st === 'wrong' ? `<p class="spot">🤔 Not quite. ${q.hint}</p>` : ''}</div>`;
+    }).join('');
+    return `<div class="card"><h2>Label detective</h2>
+        <p>Food labels tell you what is inside. Each label shows what is in <b>${S.per}</b>. Look carefully at the labels in the picture, then answer.</p>
+        <div class="stops">${tabs}</div><p class="muted">Solved: ${LBL.solved()} of ${QCOUNT}</p></div>${qs}`;
+  },
+  answer(q, k) {
+    const L = state.labels, key = `${L.set}${q}`;
+    L.answers[key] = LABELS[L.set].qs[q].a === k ? 'right' : 'wrong';
+    render();
+    if (L.answers[key] === 'right') emit('label', { all: LBL.solved() === QCOUNT });
+  }
+};
+
+// ================= What is food for? =================
+// Five jobs. Some foods do more than one (beans have protein and fibre), so either of their jobs is right.
+const JOBS = {
+  carb:  { icon: '⚡', name: 'Carbohydrates', noun: 'carbohydrate', job: 'Give us energy to move, play and think', c: '#f2b632' },
+  prot:  { icon: '🧱', name: 'Proteins', noun: 'protein', job: 'Help us grow and repair our bodies', c: '#e5735f' },
+  fat:   { icon: '🔋', name: 'Fats', noun: 'fat', job: 'Store energy and help keep us warm', c: '#a066d3' },
+  vit:   { icon: '🛡️', name: 'Vitamins and minerals', noun: 'vitamins and minerals', job: 'Keep us healthy and help our bodies work', c: '#3faa4f' },
+  fibre: { icon: '🌾', name: 'Fibre', noun: 'fibre', job: 'Helps food move through your digestive system', c: '#a0784a' }
+};
+const JFOODS = { toast: ['carb'], rice: ['carb'], pasta: ['carb'], potato: ['carb'], porridge: ['carb', 'fibre'], chicken: ['prot'], egg: ['prot'], fish: ['prot'],
+  beans: ['prot', 'fibre'], butter: ['fat'], olive: ['fat'], carrot: ['vit'], orange: ['vit'], broccoli: ['vit', 'fibre'] };
+const JORDER = ['egg', 'carrot', 'toast', 'butter', 'beans', 'fish', 'orange', 'porridge', 'rice', 'olive', 'potato', 'broccoli', 'chicken', 'pasta'];
+const JB = {
+  BOX: { carb: [20, 30, 310], prot: [345, 30, 310], fat: [670, 30, 310], vit: [20, 350, 470], fibre: [510, 350, 470] }, H: 300,
+  stage() {
+    const j = state.jobs;
+    const boxes = Object.entries(JOBS).map(([id, J]) => {
+      const [x, y, w] = JB.BOX[id], items = Object.keys(j.placed).filter(f => j.placed[f] === id), per = Math.floor((w - 30) / 70);
+      return `<g class="station${j.sel ? ' ready' : ''}" data-act="jdrop" data-j="${id}" id="st-${id}" role="button" aria-label="${J.name}">
+        <rect class="panel" x="${x}" y="${y}" width="${w}" height="${JB.H}" rx="24"/>
+        <rect x="${x}" y="${y}" width="${w}" height="70" rx="24" fill="${J.c}" opacity=".25"/>
+        <text x="${x + 18}" y="${y + 48}" style="font-size:32px">${J.icon}</text>
+        <text x="${x + 62}" y="${y + 46}" class="stitle">${J.name}</text>
+        <foreignObject x="${x + 16}" y="${y + 78}" width="${w - 32}" height="60"><div class="sjobtxt">${J.job}</div></foreignObject>
+        ${items.map((f, k) => picSVG(FOODS[f][0], x + 50 + (k % per) * 70, y + 180 + Math.floor(k / per) * 66, 50)).join('')}</g>`;
+    }).join('');
+    return `<svg viewBox="0 0 1000 680" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Five jobs that food does">
+      <rect x="-700" y="-300" width="2400" height="1300" fill="#eef3ff"/>${boxes}</svg>`;
+  },
+  // Tap a food, then tap its job (or drag the food onto the job)
+  put(f, jobId) {
+    const j = state.jobs, right = JFOODS[f], name = FOODS[f][1], is = /s$/.test(name) ? 'are' : 'is';
+    if (!f || j.placed[f]) return;
+    j.sel = null;
+    if (right.includes(jobId)) {
+      j.placed[f] = jobId;
+      const other = right.find(r => r !== jobId);
+      j.msg = ['✅', `Yes! ${name} ${is} a good source of <b>${JOBS[jobId].noun}</b>${other ? `, and of <b>${JOBS[other].noun}</b> too, so either box is right` : ''}.`];
+      render(); $(`#st-${jobId}`)?.classList.add('yes');
+      if (Object.keys(j.placed).length === JORDER.length) emit('jobs', { mistakes: j.mistakes });
+    } else {
+      j.mistakes++;
+      const R = JOBS[right[0]];
+      j.msg = ['🤔', `Not quite. ${name} ${is} a good source of <b>${right.map(r => JOBS[r].noun).join('</b>, and of <b>')}</b>. ${R.name} ${R.job.charAt(0).toLowerCase() + R.job.slice(1)}.`];
+      render(); $(`#st-${jobId}`)?.classList.add('no');
+    }
+  }
+};
+
+// ================= Feed the zoo =================
+const PANTRY = {
+  bamboo: ['🎋', 'Bamboo'], meat: ['🥩', 'Meat'], grass: ['🌿', 'Grass'], hay: ['🌾', 'Hay'], seeds: ['🌻', 'Seeds'], insects: ['🐛', 'Insects'],
+  berries: ['🍓', 'Berries'], fish: ['🐟', 'Fish'], apple: ['🍎', 'Apple'], bread: ['🍞', 'Bread'], cake: ['🍰', 'Cake'], chocolate: ['🍫', 'Chocolate']
+};
+// need: must be in the bowl. any: at least one of these. ok: fine as well. Anything else gets its own reason (or a general one).
+// Every animal also needs its water trough filled.
+const ANIMALS = {
+  panda: { em: '🐼', name: 'Giant panda', sky: '#cfe8c5', ground: '#7cb36a', need: ['bamboo'], ok: ['apple'],
+    hint: 'Pandas eat almost nothing but one kind of plant.',
+    why: { meat: 'Pandas eat almost nothing but <b>bamboo</b>. They don\'t eat meat.', fish: 'Pandas don\'t eat fish. They eat almost nothing but <b>bamboo</b>.' },
+    win: 'A panda\'s balanced diet is almost all <b>bamboo</b>! It eats lots of it, for up to 12 hours a day. Zoo keepers give it a little fruit as a treat.' },
+  lion: { em: '🦁', name: 'Lion', sky: '#ffe9a8', ground: '#d9b45f', need: ['meat'], ok: [],
+    hint: 'Lions are hunters. What do they catch?',
+    why: { grass: 'Lions are <b>carnivores</b>: they eat meat, not plants.', hay: 'Lions are <b>carnivores</b>: they eat meat, not plants.', bamboo: 'Lions are <b>carnivores</b>: they eat meat, not plants.',
+      fish: 'Lions hunt land animals, like zebras and antelopes. In zoos they are fed <b>meat</b>.' },
+    win: 'Lions eat <b>meat</b>. Eating the whole animal, including bones and other parts, gives them the vitamins and minerals they need.' },
+  cow: { em: '🐄', name: 'Cow', sky: '#cfe8ff', ground: '#8fd18a', need: ['grass'], ok: ['hay', 'apple'],
+    hint: 'Cows munch plants in a field all day.',
+    why: { meat: 'Cows are <b>herbivores</b>: they only eat plants.', fish: 'Cows are <b>herbivores</b>: they only eat plants.' },
+    win: 'Cows eat <b>grass</b>, and <b>hay</b> (dried grass) in winter. Their stomach has four parts, which helps them digest tough grass.' },
+  bird: { em: '🐦', name: 'Garden bird', sky: '#d6ecff', ground: '#9fd39a', need: [], any: ['seeds', 'insects'], ok: ['seeds', 'insects', 'berries'],
+    hint: 'Garden birds eat food from plants, and some tiny animals too.',
+    why: { bread: 'Bread fills birds up, but it doesn\'t give them what they need to stay healthy.' },
+    win: 'Garden birds eat <b>seeds</b> and <b>insects</b>. Different birds eat different mixes: sparrows eat more seeds, robins more insects, and many eat berries too.' }
+};
+const ZOO = {
+  stage() {
+    const z = state.zoo, A = ANIMALS[z.animal], bowl = z.bowl[z.animal], wet = z.water[z.animal];
+    return `<svg viewBox="0 0 1000 680" preserveAspectRatio="xMidYMid meet" role="img" aria-label="${A.name} with its food bowl and water trough">
+      <rect x="-700" y="-300" width="2400" height="1300" fill="${A.sky}"/>
+      <rect x="-700" y="470" width="2400" height="600" fill="${A.ground}"/>
+      <path d="M-700 470 Q-200 440 300 470 T1300 466 T1700 470" fill="none" stroke="#000" stroke-opacity=".08" stroke-width="10"/>
+      <text x="260" y="430" text-anchor="middle" style="font-size:240px">${A.em}</text>
+      <text x="260" y="120" text-anchor="middle" class="aname">${A.name}</text>
+      <ellipse cx="660" cy="560" rx="170" ry="40" fill="#000" opacity=".1"/>
+      <path d="M490 480 H830 L795 570 H525 Z" fill="#c08a52" stroke="#8a5a2b" stroke-width="6" stroke-linejoin="round"/>
+      ${bowl.map((f, k) => `<text x="${545 + (k % 5) * 58}" y="${468 - Math.floor(k / 5) * 54}" text-anchor="middle" style="font-size:50px">${PANTRY[f][0]}</text>`).join('')}
+      <text x="660" y="620" text-anchor="middle" class="wlabel" style="fill:var(--ink)">${bowl.length ? 'Food bowl' : 'Empty food bowl'}</text>
+      <path d="M860 520 H980 L968 575 H872 Z" fill="#9aa3b8" stroke="#6b7389" stroke-width="5" stroke-linejoin="round"/>
+      ${wet ? '<path d="M866 530 H974 L966 568 H874 Z" fill="#4aa3df"/>' : ''}
+      <text x="920" y="620" text-anchor="middle" class="wlabel" style="fill:var(--ink)">${wet ? 'Water ✔' : 'No water'}</text>
+      ${z.fed.includes(z.animal) ? '<text x="660" y="220" text-anchor="middle" style="font-size:90px">💚</text>' : ''}</svg>`;
+  },
+  toggle(f) {
+    const z = state.zoo, b = z.bowl[z.animal];
+    z.bowl[z.animal] = b.includes(f) ? b.filter(x => x !== f) : b.concat(f);
+    z.msg = null; render();
+  },
+  check() {
+    const z = state.zoo, A = ANIMALS[z.animal], b = z.bowl[z.animal], m = [];
+    b.filter(f => !A.need.includes(f) && !A.ok.includes(f)).forEach(f => m.push(
+      A.why[f] || (f === 'chocolate' ? 'Chocolate can make many animals <b>ill</b>. Never feed it to them!'
+        : f === 'cake' ? 'Cake isn\'t part of a healthy diet for any animal.'
+        : `${A.name}s don't usually eat <b>${PANTRY[f][1].toLowerCase()}</b>.`)));
+    if (A.need.some(f => !b.includes(f)) || (A.any && !A.any.some(f => b.includes(f)))) m.push(`Something is missing. ${A.hint}`);
+    if (!z.water[z.animal]) m.push('Every animal needs <b>water</b> to drink! Fill the water trough.');
+    const ok = m.length === 0;
+    z.msg = ok ? ['🎉', A.win] : ['🤔', m.join(' ')];
+    if (ok && !z.fed.includes(z.animal)) z.fed.push(z.animal);
+    render();
+    if (ok) emit('zoo', { animal: z.animal });
+  }
+};
+
+// ================= Dragging food =================
+// A chip can be tapped or dragged onto the picture. Tapping and dropping do the same job for each kind of chip.
+const TAP = {
+  plate: id => PL.add(id),
+  lunch: id => LB.add(id),
+  job: id => { state.jobs.sel = state.jobs.sel === id ? null : id; state.jobs.msg = null; render(); },
+  zoo: id => ZOO.toggle(id)
+};
+const DROP = {
+  plate: id => { if (!state.plate.includes(id)) PL.add(id); },
+  lunch: id => { if (!state.lunch.box.includes(id)) LB.add(id); },
+  // A food dropped on a job box goes into that box
+  job: (id, e) => { const st = document.elementFromPoint(e.clientX, e.clientY)?.closest('.station'); if (st) JB.put(id, st.dataset.j); },
+  zoo: id => { if (!state.zoo.bowl[state.zoo.animal].includes(id)) ZOO.toggle(id); }
+};
+const Chips = {
+  start(e, btn) {
+    if (btn.disabled) return;
+    e.preventDefault();
+    Chips.d = { kind: btn.dataset.kind, id: btn.dataset.id, x: e.clientX, y: e.clientY, pid: e.pointerId, ghost: null, btn };
+    try { btn.setPointerCapture(e.pointerId); } catch {}
+  },
+  move(e) {
+    const d = Chips.d; if (!d || d.pid !== e.pointerId) return;
+    if (!d.ghost && Math.hypot(e.clientX - d.x, e.clientY - d.y) > 8) {
+      d.ghost = d.btn.cloneNode(true); d.ghost.classList.add('chip-ghost'); d.ghost.style.width = d.btn.offsetWidth + 'px';
+      document.body.appendChild(d.ghost);
+    }
+    if (d.ghost) { d.ghost.style.left = e.clientX + 'px'; d.ghost.style.top = e.clientY + 'px'; }
+  },
+  end(e) {
+    const d = Chips.d; if (!d || d.pid !== e.pointerId) return;
+    Chips.d = null;
+    if (!d.ghost) return TAP[d.kind](d.id);
+    d.ghost.remove();
+    const r = $('#stage').getBoundingClientRect();
+    if (e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom) DROP[d.kind](d.id, e);
+  }
+};
+document.addEventListener('pointerdown', e => { const b = e.target.closest('.chip'); if (b) Chips.start(e, b); });
+document.addEventListener('pointermove', e => Chips.move(e));
+document.addEventListener('pointerup', e => Chips.end(e));
+document.addEventListener('pointercancel', () => { if (Chips.d) { Chips.d.ghost?.remove(); Chips.d = null; } });
+
+// ================= Missions =================
+// Each mission sets up a view; activities call emit() when something happens, and on() says whether that completes it.
+const got = (id, all) => { state.mseen.add(id); return all.every(x => state.mseen.has(x)); };
+const lunchMission = (id, icon, title, task, hint) => ({ id, icon, title, task, hint,
+  setup() { state.view = 'lunch'; state.lunch = freshLunch(id); },
+  on: (ev, d) => ev === 'lunch' && d.ok && d.brief === id,
+  win: () => LB.BRIEFS[id].win });
+const MISSIONS = [
+  { id: 'balanced', icon: '🍽️', title: 'A balanced day', task: 'Fill Sam\'s plate with a <b>balanced diet</b> for the whole day, then check with Sam.',
+    hint: 'Look at the plate. Try to put food in every coloured part, with lots of fruit and vegetables. Then choose a drink.',
+    setup() { state.view = 'plate'; state.plate = []; state.drink = null; state.said = null; },
+    on: (ev, d) => ev === 'plate' && d.ok,
+    win: () => 'Sam has a balanced diet: lots of fruit and vegetables, energy food, protein, dairy and a healthy drink. A balanced diet keeps you <b>healthy</b>.' },
+  { id: 'veggie', icon: '🥦', title: 'Veggie power', task: 'Make Sam a balanced plate with <b>no meat or fish</b>.',
+    hint: 'Eggs, beans, nuts and hummus all have protein in them too.',
+    setup() { state.view = 'plate'; state.plate = []; state.drink = null; state.said = null; },
+    on: (ev, d) => ev === 'plate' && d.ok && !d.plate.some(id => MEAT.includes(id)),
+    win: () => 'A vegetarian diet can be balanced too! Beans, nuts, eggs, hummus and dairy give protein without meat or fish.' },
+  { id: 'fix', icon: '🛠️', title: 'Fix the plate', task: 'Sam\'s plate is full of treats! Change it to make a <b>balanced diet</b>.',
+    hint: 'Tap a food on the plate to take it off. One small treat is fine.',
+    setup() { state.view = 'plate'; state.model = 'plate'; state.plate = ['chips', 'cake', 'toast', 'sweets', 'chocolate', 'biscuit', 'pasta']; state.drink = 'fizzy'; state.said = null; },
+    on: (ev, d) => ev === 'plate' && d.ok,
+    win: () => 'Treats are fine <b>sometimes</b>, in small amounts. Most of a balanced diet is fruit, vegetables and starchy food, with some protein and dairy.' },
+  lunchMission('leo', '⚽', 'Football fuel', 'In <b>Lunchbox</b>, pack a balanced lunch for <b>Leo</b>, who has football after school.', 'A sandwich counts as one starchy food. Leo needs one more, like pasta salad or rice cakes.'),
+  lunchMission('aisha', '🥕', 'Veggie lunch', 'In <b>Lunchbox</b>, pack a balanced lunch for <b>Aisha</b>, who is vegetarian.', 'Try an egg or hummus sandwich, and remember dairy.'),
+  lunchMission('maya', '🏫', 'Nut-free school', 'In <b>Lunchbox</b>, pack a balanced lunch for <b>Maya</b>, whose school is nut-free.', 'Watch out for the peanut butter sandwich!'),
+  lunchMission('ben', '🧀', 'No cheese please', 'In <b>Lunchbox</b>, pack a balanced lunch for <b>Ben</b>, who doesn\'t like cheese.', 'Yoghurt and milk are dairy too.'),
+  { id: 'labels', icon: '🏷️', title: 'Label detective', task: 'In <b>Labels</b>, answer all <b>12</b> questions about the food labels.',
+    hint: 'Labels show what is in 100 g. For 200 g, double it. For 50 g, halve it.',
+    setup() { state.view = 'labels'; state.labels = { set: 'yog', answers: {} }; },
+    on: (ev, d) => ev === 'label' && d.all,
+    win: () => 'You can read food labels! Comparing labels helps you choose foods with <b>less sugar</b> and <b>more fibre</b>.' },
+  { id: 'jobs', icon: '🔋', title: 'Food power-ups', task: 'In <b>What is food for?</b>, put all 14 foods with a job they do, with no more than <b>2 mistakes</b>.',
+    hint: 'Bread, rice and pasta give energy. Meat, fish, eggs and beans help you grow. Some foods can go in two boxes.',
+    setup() { state.view = 'jobs'; state.jobs = { placed: {}, sel: null, mistakes: 0, msg: null }; },
+    on: (ev, d) => ev === 'jobs' && d.mistakes <= 2,
+    win: () => 'Carbohydrates give energy, proteins help you grow and repair, fats store energy, vitamins and minerals keep you healthy, and fibre helps digestion. You need <b>all</b> of them!' },
+  { id: 'zoo', icon: '🦁', title: 'Zoo keeper', task: 'In <b>Feed the zoo</b>, give all <b>4 animals</b> a balanced diet.',
+    hint: 'Think about what each animal eats in the wild. And don\'t forget the water trough!',
+    setup() { state.view = 'zoo'; state.zoo = { animal: 'panda', bowl: { panda: [], lion: [], cow: [], bird: [] }, water: {}, fed: [], msg: null }; },
+    on: (ev, d) => ev === 'zoo' && got(d.animal, Object.keys(ANIMALS)),
+    win: () => 'Every animal needs a balanced diet, but what is balanced is <b>different</b> for each one: bamboo for a panda, meat for a lion, grass for a cow and seeds and insects for a garden bird.' }
+];
+function emit(ev, data = {}) {
+  if (state.mission == null) return;
+  const i = state.mission, m = MISSIONS[i];
+  if (!m.on(ev, data)) return;
+  stopMission();
+  if (!state.done.includes(m.id)) { state.done.push(m.id); store.set('bp-done', state.done); }
+  updateStars();
+  setTimeout(() => {
+    $('#winTitle').textContent = `${m.icon} Mission complete!`;
+    $('#winText').innerHTML = m.win(data);
+    $('#winNext').style.display = i < MISSIONS.length - 1 ? '' : 'none';
+    $('#winPractise').style.display = i < MISSIONS.length - 1 ? 'none' : '';
+    $('#winNext').dataset.i = i + 1;
+    $('#winModal').classList.remove('hidden'); confetti();
+  }, 1200);
+}
+function startMission(i) {
+  closeModals();
+  state.mission = i; state.mseen = new Set(); MISSIONS[i].setup();
+  location.hash = 'view=' + state.view;
+  const m = MISSIONS[i];
+  $('#bannerKicker').textContent = `Mission ${i + 1} of ${MISSIONS.length}: ${m.title}`;
+  $('#bannerText').innerHTML = m.task; $('#bannerHint').innerHTML = m.hint;
+  $('#bannerHint').classList.add('hidden'); $('#hintBtn').textContent = '💡 Show a hint';
+  $('#banner').classList.remove('hidden');
+  render();
+}
+function stopMission() { state.mission = null; $('#banner').classList.add('hidden'); fitBanner(); }
+// The banner sits over the top of the drawer, so the drawer's cards start below it
+function fitBanner() { $('#drawer').style.paddingTop = state.mission == null ? '' : `${$('#banner').offsetHeight + 18}px`; }
+function updateStars() { $('#starCount').textContent = `${state.done.length}/${MISSIONS.length} ⭐`; }
+function closeModals() { document.querySelectorAll('.modal').forEach(m => m.classList.add('hidden')); }
+function confetti() {
+  const em = ['⭐', '🌟', '🍎', '🥦', '🎉'];
+  for (let i = 0; i < 30; i++) {
+    const s = document.createElement('span'); s.className = 'confetti'; s.textContent = em[i % em.length];
+    s.style.left = `${Math.random() * 100}vw`; s.style.animationDuration = `${2 + Math.random() * 2}s`; s.style.animationDelay = `${Math.random() * .6}s`;
+    document.body.appendChild(s); setTimeout(() => s.remove(), 5000);
+  }
+}
+
+// ================= Views =================
+const chip = (kind, id, em, name, cls = '', dis = false) =>
+  `<button class="chip${cls}" data-kind="${kind}" data-id="${id}"${dis ? ' disabled' : ''}><span class="em">${picHTML(em)}</span>${name}</button>`;
+const saysCard = (s, who) => s ? `<div class="card says${s.ok ? ' good' : ''}"><h3>💬 ${who} says…</h3>${s.ok ? `<p>${s.text}</p>` : `<ul>${s.msgs.slice(0, 3).map(t => `<li>${t}</li>`).join('')}</ul>`}</div>` : '';
+const VIEWS = {
+  plate: {
+    label: '🍽️ <span class="tl">Plate builder</span>',
+    stage: () => PL.stage(),
+    after: () => PL.foods(),
+    drawer() {
+      const c = PL.counts(), full = state.plate.length >= MAXFOOD, meal = MEALS[state.meal];
+      const meals = Object.entries(MEALS).map(([id, m]) => `<button class="opt${id === state.meal ? ' on' : ''}" data-act="pmeal" data-m="${id}">${m[0]} ${m[1]}</button>`).join('');
+      const chips = meal[2].map(id => chip('plate', id, FOODS[id][0], FOODS[id][1], state.plate.includes(id) ? ' on' : '', full && !state.plate.includes(id))).join('');
+      // What Sam says goes at the top, so it is never scrolled out of sight
+      return `
+        ${saysCard(state.said, 'Sam')}
+        <div class="card"><h2>Plate builder</h2>
+          <p>Fill Sam's plate with <b>everything Sam eats in one day</b>. Tap a food to add it, or drag it on. It goes in its <b>food group's</b> part. Tap it again to take it off.</p>
+          <div class="stops mealtabs">${meals}</div>
+          <div class="shelf">${chips}</div>
+          <p class="muted">${state.plate.length} of ${MAXFOOD} spaces used.</p></div>
+        <div class="card"><h3>🥤 Choose a drink</h3><div class="stops">${Object.entries(DRINKS).map(([id, d]) =>
+          `<button class="opt${state.drink === id ? ' on' : ''}" data-act="pdrink" data-d="${id}">${d[0]} ${d[1]}</button>`).join('')}</div></div>
+        <div class="checkbar"><button class="btn go" data-act="pcheck"${state.plate.length ? '' : ' disabled'}>💬 Check with Sam</button></div>
+        <div class="card"><h3>👀 Show the day as…</h3><div class="stops">
+          <button class="opt${state.model === 'plate' ? ' on' : ''}" data-act="pmodel" data-m="plate">🍽️ A plate</button>
+          <button class="opt${state.model === 'pyramid' ? ' on' : ''}" data-act="pmodel" data-m="pyramid">🔺 A food pyramid</button></div>
+          <p class="muted">${state.model === 'pyramid' ? 'A <b>food pyramid</b> is another model. Eat most of the foods at the bottom, and least of the ones at the top. Notice that it puts starchy foods at the bottom, but the plate gives fruit and vegetables just as much room!' : 'The <b>plate</b> shows how much of each food group to eat. The bigger the part, the more of that group you need.'}</p></div>`;
+    }
+  },
+  lunch: {
+    label: '🥪 <span class="tl">Lunchbox</span>',
+    stage: () => LB.stage(),
+    drawer() {
+      const l = state.lunch, full = l.box.length >= LB.SPACES;
+      const briefs = Object.entries(LB.BRIEFS).map(([id, b]) => `<button class="opt${id === l.brief ? ' on' : ''}" data-act="lbrief" data-b="${id}">${b.em} ${b.name}${state.packed.includes(id) ? ' <span class="tick">✔</span>' : ''}</button>`).join('');
+      const items = Object.entries(LB.ITEMS).map(([id, it]) => chip('lunch', id, it[0], it[1], l.box.includes(id) ? ' on' : '', full && !l.box.includes(id))).join('');
+      const row = (title, set, key) => `<div class="swrow"><span>${title}</span><div class="stops">${Object.entries(set).map(([id, p]) =>
+        `<button class="opt sm${l.sw[key] === id ? ' on' : ''}" data-act="lsw" data-k="${key}" data-v="${id}"${l.box.includes('sandwich') ? ' disabled' : ''}>${picHTML(p[0])} ${p[1]}</button>`).join('')}</div></div>`;
+      return `
+        ${saysCard(l.said, LB.BRIEFS[l.brief].name)}
+        <div class="card"><h2>Lunchbox</h2>
+          <p>Pack a <b>balanced lunch</b> that fits in <b>5 spaces</b>. Read who it is for first!</p>
+          <div class="stops">${briefs}</div></div>
+        <div class="card"><h3>🥪 Make a sandwich</h3>
+          <p class="muted">A sandwich takes one space, but it counts for <b>more than one</b> food group.</p>
+          ${row('Bread', LB.BREAD, 'bread')}${row('Filling', LB.FILL, 'fill')}${row('Salad', LB.SALAD, 'salad')}
+          <div class="navrow" style="margin-top:6px">${l.box.includes('sandwich')
+            ? '<button class="btn" data-act="lremove" data-id="sandwich">↩ Take the sandwich out</button>'
+            : `<button class="btn" data-act="lsandwich"${full ? ' disabled' : ''}>➕ Put the sandwich in</button>`}</div></div>
+        <div class="card"><h3>🧺 Other food</h3><div class="shelf">${items}</div></div>
+        <div class="card"><h3>🥤 Choose a drink</h3><div class="stops">${Object.entries(LB.DRINKS).map(([id, d]) =>
+          `<button class="opt${l.drink === id ? ' on' : ''}" data-act="ldrink" data-d="${id}">${d[0]} ${d[1]}</button>`).join('')}</div></div>
+        <div class="checkbar"><button class="btn go" data-act="lcheck"${l.box.length ? '' : ' disabled'}>💬 Check the lunchbox</button></div>`;
+    }
+  },
+  labels: {
+    label: '🏷️ <span class="tl">Labels</span>',
+    stage: () => LBL.stage(),
+    drawer: () => LBL.drawer()
+  },
+  jobs: {
+    label: '🔋 <span class="tl">What is food for?</span>',
+    stage: () => JB.stage(),
+    drawer() {
+      const j = state.jobs, left = JORDER.filter(f => !j.placed[f]);
+      return `
+        <div class="card"><h2>What is food for?</h2>
+          <p>Different foods do different <b>jobs</b> in your body. Tap a food, then tap a job it does. You can drag it there too. Some foods do <b>two</b> jobs!</p>
+          ${left.length ? `<div class="shelf">${left.map(f => chip('job', f, FOODS[f][0], FOODS[f][1], j.sel === f ? ' sel' : '')).join('')}</div>`
+            : '<p class="job">🎉 All the foods are in a right place!</p>'}
+          ${j.msg ? `<p class="spot"><span>${j.msg[0]}</span> ${j.msg[1]}</p>` : ''}
+          <p class="muted">Mistakes: ${j.mistakes}</p></div>
+        ${left.length ? '' : `<div class="card"><h3>💡 One more thing you need</h3>
+          <p><b>Water</b> helps every part of your body work. You need to drink every day.</p>
+          <p>A <b>balanced diet</b> gives you all of these, in the right amounts.</p>
+          <div class="navrow"><button class="btn" data-act="jreset">↺ Start again</button></div></div>`}`;
+    }
+  },
+  zoo: {
+    label: '🦁 <span class="tl">Feed the zoo</span>',
+    stage: () => ZOO.stage(),
+    drawer() {
+      const z = state.zoo, A = ANIMALS[z.animal], bowl = z.bowl[z.animal], wet = z.water[z.animal];
+      const animals = Object.entries(ANIMALS).map(([id, a]) => `<button class="opt${id === z.animal ? ' on' : ''}" data-act="zanimal" data-a="${id}">${a.em} ${a.name}${z.fed.includes(id) ? ' <span class="tick">✔</span>' : ''}</button>`).join('');
+      const chips = Object.entries(PANTRY).map(([id, p]) => chip('zoo', id, p[0], p[1], bowl.includes(id) ? ' on' : '')).join('');
+      return `
+        <div class="card"><h2>Feed the zoo</h2>
+          <p>Animals need a balanced diet too. Fill each animal's bowl with the <b>right foods</b> for it, then check.</p>
+          <div class="stops">${animals}</div></div>
+        <div class="card"><h3>${A.em} Food for the ${A.name.toLowerCase()}</h3>
+          ${z.msg ? `<p class="${z.msg[0] === '🎉' ? 'job' : 'spot'}"><span>${z.msg[0]}</span> ${z.msg[1]}</p>` : ''}
+          <div class="shelf">${chips}</div>
+          <div class="navrow" style="margin-top:8px"><button class="btn${wet ? ' active' : ''}" data-act="zwater">💧 ${wet ? 'Trough is full' : 'Fill the water trough'}</button></div>
+          <div class="navrow" style="margin-top:8px"><button class="btn go" data-act="zcheck"${bowl.length ? '' : ' disabled'}>✔ Check</button></div></div>
+        ${z.fed.length === 4 ? '<div class="card"><h3>🌍 What did you find out?</h3><p>Every animal needs a <b>balanced diet</b> to be healthy, but a balanced diet is <b>different</b> for each animal. Humans eat both plants and animals, so our balanced diet has lots of different foods.</p></div>' : ''}`;
+    }
+  },
+  help: {
+    label: 'Help',
+    stage: () => PL.stage(),
+    after: () => PL.foods(),
+    drawer() {
+      return `<div class="card"><h2>Help</h2>
+        <p><b>🍽️ Plate builder</b>: fill Sam's plate with a whole day's food, choose a drink, then check with Sam. Each food goes in its food group's part of the plate. Point at a food on the plate, or tap it, to see what it gives you. You can also see the day as a food pyramid.</p>
+        <p><b>🥪 Lunchbox</b>: pack a balanced lunch for a child with a special need.</p>
+        <p><b>🏷️ Labels</b>: be a label detective. Compare the labels on four foods, and work out how much is in a whole pack.</p>
+        <p><b>🔋 What is food for?</b>: match foods to the jobs they do in your body.</p>
+        <p><b>🦁 Feed the zoo</b>: give each animal the right foods for a balanced diet.</p>
+        <p><b>🚀 Missions</b>: challenges that use all the tabs. Win a star for each one!</p>
+        <p><b>🤔 Real life?</b>: how this model is different from real food and diets.</p></div>
+        <div class="card"><h3>🎯 What you are learning</h3>
+          <p><b>5Bp.01</b> Know that animals, including humans, need an adequate, balanced diet in order to be healthy.</p>
+          <p class="muted"><b>Also:</b> <b>5TWSm.01</b> Know that a model presents an object, process or idea in a way that shows some of the important features.</p></div>
+        <div class="navrow"><a class="btn go" href="../practice/index.html#diet">✏️ Practise this</a></div>`;
+    }
+  }
+};
+
+function render() {
+  const v = VIEWS[state.view];
+  // Help is the ❓ button at the end of the top bar, like the other tools, so it isn't one of the tabs
+  $('#helpBtn').classList.toggle('active', state.view === 'help');
+  $('#tabs').innerHTML = Object.entries(VIEWS).filter(([id]) => id !== 'help').map(([id, x]) =>
+    `<button class="btn${id === state.view ? ' active' : ''}" data-act="view" data-view="${id}" aria-label="${x.label.replace(/<[^>]+>/g, '').replace(/^\S+ /, '')}">${x.label}</button>`).join('');
+  const keep = $('#drawer').scrollTop, same = render.last === state.view;
+  $('#stage').innerHTML = v.stage();
+  $('#drawer').innerHTML = v.drawer();
+  if (v.after) v.after();
+  // Staying on the same tab keeps the drawer where it was scrolled to
+  if (same) $('#drawer').scrollTop = keep;
+  render.last = state.view;
+  fitBanner();
+}
+
+// ================= Actions =================
+const ACTIONS = {
+  view(el) { state.view = el.dataset.view; location.hash = 'view=' + state.view; render(); },
+  premove(el) { PL.remove(el.dataset.id); },
+  pinfo(el) { PL.tip(el.dataset.id, el, true); },
+  pmeal(el) { state.meal = el.dataset.m; render(); },
+  pmodel(el) { state.model = el.dataset.m; render(); },
+  pdrink(el) { state.drink = state.drink === el.dataset.d ? null : el.dataset.d; state.said = null; render(); },
+  pcheck() { PL.check(); },
+  lbrief(el) { state.lunch = freshLunch(el.dataset.b); render(); },
+  lsw(el) { state.lunch.sw[el.dataset.k] = el.dataset.v; state.lunch.said = null; render(); },
+  lsandwich() { LB.sandwich(); },
+  lremove(el) { LB.remove(el.dataset.id); },
+  ldrink(el) { const l = state.lunch; l.drink = l.drink === el.dataset.d ? null : el.dataset.d; l.said = null; render(); },
+  lcheck() { LB.check(); },
+  lset(el) { state.labels.set = el.dataset.s; render(); },
+  lans(el) { LBL.answer(+el.dataset.q, +el.dataset.k); },
+  jdrop(el) { if (state.jobs.sel) JB.put(state.jobs.sel, el.dataset.j); },
+  jreset() { state.jobs = { placed: {}, sel: null, mistakes: 0, msg: null }; render(); },
+  zanimal(el) { state.zoo.animal = el.dataset.a; state.zoo.msg = null; render(); },
+  zwater() { const z = state.zoo; z.water[z.animal] = !z.water[z.animal]; z.msg = null; render(); },
+  zcheck() { ZOO.check(); },
+  missions() {
+    $('#missionList').innerHTML = MISSIONS.map((m, i) => `<button class="mission-item${state.done.includes(m.id) ? ' done' : ''}" data-act="startMission" data-i="${i}">
+      <span class="em">${m.icon}</span><span class="t">${i + 1}. ${m.title}</span><span class="star">⭐</span></button>`).join('');
+    $('#missionsModal').classList.remove('hidden');
+  },
+  startMission(el) { startMission(+el.dataset.i); },
+  nextMission(el) { startMission(+el.dataset.i); },
+  stopMission() { stopMission(); },
+  hint() {
+    const h = $('#bannerHint');
+    h.classList.toggle('hidden');
+    $('#hintBtn').textContent = h.classList.contains('hidden') ? '💡 Show a hint' : '💡 Hide the hint';
+    fitBanner();
+  },
+  resetStars() { state.done = []; store.set('bp-done', []); updateStars(); ACTIONS.missions(); },
+  closeModals() { closeModals(); },
+  model() { $('#modelModal').classList.remove('hidden'); }
+};
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-act]');
+  if (el && ACTIONS[el.dataset.act]) ACTIONS[el.dataset.act](el);
+});
+// The food card on the plate: a mouse pointing at a food shows it; a tap anywhere else closes it
+document.addEventListener('pointerover', e => {
+  const f = e.target.closest('#foods .food');
+  if (f && e.pointerType === 'mouse' && !$('#ftip')?.dataset.pinned) PL.tip(f.dataset.id, f, false);
+});
+document.addEventListener('pointerout', e => { if (e.target.closest('#foods .food') && e.pointerType === 'mouse') PL.hideTip(false); });
+document.addEventListener('click', e => { if (!e.target.closest('#foods .food, #ftip')) PL.hideTip(true); }, true);
+// Tapping the dark background or pressing Escape closes a pop-up
+document.querySelectorAll('.modal').forEach(m => m.addEventListener('click', e => { if (e.target === m) closeModals(); }));
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModals(); });
+addEventListener('resize', fitBanner);
+
+// ================= Start =================
+// Test hooks: #view=plate&foods=apple,toast&drink=water&model=pyramid&check=1 fills the plate; #view=jobs&placed=toast,egg places foods;
+// #view=lunch&brief=ben&box=apple,yogNat&sandwich=brown,egg,lettuce&drink=water&check=1 packs a lunchbox;
+// #view=labels&set=drink opens a set of labels; #view=zoo&animal=lion&food=meat&water=1&check=1 fills a bowl; #mission=2 starts a mission
+const hp = new URLSearchParams(location.hash.slice(1));
+if (VIEWS[hp.get('view')]) state.view = hp.get('view');
+if (hp.has('foods')) state.plate = hp.get('foods').split(',').filter(id => FOODS[id]).slice(0, MAXFOOD);
+if (DRINKS[hp.get('drink')]) state.drink = hp.get('drink');
+if (hp.get('model') === 'pyramid') state.model = 'pyramid';
+if (MEALS[hp.get('meal')]) state.meal = hp.get('meal');
+if (hp.has('placed')) hp.get('placed').split(',').filter(f => JFOODS[f]).forEach(f => { state.jobs.placed[f] = JFOODS[f][0]; });
+if (ANIMALS[hp.get('animal')]) state.zoo.animal = hp.get('animal');
+if (hp.has('food')) state.zoo.bowl[state.zoo.animal] = hp.get('food').split(',').filter(f => PANTRY[f]);
+if (hp.has('water')) state.zoo.water[state.zoo.animal] = true;
+if (LB.BRIEFS[hp.get('brief')]) state.lunch = freshLunch(hp.get('brief'));
+if (LABELS[hp.get('set')]) state.labels.set = hp.get('set');
+if (hp.has('sandwich')) { const [bread, fill, salad] = hp.get('sandwich').split(','); Object.assign(state.lunch.sw, { bread, fill, salad: salad || 'none' }); state.lunch.box.push('sandwich'); }
+if (hp.has('box')) hp.get('box').split(',').filter(id => LB.ITEMS[id]).forEach(id => state.lunch.box.length < LB.SPACES && state.lunch.box.push(id));
+if (LB.DRINKS[hp.get('drink')] && state.view === 'lunch') state.lunch.drink = hp.get('drink');
+updateStars();
+if (MISSIONS[hp.get('mission')]) startMission(+hp.get('mission'));
+else render();
+if (hp.has('check')) { if (state.view === 'plate') PL.check(); if (state.view === 'zoo') ZOO.check(); if (state.view === 'lunch') LB.check(); }
+</script>
+</body>
+</html>

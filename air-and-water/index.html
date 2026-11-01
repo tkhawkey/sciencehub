@@ -1,0 +1,1677 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Air and Water</title>
+<meta name="description" content="Find out what air is made of: count 100 particles of air, then hunt for carbon dioxide in 10,000 – an interactive tool for Year 5.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ================= Shared look (matches Balanced Plate) ================= */
+  :root {
+    --ink: #1d2340; --muted: #5b6386; --soft: #eef2ff;
+    --yellow: #ffc83d; --blue: #3d7bff; --coral: #ff5f6d; --green: #22b07d; --orange: #f0892e; --grey: #8a93ad;
+    --space: #070d24; --drawerW: 360px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: var(--space); color: var(--ink); font-family: 'Fredoka', system-ui, sans-serif; font-size: 17px; line-height: 1.35; -webkit-tap-highlight-color: transparent; }
+  body { display: flex; flex-direction: column; }
+  button, input, textarea { font: inherit; color: inherit; }
+  b { font-weight: 700; }
+  .btn { border: 0; border-radius: 14px; padding: 9px 14px; min-height: 44px; cursor: pointer; background: #fff; color: var(--ink); font-weight: 600; font-size: 16px; box-shadow: 0 3px 0 rgba(0,0,0,.18); }
+  .btn:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,.18); }
+  .btn.active { background: var(--yellow); }
+  .btn:focus-visible { outline: 3px solid var(--yellow); outline-offset: 2px; }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .btn.go { background: var(--green); color: #fff; font-size: 19px; flex: 1; }
+  .btn.primary { background: var(--green); color: #fff; }
+  a.btn { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
+  #drawer a.btn { color: #fff; }
+
+  /* ---------- Top bar ---------- */
+  .topbar { flex: none; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 8px 10px; background: rgba(7,13,36,.95); z-index: 15; }
+  .brand { color: #fff; font-size: 21px; font-weight: 700; margin-right: auto; white-space: nowrap; }
+  .hub-link { flex: none; display: grid; place-items: center; width: 38px; height: 38px; border-radius: 12px; text-decoration: none; font-size: 20px; background: rgba(255,255,255,.14); box-shadow: 0 3px 0 rgba(0,0,0,.25); transition: background .15s, transform .08s; }
+  .hub-link:hover { background: rgba(255,255,255,.26); }
+  .hub-link:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,.25); }
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+  .btn.missions { background: var(--blue); color: #fff; }
+  .tabs .btn { padding: 9px 11px; }
+  @media (max-width: 1399px) {
+    .topbar .long { display: none; }
+    .brand { font-size: 18px; }
+    .topbar, .tabs { gap: 4px; }
+    .tabs .btn { padding: 9px 8px; font-size: 14.5px; }
+  }
+
+  /* ---------- Main area: stage on the left, drawer on the right ---------- */
+  main { position: relative; flex: 1; min-height: 0; }
+  #stage { position: absolute; top: 0; bottom: 0; left: 0; right: var(--drawerW); overflow: hidden; background: #e6efff; display: flex; align-items: center; justify-content: center; }
+  #stage > svg { width: 100%; height: 100%; display: block; touch-action: none; user-select: none; -webkit-user-select: none; }
+  #drawer { position: absolute; top: 0; right: 0; bottom: 0; width: var(--drawerW); background: #dfe6ff; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+  .card { background: #fff; border-radius: 16px; padding: 12px 14px; }
+  .card h2 { margin: 0 0 4px; font-size: 21px; line-height: 1.2; }
+  .card h3 { margin: 0 0 6px; font-size: 17px; }
+  .card p { margin: 4px 0; }
+  .muted { color: var(--muted); font-size: 14.5px; }
+  .term { background: #fff3c4; border-radius: 6px; padding: 0 4px; font-weight: 600; }
+  .navrow { display: flex; gap: 8px; flex-wrap: wrap; }
+  .opt { border: 2px solid #d3dbf7; background: #fff; border-radius: 12px; padding: 6px 10px; min-height: 44px; font-weight: 600; font-size: 15px; cursor: pointer; }
+  .opt.on { background: var(--yellow); border-color: #e0a800; }
+  .opt.wrong { background: #ffe0e3; border-color: var(--coral); }
+  .opt.done, .opt.done:disabled { background: #c9f2df; border-color: var(--green); opacity: 1; }
+  .opt:disabled { opacity: .45; cursor: default; }
+  .stops { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tick { color: var(--green); }
+  .spot { background: #fff3c4; border-radius: 12px; padding: 8px 10px; margin-top: 6px !important; }
+  .job { font-size: 16px; background: #c9f2df; border-radius: 12px; padding: 8px 10px; }
+  .says { border: 3px solid var(--yellow); }
+  .says.good { border-color: var(--green); background: #effbf5; }
+  .says ul { margin: 6px 0 0; padding-left: 20px; }
+  .says li { margin: 4px 0; }
+  /* Check stays in reach at the bottom of the drawer */
+  .checkbar { position: sticky; bottom: -10px; z-index: 2; display: flex; margin: 0 -10px; padding: 6px 10px 10px; background: #dfe6ff; }
+  .sw { width: 18px; height: 18px; border-radius: 50%; flex: none; display: inline-block; }
+
+  /* ---------- What is air? ---------- */
+  .svgtext { font-family: 'Fredoka', system-ui, sans-serif; }
+  .glabel { font-family: 'Fredoka', system-ui, sans-serif; font-size: 19px; font-weight: 700; fill: var(--ink); }
+  .gsmall { font-family: 'Fredoka', system-ui, sans-serif; font-size: 15px; font-weight: 600; fill: var(--muted); }
+  .countrow { display: grid; grid-template-columns: 1fr 86px; align-items: center; gap: 6px; margin: 6px 0; }
+  .countrow label { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+  .numin { width: 86px; min-height: 44px; font-size: 20px; text-align: center; border: 2px solid #c3cdf2; border-radius: 12px; padding: 4px; background: #fff; }
+  .numin:focus { outline: 3px solid var(--yellow); border-color: #e0a800; }
+  .numin.ok { border-color: var(--green); background: #effbf5; }
+  .numin.bad { border-color: var(--coral); background: #fff2f3; }
+  textarea.reason { width: 100%; min-height: 64px; border: 2px solid #c3cdf2; border-radius: 12px; padding: 6px 8px; font-size: 15.5px; resize: vertical; }
+  .found { font-size: 26px; letter-spacing: 4px; }
+  .gtable { width: 100%; border-collapse: collapse; font-size: 15.5px; margin: 6px 0; }
+  .gtable th { text-align: left; font-size: 13.5px; color: var(--muted); padding: 2px 4px; }
+  .gtable td { border-top: 1px solid #e1e6f5; padding: 5px 4px; }
+  .gtable td:not(:first-child), .gtable th:not(:first-child) { text-align: right; }
+  .gtable tr.co2 td { background: #fff3c4; font-weight: 700; }
+  .bars { width: 100%; height: auto; display: block; }
+
+  /* ---------- Chips (tap, or drag onto the picture) ---------- */
+  .shelf { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+  .chip { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; border: 2px solid #d3dbf7; background: #fff; border-radius: 12px; padding: 4px 2px; min-height: 62px; font-weight: 600; font-size: 13px; line-height: 1.1; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; text-align: center; }
+  .chip .em { font-size: 26px; line-height: 1; }
+  .chip.on { background: #c9f2df; border-color: var(--green); }
+  .chip.sel { background: var(--yellow); border-color: #e0a800; }
+  .chip-ghost { position: fixed; z-index: 30; pointer-events: none; transform: translate(-50%, -50%) rotate(-3deg); box-shadow: 0 8px 18px rgba(0,0,0,.3); }
+  .ic { width: 28px; height: 28px; display: block; }
+
+  /* ---------- Layers of the atmosphere ---------- */
+  .lname { font-family: 'Fredoka', system-ui, sans-serif; font-size: 18px; font-weight: 700; paint-order: stroke; stroke-width: 4px; stroke-linejoin: round; }
+  .ltick { font-family: 'Fredoka', system-ui, sans-serif; font-size: 12.5px; fill: var(--muted); }
+  .ltick.b { font-weight: 700; fill: var(--ink); }
+  .iname { font-family: 'Fredoka', system-ui, sans-serif; font-size: 12px; font-weight: 600; fill: var(--ink); paint-order: stroke; stroke: #fff; stroke-width: 4px; stroke-linejoin: round; }
+  .pitem { cursor: grab; }
+  .pitem > text:first-child, .pitem > use { filter: drop-shadow(0 1px 2px rgba(0,0,0,.55)); }
+  .lay-top { position: absolute; top: 8px; left: 10px; right: 10px; display: flex; gap: 8px; align-items: flex-start; flex-wrap: wrap; pointer-events: none; z-index: 2; }
+  .scaletag { background: var(--coral); color: #fff; font-weight: 700; border-radius: 10px; padding: 5px 10px; font-size: 15px; white-space: nowrap; }
+  .scaletag.true { background: var(--green); }
+  .readout { background: #fff; border-radius: 12px; padding: 5px 10px; font-size: 15px; line-height: 1.3; box-shadow: 0 3px 8px rgba(0,0,0,.12); }
+  .layerbtns .opt { padding: 4px 8px; font-size: 14px; }
+  .facts { margin: 6px 0 0; padding-left: 20px; } .facts li { margin: 3px 0; }
+  @media (max-width: 760px) { .readout, .scaletag { font-size: 13px; padding: 3px 7px; } .lname { font-size: 14px; } }
+
+  /* ---------- Around the Earth ---------- */
+  .lpop { position: absolute; z-index: 5; width: 290px; background: #fff; border: 3px solid var(--yellow); border-radius: 14px; padding: 9px 12px; box-shadow: 0 6px 18px rgba(0,0,0,.3); font-size: 15px; line-height: 1.3; pointer-events: none; }
+  .lpop[data-pinned="1"] { pointer-events: auto; padding-right: 40px; }
+  .lpop.hidden { display: none; }
+  .lpop h3 { margin: 0; font-size: 18px; display: flex; align-items: center; gap: 8px; }
+  .lpop p { margin: 4px 0 0; }
+  .lpop .close { position: absolute; top: 6px; right: 6px; border: 0; background: var(--soft); border-radius: 50%; width: 32px; height: 32px; cursor: pointer; }
+  @media (max-width: 760px) { .lpop { width: 250px; font-size: 13.5px; } }
+
+  /* ---------- Water cycle ---------- */
+  .wlab { font-family: 'Fredoka', system-ui, sans-serif; font-size: 16px; font-weight: 700; }
+  .wsmall { font-family: 'Fredoka', system-ui, sans-serif; font-size: 13px; font-weight: 600; fill: var(--ink); paint-order: stroke; stroke: #fff; stroke-width: 4px; stroke-linejoin: round; }
+  /* One gentle, steady movement for each part: vapour rising, rain falling, rivers flowing downhill */
+  .vap { stroke-dasharray: 6 6; animation: vap 1s linear infinite; }
+  @keyframes vap { to { stroke-dashoffset: -12; } }
+  .flow { stroke-dasharray: 5 13; animation: flow 1.2s linear infinite; }
+  @keyframes flow { to { stroke-dashoffset: -18; } }
+  .drop { animation: drop 1.1s linear infinite; }
+  .flake { animation: drop 3s linear infinite; }
+  @keyframes drop { from { transform: translateY(0); opacity: 0; } 15% { opacity: 1; } to { transform: translateY(var(--d)); opacity: .3; } }
+  .slot { cursor: pointer; }
+  .slot.wrong rect { animation: shake .4s; }
+  @keyframes shake { 20%, 60% { transform: translateX(-6px); } 40%, 80% { transform: translateX(6px); } }
+  @media (prefers-reduced-motion: reduce) { .vap, .flow, .drop, .flake { animation: none; } }
+  .wq .opt { display: block; width: 100%; text-align: left; margin-top: 6px; }
+  .wdone { list-style: none; padding: 0; margin: 6px 0 0; display: grid; gap: 4px; font-size: 15px; }
+  @media (max-width: 760px) { .wlab { font-size: 13px; } .wsmall { font-size: 11px; } }
+
+  /* ---------- Is it pure? ---------- */
+  .prow { display: grid; grid-template-columns: 1fr auto auto; gap: 6px; align-items: center; margin: 6px 0; font-weight: 600; font-size: 15px; }
+  .prow .opt { padding: 4px 8px; font-size: 14px; }
+  .ptable td:nth-child(2) { white-space: nowrap; }
+
+  /* ---------- River town ---------- */
+  .meter { flex: none; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; background: #fff; border-radius: 12px; padding: 4px 10px; font-size: 15px; font-weight: 600; box-shadow: 0 3px 8px rgba(0,0,0,.12); }
+  .meter .bars { display: inline-flex; gap: 2px; }
+  .meter .bars i { width: 10px; height: 14px; border-radius: 3px; background: #e1e6f5; }
+  .place { cursor: pointer; }
+  .fixrow { display: grid; grid-template-columns: 34px 1fr; gap: 8px; align-items: start; padding: 8px 0; border-top: 1px solid #e1e6f5; }
+  .fixrow:first-of-type { border-top: 0; }
+  .fixrow .em { font-size: 26px; line-height: 1; }
+  .fixrow .btn { margin-top: 6px; font-size: 15px; min-height: 40px; }
+  .defn { background: #eef2ff; border-radius: 12px; padding: 8px 10px; font-size: 15px; }
+  @media (max-width: 760px) { .meter { font-size: 12px; padding: 3px 7px; } .meter .bars i { width: 7px; height: 11px; } }
+
+  /* ---------- Missions and pop-ups ---------- */
+  .banner { position: absolute; top: 10px; right: 10px; width: calc(var(--drawerW) - 20px); z-index: 6; background: #fff; border: 3px solid var(--yellow); border-radius: 16px; padding: 9px 44px 9px 14px; box-shadow: 0 6px 16px rgba(0,0,0,.18); }
+  .banner.hidden { display: none; }
+  .banner .kicker { font-size: 12.5px; font-weight: 700; color: var(--blue); text-transform: uppercase; letter-spacing: .04em; }
+  .banner .close { position: absolute; top: 6px; right: 6px; border: 0; background: var(--soft); border-radius: 50%; width: 32px; height: 32px; cursor: pointer; }
+  .banner .hint { margin-top: 4px; color: var(--muted); font-size: 15px; }
+  .banner .hint.hidden { display: none; }
+  .linkbtn { border: 0; background: none; color: var(--blue); font-weight: 600; cursor: pointer; padding: 4px 0; font-size: 15px; min-height: 32px; }
+  .modal-box ul.icons { list-style: none; padding: 0; margin: 0 0 14px; }
+  .icons li { display: flex; gap: 10px; padding: 6px 0; line-height: 1.35; }
+  .icons .em { font-size: 24px; width: 32px; flex: none; text-align: center; }
+  .modal { position: fixed; inset: 0; background: rgba(5,10,30,.6); display: flex; align-items: center; justify-content: center; z-index: 20; padding: 16px; }
+  .modal.hidden { display: none; }
+  .modal-box { background: #fff; border-radius: 24px; padding: 20px; width: min(580px, 100%); max-height: calc(100vh - 32px); overflow-y: auto; }
+  .modal-box h2 { margin: 0 0 8px; font-size: 25px; }
+  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+  .mission-list { display: grid; gap: 8px; margin-bottom: 14px; }
+  .mission-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; min-height: 52px; border-radius: 16px; background: var(--soft); border: 0; text-align: left; cursor: pointer; font-size: 16px; }
+  .mission-item .em { font-size: 25px; } .mission-item .t { flex: 1; font-weight: 600; }
+  .mission-item .star { font-size: 21px; filter: grayscale(1); opacity: .35; }
+  .mission-item.done .star { filter: none; opacity: 1; }
+  .win-emoji { font-size: 56px; text-align: center; }
+  .win-text { font-size: 17.5px; line-height: 1.5; margin-bottom: 14px; }
+  .confetti { position: fixed; top: -40px; font-size: 26px; z-index: 40; pointer-events: none; animation: fall linear forwards; }
+  @keyframes fall { to { transform: translateY(110vh) rotate(540deg); } }
+
+  /* ---------- Narrow screens: stage on top, drawer below ---------- */
+  @media (max-width: 760px) {
+    :root { --drawerW: 0px; }
+    #stage { bottom: 42%; right: 0; }
+    #drawer { top: 58%; width: 100%; }
+    .banner { top: calc(58% + 8px); left: 8px; right: 8px; width: auto; }
+    .brand { font-size: 18px; }
+    .tl { display: none; }
+  }
+</style>
+</head>
+<body>
+<!-- Drawn icons for things that have no emoji -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="ic-balloon" viewBox="0 0 64 64"><ellipse cx="32" cy="22" rx="17" ry="19" fill="#fff" stroke="#9aa6c7" stroke-width="3"/><path d="M32 41 V52" stroke="#5b6386" stroke-width="2"/><rect x="25" y="51" width="14" height="10" rx="2" fill="#f0892e" stroke="#a85a14" stroke-width="2"/></symbol>
+  <symbol id="ic-aurora" viewBox="0 0 64 64"><path d="M4 44 C14 14 22 14 26 40 C30 14 40 12 42 38 C46 16 56 16 60 40" fill="none" stroke="#3ee08f" stroke-width="7" stroke-linecap="round" opacity=".9"/><path d="M4 54 C14 30 22 30 26 52 C30 30 40 28 42 50 C46 32 56 32 60 52" fill="none" stroke="#b46cf0" stroke-width="5" stroke-linecap="round" opacity=".75"/></symbol>
+  <symbol id="ic-iss" viewBox="0 0 64 64"><rect x="2" y="14" width="16" height="36" fill="#3d5bd6" stroke="#1d2a7a" stroke-width="2"/><rect x="46" y="14" width="16" height="36" fill="#3d5bd6" stroke="#1d2a7a" stroke-width="2"/><path d="M18 32 H46" stroke="#8a93ad" stroke-width="4"/><rect x="24" y="24" width="16" height="16" rx="3" fill="#e9ecf5" stroke="#8a93ad" stroke-width="2"/><path d="M10 14 V50 M54 14 V50" stroke="#1d2a7a" stroke-width="1.5"/></symbol>
+  <symbol id="ic-ozone" viewBox="0 0 64 64"><path d="M4 22 Q18 14 32 22 T60 22" fill="none" stroke="#f0892e" stroke-width="6" stroke-linecap="round"/><path d="M4 34 Q18 26 32 34 T60 34" fill="none" stroke="#ffc83d" stroke-width="6" stroke-linecap="round"/><path d="M4 46 Q18 38 32 46 T60 46" fill="none" stroke="#f0892e" stroke-width="6" stroke-linecap="round"/></symbol>
+</svg>
+<div class="topbar">
+  <a class="hub-link" href="../index.html" title="Back to the Science Hub" aria-label="Back to the Science Hub">🏠</a>
+  <div class="brand">💨 Air and Water</div>
+  <div class="tabs" id="tabs"></div>
+  <button class="btn missions" data-act="missions" title="Missions">🚀 <span class="long">Missions </span><span id="starCount"></span></button>
+  <button class="btn" data-act="model" title="How is this model different from real life?">🤔<span class="long"> Real life?</span></button>
+  <button class="btn" id="helpBtn" data-act="view" data-view="help" aria-label="How to use">❓</button>
+</div>
+<main>
+  <div id="stage"></div>
+  <div id="drawer"></div>
+  <div id="lpop" class="lpop hidden" role="dialog" aria-label="About this layer"></div>
+  <div id="banner" class="banner hidden" role="status">
+    <div class="kicker" id="bannerKicker"></div>
+    <div id="bannerText"></div>
+    <button class="linkbtn" data-act="hint" id="hintBtn">💡 Show a hint</button>
+    <div class="hint hidden" id="bannerHint"></div>
+    <button class="close" data-act="stopMission" aria-label="Stop this mission">✖</button>
+  </div>
+</main>
+<div id="missionsModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="missionsTitle">
+  <div class="modal-box">
+    <h2 id="missionsTitle">🚀 Missions</h2>
+    <div class="mission-list" id="missionList"></div>
+    <div class="modal-actions"><button class="btn" data-act="resetStars">Reset stars</button><button class="btn primary" data-act="closeModals">Close</button></div>
+  </div>
+</div>
+<div id="modelModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modelTitle">
+  <div class="modal-box">
+    <h2 id="modelTitle">🤔 How is this model different from real life?</h2>
+    <p style="margin-top:0">A <span class="term">model</span> shows some important features of something real – but not everything.</p>
+    <ul class="icons">
+      <li><span class="em">🔬</span><span>Real air particles are <b>far too small to see</b>, even with a microscope. One breath of air holds billions and billions of them, not 100 or 10,000.</span></li>
+      <li><span class="em">💨</span><span>Real air particles are <b>always moving</b> very fast, bumping into each other, with lots of <b>empty space</b> between them. Here they stand still in neat rows so that you can count them.</span></li>
+      <li><span class="em">🎨</span><span>Real particles have <b>no colours</b>. Air is see-through! The colours are only here to show which gas is which.</span></li>
+      <li><span class="em">💧</span><span>Real air also has some <b>water vapour</b> in it. The amount changes with the weather, so it isn't shown here. This is <b>dry</b> air.</span></li>
+      <li><span class="em">📏</span><span>In the <b>Not to scale</b> view of the layers, each layer is stretched or squashed so that they all fit, and the Earth is drawn much more curved than it really is. Switch to <b>To scale</b> to see how thin the lower layers really are, and how gently the real Earth curves.</span></li>
+      <li><span class="em">🌐</span><span>The layers have no sharp edges, and their heights change from place to place. The troposphere is about 16 km deep over the equator, but only about 8 km over the poles. The heights here are typical values.</span></li>
+      <li><span class="em">🌫️</span><span>The atmosphere has <b>no sharp top</b>: the air just gets thinner and thinner until it fades into space.</span></li>
+      <li><span class="em">🌡️</span><span>The temperatures are typical too. Real ones change with the place, the season and the Sun.</span></li>
+      <li><span class="em">🌧️</span><span>In the <b>water cycle</b> picture, real <b>water vapour</b> is invisible, so it is only shown by faint arrows. The real water cycle is much slower: water can stay in the sea, in ice or underground for a very long time.</span></li>
+      <li><span class="em">🥤</span><span>The <b>water cycle in a cup</b> is a model of a model! In a real cup, the drops take a few minutes to form. Ask an adult to pour the warm water.</span></li>
+      <li><span class="em">⛰️</span><span>The mountain, the clouds and the sea are <b>not to scale</b>. Real clouds can form anywhere that air rises and cools, and rain falls on the sea and the lowlands too. Plants also give off water vapour, which isn't shown.</span></li>
+      <li><span class="em">🧪</span><span>In <b>Is it pure?</b>, the amounts are for <b>1 litre</b> of each water. In a classroom you would only evaporate a small amount, so there would be much less left. Real amounts change from place to place, and from one brand of mineral water to another.</span></li>
+      <li><span class="em">🏰</span><span><b>Devín</b> is a real place, but the farm, factory and rubbish tip in the picture are <b>made up</b>. Real towns on the Danube have water treatment works and laws that limit pollution. Real pollution is often <b>invisible</b>, and fixing it takes time and money. Fixes reduce pollution a lot, but rarely stop all of it.</span></li>
+      <li><span class="em">📈</span><span>The numbers are rounded. The amount of <b>carbon dioxide</b> in the air is slowly going up, because people burn fuels like coal, oil and gas.</span></li>
+    </ul>
+    <div class="modal-actions"><button class="btn primary" data-act="closeModals">Got it!</button></div>
+  </div>
+</div>
+<div id="winModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="winTitle">
+  <div class="modal-box">
+    <div class="win-emoji">⭐</div>
+    <h2 id="winTitle" style="text-align:center">Mission complete!</h2>
+    <div class="win-text" id="winText"></div>
+    <div class="modal-actions"><button class="btn" data-act="closeModals">Keep exploring</button><a class="btn primary" id="winPractise" href="../practice/index.html#air-water">✏️ Practise this</a><button class="btn primary" id="winNext" data-act="nextMission">Next mission ▶</button></div>
+  </div>
+</div>
+
+<script>
+// ================= Utilities =================
+const $ = (s, r = document) => r.querySelector(s);
+// Saved progress; private windows can block storage, so failures are ignored
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+};
+// A repeatable random number generator, so the same mix comes back for the same seed
+function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function shuffle(a, r) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+const fmt = n => n.toLocaleString('en-GB');
+// A smooth closed path through a list of [x, y] points
+const smooth = pts => pts.map((q, i) => { const n = pts[(i + 1) % pts.length], m = [(q[0] + n[0]) / 2, (q[1] + n[1]) / 2];
+  return (i ? '' : `M${((pts[pts.length - 1][0] + q[0]) / 2).toFixed(1)} ${((pts[pts.length - 1][1] + q[1]) / 2).toFixed(1)}`) + `Q${q[0].toFixed(1)} ${q[1].toFixed(1)} ${m[0].toFixed(1)} ${m[1].toFixed(1)}`; }).join('') + 'Z';
+// A picture: an emoji, or one of the drawn icons (ic-…) for things that have no emoji
+const isIc = em => em.startsWith('ic-');
+const picHTML = em => isIc(em) ? `<svg class="ic" viewBox="0 0 64 64" aria-hidden="true"><use href="#${em}"/></svg>` : em;
+const picSVG = (em, x, y, size) => isIc(em)
+  ? `<use href="#${em}" x="${(x - size * .55).toFixed(0)}" y="${(y - size * .55).toFixed(0)}" width="${(size * 1.1).toFixed(0)}" height="${(size * 1.1).toFixed(0)}"/>`
+  : `<text x="${x.toFixed(0)}" y="${(y + size * .36).toFixed(0)}" text-anchor="middle" style="font-size:${size}px">${em}</text>`;
+
+// ================= Air =================
+// Colours follow the ones scientists use in molecule models: nitrogen blue, oxygen red, carbon black.
+const GAS = {
+  n: { name: 'Nitrogen',       c: '#3d7bff' },
+  o: { name: 'Oxygen',         c: '#ff5f6d' },
+  x: { name: 'Other gases',    c: '#b3bacd' },
+  c: { name: 'Carbon dioxide', c: '#1d2340' }
+};
+// Dry air: in 10,000 particles there are 7,808 nitrogen, 2,095 oxygen, 93 other (mostly argon) and 4 carbon dioxide.
+// In 100, carbon dioxide rounds to nothing, so the 1 "other" stands for argon and everything else.
+const MIX = { 100: { n: 78, o: 21, x: 1 }, 10000: { n: 7808, o: 2095, x: 93, c: 4 } };
+const LENS = 8;   // the close-up shows 8 × 8 particles
+
+// The particles for one level. co2 lists where the carbon dioxide particles are, in order.
+const arrange = (() => {
+  const cache = {};
+  return (level, seed, sorted) => {
+    const key = `${level}-${seed}-${sorted}`;
+    if (cache[key]) return cache[key];
+    const side = Math.sqrt(level), list = [];
+    for (const [g, k] of Object.entries(MIX[level])) for (let i = 0; i < k; i++) list.push(g);
+    let types = list, co2 = [];
+    if (sorted) co2 = list.map((g, i) => g === 'c' ? i : -1).filter(i => i >= 0);
+    else if (level === 100) types = shuffle(list.slice(), rng(seed));
+    else {
+      // Carbon dioxide is spread out and kept away from the edges, so each one is a separate find
+      const r = rng(seed), rest = shuffle(list.filter(g => g !== 'c'), r);
+      while (co2.length < MIX[level].c) {
+        const x = 5 + Math.floor(r() * (side - 10)), y = 5 + Math.floor(r() * (side - 10));
+        if (co2.every(i => Math.hypot(i % side - x, Math.floor(i / side) - y) > 22)) co2.push(y * side + x);
+      }
+      co2.sort((a, b) => a - b);
+      types = []; let k = 0;
+      for (let i = 0; i < level; i++) types.push(co2.includes(i) ? 'c' : rest[k++]);
+    }
+    return cache[key] = { types, co2, side };
+  };
+})();
+
+// ================= State =================
+const freshAir = () => ({ level: 100, seed: 3, sorted: false, pred: null, reason: '', predSaved: false,
+  counts: { n: '', o: '', x: '' }, tries: 0, msg: null, counted: false,
+  lens: [46, 46], found: [], tap: null, pct: null, pctWrong: [] });
+const freshLayers = () => ({ scale: false, sel: 'tropo', chip: null, placed: {}, fx: {}, res: {}, tries: {}, said: null, probe: 5 });
+const freshWater = () => ({ mode: 'step', step: 0, wrong: [], placed: {}, chip: null, said: null, cold: false, cup: 0, well: '', diff: '', ideas: false });
+const freshPure = () => ({ pred: {}, reason: '', heated: false, ans: {}, wrong: {} });
+const freshTown = () => ({ mode: 'spot', open: null, answered: {}, wrong: {}, fixed: {} });
+const freshEarth = () => ({ hover: null, sel: null, seen: [] });
+const state = { view: 'air', air: freshAir(), earth: freshEarth(), layers: freshLayers(), water: freshWater(), pure: freshPure(), town: freshTown(), mission: null, done: store.get('aw-done', []) };
+
+// ================= What is air? =================
+const AIR = {
+  // Where things go on the stage, in screen pixels (the SVG's viewBox matches the stage's size)
+  layout() {
+    const st = $('#stage'), w = st.clientWidth || 900, h = st.clientHeight || 600, big = state.air.level === 10000;
+    const top = 44, foot = 46;
+    if (!big) { const G = Math.max(120, Math.min(w - 40, h - top - foot - 10)); return { w, h, G, gx: (w - G) / 2, gy: top }; }
+    // Phones: the grid and the close-up share the width equally, with the key in two rows underneath
+    if (w < 560) { const G = Math.min((w - 36) / 2, h - top - 90); return { w, h, G, gx: 12, gy: top, L: G, lx: 24 + G, ly: top, narrow: true }; }
+    const G = Math.max(120, Math.min(h - top - foot - 10, (w - 50) * .6)), L = Math.min(G, w - G - 50, 340);
+    const gx = (w - G - L - 24) / 2;
+    return { w, h, G, gx, gy: top, L, lx: gx + G + 24, ly: top };
+  },
+  stage() {
+    const a = state.air, P = AIR.layout(), A = arrange(a.level, a.seed, a.sorted), cs = P.G / A.side;
+    // Until the prediction is saved the colours stay hidden, so the picture doesn't give the answer away
+    const hide = !a.predSaved;
+    const paths = Object.keys(GAS).map(g => {
+      let d = '';
+      A.types.forEach((t, i) => { if (t === g) d += `M${i % A.side + .5} ${Math.floor(i / A.side) + .5}h0`; });
+      return d ? `<path d="${d}" stroke="${hide ? '#c9d0e4' : GAS[g].c}" stroke-width=".74" stroke-linecap="round" fill="none"/>` : '';
+    }).join('');
+    const key = Object.keys(MIX[a.level]).map(g => [g, GAS[g]]);
+    const kw = P.G / key.length;
+    const legend = hide ? `<text x="${P.gx + P.G / 2}" y="${P.gy + P.G + 31}" text-anchor="middle" class="gsmall">Make your prediction to see the colours!</text>`
+      : key.map(([g, x], i) => {
+        const [lx, ly] = P.narrow ? [12 + (i % 2) * (P.w / 2), P.gy + P.G + (i < 2 ? 98 : 124)] : [P.gx + i * kw + 4, P.gy + P.G + 26];
+        return `<g transform="translate(${lx},${ly})"><circle r="8" cx="8" cy="0" fill="${x.c}"/><text x="22" y="5" class="gsmall">${x.name}</text></g>`;
+      }).join('');
+    const title = hide ? '100 particles of air' : `${a.level === 100 ? '100' : '10,000'} particles${P.narrow ? '' : ' of air'} · ${a.sorted ? 'sorted' : 'mixed up'}`;
+    return `<svg id="airSvg" viewBox="0 0 ${P.w} ${P.h}" aria-label="${title}">
+      <text x="${P.gx}" y="30" class="glabel">🔍 ${title}</text>
+      <rect x="${P.gx - 6}" y="${P.gy - 6}" width="${P.G + 12}" height="${P.G + 12}" rx="12" fill="#fff"/>
+      <g id="grid" transform="translate(${P.gx},${P.gy}) scale(${cs})" style="cursor:${a.level === 100 ? 'pointer' : 'crosshair'}">
+        <rect width="${A.side}" height="${A.side}" fill="#fff"/>${paths}</g>
+      ${legend}
+      <g id="lensLayer"></g>
+    </svg>`;
+  },
+  // The parts that change while you look around: the close-up, its frame and the rings round found particles
+  drawLens() {
+    const a = state.air, layer = $('#lensLayer');
+    if (!layer) return;
+    const P = AIR.layout(), A = arrange(a.level, a.seed, a.sorted), cs = P.G / A.side;
+    const ring = i => [P.gx + (i % A.side + .5) * cs, P.gy + (Math.floor(i / A.side) + .5) * cs];
+    let s = '';
+    if (a.level === 100) {
+      if (a.tap) s += `<text x="${P.gx + P.G}" y="30" text-anchor="end" class="gsmall">${a.tap}</text>`;
+      layer.innerHTML = s; return;
+    }
+    a.found.forEach(k => { const [x, y] = ring(A.co2[k]); s += `<circle cx="${x}" cy="${y}" r="${Math.max(7, cs * 1.6)}" fill="none" stroke="#e0a800" stroke-width="3"/>`; });
+    const [lx, ly] = a.lens, c = P.L / LENS;
+    s += `<rect x="${P.gx + lx * cs}" y="${P.gy + ly * cs}" width="${LENS * cs}" height="${LENS * cs}" fill="none" stroke="#e0a800" stroke-width="3" rx="2"/>`;
+    if (!P.narrow) s += `<text x="${P.lx}" y="30" class="gsmall">Close-up</text>`;
+    s += `<rect x="${P.lx - 6}" y="${P.ly - 6}" width="${P.L + 12}" height="${P.L + 12}" rx="14" fill="#fff" stroke="#e0a800" stroke-width="4"/>`;
+    s += `<g id="lens" style="cursor:pointer">`;
+    for (let j = 0; j < LENS; j++) for (let i = 0; i < LENS; i++) {
+      const idx = (ly + j) * A.side + lx + i, t = A.types[idx], k = A.co2.indexOf(idx);
+      const cx = P.lx + (i + .5) * c, cy = P.ly + (j + .5) * c;
+      s += `<circle cx="${cx}" cy="${cy}" r="${c * .36}" fill="${GAS[t].c}"/>`;
+      if (k >= 0 && a.found.includes(k)) s += `<circle cx="${cx}" cy="${cy}" r="${c * .46}" fill="none" stroke="#e0a800" stroke-width="4"/>`;
+    }
+    s += `<rect x="${P.lx}" y="${P.ly}" width="${P.L}" height="${P.L}" fill="transparent"/></g>`;
+    // The message under the close-up, wrapped to fit its width
+    const lines = [], most = Math.max(14, Math.floor((P.L + 12) / 8));
+    (a.tap || 'Tap a particle in the close-up to see what it is.').split('\n').forEach(part => {
+      let line = '';
+      part.split(' ').forEach(word => { if (line && (line + ' ' + word).length > most) { lines.push(line); line = word; } else line = line ? line + ' ' + word : word; });
+      lines.push(line);
+    });
+    s += lines.map((t, i) => `<text x="${P.lx + P.L / 2}" y="${P.ly + P.L + 28 + i * 19}" text-anchor="middle" class="gsmall" style="fill:var(--ink)">${t}</text>`).join('');
+    layer.innerHTML = s;
+  },
+  // Which particle (column, row) is under a point on the big grid, or null
+  cellAt(e) {
+    const P = AIR.layout(), A = arrange(state.air.level, state.air.seed, state.air.sorted), b = $('#airSvg').getBoundingClientRect();
+    const x = (e.clientX - b.left - P.gx) / (P.G / A.side), y = (e.clientY - b.top - P.gy) / (P.G / A.side);
+    return x >= 0 && y >= 0 && x < A.side && y < A.side ? [Math.floor(x), Math.floor(y)] : null;
+  },
+  lensAt(e) {
+    const P = AIR.layout(), b = $('#airSvg').getBoundingClientRect();
+    const x = (e.clientX - b.left - P.lx) / (P.L / LENS), y = (e.clientY - b.top - P.ly) / (P.L / LENS);
+    return x >= 0 && y >= 0 && x < LENS && y < LENS ? [Math.floor(x), Math.floor(y)] : null;
+  },
+  moveLens(cell) {
+    const side = 100, a = state.air;
+    a.lens = [Math.max(0, Math.min(side - LENS, cell[0] - LENS / 2)), Math.max(0, Math.min(side - LENS, cell[1] - LENS / 2))];
+    AIR.drawLens();
+  },
+  // Tapping a particle in the close-up. A tap next to a carbon dioxide particle counts too, so small fingers aren't punished.
+  tapLens([i, j]) {
+    const a = state.air, A = arrange(a.level, a.seed, a.sorted), [lx, ly] = a.lens;
+    const near = A.co2.findIndex(idx => { const x = idx % A.side - lx, y = Math.floor(idx / A.side) - ly; return x >= 0 && y >= 0 && x < LENS && y < LENS && Math.abs(x - i) <= 1 && Math.abs(y - j) <= 1; });
+    if (near >= 0) {
+      if (a.found.includes(near)) a.tap = 'You have already found this one.';
+      else {
+        a.found.push(near);
+        a.tap = a.found.length < 4 ? `🎉 Carbon dioxide! ${a.found.length} of 4 found.` : '🎉 You found all 4!\nNow answer the question.';
+      }
+      render(); return;
+    }
+    const t = A.types[(ly + j) * A.side + lx + i];
+    a.tap = t === 'x' ? 'That is another gas, like argon.' : `That is ${GAS[t].name.toLowerCase()}.`;
+    AIR.drawLens();
+  },
+  check() {
+    const a = state.air, want = MIX[100], got = {};
+    for (const g of ['n', 'o', 'x']) got[g] = a.counts[g] === '' ? null : Number(a.counts[g]);
+    if (Object.values(got).some(v => v == null || !Number.isFinite(v))) { a.msg = { ok: false, msgs: ['Type a number for every gas.'] }; render(); return; }
+    const close = ['n', 'o', 'x'].every(g => Math.abs(got[g] - want[g]) <= 1);
+    const exact = ['n', 'o', 'x'].every(g => got[g] === want[g]);
+    a.tries++;
+    if (exact || close || a.tries >= 3) {
+      const before = exact ? 'Yes! You counted them all correctly.' : close ? 'Very close! The exact numbers are 78, 21 and 1.' : 'Here are the right numbers: 78, 21 and 1.';
+      a.counts = { n: '78', o: '21', x: '1' }; a.counted = true;
+      a.msg = { ok: true, text: `${before} Look at your bar chart below.` };
+      render(); emit('count', { ok: true }); return;
+    }
+    const msgs = [], sum = got.n + got.o + got.x;
+    if (sum !== 100) msgs.push(`Your numbers add up to <b>${sum}</b>. There are exactly <b>100</b> particles, so they should add up to 100.`);
+    for (const g of ['n', 'o', 'x']) if (got[g] !== want[g]) msgs.push(`Count the <b>${GAS[g].name.toLowerCase()}</b> again. Your number is too ${got[g] > want[g] ? 'high' : 'low'}.`);
+    if (!a.sorted) msgs.push('Tip: press <b>Sort them</b>. Each full row is 10.');
+    a.msg = { ok: false, msgs };
+    render();
+  },
+  barChart() {
+    const W = 310, H = 190, b = 40, top = 12, ch = H - b - top, bw = 56;
+    let s = '';
+    for (let v = 0; v <= 100; v += 20) { const y = top + ch - v / 100 * ch; s += `<line x1="34" x2="${W}" y1="${y}" y2="${y}" stroke="#e1e6f5"/><text x="28" y="${y + 5}" text-anchor="end" class="gsmall" style="font-size:12px">${v}</text>`; }
+    ['n', 'o', 'x'].forEach((g, i) => {
+      const v = MIX[100][g], hgt = Math.max(2, v / 100 * ch), x = 60 + i * 86, y = top + ch - hgt;
+      s += `<rect x="${x}" y="${y}" width="${bw}" height="${hgt}" rx="4" fill="${GAS[g].c}"/>`;
+      s += `<text x="${x + bw / 2}" y="${y - 4}" text-anchor="middle" class="gsmall" style="fill:var(--ink)">${v}</text>`;
+      s += `<text x="${x + bw / 2}" y="${H - 18}" text-anchor="middle" class="gsmall" style="font-size:13px">${GAS[g].name}</text>`;
+    });
+    s += `<text x="10" y="${top + ch / 2}" transform="rotate(-90 10 ${top + ch / 2})" text-anchor="middle" class="gsmall" style="font-size:12px">Particles</text>`;
+    return `<svg class="bars" viewBox="0 0 ${W} ${H}" role="img" aria-label="Bar chart: nitrogen 78, oxygen 21, other gases 1">${s}</svg>`;
+  },
+  answerPct(v) {
+    const a = state.air;
+    if (v === '0.04') { a.pct = v; render(); emit('co2', { ok: true }); return; }
+    if (!a.pctWrong.includes(v)) a.pctWrong.push(v);
+    render();
+  }
+};
+const PCT_HINT = {
+  '4': '4% would mean 4 in every <b>100</b> particles. But in 100 particles there was no carbon dioxide at all!',
+  '0.4': '0.4% would mean 4 in every <b>1,000</b> particles. You needed <b>10,000</b> particles to find 4.'
+};
+
+// ================= Layers of the atmosphere =================
+// Heights in km. Temperatures are typical values; real ones change with the place, the season and the Sun.
+const LAYERS = [
+  { id: 'tropo', name: 'Troposphere', lo: 0, hi: 12, c: '#a8d6ff', ink: '#1d2340', short: 'Colder as you go up',
+    trend: 'Gets <b>colder</b> as you go up: about 6 or 7 °C colder for every km.',
+    facts: ['Almost all the <b>weather</b> and <b>clouds</b> are here.', 'We live here! It holds about three-quarters of all the air.', 'The top of <b>Mount Everest</b> is 8.8 km up.', 'Big passenger planes cruise about 10–12 km up, near the top.', 'It is about 16 km deep over the equator, but only about 8 km over the poles.'] },
+  { id: 'strato', name: 'Stratosphere', lo: 12, hi: 50, c: '#6aa5ee', ink: '#fff', short: 'Warmer as you go up',
+    trend: 'Gets <b>warmer</b> as you go up, because the ozone layer soaks up some of the Sun\'s ultraviolet (UV) light.',
+    facts: ['The <b>ozone layer</b> is here, about 15–35 km up. It protects living things from the Sun\'s harmful UV light.', '<b>Weather balloons</b> rise to about 35 km before they burst.'] },
+  { id: 'meso', name: 'Mesosphere', lo: 50, hi: 85, c: '#4475c9', ink: '#fff', short: 'Colder as you go up',
+    trend: 'Gets <b>colder</b> as you go up. The top is the coldest place in the atmosphere: about −90 °C.',
+    facts: ['Most <b>meteors</b> ("shooting stars") burn up high in this layer, about 70–100 km up.'] },
+  { id: 'thermo', name: 'Thermosphere', lo: 85, hi: 600, c: '#2b4590', ink: '#fff', short: 'Much hotter as you go up, but too thin to feel hot',
+    trend: 'Gets <b>much hotter</b> as you go up: 700 °C or more, and over 1,000 °C when the Sun is very active. But the air is so thin that it would not feel hot.',
+    facts: ['The <b>edge of space</b> is usually said to be 100 km up.', 'The <b>aurora</b> (northern and southern lights) glow here, about 100–300 km up.', 'The <b>International Space Station</b> orbits about 400 km up.'] },
+  { id: 'exo', name: 'Exosphere', lo: 600, hi: 10000, c: '#141c45', ink: '#fff', short: 'The air fades away into space',
+    trend: 'The air <b>fades away</b> into space. There is almost nothing left.',
+    facts: ['Some <b>weather satellites</b> orbit here, about 800 km up.', 'It reaches up to about 10,000 km.'] }
+];
+// [km, °C]: a typical temperature line
+const TEMPS = [[0, 15], [12, -56], [20, -56], [32, -44], [47, -2], [51, -2], [71, -58], [85, -90], [100, -78], [110, -33], [120, 85], [150, 355], [200, 575], [300, 675], [400, 725], [600, 750]];
+const tempAt = km => {
+  if (km >= 600) return 750;
+  for (let i = 1; i < TEMPS.length; i++) if (km <= TEMPS[i][0]) { const [k0, t0] = TEMPS[i - 1], [k1, t1] = TEMPS[i]; return t0 + (t1 - t0) * (km - k0) / (k1 - k0); }
+};
+// Things to put in the sky: [picture, name, lowest km, highest km, real height, hint]
+const SKY = {
+  cloud:   ['☁️', 'Clouds', 0.5, 12, 5, 'Clouds are part of the weather. Which layer has the weather?'],
+  everest: ['🏔️', 'Top of Mount Everest', 7.5, 10, 8.8, 'Mount Everest is 8.8 km high. Use the numbers on the height scale.'],
+  plane:   ['✈️', 'Passenger plane', 9, 13, 11, 'Big planes cruise near the top of the troposphere.'],
+  ozone:   ['ic-ozone', 'Ozone layer', 15, 35, 25, 'The ozone layer is in the layer that gets warmer as you go up.'],
+  balloon: ['ic-balloon', 'Weather balloon', 25, 40, 35, 'Weather balloons rise until they burst, about 35 km up.'],
+  meteor:  ['🌠', 'Meteor burning up', 60, 110, 80, 'Meteors burn up in the layer above the stratosphere.'],
+  aurora:  ['ic-aurora', 'Aurora', 90, 400, 200, 'The aurora glow above the edge of space, in the layer that gets very hot.'],
+  iss:     ['ic-iss', 'Space Station', 330, 480, 400, 'The International Space Station orbits about 400 km up.'],
+  sat:     ['🛰️', 'Weather satellite', 600, 10000, 800, 'This weather satellite is very far out, where the air fades away into space.']
+};
+const SKYORDER = ['cloud', 'everest', 'plane', 'ozone', 'balloon', 'meteor', 'aurora', 'iss', 'sat'];
+const kmText = km => km < 100 ? `${Math.round(km)} km` : `${fmt(Math.round(km / (km < 1000 ? 10 : 100)) * (km < 1000 ? 10 : 100))} km`;
+const tempText = t => `about ${Math.round(t / (t < 100 ? 5 : 50)) * (t < 100 ? 5 : 50)} °C`.replace('-', '−');
+
+const LY = {
+  // Not to scale: each layer gets a band of the picture (from the bottom). To scale: 0–1,000 km evenly.
+  BANDS: [.22, .2, .18, .22, .18], TOP: 1000,
+  TICKS: [[0, 4, 8, 12], [20, 30, 40, 50], [60, 70, 85], [200, 300, 400, 500, 600], [2000, 4000, 6000, 8000, 10000]],
+  // Fewer numbers on phones, where there is less room
+  TICKS_SMALL: [[0, 4, 8, 12], [30, 50], [70, 85], [300, 600], [10000]],
+  geo() {
+    const st = $('#stage'), w = st.clientWidth || 900, h = st.clientHeight || 600, narrow = w < 560;
+    const x0 = narrow ? 50 : 62, gw = narrow ? 104 : Math.min(250, w * .28);
+    const cw = w - x0 - gw - (narrow ? 18 : 34), gx0 = x0 + cw + (narrow ? 10 : 18);
+    const yTop = narrow ? 92 : 80, yBot = h - 50;
+    return { w, h, narrow, x0, cw, gx0, gx1: gx0 + gw - (narrow ? 6 : 12), yTop, yBot, H: yBot - yTop };
+  },
+  y(km, g) {
+    if (state.layers.scale) return g.yBot - Math.min(km, LY.TOP) / LY.TOP * g.H;
+    let y = g.yBot;
+    for (let i = 0; i < LAYERS.length; i++) {
+      const L = LAYERS[i], bh = LY.BANDS[i] * g.H;
+      if (km <= L.hi || i === LAYERS.length - 1) return y - Math.min(1, Math.max(0, (km - L.lo) / (L.hi - L.lo))) * bh;
+      y -= bh;
+    }
+  },
+  km(y, g) {
+    if (state.layers.scale) return Math.max(0, Math.min(LY.TOP, (g.yBot - y) / g.H * LY.TOP));
+    let base = g.yBot;
+    for (let i = 0; i < LAYERS.length; i++) {
+      const L = LAYERS[i], bh = LY.BANDS[i] * g.H;
+      if (y >= base - bh || i === LAYERS.length - 1) return L.lo + Math.min(1, Math.max(0, (base - y) / bh)) * (L.hi - L.lo);
+      base -= bh;
+    }
+  },
+  layerAt: km => LAYERS.find(L => km <= L.hi) || LAYERS[4],
+  tx: (t, g) => g.gx0 + (Math.max(-100, Math.min(50, t)) + 100) / 150 * (g.gx1 - g.gx0),
+  stage() {
+    const s = state.layers, g = LY.geo(), T = g.yTop;
+    let o = '';
+    // The layers, bottom to top
+    LAYERS.forEach(L => {
+      const yb = LY.y(L.lo, g), yt = L.id === 'exo' ? T : LY.y(L.hi, g);
+      o += `<rect x="${g.x0}" y="${yt}" width="${g.cw}" height="${Math.max(0, yb - yt)}" fill="${L.c}" data-layer="${L.id}"/>`;
+      if (s.sel === L.id) o += `<rect x="${g.x0 + 2}" y="${yt + 2}" width="${g.cw - 4}" height="${Math.max(0, yb - yt - 4)}" fill="none" stroke="var(--yellow)" stroke-width="4" pointer-events="none"/>`;
+    });
+    // Layer names: in the middle of each band, or with pointer lines when the layer is too thin to write in
+    LAYERS.forEach((L, i) => {
+      const yb = LY.y(L.lo, g), yt = L.id === 'exo' ? T : LY.y(L.hi, g), mid = (yb + yt) / 2, thin = yb - yt < 26;
+      const stroke = L.ink === '#fff' ? 'rgba(0,0,0,.35)' : '#fff';
+      if (!thin) o += `<text x="${g.x0 + 12}" y="${mid + 6}" class="lname" fill="${L.ink}" stroke="${stroke}" pointer-events="none">${L.name}</text>`;
+      else {
+        const ly = g.yBot - 80 - i * 26, lx = g.x0 + g.cw * .42;
+        o += `<path d="M${lx - 4} ${ly - 5} L${g.x0 + g.cw * .3 - i * 24} ${mid}" stroke="#fff" stroke-width="2" pointer-events="none"/><circle cx="${g.x0 + g.cw * .3 - i * 24}" cy="${mid}" r="3" fill="#fff"/>`;
+        o += `<text x="${lx}" y="${ly}" class="lname" fill="#fff" stroke="rgba(0,0,0,.45)" pointer-events="none">${L.name}</text>`;
+      }
+    });
+    // The edge of space
+    const ye = LY.y(100, g);
+    o += `<path d="M${g.x0} ${ye} H${g.x0 + g.cw}" stroke="#fff" stroke-width="2" stroke-dasharray="7 6" opacity=".8" pointer-events="none"/>`;
+    o += `<text x="${g.x0 + g.cw - 8}" y="${ye - 6}" text-anchor="end" class="iname" style="fill:#fff;stroke:rgba(0,0,0,.4)" pointer-events="none">Edge of space</text>`;
+    if (s.scale) o += `<text x="${g.x0 + g.cw / 2}" y="${T + 18}" text-anchor="middle" class="iname" style="fill:#fff;stroke:rgba(0,0,0,.5);font-size:13px" pointer-events="none">↑ The exosphere carries on up to about 10,000 km: 10 times higher than this picture!</text>`;
+    // The ground
+    o += `<rect x="${g.x0}" y="${g.yBot}" width="${g.cw}" height="10" fill="#4caf50"/><rect x="${g.x0}" y="${g.yBot + 10}" width="${g.cw}" height="6" fill="#8d6e4a"/>`;
+    // Height scale. Not to scale, each layer has its own spacing, so the scale is broken at every layer edge.
+    o += `<path d="M${g.x0 - 1} ${T} V${g.yBot}" stroke="var(--ink)" stroke-width="2"/>`;
+    o += `<text x="${g.x0 - 6}" y="${T - 8}" text-anchor="end" class="ltick b">km</text>`;
+    const tick = (km, bold) => { const y = LY.y(km, g); o += `<path d="M${g.x0 - 6} ${y} H${g.x0}" stroke="var(--ink)" stroke-width="${bold ? 2 : 1}"/><text x="${g.x0 - 9}" y="${y + 4}" text-anchor="end" class="ltick${bold ? ' b' : ''}">${fmt(km)}</text>`; };
+    if (s.scale) for (let km = 0; km <= LY.TOP; km += 100) tick(km, km === 0);
+    else {
+      (g.narrow ? LY.TICKS_SMALL : LY.TICKS).forEach((list, i) => list.forEach(km => tick(km, km === LAYERS[i].hi || km === 0)));
+      LAYERS.slice(0, 4).forEach(L => { const y = LY.y(L.hi, g); o += `<path d="M${g.x0 - 5} ${y + 7} l5 -3 l-5 -4 l5 -3" fill="none" stroke="var(--coral)" stroke-width="2"/>`; });
+    }
+    // Temperature graph, sharing the same heights
+    o += `<rect x="${g.gx0 - 4}" y="${T}" width="${g.gx1 - g.gx0 + 8}" height="${g.yBot - T}" rx="8" fill="#fff" id="graph" style="cursor:ns-resize"/>`;
+    [-100, -50, 0, 50].forEach(t => { const x = LY.tx(t, g); o += `<path d="M${x} ${T} V${g.yBot}" stroke="${t === 0 ? '#9aa6c7' : '#e1e6f5'}" pointer-events="none"/><text x="${x}" y="${g.yBot + 17}" text-anchor="middle" class="ltick">${String(t).replace('-', '−')}</text>`; });
+    o += `<text x="${(g.gx0 + g.gx1) / 2}" y="${g.yBot + 36}" text-anchor="middle" class="ltick b">Temperature (°C)</text>`;
+    let pts = [], off = null;
+    for (let y = g.yBot; y >= T; y -= 2) {
+      const km = LY.km(y, g); if (km >= 600) break;
+      const t = tempAt(km);
+      if (t > 50) { off = y; break; }
+      pts.push(`${LY.tx(t, g).toFixed(1)},${y}`);
+    }
+    o += `<polyline points="${pts.join(' ')}" fill="none" stroke="var(--coral)" stroke-width="3.5" stroke-linejoin="round" pointer-events="none"/>`;
+    if (off != null) o += `<path d="M${g.gx1 - 14} ${off + 6} L${g.gx1} ${off} M${g.gx1 - 8} ${off - 4} L${g.gx1} ${off} L${g.gx1 - 3} ${off + 8}" stroke="var(--coral)" stroke-width="3" fill="none" pointer-events="none"/>`
+      + `<text x="${g.gx1 - 4}" y="${off - 12}" text-anchor="end" class="iname" pointer-events="none">${g.narrow ? 'Much hotter' : 'Much hotter: off the graph!'}</text>`;
+    // The thermometer you move up and down
+    const py = LY.y(s.probe, g), pt = tempAt(Math.min(s.probe, 600));
+    o += `<path d="M${g.x0} ${py} H${g.gx1}" stroke="var(--yellow)" stroke-width="2.5" stroke-dasharray="6 5" pointer-events="none"/>`;
+    o += `<circle cx="${LY.tx(pt, g)}" cy="${py}" r="9" fill="var(--yellow)" stroke="var(--ink)" stroke-width="2" pointer-events="none"/>`;
+    o += `<text x="${g.gx1 - 2}" y="${py - 8}" text-anchor="end" style="font-size:22px" pointer-events="none">🌡️</text>`;
+    // Things placed in the sky
+    SKYORDER.filter(id => s.placed[id] != null).forEach(id => {
+      const [em, name] = SKY[id], x = g.x0 + s.fx[id] * g.cw, y = LY.y(s.placed[id], g), r = s.res[id];
+      o += `<g class="pitem" data-id="${id}">${picSVG(em, x, y, g.narrow ? 24 : 32)}${s.scale && s.placed[id] < 100 ? '' : `<text x="${x}" y="${y + (g.narrow ? 22 : 28)}" text-anchor="middle" class="iname">${name}</text>`}`;
+      if (r != null) o += `<circle cx="${x + 17}" cy="${y - 15}" r="9" fill="${r === false ? 'var(--coral)' : 'var(--green)'}"/><text x="${x + 17}" y="${y - 10}" text-anchor="middle" style="font-size:13px;font-weight:700;fill:#fff">${r === false ? '✗' : '✓'}</text>`;
+      o += `</g>`;
+    });
+    const L = LY.layerAt(s.probe);
+    const read = `<div class="readout">🌡️ <b>${kmText(s.probe)}</b> up · <b>${L.name}</b><br>${s.probe >= 600 ? 'Hot, but hardly any air left' : tempText(pt)}${pt > 100 && s.probe < 600 ? ', but too thin to feel hot' : ''} <span class="muted">· ${L.short}</span></div>`;
+    return `<div class="lay-top"><span class="scaletag${s.scale ? ' true' : ''}">${s.scale ? '📏 To scale' : '↕ Not to scale'}</span>${read}</div>
+      <svg id="laySvg" viewBox="0 0 ${g.w} ${g.h}" aria-label="Layers of the atmosphere">${o}</svg>`;
+  },
+  // Where a pointer is on the picture: 'col' (the layers), 'graph', or nothing
+  where(e) {
+    const g = LY.geo(), b = $('#laySvg').getBoundingClientRect(), x = e.clientX - b.left, y = e.clientY - b.top;
+    if (y < g.yTop - 6 || y > g.yBot + 4) return null;
+    // Things stay to the right of the layer names
+    if (x >= g.x0 && x <= g.x0 + g.cw) return { at: 'col', fx: Math.max(Math.min(.55, (g.narrow ? 110 : 160) / g.cw), Math.min(.94, (x - g.x0) / g.cw)), km: LY.km(y, g) };
+    if (x >= g.gx0 - 6 && x <= g.gx1 + 6) return { at: 'graph', km: LY.km(y, g) };
+    return null;
+  },
+  place(id, p) {
+    const s = state.layers;
+    s.placed[id] = p.km; s.fx[id] = p.fx; delete s.res[id]; s.chip = null; s.said = null;
+    render();
+  },
+  check() {
+    const s = state.layers, msgs = [];
+    SKYORDER.filter(id => s.placed[id] != null && s.res[id] !== 'shown').forEach(id => {
+      const [, name, lo, hi, at, hint] = SKY[id], km = s.placed[id];
+      if (km >= lo && km <= hi) { s.res[id] = true; return; }
+      s.tries[id] = (s.tries[id] || 0) + 1;
+      if (s.tries[id] >= 3) { s.placed[id] = at; s.res[id] = 'shown'; msgs.push(`<b>${name}</b>: here is where it goes, about ${kmText(at)} up.`); return; }
+      s.res[id] = false;
+      msgs.push(`<b>${name}</b> is too ${km > hi ? 'high' : 'low'}. ${hint}`);
+    });
+    const done = SKYORDER.filter(id => s.res[id] === true || s.res[id] === 'shown').length, left = SKYORDER.length - Object.keys(s.placed).length;
+    if (!msgs.length) s.said = { ok: true, text: done === SKYORDER.length ? 'All 9 are at the right height! 🎉' : `Everything so far is right! ${left} still to place.` };
+    else s.said = { ok: false, msgs };
+    render();
+    emit('layers', { all: done === SKYORDER.length });
+  }
+};
+
+// ================= Around the Earth =================
+// The layers drawn as rings round a curved Earth, like a textbook picture. Point at a layer, or tap it, to read about it.
+const EV = {
+  // Land: each shape is a list of [how far across the picture (0–1), how far down from the surface in px]
+  LAND: [
+    [[-.05, 0], [.06, 0], [.14, 0], [.22, 0], [.27, 6], [.24, 22], [.17, 34], [.1, 52], [.02, 66], [-.05, 70]],
+    [[.4, 0], [.5, 0], [.6, 0], [.68, 0], [.72, 10], [.66, 26], [.57, 36], [.5, 28], [.43, 30], [.39, 14]],
+    [[.86, 0], [.96, 0], [1.05, 0], [1.05, 60], [.97, 48], [.9, 30], [.84, 14]],
+    [[.3, 70], [.36, 62], [.42, 72], [.38, 86], [.31, 84]]
+  ],
+  // The Earth's middle is far below the picture, under a point three-quarters of the way across.
+  // The ground is lifted so that the Earth still shows at the bottom left, where the curve dips.
+  geo() {
+    const st = $('#stage'), w = st.clientWidth || 900, h = st.clientHeight || 600, narrow = w < 560;
+    const ex = w * .75, R = 1.6 * w, dip = R - Math.sqrt(R * R - ex * ex);
+    const yTop = narrow ? 52 : 58, yBot = h - 14 - Math.min(dip, h * .35);
+    return { w, h, narrow, ex, ey: yBot + R, R, yTop, yBot, H: yBot - yTop };
+  },
+  // The radius of the top of each layer (not to scale: each layer gets a share of the height)
+  rings(g) { let r = g.R; return LY.BANDS.map(b => r += b * g.H); },
+  onArc: (r, x, g) => g.ey - Math.sqrt(Math.max(0, r * r - (x - g.ex) ** 2)),
+  stage() {
+    const e = state.earth, g = EV.geo(), tops = EV.rings(g), inner = i => i ? tops[i - 1] : g.R;
+    let o = `<rect width="${g.w}" height="${g.h}" fill="#070d24"/>`;
+    // A few stars, always in the same places
+    const r = rng(9);
+    for (let i = 0; i < 50; i++) o += `<circle cx="${(r() * g.w).toFixed(0)}" cy="${(r() * g.h * .5).toFixed(0)}" r="${(r() * 1.2 + .4).toFixed(1)}" fill="#fff" opacity=".7"/>`;
+    // The layers, outside first, so each smaller ring sits on top
+    for (let i = 4; i >= 0; i--) o += `<circle cx="${g.ex}" cy="${g.ey}" r="${tops[i].toFixed(1)}" fill="${LAYERS[i].c}" data-layer="${LAYERS[i].id}" style="cursor:pointer"/>`;
+    const inward = ([f, d]) => { const x = f * g.w, y = EV.onArc(g.R, x, g); return [x + (g.ex - x) / g.R * d, y + (g.ey - y) / g.R * d]; };
+    o += `<clipPath id="evclip"><circle cx="${g.ex}" cy="${g.ey}" r="${g.R}"/></clipPath><circle cx="${g.ex}" cy="${g.ey}" r="${g.R}" fill="#2f7fd8"/>`
+      + `<g clip-path="url(#evclip)" fill="#4caf50" pointer-events="none">${EV.LAND.map(c => `<path d="${smooth(c.map(inward))}"/>`).join('')}</g>`;
+    // The layer being pointed at, or chosen, has a yellow edge
+    const on = LAYERS.findIndex(L => L.id === (e.hover || e.sel));
+    if (on >= 0) o += `<g fill="none" stroke="var(--yellow)" stroke-width="4" pointer-events="none"><circle cx="${g.ex}" cy="${g.ey}" r="${tops[on]}"/><circle cx="${g.ex}" cy="${g.ey}" r="${inner(on)}"/></g>`;
+    // The edge of space, 100 km up, near the bottom of the thermosphere
+    const re = tops[2] + (100 - 85) / (600 - 85) * (tops[3] - tops[2]);
+    o += `<circle cx="${g.ex}" cy="${g.ey}" r="${re}" fill="none" stroke="#fff" stroke-width="2" stroke-dasharray="7 6" opacity=".75" pointer-events="none"/>`;
+    { const x = g.w * (g.narrow ? .72 : .78), y = EV.onArc(re, x, g); o += `<text x="${x}" y="${y - 6}" text-anchor="end" class="iname" style="fill:#fff;stroke:rgba(0,0,0,.4)" pointer-events="none">Edge of space</text>`; }
+    // Layer names follow the curve; the height of each layer's top sits at its right-hand end
+    LAYERS.forEach((L, i) => {
+      const rm = (inner(i) + tops[i]) / 2, x = g.w * (g.narrow ? .38 : .4), y = EV.onArc(rm, x, g), turn = Math.asin((x - g.ex) / rm) * 180 / Math.PI;
+      const stroke = L.ink === '#fff' ? 'rgba(0,0,0,.35)' : '#fff';
+      o += `<text x="${x}" y="${y + 7}" text-anchor="middle" transform="rotate(${turn.toFixed(1)} ${x} ${y})" class="lname" style="font-size:${g.narrow ? 15 : 21}px" fill="${L.ink}" stroke="${stroke}" pointer-events="none">${L.name}</text>`;
+      if (i < 4) { const bx = g.w * (g.narrow ? .9 : .93), by = EV.onArc(tops[i], bx, g); o += `<text x="${bx}" y="${by - 5}" text-anchor="end" class="iname" style="fill:#fff;stroke:rgba(0,0,0,.45)" pointer-events="none">${fmt(L.hi)} km</text>`; }
+    });
+    return `<div class="lay-top"><span class="scaletag">↕ Not to scale</span><div class="readout">👆 Point at a layer, or tap it, to find out about it.</div></div>
+      <svg id="earthSvg" viewBox="0 0 ${g.w} ${g.h}" aria-label="The five layers of the atmosphere around the Earth">${o}</svg>`;
+  },
+  // The pop-up with a layer's facts, next to the pointer
+  show(id, e, pinned) {
+    const L = LAYERS.find(x => x.id === id), pop = $('#lpop'), m = $('main').getBoundingClientRect(), st = $('#stage').getBoundingClientRect();
+    pop.innerHTML = `${pinned ? '<button class="close" data-act="lpopclose" aria-label="Close">✖</button>' : ''}<h3><span class="sw" style="background:${L.c}"></span> ${L.name}</h3>
+      <p class="muted">${L.id === 'exo' ? 'From about 600 km up to about 10,000 km' : `From ${L.lo} to about ${fmt(L.hi)} km up`}</p>
+      <p>🌡️ ${L.trend}</p><ul class="facts">${L.facts.map(f => `<li>${f}</li>`).join('')}</ul>`;
+    pop.classList.remove('hidden');
+    pop.dataset.pinned = pinned ? '1' : '';
+    const pw = pop.offsetWidth, ph = pop.offsetHeight;
+    let x = e.clientX - m.left + 18, y = e.clientY - m.top + 18;
+    if (x + pw > st.right - m.left - 8) x = Math.max(8, e.clientX - m.left - pw - 18);
+    if (y + ph > st.bottom - m.top - 8) y = Math.max(8, st.bottom - m.top - ph - 8);
+    pop.style.left = `${x}px`; pop.style.top = `${y}px`;
+    const ea = state.earth;
+    if (!ea.seen.includes(id)) { ea.seen.push(id); const d = $('#drawer'), keep = d.scrollTop; d.innerHTML = VIEWS.earth.drawer(); d.scrollTop = keep; fitBanner(); emit('explore', { seen: ea.seen.length }); }
+  },
+  hide() { const pop = $('#lpop'); pop.classList.add('hidden'); pop.dataset.pinned = ''; }
+};
+
+// ================= Water cycle =================
+// A still landscape: the sea on the left, flat land, and a mountain on the right with a river running back to the sea.
+// Step by step, each answer adds a part of the cycle to the picture. Build it shows every part, and children put the key words in place.
+const WC = {
+  geo() { const st = $('#stage'), w = st.clientWidth || 900, h = st.clientHeight || 600; return { w, h, narrow: w < 560, sea: h * .72, land: h * .7 }; },
+  // The ground's height across the picture, as [across, down] fractions
+  GROUND: [[.3, .72], [.4, .7], [.55, .7], [.62, .66], [.68, .56], [.72, .45], [.8, .3], [.88, .4], [.95, .47], [1, .48]],
+  groundY(x, g) {
+    const f = x / g.w, G = WC.GROUND;
+    for (let i = 1; i < G.length; i++) if (f <= G[i][0]) { const [a, b] = G[i - 1], [c, d] = G[i]; return (b + (d - b) * (f - a) / (c - a)) * g.h; }
+    return G[G.length - 1][1] * g.h;
+  },
+  // The river is drawn from the mountain down to the sea, so its moving dashes always flow downhill
+  river: g => { const { w, h } = g; return `M${w * .765} ${h * .39} Q${w * .73} ${h * .44} ${w * .71} ${h * .5} Q${w * .67} ${h * .63} ${w * .6} ${h * .715} Q${w * .5} ${h * .745} ${w * .32} ${h * .745}`; },
+  cloudAt: g => [g.w * .79, g.h * (g.narrow ? .22 : .17), Math.min(g.w, g.h) * .065],
+  // The three key words, where each one goes on the picture, and a hint for when one is put in the wrong place
+  WORDS: {
+    evap: ['Evaporation', '#ffc83d', 'Evaporation is when liquid water turns into water vapour, a gas. Where is water turning into a gas and rising?'],
+    cond: ['Condensation', '#ffffff', 'Condensation is when water vapour cools and turns back into tiny drops of water. Where do lots of tiny drops make something you can see?'],
+    prec: ['Precipitation', '#a8d6ff', 'Precipitation is water falling from the sky, like rain or snow. Where is water falling?']
+  },
+  slotAt(id, g) { const [cx, cy, r] = WC.cloudAt(g); return { evap: [g.w * .19, g.h * .42], cond: [g.w * .56, g.h * (g.narrow ? .14 : .12)], prec: [g.w * (g.narrow ? .83 : .885), g.h * .5] }[id]; },
+  // Step by step: what happens next?
+  STEPS: [
+    { part: 'evap', ok: 0, q: 'The Sun warms the sea. What happens to some of the water?',
+      opts: ['It <b>evaporates</b>: it turns into water vapour, an invisible gas, and rises into the air.', 'It turns into clouds straight away.', 'It sinks to the bottom of the sea.'],
+      hint: 'Warmth makes liquid water turn into a gas. The gas is invisible.',
+      done: '<b>Evaporation</b>: the Sun warms the water, and it turns into <b>water vapour</b>, an invisible gas, which rises into the air.' },
+    { part: 'cond', ok: 1, q: 'The wind carries the water vapour to the mountain. The air rises up the mountain and gets colder. What happens to the water vapour?',
+      opts: ['It evaporates again.', 'It <b>condenses</b>: it cools and turns into tiny drops of water, which make a cloud.', 'It disappears for ever.'],
+      hint: 'Think about what happens on a cold window when you breathe on it.',
+      done: '<b>Condensation</b>: the water vapour cools and turns into tiny drops of liquid water. Millions of tiny drops make a <b>cloud</b>.' },
+    { part: 'prec', ok: 2, q: 'The tiny drops in the cloud join together and get bigger and heavier. What happens?',
+      opts: ['They float higher, into space.', 'They turn back into water vapour.', 'They <b>fall</b> as rain, or as snow if it is very cold.'],
+      hint: 'Heavy things fall down.',
+      done: '<b>Precipitation</b>: the drops get too heavy and fall as <b>rain</b>, or as <b>snow</b> when it is very cold.' },
+    { part: 'river', ok: 0, q: 'The rain lands on the mountain. Where does the water go next?',
+      opts: ['It runs down into rivers, which carry it back to the sea.', 'It stays on top of the mountain for ever.', 'It goes straight back up into the cloud.'],
+      hint: 'Water always flows downhill.',
+      done: 'Rivers carry the water back to the <b>sea</b>. Then the Sun warms the sea again, and the cycle goes round and round! 🔄' }
+  ],
+  // Which parts of the picture are showing
+  shows(part) { const a = state.water; return a.mode === 'build' || a.step > WC.STEPS.findIndex(x => x.part === part); },
+  pill(x, y, txt, bg, g, cls = '') {
+    const fs = g.narrow ? .8 : 1, wd = 150 * fs, ht = 28 * fs;
+    return `<g class="${cls}"><rect x="${x - wd / 2}" y="${y - ht / 2}" width="${wd}" height="${ht}" rx="${ht / 2}" fill="${bg}" stroke="var(--ink)" stroke-width="2"/><text x="${x}" y="${y + 5 * fs}" text-anchor="middle" class="wlab">${txt}</text></g>`;
+  },
+  // The water cycle in a cup: warm water, cling film on top, ice on the cling film. Each click is one step.
+  CUP: [
+    { act: '💧 Pour in warm water', done: 'Warm (not boiling) water goes into the cup. Some of it <b>evaporates</b> straight away: it turns into water vapour, an invisible gas, and rises.' },
+    { act: '🎞️ Cover the cup with cling film', done: 'The cling film stops the water vapour from escaping.' },
+    { act: '🧊 Put ice cubes on the cling film', done: 'The ice makes the cling film <b>cold</b>.' },
+    { act: '⏱️ Wait a few minutes', done: 'When the water vapour touches the cold cling film, it cools and <b>condenses</b> into tiny drops of water underneath it.' },
+    { act: '⏱️ Wait a bit longer', done: 'The drops join together and get heavy, so they fall back into the water: <b>precipitation</b>! The same water goes round and round.' }
+  ],
+  cupStage() {
+    const a = state.water, g = WC.geo(), { w, h } = g, n = a.cup, fs = g.narrow ? .8 : 1;
+    const table = h * .84, bw = Math.min(w * .26, h * .36), tw = bw * 1.25, ch = Math.min(h * .56, bw * 1.6), cx = w * (g.narrow ? .42 : .38), top = table - ch;
+    const side = (f, s2) => cx + s2 * (bw / 2 + (tw - bw) / 2 * f);   // the edge of the cup, f = 0 at the bottom, 1 at the top
+    const lvl = .45, wy = table - ch * lvl;
+    let o = `<rect width="${w}" height="${h}" fill="#eef4fb"/><rect x="0" y="${table}" width="${w}" height="${h - table}" fill="#c9a77c"/><rect x="0" y="${table}" width="${w}" height="7" fill="#a8835a"/>`;
+    // The warm water
+    if (n >= 1) o += `<path d="M${side(0, -1)} ${table} L${side(lvl, -1)} ${wy} L${side(lvl, 1)} ${wy} L${side(0, 1)} ${table} Z" fill="#9fd0ff"/><path d="M${side(lvl, -1)} ${wy} L${side(lvl, 1)} ${wy}" stroke="#5fa8e8" stroke-width="3"/>`
+      + `<text x="${cx}" y="${table - ch * .18}" text-anchor="middle" class="wsmall" style="font-size:${14 * fs}px">warm water 🌡️</text>`;
+    // Water vapour rising: invisible, so shown only by faint dashed arrows
+    if (n >= 1) [-.25, 0, .25].forEach(f => {
+      const x = cx + f * bw, y0 = wy - 6, y1 = top + ch * (n >= 2 ? .16 : .02);
+      o += `<path class="vap" d="M${x} ${y0} q6 ${(y1 - y0) / 4} 0 ${(y1 - y0) / 2} q-6 ${(y1 - y0) / 4} 0 ${(y1 - y0) / 2}" stroke="#7fb2e6" stroke-width="3" fill="none"/><path d="M${x - 5} ${y1 + 7} l5 -7 l5 7" stroke="#7fb2e6" stroke-width="3" fill="none"/>`;
+    });
+    // The cup itself
+    o += `<path d="M${side(1, -1)} ${top} L${side(0, -1)} ${table} L${side(0, 1)} ${table} L${side(1, 1)} ${top}" fill="rgba(220,235,255,.35)" stroke="#7d8db0" stroke-width="3"/>`;
+    // Cling film, sagging a little in the middle
+    const sag = ch * (n >= 3 ? .08 : .04), filmY = x => top + sag * (1 - ((x - cx) / (tw / 2)) ** 2);
+    if (n >= 2) o += `<path d="M${side(1, -1) - 8} ${top + 10} L${side(1, -1)} ${top} Q${cx} ${top + 2 * sag} ${side(1, 1)} ${top} L${side(1, 1) + 8} ${top + 10}" stroke="#b9cbe6" stroke-width="4" fill="none" stroke-linejoin="round"/>`;
+    // Ice cubes on the cling film
+    if (n >= 3) [[-.28, -4], [0, 6], [.28, -8]].forEach(([f, turn]) => { const x = cx + f * tw * .7, y = filmY(x) - bw * .07; o += `<rect x="${x - bw * .08}" y="${y - bw * .08}" width="${bw * .16}" height="${bw * .16}" rx="${bw * .03}" fill="#eaf7ff" stroke="#8fc0e6" stroke-width="2" transform="rotate(${turn} ${x} ${y})"/>`; });
+    // Drops under the cling film, bigger once they are ready to fall
+    if (n >= 4) for (let i = 0; i < 9; i++) { const x = cx - tw * .38 + i * tw * .095, y = filmY(x) + 5; o += `<circle cx="${x}" cy="${y}" r="${n >= 5 ? 4.5 : 2.6}" fill="#4aa3e8" opacity=".85"/>`; }
+    // Drops falling back into the water
+    if (n >= 5) [-.2, -.05, .1, .24].forEach((f, i) => { const x = cx + f * tw * .8, y0 = filmY(x) + 8; o += `<circle class="drop" style="--d:${(wy - y0 - 6).toFixed(0)}px;animation-delay:${(-i * .3).toFixed(1)}s" cx="${x}" cy="${y0}" r="4" fill="#2f7fd8"/>`; });
+    // The key words, joined to the part of the cup they describe
+    const lx = Math.min(w - 80 * fs, side(1, 1) + 105 * fs), lab = (y, ty, tx, name, bg) => `<path d="M${tx} ${ty} L${lx - 75 * fs} ${y}" stroke="var(--ink)" stroke-width="1.5"/>` + WC.pill(lx, y, name, bg, g);
+    if (n >= 1) o += lab(top + ch * .38, top + ch * .38, cx + bw * .27, 'Evaporation', '#ffc83d');
+    if (n >= 4) o += lab(top - ch * .02, filmY(cx + tw * .3) + 6, cx + tw * .3, 'Condensation', '#ffffff');
+    if (n >= 5) o += lab(top + ch * .2, top + ch * .2, cx + tw * .26, 'Precipitation', '#a8d6ff');
+    return `<div class="lay-top"><span class="scaletag">🥤 A model</span><div class="readout">${n < 5 ? `${n} of 5 steps done` : 'A water cycle in a cup!'}</div></div>
+      <svg id="waterSvg" viewBox="0 0 ${w} ${h}" aria-label="A model of the water cycle in a cup">${o}</svg>`;
+  },
+  stage() {
+    if (state.water.mode === 'cup') return WC.cupStage();
+    const a = state.water, g = WC.geo(), { w, h } = g, fs = g.narrow ? .8 : 1;
+    let o = `<rect width="${w}" height="${h}" fill="#bfe3ff"/>`;
+    // The Sun
+    const sx = w * .12, sy = h * .25, sr = Math.min(w, h) * .055;
+    for (let i = 0; i < 12; i++) { const an = i * Math.PI / 6; o += `<path d="M${sx + Math.cos(an) * sr * 1.3} ${sy + Math.sin(an) * sr * 1.3} L${sx + Math.cos(an) * sr * 1.75} ${sy + Math.sin(an) * sr * 1.75}" stroke="#ffb300" stroke-width="4" stroke-linecap="round"/>`; }
+    o += `<circle cx="${sx}" cy="${sy}" r="${sr}" fill="#ffc83d" stroke="#ffb300" stroke-width="3"/>`;
+    // The sea, the land and the mountain
+    o += `<rect x="0" y="${g.sea}" width="${w * .34}" height="${h - g.sea}" fill="#2f7fd8"/>`;
+    o += `<linearGradient id="rock" gradientUnits="userSpaceOnUse" x1="0" y1="${h * .3}" x2="0" y2="${h * .62}"><stop offset="0" stop-color="#9b8a76"/><stop offset=".55" stop-color="#8f9a6a"/><stop offset="1" stop-color="#6cbf5f"/></linearGradient>`;
+    o += `<path d="M${w * .3} ${h} ${WC.GROUND.map(([x, y]) => `L${x * w} ${y * h}`).join(' ')} L${w} ${h} Z" fill="url(#rock)" stroke="#4e9c45" stroke-width="3" stroke-linejoin="round"/>`;
+    o += `<path d="${WC.river(g)}" stroke="#4aa3e8" stroke-width="${g.narrow ? 5 : 8}" fill="none" stroke-linecap="round"/>`;
+    // Evaporation: water vapour is invisible, so it is only shown by faint arrows, up from the sea and across to the mountain
+    if (WC.shows('evap')) {
+      for (let i = 0; i < 4; i++) {
+        const x = w * (.05 + .07 * i), y0 = g.sea - 6, y1 = h * .5;
+        o += `<path class="vap" d="M${x} ${y0} q8 ${(y1 - y0) / 4} 0 ${(y1 - y0) / 2} q-8 ${(y1 - y0) / 4} 0 ${(y1 - y0) / 2}" stroke="#fff" stroke-width="3" fill="none"/><path d="M${x - 6} ${y1 + 8} L${x} ${y1} L${x + 6} ${y1 + 8}" stroke="#fff" stroke-width="3" fill="none"/>`;
+      }
+      o += `<path class="vap" d="M${w * .3} ${h * .44} Q${w * .45} ${h * .36} ${w * .6} ${h * .38}" stroke="#fff" stroke-width="3" fill="none"/><path d="M${w * .6 - 8} ${h * .38 - 7} L${w * .6} ${h * .38} L${w * .6 - 9} ${h * .38 + 6}" stroke="#fff" stroke-width="3" fill="none"/>`;
+      o += `<path class="vap" d="M${w * .63} ${h * .5} Q${w * .67} ${h * .38} ${w * .7} ${h * .27}" stroke="#fff" stroke-width="3" fill="none"/><path d="M${w * .7 - 8} ${h * .27 + 5} L${w * .7} ${h * .27} L${w * .7 + 4} ${h * .27 + 8}" stroke="#fff" stroke-width="3" fill="none"/>`;
+      o += `<text x="${w * .19}" y="${h * .53}" text-anchor="middle" class="wsmall" style="font-size:${12 * fs}px">water vapour (an invisible gas)</text>`;
+      o += `<text x="${w * .45}" y="${h * .345}" text-anchor="middle" class="wsmall" style="font-size:${12 * fs}px">carried by the wind</text>`;
+    }
+    // Condensation: a cloud over the mountain
+    const [cx, cy, r] = WC.cloudAt(g);
+    if (WC.shows('cond')) [[-1.4, .25, .8], [-.6, -.25, 1.05], [.45, -.35, 1.15], [1.35, .15, .85], [0, .35, .95]].forEach(([dx, dy, k]) => { o += `<circle cx="${cx + dx * r}" cy="${cy + dy * r}" r="${k * r}" fill="#f4f6fb" stroke="#dfe4ef" stroke-width="2"/>`; });
+    // Precipitation: rain falling from the cloud onto the mountain
+    if (a.cold) o += `<path d="M${w * .765} ${h * .37} L${w * .8} ${h * .3} L${w * .84} ${h * .355} L${w * .82} ${h * .35} L${w * .805} ${h * .365} L${w * .79} ${h * .35} L${w * .775} ${h * .37} Z" fill="#fff" stroke="#dfe6f5" stroke-width="2"/>`;
+    if (WC.shows('prec')) {
+      for (let i = 0; i < 14; i++) {
+        const x = cx - r * 1.4 + (i * 2.8 * r / 13), top = cy + r * .7, len = Math.max(10, WC.groundY(x, g) - top - 14);
+        o += a.cold
+          ? `<circle class="flake" style="--d:${len.toFixed(0)}px;animation-delay:${(-(i * .83) % 3).toFixed(2)}s" cx="${x}" cy="${top + 4}" r="3.5" fill="#fff" stroke="#9fb2d6" stroke-width="1.2"/>`
+          : `<path class="drop" style="--d:${len.toFixed(0)}px;animation-delay:${(-(i * .37) % 1.1).toFixed(2)}s" d="M${x} ${top} l-2 12" stroke="#2f7fd8" stroke-width="2.5" stroke-linecap="round"/>`;
+      }
+    }
+    // Rivers carry the water back to the sea
+    if (WC.shows('river')) {
+      o += `<path class="flow" d="${WC.river(g)}" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round"/>`;
+      o += `<text x="${w * .5}" y="${h * .82}" text-anchor="middle" class="wsmall">Rivers carry the water back to the sea</text>`;
+    }
+    // The key words: labels in Step by step; spaces to fill in Build it
+    Object.entries(WC.WORDS).forEach(([id, [name, bg]], i) => {
+      const [x, y] = WC.slotAt(id, g);
+      if (a.mode === 'step') { if (WC.shows(id)) o += WC.pill(x, y, name, bg, g); return; }
+      const got = a.placed[id];
+      if (got) o += WC.pill(x, y, WC.WORDS[got][0], WC.WORDS[got][1], g);
+      else {
+        const wd = 150 * fs, ht = 28 * fs;
+        o += `<g class="slot${a.said && a.said.slot === id ? ' wrong' : ''}" data-slot="${id}"><rect x="${x - wd / 2}" y="${y - ht / 2}" width="${wd}" height="${ht}" rx="${ht / 2}" fill="rgba(255,255,255,.75)" stroke="var(--ink)" stroke-width="2" stroke-dasharray="6 4"/><text x="${x}" y="${y + 5 * fs}" text-anchor="middle" class="wlab" fill="var(--muted)">${i + 1}. ?</text></g>`;
+      }
+    });
+    return `<div class="lay-top"><span class="scaletag">↕ Not to scale</span><div class="readout">${a.cold ? '❄️ A cold day: below 0 °C on the mountain top' : '☀️ A warm day'}</div></div>
+      <svg id="waterSvg" viewBox="0 0 ${w} ${h}" aria-label="The water cycle: sea, clouds, mountain and river">${o}</svg>`;
+  },
+  // The empty space nearest to a pointer, if it is close enough
+  slotNear(e) {
+    const g = WC.geo(), b = $('#waterSvg').getBoundingClientRect(), x = e.clientX - b.left, y = e.clientY - b.top;
+    let best = null, d = 90;
+    Object.keys(WC.WORDS).forEach(id => { if (state.water.placed[id]) return; const [sx, sy] = WC.slotAt(id, g), dd = Math.hypot(sx - x, sy - y); if (dd < d) { d = dd; best = id; } });
+    return best;
+  },
+  answer(k) {
+    const a = state.water, S = WC.STEPS[a.step];
+    if (!S) return;
+    if (k !== S.ok) { if (!a.wrong.includes(k)) a.wrong.push(k); render(); return; }
+    a.step++; a.wrong = [];
+    render();
+    if (a.step === WC.STEPS.length) emit('wsteps');
+  },
+  // Build it: put a key word into a space on the picture
+  put(word, slot) {
+    const a = state.water;
+    a.chip = null;
+    if (word === slot) { a.placed[slot] = word; a.said = Object.keys(a.placed).length === 3 ? { ok: true, text: 'You built the water cycle! Water evaporates from the sea, condenses into clouds, falls as precipitation, and rivers carry it back to the sea.' } : null; render(); if (Object.keys(a.placed).length === 3) emit('wbuild'); return; }
+    a.said = { ok: false, slot, text: `<b>${WC.WORDS[word][0]}</b> doesn't go there. ${WC.WORDS[word][2]}` };
+    render();
+  }
+};
+
+// ================= Is it pure? =================
+// Five kinds of water that all look clear. Evaporate 1 litre of each and see what is left behind in the dish.
+const PU = {
+  // [name, short name, grams left from 1 litre, what is left, pure?]
+  SAMPLES: {
+    sea:     ['Sea water', 'Sea', 35, '35 g', 'Lots of <b>salt</b>.', false],
+    river:   ['River water', 'River', .3, 'about 0.3 g', 'A little: <b>minerals</b> from rocks and soil.', false],
+    tap:     ['Tap water', 'Tap', .4, 'about 0.4 g', 'A little: <b>minerals</b>, like the white scale inside a kettle.', false],
+    rain:    ['Rain water', 'Rain', 0, 'almost nothing', 'Almost nothing. Rain is <b>nearly pure</b>.', true],
+    mineral: ['Bottled mineral water', 'Mineral', .5, 'about 0.5 g', 'A little: the <b>minerals</b> written on its label.', false]
+  },
+  ORDER: ['sea', 'river', 'tap', 'rain', 'mineral'],
+  QUESTIONS: [
+    { q: 'Which water had the <b>most</b> dissolved in it?', opts: ['Tap water', 'Sea water', 'Rain water'], ok: 1, hint: 'Look for the dish with the most left in it.' },
+    { q: 'Which water was <b>closest to pure</b>?', opts: ['Rain water', 'Bottled mineral water', 'River water'], ok: 0, hint: 'Pure water leaves nothing behind when it evaporates.' },
+    { q: 'Tap water looks completely clear. Is it pure?', opts: ['Yes, because you can see through it.', 'No, it had substances dissolved in it.'], ok: 1, hint: 'Look at the tap water dish. Was anything left?' }
+  ],
+  stage() {
+    const u = state.pure, st = $('#stage'), w = st.clientWidth || 900, h = st.clientHeight || 600, narrow = w < 560;
+    const bench = h * .62, step = w / 5, sz = Math.min(step * .74, h * .4);
+    let o = `<rect width="${w}" height="${h}" fill="#eef4fb"/><rect x="0" y="${bench}" width="${w}" height="${h - bench}" fill="#c9a77c"/><rect x="0" y="${bench}" width="${w}" height="8" fill="#a8835a"/>`;
+    PU.ORDER.forEach((id, i) => {
+      const [, short, grams, left] = PU.SAMPLES[id], cx = step * (i + .5);
+      if (!u.heated) {
+        // A beaker of clear water
+        const bw = sz * .75, bh = sz, x0 = cx - bw / 2, y0 = bench - bh;
+        o += `<rect x="${x0}" y="${y0 + bh * .25}" width="${bw}" height="${bh * .75}" fill="#d6ecff" opacity=".9"/>`;
+        o += `<path d="M${x0} ${y0} V${bench} H${x0 + bw} V${y0}" fill="none" stroke="#7d8db0" stroke-width="3"/><path d="M${x0} ${y0 + bh * .25} H${x0 + bw}" stroke="#8fc6ff" stroke-width="2"/>`;
+        o += `<text x="${cx}" y="${y0 + bh * .6}" text-anchor="middle" class="wsmall" style="font-size:${narrow ? 10 : 14}px">1 litre</text>`;
+      } else {
+        // An evaporating dish with whatever was left behind
+        const dw = sz * 1.08, dh = sz * .42, y0 = bench - dh;
+        o += `<path d="M${cx - dw / 2} ${y0} Q${cx} ${bench + dh * .3} ${cx + dw / 2} ${y0}" fill="#f5f5f2" stroke="#7d8db0" stroke-width="3"/>`;
+        if (grams >= 10) o += `<path d="M${cx - dw * .42} ${y0 + dh * .1} Q${cx - dw * .2} ${y0 - dh * .55} ${cx} ${y0 - dh * .5} Q${cx + dw * .22} ${y0 - dh * .55} ${cx + dw * .42} ${y0 + dh * .1} Q${cx} ${bench + dh * .1} ${cx - dw * .42} ${y0 + dh * .1}Z" fill="#fff" stroke="#c9ccd6" stroke-width="2"/>`
+          + [-.25, -.1, .05, .2].map((f, k) => `<circle cx="${cx + f * dw}" cy="${y0 + dh * (.35 + (k % 2) * .15)}" r="2.5" fill="#dfe3ee"/>`).join('');
+        else if (grams > 0) o += `<ellipse cx="${cx}" cy="${y0 + dh * .45}" rx="${dw * .28}" ry="${dh * .2}" fill="none" stroke="#d9d4bf" stroke-width="${3 + grams * 9}"/>`;
+        o += `<text x="${cx}" y="${y0 - 12}" text-anchor="middle" class="wsmall" style="font-size:${narrow ? 11 : 16}px">${narrow ? left.replace('about ', '').replace('almost nothing', '≈ 0 g') : left}</text>`;
+        // A small flame shows it was heated
+        o += `<text x="${cx}" y="${bench + 30}" text-anchor="middle" style="font-size:${narrow ? 14 : 18}px">🔥</text>`;
+      }
+      o += `<text x="${cx}" y="${bench + (u.heated ? 54 : 30)}" text-anchor="middle" class="glabel" style="font-size:${narrow ? 12 : 17}px">${short}</text>`;
+      const p = u.pred[id];
+      if (p != null) {
+        const right = p === PU.SAMPLES[id][5];
+        o += `<text x="${cx}" y="${bench + (u.heated ? 74 : 50)}" text-anchor="middle" class="gsmall" style="font-size:${narrow ? 10 : 13}px">${narrow ? '' : 'You said: '}${p ? 'pure' : 'not pure'}${u.heated ? (right ? ' ✅' : ' ❌') : ''}</text>`;
+      }
+    });
+    return `<div class="lay-top"><span class="scaletag${u.heated ? '' : ' true'}">${u.heated ? '🔥 After' : '💧 Before'}</span><div class="readout">${u.heated ? 'All the water has <b>evaporated</b>. What is left in each dish?' : '1 litre of each kind of water. They all look <b>clear</b>.'}</div></div>
+      <svg id="pureSvg" viewBox="0 0 ${w} ${h}" aria-label="Five kinds of water${u.heated ? ', after evaporating' : ''}">${o}</svg>`;
+  },
+  answer(qi, k) {
+    const u = state.pure, Q = PU.QUESTIONS[qi];
+    if (k === Q.ok) { u.ans[qi] = true; delete u.wrong[qi]; } else u.wrong[qi] = [...(u.wrong[qi] || []), k];
+    render();
+    if (PU.QUESTIONS.every((_, i) => u.ans[i])) emit('pure');
+  }
+};
+
+// ================= River town =================
+// A made-up town by the River Danube. Spot the pollution, then use science and technology to make things better.
+const RT = {
+  // x: how far across the picture. river / air: how much this place pollutes them. fix: [picture, what to do, how it helps]
+  PLACES: {
+    farm: { em: '🚜', name: 'The farm', x: .1, pol: true, river: 3, air: 0,
+      see: 'The farmer sprays fertiliser and pesticide on the fields. When it rains, some of it washes into the river.',
+      yes: 'Yes, it is pollution. Farm chemicals are substances added by people. In the river they can harm fish, and make too much green slime grow.',
+      fix: ['🌾', 'Use less fertiliser, and leave a strip of grass and trees by the river', 'The grass and trees soak up the chemicals before they reach the river.'] },
+    houses: { em: '🏠', name: 'The houses', x: .28, pol: true, river: 2, air: 0,
+      see: 'Plastic bottles and bags have been dropped and blown into the river.',
+      yes: 'Yes, it is pollution. Plastic is added by people. It harms animals that eat it or get tangled in it, and it takes hundreds of years to break down.',
+      fix: ['♻️', 'Put out recycling bins and pick up the litter', 'Plastic is recycled into new things instead of ending up in the river.'] },
+    tree: { em: '🍂', name: 'The tree by the river', x: .43, pol: false,
+      see: 'It is autumn. Leaves from the tree fall into the river.',
+      no: 'Right, this is <b>not</b> pollution. People did not add the leaves: they fall naturally. Rotting leaves are even food for tiny river animals.' },
+    road: { em: '🚗', name: 'The busy road', x: .57, pol: true, river: 0, air: 3,
+      see: 'Cars and lorries burn petrol and diesel. Their exhaust fumes go into the air.',
+      yes: 'Yes, it is pollution. Exhaust fumes are substances added by people. They make the air dirty and can harm people\'s lungs.',
+      fix: ['🚌', 'Run electric buses and build cycle paths', 'Electric buses and bikes do not give out exhaust fumes in the town.'] },
+    factory: { em: '🏭', name: 'The factory', x: .73, pol: true, river: 3, air: 3,
+      see: 'Smoke comes out of the chimney, and a pipe pours dirty water into the river.',
+      yes: 'Yes, it is pollution. The smoke and the dirty water are substances added by people, and they harm the air, the river and living things.',
+      fix: ['🧪', 'Put filters on the chimney, and clean the water before it goes into the river', 'Filters catch most of the harmful substances, and a treatment works cleans the water.'] },
+    tip: { em: '🗑️', name: 'The rubbish tip', x: .9, pol: true, river: 2, air: 1,
+      see: 'Rubbish is piled up next to the river. Rain washes dirty liquid out of it into the water, and it smells.',
+      yes: 'Yes, it is pollution. The rubbish and the liquid leaking from it were added by people, and they harm the river.',
+      fix: ['♻️', 'Recycle more, and line the tip so nothing leaks out', 'Less rubbish goes to the tip, and the lining stops liquid leaking into the river.'] }
+  },
+  ORDER: ['farm', 'houses', 'tree', 'road', 'factory', 'tip'],
+  LEVELS: [['Very poor', '😫', '#d9534f'], ['Poor', '😟', '#f0892e'], ['OK', '😐', '#ffc83d'], ['Good', '🙂', '#8bc34a'], ['Very good', '😄', '#22b07d']],
+  RIVERS: ['#8a7d4a', '#86935a', '#5f93a8', '#4a9ad8', '#2f86e0'],
+  // 0 (very poor) to 4 (very good)
+  level(kind) {
+    const t = state.town, P = RT.PLACES, max = RT.ORDER.reduce((n, id) => n + (P[id][kind] || 0), 0);
+    const now = RT.ORDER.reduce((n, id) => n + (t.fixed[id] ? 0 : (P[id][kind] || 0)), 0);
+    return Math.round(4 * (1 - now / max));
+  },
+  meter(label, lv) {
+    const [name, face, col] = RT.LEVELS[lv];
+    return `<span class="meter">${label} <span class="bars">${[0, 1, 2, 3, 4].map(i => `<i style="${i <= lv ? `background:${col}` : ''}"></i>`).join('')}</span> ${face} ${name}</span>`;
+  },
+  stage() {
+    const t = state.town, st = $('#stage'), w = st.clientWidth || 900, h = st.clientHeight || 600, narrow = w < 560, f = t.fixed;
+    const rl = RT.level('river'), al = RT.level('air'), em = narrow ? 30 : Math.min(60, w * .065), landY = h * .6, r0 = h * .72, r1 = h * .88;
+    const X = id => RT.PLACES[id].x * w;
+    // Sky: hazy when the air is dirty
+    let o = `<rect width="${w}" height="${h}" fill="${['#c9c4b5', '#cfd3cc', '#c8dcef', '#bcdcf7', '#b3dcff'][al]}"/>`;
+    o += `<path d="M0 ${h * .42} Q${w * .2} ${h * .3} ${w * .4} ${h * .4} T${w * .8} ${h * .36} T${w} ${h * .4} V${h * .5} H0Z" fill="#9cc98f"/>`;
+    o += `<path d="M${w * .8} ${h * .45} L${w * .83} ${h * .33} L${w * .87} ${h * .3} L${w * .9} ${h * .34} L${w * .93} ${h * .45}Z" fill="#a39a8a"/>` + (() => { const cx = w * .865, by = h * .315, u = Math.min(w, h) * .012;
+      return `<path d="M${cx - 5 * u} ${by} V${by - 3 * u} h${u} v-${u} h${u} v${u} h${u} V${by - 2.2 * u} h${u} v-${1.5 * u} h${u} V${by - 6 * u} h${.8 * u} v-${u} h${.8 * u} v${u} h${.8 * u} V${by - 2.6 * u} h${u} V${by} Z" fill="#c9c2b4" stroke="#8d8576" stroke-width="1.5"/>`
+        + `<rect x="${cx + .3 * u}" y="${by - 4.6 * u}" width="${.8 * u}" height="${1.4 * u}" rx="${.4 * u}" fill="#6f6759"/>`; })();
+    o += `<rect x="0" y="${h * .45}" width="${w}" height="${r0 - h * .45 + 4}" fill="#7cc46e"/>`;
+    // The Danube, murky when polluted, with fish when it is clean
+    o += `<path d="M0 ${r0} Q${w * .25} ${r0 - 8} ${w * .5} ${r0} T${w} ${r0} V${r1} Q${w * .75} ${r1 + 8} ${w * .5} ${r1} T0 ${r1}Z" fill="${RT.RIVERS[rl]}"/>`;
+    o += `<rect x="0" y="${r1}" width="${w}" height="${h - r1}" fill="#7cc46e"/>`;
+    o += `<text x="${w * .5}" y="${r1 - 8}" text-anchor="middle" class="wsmall" style="font-size:${narrow ? 11 : 14}px">River Danube →</text>`;
+    for (let i = 0; i < rl; i++) o += `<text x="${w * (.14 + i * .2)}" y="${r0 + (r1 - r0) * (i % 2 ? .45 : .7)}" text-anchor="middle" style="font-size:${em * .6}px">🐟</text>`;
+    const e = (x, y, ch, k = 1) => `<text x="${x}" y="${y}" text-anchor="middle" style="font-size:${em * k}px">${ch}</text>`;
+    const dirt = (x0, y0, x1) => `<path d="M${x0} ${y0} Q${x0 + w * .02} ${(y0 + r0) / 2} ${x1} ${r0 + 6}" stroke="#7a5a2a" stroke-width="${narrow ? 6 : 11}" fill="none" stroke-linecap="round" opacity=".55"/>`
+      + [.25, .5, .75].map(k => `<circle cx="${x0 + (x1 - x0) * k + w * .012}" cy="${y0 + (r0 - y0) * k}" r="${narrow ? 3 : 4.5}" fill="#6b4a1e"/>`).join('')
+      + `<ellipse cx="${x1}" cy="${r0 + 14}" rx="${w * .045}" ry="9" fill="#6b5a2e" opacity=".55"/>`;
+    const smoke = (x, y, k, col) => [[0, 0, 1], [.5, -.8, 1.2], [1.2, -1.5, 1.4]].map(([dx, dy, s2]) => `<circle cx="${x + dx * k}" cy="${y + dy * k}" r="${k * .55 * s2}" fill="${col}"/>`).join('');
+    // Farm: a field, a tractor, and chemicals washing into the river (or a grass strip once fixed)
+    { const x = X('farm');
+      o += `<rect x="${x - w * .08}" y="${landY - h * .06}" width="${w * .15}" height="${h * .09}" fill="#c9a24f"/>` + [0, 1, 2, 3].map(i => `<path d="M${x - w * .08} ${landY - h * .06 + i * h * .022 + 6} H${x + w * .07}" stroke="#a8823a" stroke-width="2"/>`).join('');
+      o += e(x - w * .02, landY - h * .02, '🚜');
+      if (f.farm) o += [-.06, -.02, .02, .06].map(d => e(x + d * w, r0 - 4, '🌳', .55)).join('');
+      else o += dirt(x + w * .03, landY + h * .03, x + w * .04) + [0, 1, 2, 3, 4].map(i => `<circle cx="${x + w * (.0 + i * .012)}" cy="${landY - h * .065 - (i % 2) * 6}" r="2.5" fill="#9b7bd6"/>`).join(''); }
+    // Houses: litter in the river (or recycling bins once fixed)
+    { const x = X('houses');
+      o += e(x - w * .035, landY, '🏠') + e(x + w * .035, landY - 6, '🏠');
+      if (f.houses) o += e(x + w * .07, landY + h * .06, '♻️', .6);
+      else [[-.03, .3], [.01, .55], [.04, .35], [.06, .65]].forEach(([dx, dy]) => { o += `<rect x="${x + dx * w}" y="${r0 + (r1 - r0) * dy}" width="${narrow ? 6 : 10}" height="${narrow ? 12 : 18}" rx="3" fill="#f2f6ff" stroke="#8aa0c8" stroke-width="1.5" transform="rotate(70 ${x + dx * w} ${r0 + (r1 - r0) * dy})"/>`; }); }
+    // The tree: autumn leaves falling into the river (natural, so it never changes)
+    { const x = X('tree');
+      o += e(x, landY + h * .02, '🌳', 1.3);
+      [[-.02, .1], [.015, .02], [.03, .14], [-.01, .45], [.025, .6]].forEach(([dx, dy]) => { o += e(x + dx * w, landY + h * .04 + dy * (r1 - landY), '🍂', .35); }); }
+    // The road: cars with exhaust fumes (or an electric bus and bikes once fixed)
+    { const x = X('road');
+      o += `<rect x="${x - w * .075}" y="${landY + h * .03}" width="${w * .15}" height="${h * .05}" fill="#6d6f78"/><path d="M${x - w * .07} ${landY + h * .055} H${x + w * .07}" stroke="#fff" stroke-width="2" stroke-dasharray="10 8"/>`;
+      if (f.road) o += e(x - w * .03, landY + h * .07, '🚌', .8) + e(x + w * .04, landY + h * .07, '🚲', .7);
+      else o += e(x - w * .045, landY + h * .07, '🚗', .7) + e(x, landY + h * .07, '🚚', .7) + e(x + w * .045, landY + h * .07, '🚗', .7) + smoke(x - w * .07, landY + h * .03, em * .45, '#8a8a8a') + smoke(x + w * .005, landY + h * .02, em * .45, '#8a8a8a'); }
+    // The factory: smoke and a dirty pipe (or a little clean steam once fixed)
+    { const x = X('factory');
+      o += e(x, landY, '🏭', 1.3);
+      if (f.factory) o += smoke(x - em * .38, landY - em * 1.25, em * .3, '#ffffff');
+      else o += smoke(x - em * .38, landY - em * 1.25, em * .5, '#4b4b4b') + `<path d="M${x + w * .02} ${landY + h * .02} V${r0 - 2}" stroke="#777" stroke-width="${narrow ? 5 : 8}"/>` + `<ellipse cx="${x + w * .03}" cy="${r0 + 16}" rx="${w * .05}" ry="11" fill="#5a4a2a" opacity=".7"/>`; }
+    // The rubbish tip: leaking into the river (or recycling once fixed)
+    { const x = X('tip');
+      o += `<path d="M${x - w * .07} ${landY + h * .05} Q${x - w * .03} ${landY - h * .06} ${x} ${landY - h * .05} Q${x + w * .04} ${landY - h * .06} ${x + w * .08} ${landY + h * .05}Z" fill="${f.tip ? '#a7a08a' : '#8a7a5a'}"/>` + e(x, landY + h * .01, f.tip ? '♻️' : '🗑️', .8);
+      if (!f.tip) o += dirt(x - w * .02, landY + h * .05, x - w * .03); }
+    // Numbered circles to tap, while spotting the pollution
+    if (t.mode === 'spot') RT.ORDER.forEach((id, i) => {
+      const x = X(id), y = h * .4, done = t.answered[id], on = t.open === id, r = narrow ? 15 : 20;
+      o += `<g class="place" data-place="${id}"><circle cx="${x}" cy="${y}" r="${r + 6}" fill="transparent"/><circle cx="${x}" cy="${y}" r="${r}" fill="${done ? 'var(--green)' : 'var(--yellow)'}" stroke="${on ? 'var(--ink)' : '#fff'}" stroke-width="${on ? 4 : 3}"/>`
+        + `<text x="${x}" y="${y + (narrow ? 5 : 7)}" text-anchor="middle" style="font-size:${narrow ? 14 : 19}px;font-weight:700;fill:${done ? '#fff' : 'var(--ink)'}">${done ? '✓' : i + 1}</text></g>`;
+    });
+    return `<div class="lay-top">${RT.meter('💧 River', rl)}${RT.meter('💨 Air', al)}</div>
+      <svg id="townSvg" viewBox="0 0 ${w} ${h}" aria-label="Devín, by the River Danube">${o}</svg>`;
+  },
+  answer(yes) {
+    const t = state.town, P = RT.PLACES[t.open];
+    if (!P) return;
+    if (yes === P.pol) { t.answered[t.open] = true; delete t.wrong[t.open]; }
+    else t.wrong[t.open] = true;
+    render();
+    if (RT.ORDER.every(id => t.answered[id])) emit('spot');
+  },
+  fix(id) {
+    const t = state.town;
+    t.fixed[id] = !t.fixed[id];
+    render();
+    if (RT.ORDER.filter(x => RT.PLACES[x].pol).every(x => t.fixed[x])) emit('clean');
+  }
+};
+
+// ================= Dragging chips =================
+// A chip can be tapped (then tap the sky) or dragged onto the picture.
+const TAP = {
+  sky: id => { const s = state.layers; s.chip = s.chip === id ? null : id; render(); },
+  wword: id => { const a = state.water; a.chip = a.chip === id ? null : id; a.said = null; render(); }
+};
+const DROP = {
+  sky: (id, e) => { const p = LY.where(e); if (p && p.at === 'col') LY.place(id, p); },
+  // A word dropped on (or near) a space goes into that space
+  wword: (id, e) => { const sl = WC.slotNear(e); if (sl) WC.put(id, sl); }
+};
+const Chips = {
+  start(e, btn) {
+    if (btn.disabled) return;
+    e.preventDefault();
+    Chips.d = { kind: btn.dataset.kind, id: btn.dataset.id, x: e.clientX, y: e.clientY, pid: e.pointerId, ghost: null, btn };
+    try { btn.setPointerCapture(e.pointerId); } catch {}
+  },
+  move(e) {
+    const d = Chips.d; if (!d || d.pid !== e.pointerId) return;
+    if (!d.ghost && Math.hypot(e.clientX - d.x, e.clientY - d.y) > 8) {
+      d.ghost = d.btn.cloneNode(true); d.ghost.classList.add('chip-ghost'); d.ghost.style.width = d.btn.offsetWidth + 'px';
+      document.body.appendChild(d.ghost);
+    }
+    if (d.ghost) { d.ghost.style.left = e.clientX + 'px'; d.ghost.style.top = e.clientY + 'px'; }
+  },
+  end(e) {
+    const d = Chips.d; if (!d || d.pid !== e.pointerId) return;
+    Chips.d = null;
+    if (!d.ghost) return TAP[d.kind](d.id);
+    d.ghost.remove();
+    const r = $('#stage').getBoundingClientRect();
+    if (e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom) DROP[d.kind](d.id, e);
+  }
+};
+document.addEventListener('pointerdown', e => { const b = e.target.closest('.chip'); if (b) Chips.start(e, b); });
+document.addEventListener('pointermove', e => Chips.move(e));
+document.addEventListener('pointerup', e => Chips.end(e));
+document.addEventListener('pointercancel', () => { if (Chips.d) { Chips.d.ghost?.remove(); Chips.d = null; } });
+
+// ================= Missions =================
+// Each mission sets up a view; activities call emit() when something happens, and on() says whether that completes it.
+const MISSIONS = [
+  { id: 'count', icon: '🔢', title: 'What is air made of?', task: 'Predict which gas there is most of in air. Then <b>count</b> the 100 particles and check.',
+    hint: 'Press <b>Sort them</b> to put the colours in rows. Each full row is 10.',
+    setup() { state.view = 'air'; state.air = freshAir(); },
+    on: ev => ev === 'count',
+    win: () => 'Air is a <b>mixture</b> of gases. Most of it is <b>nitrogen</b> (78 in every 100). Next comes <b>oxygen</b> (21 in every 100).' },
+  { id: 'co2', icon: '🕵️', title: 'Carbon dioxide detective', task: 'In <b>10,000</b> particles of air, find all <b>4</b> carbon dioxide particles, then answer the question.',
+    hint: 'Look for the <b>dark</b> dots on the big grid. Tap near one to see it in the close-up, then tap it there.',
+    setup() { state.view = 'air'; state.air = Object.assign(freshAir(), { level: 10000, predSaved: true, counted: true, counts: { n: '78', o: '21', x: '1' } }); },
+    on: ev => ev === 'co2',
+    win: () => 'Carbon dioxide <b>is</b> in the air, but only <b>4 in every 10,000</b> particles: <b>0.04%</b>. That is why you can\'t find it in just 100.' },
+  { id: 'explore', icon: '🌍', title: 'Layer explorer', task: 'In <b>Around the Earth</b>, find out about all <b>5</b> layers of the atmosphere.',
+    hint: 'Point at each coloured layer in the picture, or tap it.',
+    setup() { state.view = 'earth'; state.earth = freshEarth(); },
+    on: (ev, d) => ev === 'explore' && d.seen === 5,
+    win: () => 'From the ground up: the <b>troposphere</b>, <b>stratosphere</b>, <b>mesosphere</b>, <b>thermosphere</b> and <b>exosphere</b>. Together they make the atmosphere: the layer of air all around the Earth.' },
+  { id: 'sky', icon: '✈️', title: 'Sky high', task: 'In <b>Heights and temperature</b>, put all <b>9</b> things at the right height, then check.',
+    hint: 'Tap a layer to read about it. Each layer\'s card tells you what happens there.',
+    setup() { state.view = 'layers'; state.layers = freshLayers(); },
+    on: (ev, d) => ev === 'layers' && d.all,
+    win: () => 'Weather and clouds are in the <b>troposphere</b>, the ozone layer is in the <b>stratosphere</b>, meteors burn up in the <b>mesosphere</b>, the space station orbits in the <b>thermosphere</b> and some satellites are out in the <b>exosphere</b>.' },
+  { id: 'cold', icon: '🥶', title: 'The coldest place', task: 'In <b>Heights and temperature</b>, drag the 🌡️ thermometer to the <b>coldest</b> part of the atmosphere.',
+    hint: 'Drag up and down on the temperature graph. Where does the red line go furthest to the left?',
+    setup() { state.view = 'layers'; state.layers = freshLayers(); },
+    on: (ev, d) => ev === 'probe' && d.km >= 80 && d.km <= 90,
+    win: () => 'The coldest place is the top of the <b>mesosphere</b>, about 85 km up: around <b>−90 °C</b>!' },
+  { id: 'hot', icon: '🔥', title: 'Hot but thin', task: 'In <b>Heights and temperature</b>, find a height where it is <b>hotter than 500 °C</b>.',
+    hint: 'The temperature line goes off the graph in one layer. Look above the edge of space.',
+    setup() { state.view = 'layers'; state.layers = freshLayers(); },
+    on: (ev, d) => ev === 'probe' && d.t > 500,
+    win: () => 'The <b>thermosphere</b> gets very hot: 700 °C or more. But the air there is so thin that the few particles could hardly warm you at all, so it would not feel hot.' },
+  { id: 'wsteps', icon: '🌧️', title: 'Round and round', task: 'In <b>Water cycle</b>, answer all <b>4</b> "What happens next?" questions.',
+    hint: 'Think about what warmth does to water, what cooling does to water vapour, and which way water flows.',
+    setup() { state.view = 'water'; state.water = freshWater(); },
+    on: ev => ev === 'wsteps',
+    win: () => 'Water <b>evaporates</b> from the sea, <b>condenses</b> into clouds, falls as <b>precipitation</b>, and rivers carry it back to the sea. Then it all starts again!' },
+  { id: 'wbuild', icon: '🧩', title: 'Build the water cycle', task: 'In <b>Water cycle</b>, choose <b>Build it</b> and put all 3 key words in the right places.',
+    hint: 'Evaporation is water turning into a gas. Condensation makes clouds. Precipitation is water falling from the sky.',
+    setup() { state.view = 'water'; state.water = Object.assign(freshWater(), { mode: 'build' }); },
+    on: ev => ev === 'wbuild',
+    win: () => 'You put <b>evaporation</b>, <b>condensation</b> and <b>precipitation</b> in the right places. Those are the three key parts of the water cycle.' },
+  { id: 'wcup', icon: '🥤', title: 'Water cycle in a cup', task: 'In <b>Water cycle</b>, choose <b>Cup model</b>. Do all 5 steps, then say what the model shows well and what is different.',
+    hint: 'Click each step in order. Then write one idea in each box.',
+    setup() { state.view = 'water'; state.water = Object.assign(freshWater(), { mode: 'cup' }); },
+    on: ev => ev === 'cup',
+    win: () => 'The cup is a <b>model</b> of the water cycle. It shows evaporation, condensation and precipitation well, but it is much smaller and simpler than the real thing.' },
+  { id: 'pure', icon: '🧪', title: 'Water detective', task: 'In <b>Is it pure?</b>, predict which water is pure, evaporate it all, then answer the <b>3</b> questions.',
+    hint: 'After evaporating, look at what is left in each dish. Pure water leaves nothing behind.',
+    setup() { state.view = 'pure'; state.pure = freshPure(); },
+    on: ev => ev === 'pure',
+    win: () => '<b>Most water is not pure</b>: sea, river, tap and mineral water all have substances dissolved in them, even though they look clear. Only rain water is nearly pure.' },
+  { id: 'spot', icon: '🔍', title: 'Pollution spotter', task: 'In <b>Devín</b>, look at all <b>6</b> places and decide which ones are causing pollution.',
+    hint: 'Pollution has two parts: it is caused by humans, and it contaminates (makes dirty and harmful) the air, water or land.',
+    setup() { state.view = 'town'; state.town = freshTown(); },
+    on: ev => ev === 'spot',
+    win: () => 'Farm chemicals, litter, exhaust fumes, factory smoke and dirty water, and a leaking tip are all <b>pollution</b>: substances added by people that harm the environment. Falling leaves are natural, so they are not pollution.' },
+  { id: 'clean', icon: '🛠️', title: 'Clean up the Danube', task: 'In <b>Devín</b>, choose <b>Make it better</b> and make the river and the air <b>very good</b>.',
+    hint: 'Each place that causes pollution has something that can help.',
+    setup() { state.view = 'town'; state.town = Object.assign(freshTown(), { mode: 'fix' }); },
+    on: ev => ev === 'clean',
+    win: () => 'Science and technology caused some of the pollution, but it also <b>helped</b> to clean it up: filters, water treatment, electric buses and recycling. Science can have good and bad effects on our local area.' }
+];
+function emit(ev, data = {}) {
+  if (state.mission == null) return;
+  const i = state.mission, m = MISSIONS[i];
+  if (!m.on(ev, data)) return;
+  stopMission();
+  if (!state.done.includes(m.id)) { state.done.push(m.id); store.set('aw-done', state.done); }
+  updateStars();
+  setTimeout(() => {
+    $('#winTitle').textContent = `${m.icon} Mission complete!`;
+    $('#winText').innerHTML = m.win(data);
+    $('#winNext').style.display = i < MISSIONS.length - 1 ? '' : 'none';
+    $('#winPractise').style.display = i < MISSIONS.length - 1 ? 'none' : '';
+    $('#winNext').dataset.i = i + 1;
+    $('#winModal').classList.remove('hidden'); confetti();
+  }, 1200);
+}
+function startMission(i) {
+  closeModals();
+  state.mission = i; MISSIONS[i].setup(); EV.hide();
+  location.hash = 'view=' + state.view;
+  const m = MISSIONS[i];
+  $('#bannerKicker').textContent = `Mission ${i + 1} of ${MISSIONS.length}: ${m.title}`;
+  $('#bannerText').innerHTML = m.task; $('#bannerHint').innerHTML = m.hint;
+  $('#bannerHint').classList.add('hidden'); $('#hintBtn').textContent = '💡 Show a hint';
+  $('#banner').classList.remove('hidden');
+  render();
+}
+function stopMission() { state.mission = null; $('#banner').classList.add('hidden'); fitBanner(); }
+// The banner sits over the top of the drawer, so the drawer's cards start below it
+function fitBanner() { $('#drawer').style.paddingTop = state.mission == null ? '' : `${$('#banner').offsetHeight + 18}px`; }
+function updateStars() { $('#starCount').textContent = `${state.done.filter(id => MISSIONS.some(m => m.id === id)).length}/${MISSIONS.length} ⭐`; }
+function closeModals() { document.querySelectorAll('.modal').forEach(m => m.classList.add('hidden')); }
+function confetti() {
+  const em = ['⭐', '🌟', '💨', '🎈', '🎉'];
+  for (let i = 0; i < 30; i++) {
+    const s = document.createElement('span'); s.className = 'confetti'; s.textContent = em[i % em.length];
+    s.style.left = `${Math.random() * 100}vw`; s.style.animationDuration = `${2 + Math.random() * 2}s`; s.style.animationDelay = `${Math.random() * .6}s`;
+    document.body.appendChild(s); setTimeout(() => s.remove(), 5000);
+  }
+}
+
+// ================= Views =================
+const sw = g => `<span class="sw" style="background:${GAS[g].c}"></span>`;
+const PRED = { n: 'Nitrogen', o: 'Oxygen', c: 'Carbon dioxide' };
+const VIEWS = {
+  air: {
+    label: '🫧 <span class="tl">What is air?</span>',
+    stage: () => AIR.stage(),
+    after: () => AIR.drawLens(),
+    drawer() {
+      const a = state.air;
+      const arrangeRow = `<div class="navrow" style="margin-top:8px"><button class="opt${a.sorted ? '' : ' on'}" data-act="amix">🔀 Mix them up</button><button class="opt${a.sorted ? ' on' : ''}" data-act="asort">📊 Sort them</button></div>`;
+      const zoom = `<div class="card"><h3>🔍 Zoom</h3><div class="stops">
+          <button class="opt${a.level === 100 ? ' on' : ''}" data-act="alevel" data-l="100">100 particles</button>
+          <button class="opt${a.level === 10000 ? ' on' : ''}" data-act="alevel" data-l="10000">10,000 particles</button></div></div>`;
+      if (a.level === 100) {
+        const says = a.msg ? `<div class="card says${a.msg.ok ? ' good' : ''}"><h3>🔎 Check</h3>${a.msg.ok ? `<p>${a.msg.text}</p>` : `<ul>${a.msg.msgs.slice(0, 3).map(t => `<li>${t}</li>`).join('')}</ul>`}</div>` : '';
+        const intro = `<div class="card"><h2>What is air?</h2>
+          <p>Air is a <b>mixture</b> of different gases. The picture zooms in on <b>100 particles</b> of air. Each dot is one particle, and each colour is a different gas.</p></div>`;
+        if (!a.predSaved) return `${intro}
+          <div class="card"><h3>🤔 Predict first</h3>
+            <p>Which gas do you think there is <b>most</b> of in air?</p>
+            <div class="stops">${Object.entries(PRED).map(([g, n]) => `<button class="opt${a.pred === g ? ' on' : ''}" data-act="apred" data-g="${g}">${n}</button>`).join('')}</div>
+            <p style="margin-top:8px">Why do you think that?</p>
+            <textarea class="reason" id="reason" placeholder="I think so because…">${a.reason}</textarea></div>
+          <div class="checkbar"><button class="btn go" data-act="apredsave"${a.pred ? '' : ' disabled'}>✔ Save my prediction</button></div>`;
+        const rows = ['n', 'o', 'x'].map(g => `<div class="countrow"><label for="c-${g}">${sw(g)} ${GAS[g].name}</label>
+          <input class="numin${a.counted ? ' ok' : ''}" id="c-${g}" data-g="${g}" type="number" inputmode="numeric" min="0" max="100" value="${a.counts[g]}"${a.counted ? ' readonly' : ''}></div>`).join('');
+        const result = a.counted ? `
+          <div class="card"><h3>📊 Air in 100 particles</h3>${AIR.barChart()}
+            <p>Most of the air is <b>nitrogen</b>. Next comes <b>oxygen</b>.</p>
+            <p class="spot">You predicted <b>${PRED[a.pred].toLowerCase()}</b>. ${a.pred === 'n' ? 'You were right!' : 'Lots of people think that, but there is much more nitrogen!'}${a.reason ? `<br><span class="muted">Your reason: “${esc(a.reason)}”</span>` : ''}</p></div>
+          <div class="card"><h3>❓ Where is the carbon dioxide?</h3>
+            <p>Carbon dioxide is in air too, but there is so little that 100 particles isn't enough to find any. It is hiding in the 1 for "other gases".</p>
+            <div class="navrow"><button class="btn go" data-act="alevel" data-l="10000">🔍 Zoom out to 10,000</button></div></div>` : '';
+        return `${says}${intro}
+          <div class="card"><h3>🔢 Count the particles</h3>
+            <p>How many particles of each gas are there? Type your answers.</p>${rows}${arrangeRow}</div>
+          ${a.counted ? '' : '<div class="checkbar"><button class="btn go" data-act="acheck">✔ Check my counts</button></div>'}
+          ${result}${zoom}`;
+      }
+      const all = a.found.length >= 4;
+      const stars = [0, 1, 2, 3].map(k => a.found.includes(k) ? '⚫' : '◌').join('');
+      const wrong = a.pctWrong.length && a.pct == null ? `<div class="card says"><h3>🔎 Not quite</h3><p>${PCT_HINT[a.pctWrong[a.pctWrong.length - 1]]}</p></div>` : '';
+      const quiz = all ? `<div class="card"><h3>❓ What percentage is carbon dioxide?</h3>
+          <p>There are <b>4</b> carbon dioxide particles in every <b>10,000</b>. What percentage is that?</p>
+          <div class="stops">${['4', '0.4', '0.04'].map(v => `<button class="opt${a.pct === v ? ' done' : a.pctWrong.includes(v) ? ' wrong' : ''}" data-act="apct" data-v="${v}"${a.pct ? ' disabled' : ''}>${v}%</button>`).join('')}</div></div>` : '';
+      const table = a.pct ? `<div class="card"><h3>🌍 What air is made of</h3>
+          <table class="gtable"><tr><th>Gas</th><th>In 10,000</th><th>Percentage</th></tr>
+            <tr><td>${sw('n')} Nitrogen</td><td>${fmt(7808)}</td><td>about 78%</td></tr>
+            <tr><td>${sw('o')} Oxygen</td><td>${fmt(2095)}</td><td>about 21%</td></tr>
+            <tr><td>${sw('x')} Other gases</td><td>93</td><td>about 1%</td></tr>
+            <tr class="co2"><td>${sw('c')} Carbon dioxide</td><td>4</td><td>0.04%</td></tr></table>
+          <p>So air is about <b>78% nitrogen</b> and <b>21% oxygen</b>. The other gases and the tiny amount of <b>carbon dioxide</b> make up the last <b>1%</b> together (93 + 4 = 97 particles in 10,000).</p></div>` : '';
+      return `${wrong}
+        <div class="card"><h2>Carbon dioxide hunt</h2>
+          <p>Now there are <b>10,000</b> particles. Carbon dioxide is the <b>dark</b> colour. There are only <b>4</b>!</p>
+          <p>Tap or drag on the big grid to move the <b>close-up</b>. Then tap the carbon dioxide particle in the close-up.</p>
+          <p class="found" aria-label="${a.found.length} of 4 found">${stars}</p>
+          <p class="muted">${a.found.length} of 4 found${a.sorted ? ' (sorted, so they are all at the end!)' : ''}</p>${arrangeRow}</div>
+        ${quiz}${table}${zoom}`;
+    }
+  },
+  earth: {
+    label: '🌍 <span class="tl">Around the Earth</span>',
+    stage: () => EV.stage(),
+    drawer() {
+      const e = state.earth, L = LAYERS.find(x => x.id === e.sel);
+      return `<div class="card"><h2>Layers of the atmosphere</h2>
+          <p>The <b>atmosphere</b> is the layer of air all around the Earth. It has <b>five</b> layers.</p>
+          <p>Point at a layer in the picture, or tap it, to find out about it. You can use these buttons too.</p>
+          <div class="stops layerbtns" style="margin-top:6px">${LAYERS.map(x => `<button class="opt${x.id === e.sel ? ' on' : ''}" data-act="elayer" data-l="${x.id}">${x.name}${e.seen.includes(x.id) ? ' <span class="tick">✔</span>' : ''}</button>`).join('')}</div>
+          <p class="muted">You have explored ${e.seen.length} of 5 layers.</p></div>
+        ${L ? `<div class="card"><h3><span class="sw" style="background:${L.c}"></span> ${L.name}: ${L.id === 'exo' ? 'from about 600 km up' : `${L.lo} to about ${fmt(L.hi)} km up`}</h3>
+          <p>🌡️ ${L.trend}</p><ul class="facts">${L.facts.map(f => `<li>${f}</li>`).join('')}</ul></div>` : ''}
+        <div class="card"><h3>📏 Not to scale</h3><p class="muted">The layers are drawn much thicker than they really are, so that you can see them all. In <b>Heights and temperature</b> you can switch to <b>To scale</b>.</p></div>`;
+    }
+  },
+  layers: {
+    label: '🌡️ <span class="tl">Heights and temperature</span>',
+    stage: () => LY.stage(),
+    drawer() {
+      const s = state.layers, L = LAYERS.find(x => x.id === s.sel);
+      const says = s.said ? `<div class="card says${s.said.ok ? ' good' : ''}"><h3>🔎 Check</h3>${s.said.ok ? `<p>${s.said.text}</p>` : `<ul>${s.said.msgs.slice(0, 3).map(t => `<li>${t}</li>`).join('')}</ul>`}</div>` : '';
+      const chips = SKYORDER.map(id => `<button class="chip${s.chip === id ? ' sel' : s.placed[id] != null ? ' on' : ''}" data-kind="sky" data-id="${id}"><span class="em">${picHTML(SKY[id][0])}</span>${SKY[id][1]}</button>`).join('');
+      const placed = Object.keys(s.placed).length;
+      return `${says}
+        <div class="card"><h2>Layers of the atmosphere</h2>
+          <p>Here the five layers are stacked up from the ground. Drag the 🌡️ up and down the graph to see the temperature.</p>
+          <div class="stops"><button class="opt${s.scale ? '' : ' on'}" data-act="lscale" data-v="0">↕ Not to scale</button><button class="opt${s.scale ? ' on' : ''}" data-act="lscale" data-v="1">📏 To scale</button></div>
+          ${s.scale ? '<p class="muted">To scale, the troposphere is a very thin strip at the bottom, even though almost all the air and all the weather are in it!</p>' : ''}</div>
+        <div class="card"><div class="stops layerbtns">${LAYERS.map(x => `<button class="opt${x.id === s.sel ? ' on' : ''}" data-act="llayer" data-l="${x.id}">${x.name}</button>`).join('')}</div>
+          <h3 style="margin-top:8px">${L.name}: ${L.id === 'exo' ? 'from about 600 km up' : `${L.lo} to about ${fmt(L.hi)} km up`}</h3>
+          <p>🌡️ ${L.trend}</p><ul class="facts">${L.facts.map(f => `<li>${f}</li>`).join('')}</ul></div>
+        <div class="card"><h3>📍 Put things in the sky</h3>
+          <p class="muted">Drag each one to the right height. Or tap it, then tap the sky. Drag it again to move it.</p>
+          <div class="shelf">${chips}</div></div>
+        <div class="checkbar"><button class="btn go" data-act="lcheck"${placed ? '' : ' disabled'}>✔ Check (${placed} of 9 placed)</button></div>`;
+    }
+  },
+  water: {
+    label: '🌧️ <span class="tl">Water cycle</span>',
+    stage: () => WC.stage(),
+    drawer() {
+      const a = state.water;
+      const top = `<div class="card"><h2>The water cycle</h2>
+          <p>Water goes round and round between the <b>sea</b>, the <b>air</b> and the <b>land</b>.</p>
+          <div class="stops"><button class="opt${a.mode === 'step' ? ' on' : ''}" data-act="wmode" data-m="step">👆 Step by step</button><button class="opt${a.mode === 'build' ? ' on' : ''}" data-act="wmode" data-m="build">🧩 Build it</button><button class="opt${a.mode === 'cup' ? ' on' : ''}" data-act="wmode" data-m="cup">🥤 Cup model</button></div>
+          ${a.mode === 'cup' ? '' : `<div class="stops" style="margin-top:6px"><button class="opt${a.cold ? '' : ' on'}" data-act="wcold" data-v="0">☀️ Warm day</button><button class="opt${a.cold ? ' on' : ''}" data-act="wcold" data-v="1">❄️ Cold day</button></div>
+          ${a.cold ? '<p class="muted">High up on the mountain it is below 0 °C, so the precipitation falls as <b>snow</b>.</p>' : ''}`}</div>`;
+      if (a.mode === 'cup') {
+        const C = WC.CUP, n = a.cup, both = a.well.trim() && a.diff.trim();
+        const step = n < C.length
+          ? `<div class="card says"><h3>🥤 Step ${n + 1} of ${C.length}</h3><p>${n ? C[n - 1].done : 'Make a model of the water cycle in a cup. Do each step in order.'}</p><div class="navrow"><button class="btn go" data-act="wcup">${C[n].act}</button></div></div>`
+          : `<div class="card says good"><h3>🔄 A water cycle in a cup!</h3><p>${C[n - 1].done}</p></div>`;
+        const sofar = n ? `<div class="card"><h3>So far</h3><ul class="wdone">${C.slice(0, n).map(x => `<li>✔️ ${x.done}</li>`).join('')}</ul></div>` : '';
+        const model = n < C.length ? '' : `<div class="card"><h3>🌍 The cup and the real world</h3>
+            <table class="gtable"><tr><th>In the cup</th><th style="text-align:left">In the real world</th></tr>
+            <tr><td>Warm water</td><td style="text-align:left">The sea, warmed by the Sun</td></tr>
+            <tr><td>Cold cling film with ice</td><td style="text-align:left">Cold air high in the sky</td></tr>
+            <tr><td>Drops under the cling film</td><td style="text-align:left">Clouds</td></tr>
+            <tr><td>Drops falling back</td><td style="text-align:left">Rain</td></tr></table></div>
+          <div class="card"><h3>🤔 How good is this model?</h3>
+            <p class="muted">A model shows some important features of something real, but not everything.</p>
+            <p>What does the cup show <b>well</b>?</p><textarea class="reason" id="cupWell" placeholder="It shows…">${esc(a.well)}</textarea>
+            <p style="margin-top:8px">What is <b>different</b> from the real water cycle?</p><textarea class="reason" id="cupDiff" placeholder="In real life…">${esc(a.diff)}</textarea>
+            <div class="navrow" style="margin-top:8px"><button class="btn" data-act="wideas"${both ? '' : ' disabled'}>💡 Show some ideas</button><button class="btn" data-act="wrestart">↺ Start again</button></div>
+            ${a.ideas ? `<p style="margin-top:8px"><b>It shows well:</b></p><ul class="facts"><li>Evaporation, condensation and precipitation, in the right order.</li><li>Warmth makes water evaporate, and cold makes water vapour condense.</li><li>The same water goes round and round.</li></ul>
+              <p><b>It is different because:</b></p><ul class="facts"><li>It is much smaller and faster.</li><li>The warmth comes from warm water, not from the Sun.</li><li>The drops fall back into the same place. There is no land, no rivers and no wind.</li><li>The cup is closed, but the real atmosphere is open.</li></ul>` : ''}</div>`;
+        return `${step}${model}${sofar}${top}`;
+      }
+      if (a.mode === 'step') {
+        const S = WC.STEPS[a.step];
+        const done = WC.STEPS.slice(0, a.step).map(x => `<li>✔️ ${x.done}</li>`).join('');
+        const ask = S ? `<div class="card says wq"><h3>${a.step + 1} of 4: What happens next?</h3><p>${S.q}</p>
+            ${S.opts.map((t, k) => `<button class="opt${a.wrong.includes(k) ? ' wrong' : ''}" data-act="wans" data-k="${k}"${a.wrong.includes(k) ? ' disabled' : ''}>${t.replace(/<\/?b>/g, '')}</button>`).join('')}
+            ${a.wrong.length ? `<p class="spot">💡 Not quite. ${S.hint}</p>` : ''}</div>`
+          : `<div class="card says good"><h3>🔄 Round and round!</h3><p>That is the water cycle. It never stops: the same water goes round again and again.</p><div class="navrow"><button class="btn" data-act="wrestart">↺ Start again</button></div></div>`;
+        return `${ask}${top}${done ? `<div class="card"><h3>So far</h3><ul class="wdone">${done}</ul></div>` : ''}`;
+      }
+      const left = Object.keys(WC.WORDS).filter(id => !Object.values(a.placed).includes(id));
+      const says = a.said ? `<div class="card says${a.said.ok ? ' good' : ''}"><h3>${a.said.ok ? '🎉 Well done!' : '🔎 Not quite'}</h3><p>${a.said.text}</p></div>` : '';
+      return `${says}${top}
+        <div class="card"><h3>🧩 Put the key words in place</h3>
+          <p class="muted">Drag each word to a space on the picture. Or tap a word, then tap a space.</p>
+          ${left.length ? `<div class="stops">${left.map(id => `<button class="chip${a.chip === id ? ' sel' : ''}" data-kind="wword" data-id="${id}" style="min-height:44px;padding:4px 12px;font-size:15px">${WC.WORDS[id][0]}</button>`).join('')}</div>` : '<p class="job">🎉 All three are in place!</p>'}
+          <div class="navrow" style="margin-top:8px"><button class="btn" data-act="wrestart">↺ Start again</button></div></div>`;
+    }
+  },
+  pure: {
+    label: '🧪 <span class="tl">Is it pure?</span>',
+    stage: () => PU.stage(),
+    drawer() {
+      const u = state.pure, all = PU.ORDER.every(id => u.pred[id] != null);
+      if (!u.heated) return `<div class="card"><h2>Is it pure?</h2>
+          <p><b>Pure</b> water is only water, with nothing else in it. These five kinds of water all look clear.</p>
+          <p>Which ones do you think are <b>pure</b>?</p>
+          ${PU.ORDER.map(id => `<div class="prow"><span>${PU.SAMPLES[id][0]}</span><button class="opt${u.pred[id] === true ? ' on' : ''}" data-act="ppred" data-id="${id}" data-v="1">Pure</button><button class="opt${u.pred[id] === false ? ' on' : ''}" data-act="ppred" data-id="${id}" data-v="0">Not pure</button></div>`).join('')}
+          <p style="margin-top:8px">Why do you think that?</p>
+          <textarea class="reason" id="preason" placeholder="I think so because…">${esc(u.reason)}</textarea></div>
+        <div class="card"><h3>🔥 The test</h3><p>If you heat the water, it <b>evaporates</b>. Anything that was dissolved in it is <b>left behind</b> in the dish.</p></div>
+        <div class="checkbar"><button class="btn go" data-act="pheat"${all ? '' : ' disabled'}>🔥 Evaporate all the water</button></div>`;
+      const qs = PU.QUESTIONS.map((Q, i) => `<div style="margin-top:${i ? 10 : 4}px"><p>${i + 1}. ${Q.q}</p><div class="stops">${Q.opts.map((t, k) => {
+        const cls = u.ans[i] && k === Q.ok ? ' done' : (u.wrong[i] || []).includes(k) ? ' wrong' : '';
+        return `<button class="opt${cls}" data-act="pans" data-q="${i}" data-k="${k}"${u.ans[i] || (u.wrong[i] || []).includes(k) ? ' disabled' : ''}>${t}</button>`; }).join('')}</div>
+        ${u.wrong[i] && !u.ans[i] ? `<p class="spot">💡 ${Q.hint}</p>` : ''}</div>`).join('');
+      const finished = PU.QUESTIONS.every((_, i) => u.ans[i]);
+      const right = PU.ORDER.filter(id => u.pred[id] === PU.SAMPLES[id][5]).length;
+      return `${finished ? `<div class="card says good"><h3>🌍 What did you find out?</h3>
+          <p><b>Most water on Earth is not pure.</b> It has substances <b>dissolved</b> in it, even when it looks clear.</p>
+          <p>Rain is nearly pure because it comes from water that <b>evaporated</b>: when water evaporates, the dissolved substances are left behind, just like in the dishes.</p></div>` : ''}
+        <div class="card says${finished ? '' : ' wq'}"><h3>❓ What do the dishes show?</h3>${qs}</div>
+        <div class="card"><h3>📋 What was left from 1 litre</h3>
+          <table class="gtable ptable"><tr><th>Water</th><th>Left behind</th><th>You said</th></tr>
+          ${PU.ORDER.map(id => { const S = PU.SAMPLES[id], p = u.pred[id]; return `<tr><td>${S[0]}</td><td>${S[3]}</td><td>${p ? 'pure' : 'not pure'} ${p === S[5] ? '✅' : '❌'}</td></tr>`; }).join('')}</table>
+          <p class="muted">Your predictions: ${right} of 5 right.${u.reason ? ` Your reason: “${esc(u.reason)}”` : ''}</p>
+          <ul class="facts">${PU.ORDER.map(id => `<li><b>${PU.SAMPLES[id][1]}:</b> ${PU.SAMPLES[id][4]}</li>`).join('')}</ul>
+          <div class="navrow" style="margin-top:8px"><button class="btn" data-act="preset">↺ Start again</button></div></div>`;
+    }
+  },
+  town: {
+    label: '🏰 <span class="tl">Devín</span>',
+    stage: () => RT.stage(),
+    drawer() {
+      const t = state.town, P = RT.PLACES;
+      const top = `<div class="card"><h2>Devín, on the Danube</h2>
+          <p><b>Devín</b> is by the <b>River Danube</b>, in Slovakia, under its castle. The farm, factory and rubbish tip in this picture are <b>made up</b>.</p>
+          <div class="stops"><button class="opt${t.mode === 'spot' ? ' on' : ''}" data-act="tmode2" data-m="spot">🔍 Spot the pollution</button><button class="opt${t.mode === 'fix' ? ' on' : ''}" data-act="tmode2" data-m="fix">🛠️ Make it better</button></div></div>`;
+      const defn = `<div class="card"><h3>📖 What is pollution?</h3>
+          <p><b>Pollution</b> is when <b>harmful substances</b> are added to the environment <b>by humans</b>.</p>
+          <ol class="facts"><li><b>It is caused by humans.</b> Things that happen naturally, like leaves falling, are not pollution.</li>
+          <li><b>It contaminates the environment.</b> The substances make the air, water or land dirty, and harm living things.</li></ol></div>`;
+      if (t.mode === 'spot') {
+        const found = RT.ORDER.filter(id => t.answered[id]).length, Q = P[t.open];
+        const ask = Q ? `<div class="card says${t.answered[t.open] ? ' good' : ''}"><h3>${Q.em} ${Q.name}</h3><p>${Q.see}</p>
+            ${t.answered[t.open] ? `<p class="job">${Q.pol ? Q.yes : Q.no}</p>`
+              : `<p><b>Is this pollution?</b></p><div class="navrow"><button class="btn" data-act="tans" data-v="1">✅ Yes</button><button class="btn" data-act="tans" data-v="0">❌ No</button></div>
+                 ${t.wrong[t.open] ? `<p class="spot">💡 Not quite. Check both parts: 1. Was it caused by <b>humans</b>? 2. Does it <b>contaminate</b> the environment: make the air, water or land dirty and harmful?</p>` : ''}`}</div>`
+          : `<div class="card says"><h3>👆 Tap a numbered circle</h3><p>Look at each place in the town. Is it causing <b>pollution</b>?</p></div>`;
+        return `${ask}${defn}${top}<div class="card"><p class="muted">You have looked at ${found} of 6 places.</p>
+          ${found === 6 ? '<p class="job">🎉 You found all 5 kinds of pollution, and spotted that the falling leaves are natural. Now try <b>Make it better</b>!</p>' : ''}</div>`;
+      }
+      const ids = RT.ORDER.filter(id => P[id].pol), n = ids.filter(id => t.fixed[id]).length;
+      return `${n === ids.length ? `<div class="card says good"><h3>🌍 Science and technology: good and bad</h3>
+          <p>Some science and technology <b>caused</b> the pollution: the factory, the cars and lorries, and farm chemicals.</p>
+          <p>Other science and technology <b>helped</b>: filters, water treatment, electric buses and recycling.</p>
+          <p>Science and technology can have <b>good</b> and <b>bad</b> effects on our local area.</p></div>` : ''}
+        ${top}${defn}
+        <div class="card"><h3>🛠️ Use science and technology to help</h3><p class="muted">Choose what to do in each place. Watch the river and the air.</p>
+          ${ids.map(id => { const [em, what, how] = P[id].fix; return `<div class="fixrow"><span class="em">${em}</span><div><b>${P[id].name}</b><br>${what}
+            ${t.fixed[id] ? `<p class="muted" style="margin:4px 0 0">✔ ${how}</p>` : ''}
+            <div><button class="btn${t.fixed[id] ? ' active' : ''}" data-act="tfix" data-id="${id}">${t.fixed[id] ? '✔ Done (tap to undo)' : 'Do it'}</button></div></div></div>`; }).join('')}
+          <p class="muted">${n} of ${ids.length} done.</p></div>`;
+    }
+  },
+  help: {
+    label: 'Help',
+    stage: () => AIR.stage(),
+    after: () => AIR.drawLens(),
+    drawer() {
+      return `<div class="card"><h2>Help</h2>
+        <p><b>🫧 What is air?</b>: predict which gas there is most of, count 100 particles of air and make a bar chart. Then zoom out to 10,000 particles and hunt for carbon dioxide.</p>
+        <p><b>🌍 Around the Earth</b>: see the five layers of the atmosphere all around the Earth. Point at a layer, or tap it, to read about it.</p>
+        <p><b>🌡️ Heights and temperature</b>: explore the five layers of the atmosphere. Read about each one, watch the temperature change as you move the thermometer, and put things in the sky at the right height. Switch between <b>Not to scale</b> and <b>To scale</b>.</p>
+        <p><b>🌧️ Water cycle</b>: go through the water cycle step by step, answering "What happens next?". Then build it yourself by putting the key words in the right places, and make a model of it in a cup.</p>
+        <p><b>🧪 Is it pure?</b>: predict which kinds of water are pure, then evaporate them and see what is left behind.</p>
+        <p><b>🏰 Devín</b>: spot the pollution in Devín, by the River Danube, then use science and technology to clean it up.</p>
+        <p><b>🚀 Missions</b>: challenges to try. Win a star for each one!</p>
+        <p><b>🤔 Real life?</b>: how this model is different from real air.</p></div>
+        <div class="card"><h3>🎯 What you are learning</h3>
+          <p><b>5ESp.01</b> Know that the Earth is surrounded by a layer of air called the atmosphere, which is a mixture of different gases (including nitrogen, carbon dioxide and oxygen).</p>
+          <p><b>5Cm.02</b> Understand that substances can be gaseous and know the common gases at room temperature (limited to oxygen, carbon dioxide, water vapour, nitrogen and hydrogen).</p>
+          <p><b>5ESp.02</b> Understand that most water on Earth is not pure and has dissolved substances in it.</p>
+          <p><b>5ESp.03</b> Understand that pollution is the introduction of substances by humans that harm the environment and identify examples of pollution.</p>
+          <p><b>5SIC.05</b> Discuss how the use of science and technology can have positive and negative environmental effects on their local area.</p>
+          <p><b>5ESc.01</b> Describe the water cycle (limited to evaporation, condensation and precipitation).</p>
+          <p class="muted"><b>Also:</b> <b>5TWSm.01</b> Know that a model presents an object, process or idea in a way that shows some of the important features.</p></div>
+        <div class="navrow"><a class="btn go" href="../practice/index.html#air-water">✏️ Practise this</a></div>`;
+    }
+  }
+};
+const esc = s => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+
+function renderStage() { const v = VIEWS[state.view]; $('#stage').innerHTML = v.stage(); if (v.after) v.after(); }
+function render() {
+  const v = VIEWS[state.view];
+  // Help is the ❓ button at the end of the top bar, like the other tools, so it isn't one of the tabs
+  $('#helpBtn').classList.toggle('active', state.view === 'help');
+  $('#tabs').innerHTML = Object.entries(VIEWS).filter(([id]) => id !== 'help').map(([id, x]) =>
+    `<button class="btn${id === state.view ? ' active' : ''}" data-act="view" data-view="${id}" aria-label="${x.label.replace(/<[^>]+>/g, '').replace(/^\S+ /, '')}">${x.label}</button>`).join('');
+  const keep = $('#drawer').scrollTop, same = render.last === state.view;
+  $('#drawer').innerHTML = v.drawer();
+  renderStage();
+  // Staying on the same tab keeps the drawer where it was scrolled to
+  if (same) $('#drawer').scrollTop = keep;
+  render.last = state.view;
+  fitBanner();
+}
+
+// ================= Actions =================
+const ACTIONS = {
+  view(el) { state.view = el.dataset.view; location.hash = 'view=' + state.view; EV.hide(); render(); },
+  apred(el) { state.air.pred = el.dataset.g; render(); },
+  apredsave() { if (state.air.pred) { state.air.predSaved = true; render(); } },
+  amix() { const a = state.air; if (a.sorted) a.sorted = false; else a.seed++; a.tap = null; render(); },
+  asort() { state.air.sorted = true; state.air.tap = null; render(); },
+  alevel(el) { const a = state.air; a.level = +el.dataset.l; a.sorted = false; a.tap = null; a.msg = null; render(); $('#drawer').scrollTop = 0; },
+  acheck() { AIR.check(); },
+  apct(el) { AIR.answerPct(el.dataset.v); },
+  lscale(el) { state.layers.scale = el.dataset.v === '1'; render(); },
+  llayer(el) { state.layers.sel = el.dataset.l; render(); },
+  lcheck() { LY.check(); },
+  tmode2(el) { state.town.mode = el.dataset.m; state.town.open = null; render(); },
+  tans(el) { RT.answer(el.dataset.v === '1'); },
+  tfix(el) { RT.fix(el.dataset.id); },
+  ppred(el) { state.pure.pred[el.dataset.id] = el.dataset.v === '1'; render(); },
+  pheat() { const u = state.pure; if (PU.ORDER.every(id => u.pred[id] != null)) { u.heated = true; render(); $('#drawer').scrollTop = 0; } },
+  pans(el) { PU.answer(+el.dataset.q, +el.dataset.k); },
+  preset() { state.pure = freshPure(); render(); },
+  wmode(el) { state.water = Object.assign(freshWater(), { mode: el.dataset.m, cold: state.water.cold }); render(); },
+  wcold(el) { state.water.cold = el.dataset.v === '1'; render(); },
+  wcup() { const a = state.water; if (a.cup < WC.CUP.length) { a.cup++; render(); $('#drawer').scrollTop = 0; } },
+  wideas() { const a = state.water; if (a.well.trim() && a.diff.trim()) { a.ideas = true; render(); emit('cup'); } },
+  wans(el) { WC.answer(+el.dataset.k); },
+  wrestart() { state.water = Object.assign(freshWater(), { mode: state.water.mode, cold: state.water.cold }); render(); },
+  elayer(el) { state.earth.sel = el.dataset.l; EV.hide(); if (!state.earth.seen.includes(el.dataset.l)) { state.earth.seen.push(el.dataset.l); emit('explore', { seen: state.earth.seen.length }); } render(); },
+  lpopclose() { EV.hide(); state.earth.sel = null; renderStage(); },
+  missions() {
+    $('#missionList').innerHTML = MISSIONS.map((m, i) => `<button class="mission-item${state.done.includes(m.id) ? ' done' : ''}" data-act="startMission" data-i="${i}">
+      <span class="em">${m.icon}</span><span class="t">${i + 1}. ${m.title}</span><span class="star">⭐</span></button>`).join('');
+    $('#missionsModal').classList.remove('hidden');
+  },
+  startMission(el) { startMission(+el.dataset.i); },
+  nextMission(el) { startMission(+el.dataset.i); },
+  stopMission() { stopMission(); },
+  hint() {
+    const h = $('#bannerHint');
+    h.classList.toggle('hidden');
+    $('#hintBtn').textContent = h.classList.contains('hidden') ? '💡 Show a hint' : '💡 Hide the hint';
+    fitBanner();
+  },
+  resetStars() { state.done = []; store.set('aw-done', []); updateStars(); ACTIONS.missions(); },
+  closeModals() { closeModals(); },
+  model() { $('#modelModal').classList.remove('hidden'); }
+};
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-act]');
+  if (el && ACTIONS[el.dataset.act]) ACTIONS[el.dataset.act](el);
+});
+// Typed answers are kept as you type, so they survive the drawer being redrawn
+document.addEventListener('input', e => {
+  if (e.target.matches('.numin')) { state.air.counts[e.target.dataset.g] = e.target.value; }
+  if (e.target.id === 'reason') state.air.reason = e.target.value;
+  if (e.target.id === 'preason') state.pure.reason = e.target.value;
+  // The ideas only appear once both answers have been written
+  if (e.target.id === 'cupWell' || e.target.id === 'cupDiff') {
+    const a = state.water; if (e.target.id === 'cupWell') a.well = e.target.value; else a.diff = e.target.value;
+    const b = $('[data-act=wideas]'); if (b) b.disabled = !(a.well.trim() && a.diff.trim());
+  }
+});
+document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.matches('.numin')) AIR.check(); });
+// The air grid: tap or drag on the big grid to move the close-up; tap in the close-up to check a particle.
+// With 100 particles, tapping one says which gas it is.
+let dragging = false;
+$('#stage').addEventListener('pointerdown', e => {
+  if (!$('#airSvg')) return;
+  const a = state.air;
+  if (a.level === 10000) {
+    const l = AIR.lensAt(e);
+    if (l) { AIR.tapLens(l); return; }
+  }
+  const cell = AIR.cellAt(e);
+  if (!cell) return;
+  if (a.level === 100) {
+    if (!a.predSaved) return;
+    const t = arrange(100, a.seed, a.sorted).types[cell[1] * 10 + cell[0]];
+    a.tap = `That is ${t === 'x' ? 'another gas, like argon' : GAS[t].name.toLowerCase()}.`;
+    AIR.drawLens(); return;
+  }
+  dragging = true; $('#stage').setPointerCapture(e.pointerId); AIR.moveLens(cell);
+});
+$('#stage').addEventListener('pointermove', e => { if (dragging) { const c = AIR.cellAt(e); if (c) AIR.moveLens(c); } });
+addEventListener('pointerup', () => { dragging = false; });
+// Layers: drag a placed thing to move it, drag on the graph to move the thermometer, tap the sky to place a chosen thing or read about a layer
+let lay = null;
+$('#stage').addEventListener('pointerdown', e => {
+  if (!$('#laySvg')) return;
+  const s = state.layers, item = e.target.closest('.pitem'), p = LY.where(e);
+  if (item) { lay = { item: item.dataset.id }; $('#stage').setPointerCapture(e.pointerId); return; }
+  if (!p) return;
+  if (p.at === 'graph') { lay = { probe: true }; $('#stage').setPointerCapture(e.pointerId); s.probe = p.km; renderStage(); return; }
+  if (s.chip) { LY.place(s.chip, p); return; }
+  s.sel = LY.layerAt(p.km).id; render();
+});
+$('#stage').addEventListener('pointermove', e => {
+  if (!lay || !$('#laySvg')) return;
+  const s = state.layers, p = LY.where(e);
+  if (!p) return;
+  if (lay.probe) { s.probe = p.km; renderStage(); }
+  else if (lay.item && p.at === 'col') { lay.moved = true; s.placed[lay.item] = p.km; s.fx[lay.item] = p.fx; delete s.res[lay.item]; renderStage(); }
+});
+addEventListener('pointerup', () => {
+  if (!lay) return;
+  const s = state.layers, was = lay; lay = null;
+  if (was.probe) emit('probe', { km: s.probe, t: tempAt(Math.min(s.probe, 600)) });
+  if (was.item && was.moved) { s.said = null; render(); }
+});
+// Around the Earth: a mouse pointing at a layer shows its facts; a tap keeps them open until you tap somewhere else
+$('#stage').addEventListener('pointermove', e => {
+  if (!$('#earthSvg') || e.pointerType !== 'mouse' || $('#lpop').dataset.pinned) return;
+  const id = e.target.closest('[data-layer]')?.dataset.layer || null, ea = state.earth;
+  if (id) EV.show(id, e, false); else EV.hide();
+  if (id !== ea.hover) { ea.hover = id; renderStage(); }
+});
+$('#stage').addEventListener('pointerleave', () => { if (!$('#earthSvg') || $('#lpop').dataset.pinned) return; EV.hide(); if (state.earth.hover) { state.earth.hover = null; renderStage(); } });
+$('#stage').addEventListener('click', e => {
+  if (!$('#earthSvg')) return;
+  const id = e.target.closest('[data-layer]')?.dataset.layer, ea = state.earth;
+  if (!id) { EV.hide(); ea.sel = null; render(); return; }
+  ea.sel = id; ea.hover = null; render(); EV.show(id, e, true);
+});
+// Water cycle, Build it: tap a word, then tap a space
+$('#stage').addEventListener('click', e => {
+  if (!$('#waterSvg') || state.water.mode !== 'build') return;
+  const sl = e.target.closest('[data-slot]')?.dataset.slot || WC.slotNear(e);
+  if (!sl) return;
+  if (state.water.chip) WC.put(state.water.chip, sl);
+  else { state.water.said = { ok: false, text: 'First tap one of the words in the panel, then tap a space.' }; render(); }
+});
+// River town: tap a numbered circle to look at that place
+$('#stage').addEventListener('click', e => {
+  if (!$('#townSvg')) return;
+  const id = e.target.closest('[data-place]')?.dataset.place;
+  if (id) { state.town.open = id; render(); $('#drawer').scrollTop = 0; }
+});
+// Tapping the dark background or pressing Escape closes a pop-up
+document.querySelectorAll('.modal').forEach(m => m.addEventListener('click', e => { if (e.target === m) closeModals(); }));
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModals(); });
+let resizeT;
+addEventListener('resize', () => { fitBanner(); clearTimeout(resizeT); resizeT = setTimeout(renderStage, 120); });
+
+// ================= Start =================
+// Test hooks: #level=10000&sorted=1&pred=o&counted=1&found=0,1,2,3&pct=0.04&lens=40,40&seed=5&wrong=4 sets up the air grid;
+// #view=help opens help; #mission=1 starts a mission
+const hp = new URLSearchParams(location.hash.slice(1));
+if (VIEWS[hp.get('view')]) state.view = hp.get('view');
+{
+  const a = state.air;
+  if (hp.get('level') === '10000') a.level = 10000;
+  if (hp.has('seed')) a.seed = +hp.get('seed');
+  if (hp.has('sorted')) a.sorted = true;
+  if (PRED[hp.get('pred')]) { a.pred = hp.get('pred'); a.predSaved = true; }
+  if (hp.has('counted')) { a.counted = true; a.predSaved = true; a.pred = a.pred || 'o'; a.counts = { n: '78', o: '21', x: '1' }; }
+  if (hp.has('counts')) { const [n, o, x] = hp.get('counts').split(','); a.counts = { n, o, x }; a.predSaved = true; a.pred = a.pred || 'o'; }
+  if (hp.has('found')) a.found = hp.get('found').split(',').map(Number).filter(k => k >= 0 && k < 4);
+  if (hp.has('wrong')) a.pctWrong = hp.get('wrong').split(',');
+  if (hp.get('pct') === '0.04') a.pct = '0.04';
+  if (hp.has('lens')) a.lens = hp.get('lens').split(',').map(Number);
+}
+{
+  // #view=layers&scale=1&sel=meso&probe=85&placed=cloud:5,plane:11&check=1
+  const s = state.layers;
+  if (hp.has('scale')) s.scale = true;
+  if (LAYERS.some(L => L.id === hp.get('sel'))) s.sel = hp.get('sel');
+  if (hp.has('probe')) s.probe = +hp.get('probe');
+  if (hp.has('placed')) hp.get('placed').split(',').forEach((pair, i) => { const [id, km] = pair.split(':'); if (SKY[id]) { s.placed[id] = +km; s.fx[id] = .35 + (i % 4) * .17; } });
+}
+{
+  // #view=water&step=2  or  #view=water&mode=build&placed=evap,cond
+  const a = state.water;
+  if (hp.has('step')) a.step = Math.max(0, Math.min(4, +hp.get('step')));
+  if (hp.get('mode') === 'build') a.mode = 'build';
+  if (hp.has('cold')) a.cold = true;
+  if (hp.get('mode') === 'cup') { a.mode = 'cup'; a.cup = Math.max(0, Math.min(5, +(hp.get('cup') || 0))); }
+  if (hp.has('placed')) hp.get('placed').split(',').filter(id => WC.WORDS[id]).forEach(id => { a.placed[id] = id; });
+}
+{
+  // #view=pure&pred=0,0,1,1,0&heated=1
+  const u = state.pure;
+  if (hp.has('pred')) hp.get('pred').split(',').forEach((v, i) => { if (PU.ORDER[i] && v !== '') u.pred[PU.ORDER[i]] = v === '1'; });
+  if (hp.has('heated') && PU.ORDER.every(id => u.pred[id] != null)) u.heated = true;
+}
+{
+  // #view=town&open=factory&answered=farm,tree  or  #view=town&mode=fix&fixed=farm,road
+  const t = state.town;
+  if (hp.get('mode') === 'fix') t.mode = 'fix';
+  if (RT.PLACES[hp.get('open')]) t.open = hp.get('open');
+  if (hp.has('answered')) hp.get('answered').split(',').filter(id => RT.PLACES[id]).forEach(id => { t.answered[id] = true; });
+  if (hp.has('fixed')) hp.get('fixed').split(',').filter(id => RT.PLACES[id]).forEach(id => { t.fixed[id] = true; });
+}
+updateStars();
+if (MISSIONS[hp.get('mission')]) startMission(+hp.get('mission'));
+else render();
+if (hp.has('check')) { if (state.view === 'layers') LY.check(); else AIR.check(); }
+</script>
+</body>
+</html>

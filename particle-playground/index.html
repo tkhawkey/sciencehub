@@ -1,0 +1,1009 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Particle Playground</title>
+<meta name="description" content="Solids, liquids and gases with the particle model: melting, boiling, why water is odd, evaporation, condensation, dissolving and gases – an interactive tool for Year 5.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ================= Shared look (matches Air and Water) ================= */
+  :root {
+    --ink: #1d2340; --muted: #5b6386; --soft: #eef2ff;
+    --yellow: #ffc83d; --blue: #3d7bff; --coral: #ff5f6d; --green: #22b07d; --orange: #f0892e; --grey: #8a93ad;
+    --space: #070d24; --drawerW: 360px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: var(--space); color: var(--ink); font-family: 'Fredoka', system-ui, sans-serif; font-size: 17px; line-height: 1.35; -webkit-tap-highlight-color: transparent; }
+  body { display: flex; flex-direction: column; }
+  button, input, textarea { font: inherit; color: inherit; }
+  b { font-weight: 700; }
+  .btn { border: 0; border-radius: 14px; padding: 9px 14px; min-height: 44px; cursor: pointer; background: #fff; color: var(--ink); font-weight: 600; font-size: 16px; box-shadow: 0 3px 0 rgba(0,0,0,.18); }
+  .btn:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,.18); }
+  .btn.active { background: var(--yellow); }
+  .btn:focus-visible { outline: 3px solid var(--yellow); outline-offset: 2px; }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .btn.go { background: var(--green); color: #fff; font-size: 19px; flex: 1; }
+  .btn.primary { background: var(--green); color: #fff; }
+  a.btn { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
+  #drawer a.btn { color: #fff; }
+
+  /* ---------- Top bar ---------- */
+  .topbar { flex: none; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 8px 10px; background: rgba(7,13,36,.95); z-index: 15; }
+  .brand { color: #fff; font-size: 21px; font-weight: 700; margin-right: auto; white-space: nowrap; }
+  .hub-link { flex: none; display: grid; place-items: center; width: 38px; height: 38px; border-radius: 12px; text-decoration: none; font-size: 20px; background: rgba(255,255,255,.14); box-shadow: 0 3px 0 rgba(0,0,0,.25); transition: background .15s, transform .08s; }
+  .hub-link:hover { background: rgba(255,255,255,.26); }
+  .hub-link:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,.25); }
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+  .btn.missions { background: var(--blue); color: #fff; }
+  .tabs .btn { padding: 9px 11px; }
+  @media (max-width: 1399px) {
+    .topbar .long { display: none; }
+    .brand { font-size: 18px; }
+    .topbar, .tabs { gap: 4px; }
+    .tabs .btn { padding: 9px 8px; font-size: 14.5px; }
+  }
+
+  /* ---------- Main area: stage on the left, drawer on the right ---------- */
+  main { position: relative; flex: 1; min-height: 0; }
+  #stage { position: absolute; top: 0; bottom: 0; left: 0; right: var(--drawerW); overflow: hidden; background: #eef4fb; display: flex; align-items: center; justify-content: center; }
+  #stage > svg { width: 100%; height: 100%; display: block; touch-action: none; user-select: none; -webkit-user-select: none; }
+  #drawer { position: absolute; top: 0; right: 0; bottom: 0; width: var(--drawerW); background: #dfe6ff; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+  .card { background: #fff; border-radius: 16px; padding: 12px 14px; }
+  .card h2 { margin: 0 0 4px; font-size: 21px; line-height: 1.2; }
+  .card h3 { margin: 0 0 6px; font-size: 17px; }
+  .card p { margin: 4px 0; }
+  .muted { color: var(--muted); font-size: 14.5px; }
+  .term { background: #fff3c4; border-radius: 6px; padding: 0 4px; font-weight: 600; }
+  .navrow { display: flex; gap: 8px; flex-wrap: wrap; }
+  .opt { border: 2px solid #d3dbf7; background: #fff; border-radius: 12px; padding: 6px 10px; min-height: 44px; font-weight: 600; font-size: 15px; cursor: pointer; }
+  .opt.on { background: var(--yellow); border-color: #e0a800; }
+  .opt.wrong { background: #ffe0e3; border-color: var(--coral); }
+  .opt.done, .opt.done:disabled { background: #c9f2df; border-color: var(--green); opacity: 1; }
+  .opt:disabled { opacity: .45; cursor: default; }
+  .stops { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tick { color: var(--green); }
+  .spot { background: #fff3c4; border-radius: 12px; padding: 8px 10px; margin-top: 6px !important; }
+  .job { font-size: 16px; background: #c9f2df; border-radius: 12px; padding: 8px 10px; }
+  .says { border: 3px solid var(--yellow); }
+  .says.good { border-color: var(--green); background: #effbf5; }
+  .says ul { margin: 6px 0 0; padding-left: 20px; }
+  .says li { margin: 4px 0; }
+  .wq .opt { display: block; width: 100%; text-align: left; margin-top: 6px; }
+  /* Check stays in reach at the bottom of the drawer */
+  .checkbar { position: sticky; bottom: -10px; z-index: 2; display: flex; margin: 0 -10px; padding: 6px 10px 10px; background: #dfe6ff; }
+  .sw { width: 16px; height: 16px; border-radius: 50%; flex: none; display: inline-block; vertical-align: -2px; border: 1px solid rgba(0,0,0,.2); }
+  .facts { margin: 6px 0 0; padding-left: 20px; } .facts li { margin: 3px 0; }
+  .gtable { width: 100%; border-collapse: collapse; font-size: 15px; margin: 6px 0; }
+  .gtable th { text-align: left; font-size: 13.5px; color: var(--muted); padding: 2px 4px; }
+  .gtable td { border-top: 1px solid #e1e6f5; padding: 5px 4px; }
+  .numin { width: 90px; min-height: 44px; font-size: 20px; text-align: center; border: 2px solid #c3cdf2; border-radius: 12px; padding: 4px; background: #fff; }
+  .numin:focus { outline: 3px solid var(--yellow); border-color: #e0a800; }
+  .numin.ok { border-color: var(--green); background: #effbf5; }
+  .ansrow { display: flex; align-items: center; gap: 8px; margin: 8px 0 4px; font-weight: 600; flex-wrap: wrap; }
+  .slide { display: flex; align-items: center; gap: 8px; margin: 6px 0; }
+  .slide input[type=range] { flex: 1; min-height: 44px; accent-color: var(--coral); }
+  .bigtemp { font-size: 26px; font-weight: 700; text-align: center; margin: 0; }
+
+  /* ---------- Labels drawn on the pictures ---------- */
+  .glabel { font-family: 'Fredoka', system-ui, sans-serif; font-size: 18px; font-weight: 700; fill: var(--ink); }
+  .gsmall { font-family: 'Fredoka', system-ui, sans-serif; font-size: 14px; font-weight: 600; fill: var(--muted); }
+  .wsmall { font-family: 'Fredoka', system-ui, sans-serif; font-size: 13px; font-weight: 600; fill: var(--ink); paint-order: stroke; stroke: #fff; stroke-width: 4px; stroke-linejoin: round; }
+  .lay-top { position: absolute; top: 8px; left: 10px; right: 10px; display: flex; gap: 8px; align-items: flex-start; flex-wrap: wrap; pointer-events: none; z-index: 2; }
+  .scaletag { background: var(--blue); color: #fff; font-weight: 700; border-radius: 10px; padding: 5px 10px; font-size: 15px; white-space: nowrap; }
+  .readout { background: #fff; border-radius: 12px; padding: 5px 10px; font-size: 15px; line-height: 1.3; box-shadow: 0 3px 8px rgba(0,0,0,.12); }
+  .tapme { cursor: pointer; }
+  .drop { animation: drop 1.2s linear infinite; }
+  @keyframes drop { from { transform: translateY(0); opacity: 0; } 15% { opacity: 1; } to { transform: translateY(var(--d)); opacity: .2; } }
+  .rise { animation: rise 1.6s linear infinite; }
+  @keyframes rise { from { transform: translateY(0); opacity: .9; } to { transform: translateY(var(--d)); opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { .drop, .rise { animation: none; } }
+
+  /* ---------- Chips (tap, or drag onto the picture) ---------- */
+  .chip { display: inline-flex; align-items: center; justify-content: center; gap: 4px; border: 2px solid #d3dbf7; background: #fff; border-radius: 12px; padding: 4px 12px; min-height: 44px; font-weight: 600; font-size: 15px; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
+  .chip.sel { background: var(--yellow); border-color: #e0a800; }
+  .chip-ghost { position: fixed; z-index: 30; pointer-events: none; transform: translate(-50%, -50%) rotate(-3deg); box-shadow: 0 8px 18px rgba(0,0,0,.3); }
+
+  /* ---------- Missions and pop-ups ---------- */
+  .banner { position: absolute; top: 10px; right: 10px; width: calc(var(--drawerW) - 20px); z-index: 6; background: #fff; border: 3px solid var(--yellow); border-radius: 16px; padding: 9px 44px 9px 14px; box-shadow: 0 6px 16px rgba(0,0,0,.18); }
+  .banner.hidden { display: none; }
+  .banner .kicker { font-size: 12.5px; font-weight: 700; color: var(--blue); text-transform: uppercase; letter-spacing: .04em; }
+  .banner .close { position: absolute; top: 6px; right: 6px; border: 0; background: var(--soft); border-radius: 50%; width: 32px; height: 32px; cursor: pointer; }
+  .banner .hint { margin-top: 4px; color: var(--muted); font-size: 15px; }
+  .banner .hint.hidden { display: none; }
+  .linkbtn { border: 0; background: none; color: var(--blue); font-weight: 600; cursor: pointer; padding: 4px 0; font-size: 15px; min-height: 32px; }
+  .modal-box ul.icons { list-style: none; padding: 0; margin: 0 0 14px; }
+  .icons li { display: flex; gap: 10px; padding: 6px 0; line-height: 1.35; }
+  .icons .em { font-size: 24px; width: 32px; flex: none; text-align: center; }
+  .modal { position: fixed; inset: 0; background: rgba(5,10,30,.6); display: flex; align-items: center; justify-content: center; z-index: 20; padding: 16px; }
+  .modal.hidden { display: none; }
+  .modal-box { background: #fff; border-radius: 24px; padding: 20px; width: min(580px, 100%); max-height: calc(100vh - 32px); overflow-y: auto; }
+  .modal-box h2 { margin: 0 0 8px; font-size: 25px; }
+  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+  .mission-list { display: grid; gap: 8px; margin-bottom: 14px; }
+  .mission-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; min-height: 52px; border-radius: 16px; background: var(--soft); border: 0; text-align: left; cursor: pointer; font-size: 16px; }
+  .mission-item .em { font-size: 25px; } .mission-item .t { flex: 1; font-weight: 600; }
+  .mission-item .star { font-size: 21px; filter: grayscale(1); opacity: .35; }
+  .mission-item.done .star { filter: none; opacity: 1; }
+  .win-emoji { font-size: 56px; text-align: center; }
+  .win-text { font-size: 17.5px; line-height: 1.5; margin-bottom: 14px; }
+  .confetti { position: fixed; top: -40px; font-size: 26px; z-index: 40; pointer-events: none; animation: fall linear forwards; }
+  @keyframes fall { to { transform: translateY(110vh) rotate(540deg); } }
+
+  /* ---------- Narrow screens: stage on top, drawer below ---------- */
+  @media (max-width: 760px) {
+    :root { --drawerW: 0px; }
+    #stage { bottom: 42%; right: 0; }
+    #drawer { top: 58%; width: 100%; }
+    .banner { top: calc(58% + 8px); left: 8px; right: 8px; width: auto; }
+    .brand { font-size: 18px; }
+    .tl { display: none; }
+    .readout, .scaletag { font-size: 13px; padding: 3px 7px; }
+    .glabel { font-size: 14px; } .gsmall { font-size: 11px; } .wsmall { font-size: 11px; }
+  }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a class="hub-link" href="../index.html" title="Back to the Science Hub" aria-label="Back to the Science Hub">🏠</a>
+  <div class="brand">🫧 Particle Playground</div>
+  <div class="tabs" id="tabs"></div>
+  <button class="btn missions" data-act="missions" title="Missions">🚀 <span class="long">Missions </span><span id="starCount"></span></button>
+  <button class="btn" data-act="model" title="How is this model different from real life?">🤔<span class="long"> Real life?</span></button>
+  <button class="btn" id="helpBtn" data-act="view" data-view="help" aria-label="How to use">❓</button>
+</div>
+<main>
+  <div id="stage"></div>
+  <div id="drawer"></div>
+  <div id="banner" class="banner hidden" role="status">
+    <div class="kicker" id="bannerKicker"></div>
+    <div id="bannerText"></div>
+    <button class="linkbtn" data-act="hint" id="hintBtn">💡 Show a hint</button>
+    <div class="hint hidden" id="bannerHint"></div>
+    <button class="close" data-act="stopMission" aria-label="Stop this mission">✖</button>
+  </div>
+</main>
+<div id="missionsModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="missionsTitle">
+  <div class="modal-box">
+    <h2 id="missionsTitle">🚀 Missions</h2>
+    <div class="mission-list" id="missionList"></div>
+    <div class="modal-actions"><button class="btn" data-act="resetStars">Reset stars</button><button class="btn primary" data-act="closeModals">Close</button></div>
+  </div>
+</div>
+<div id="modelModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modelTitle">
+  <div class="modal-box">
+    <h2 id="modelTitle">🤔 How is this model different from real life?</h2>
+    <p style="margin-top:0">A <span class="term">model</span> shows some important features of something real – but not everything.</p>
+    <ul class="icons">
+      <li><span class="em">🔬</span><span>Real particles are <b>far too small to see</b>, even with a microscope. A single drop of water has billions and billions of them, not 30.</span></li>
+      <li><span class="em">⚪</span><span>Particles are drawn as <b>circles</b> so that you can see how they are arranged. Real particles have their own shapes, and different substances have different particles.</span></li>
+      <li><span class="em">💨</span><span>In a real gas, the particles are <b>much further apart</b> and move <b>much faster</b> than in the picture: hundreds of metres every second!</span></li>
+      <li><span class="em">🕯️</span><span>There are many kinds of <b>wax</b>. Most melt somewhere between about 45 °C and 70 °C. This tool uses <b>about 60 °C</b>.</span></li>
+      <li><span class="em">📏</span><span>The volumes, the water lost from the jugs and the results of dissolving are <b>typical</b> results. Real ones depend on the room, the container and how long you wait.</span></li>
+      <li><span class="em">🎈</span><span>Hydrogen burns very easily, so party balloons that float are filled with <b>helium</b> instead.</span></li>
+      <li><span class="em">⚠️</span><span>Hot wax and boiling water can burn. Only try these with an adult.</span></li>
+    </ul>
+    <div class="modal-actions"><button class="btn primary" data-act="closeModals">Got it!</button></div>
+  </div>
+</div>
+<div id="winModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="winTitle">
+  <div class="modal-box">
+    <div class="win-emoji">⭐</div>
+    <h2 id="winTitle" style="text-align:center">Mission complete!</h2>
+    <div class="win-text" id="winText"></div>
+    <div class="modal-actions"><button class="btn" data-act="closeModals">Keep exploring</button><a class="btn primary" id="winPractise" href="../practice/index.html#particles">✏️ Practise this</a><button class="btn primary" id="winNext" data-act="nextMission">Next mission ▶</button></div>
+  </div>
+</div>
+
+<script>
+// ================= Utilities =================
+const $ = (s, r = document) => r.querySelector(s);
+// Saved progress; private windows can block storage, so failures are ignored
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+};
+// A repeatable random number generator, so the same picture comes back every time
+function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const stageSize = () => { const st = $('#stage'), w = st.clientWidth || 900, h = st.clientHeight || 600; return { w, h, narrow: w < 560 }; };
+const minus = n => String(n).replace('-', '−');
+// A typed number, allowing a comma for the decimal point
+const num = v => parseFloat(String(v).replace(',', '.'));
+
+// Particles drawn inside a round close-up, in one of three arrangements.
+// kind: 'solid' (a neat pattern), 'open' (a pattern with more space, like ice), 'liquid' (close, no pattern), 'gas' (far apart).
+// mix: { n, col } adds n smaller particles of a second substance in the gaps between the others (a solution).
+// Every particle of the first substance stays where it was.
+function zoomCircle(cx, cy, R, kind, col, extra = '', mix = null) {
+  const id = 'z' + (zoomCircle.n = (zoomCircle.n || 0) + 1), r = R / 7, pts = [], gapsAt = [], g = rng(Math.round(cx + cy));
+  if (kind === 'gas') for (let i = 0; i < 7; i++) { const a = i * 2.4 + 0.5, d = R * (.25 + .5 * ((i * 37) % 10) / 10); pts.push([cx + Math.cos(a) * d, cy + Math.sin(a) * d]); }
+  else {
+    const gap = kind === 'open' ? 2.5 : kind === 'liquid' ? 2.25 : 2.05;
+    for (let row = -4; row <= 4; row++) for (let col = -5; col <= 5; col++) {
+      let x = cx + (col + (row & 1) * .5) * gap * r, y = cy + row * gap * r * .87;
+      if (kind === 'liquid') { x += (g() - .5) * r * .32; y += (g() - .5) * r * .32; }
+      if (Math.hypot(x - cx, y - cy) < R - r * .6) pts.push([x, y]);
+      // The middle of each triangle of neighbouring particles: a gap where a dissolved particle can fit
+      const gx = cx + (col + .5 + (row & 1) * .5) * gap * r, gy = cy + (row + 1 / 3) * gap * r * .87;
+      if (Math.hypot(gx - cx, gy - cy) < R - r) gapsAt.push([gx, gy, (Math.sin(row * 7.1 + col * 3.7) * 43758.5453 % 1 + 1) % 1]);
+    }
+  }
+  return `<clipPath id="${id}"><circle cx="${cx}" cy="${cy}" r="${R}"/></clipPath><circle cx="${cx}" cy="${cy}" r="${R}" fill="#fff" stroke="#8a93ad" stroke-width="3"/>`
+    + `<g clip-path="url(#${id})">${pts.map(([x, y]) => `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(r * .92).toFixed(1)}" fill="${col}" stroke="rgba(0,0,0,.25)"/>`).join('')}`
+    + (mix ? gapsAt.sort((a, b) => a[2] - b[2]).slice(0, mix.n).map(([x, y]) => `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(r * .5).toFixed(1)}" fill="${mix.col}" stroke="rgba(0,0,0,.6)" stroke-width="2"/>`).join('') : '')
+    + `${extra}</g>`;
+}
+const zoomLabel = (cx, y, txt) => `<text x="${cx}" y="${y}" text-anchor="middle" class="wsmall">${txt}</text>`;
+
+// ================= State =================
+const freshBox = () => ({ sub: 'water', temp: 20 });
+const freshOdd = () => ({ mode: 'float', dropped: { water: false, wax: false }, waxTries: 0, why: null, whyWrong: [], frozen: false, read: { water: '', wax: '' }, tries: {}, ok: {} });
+const freshEvap = () => ({ mode: 'evap', pred: null, left: false, ans: '', tries: 0, ok: false, waited: false, q1: null, q1w: [], q2: null, q2w: [] });
+const freshDis = () => ({ pick: null, pred: {}, stirred: {} });
+const freshGas = () => ({ mode: 'balloons', open: null, seen: [], placed: {}, chip: null, checked: false });
+const state = { view: 'box', box: freshBox(), odd: freshOdd(), evap: freshEvap(), dis: freshDis(), gas: freshGas(), mission: null, done: store.get('pp-done', []) };
+
+// ================= Particle box =================
+// 30 particles in a box. Where each one is drawn comes straight from a formula of the time, so the motion is smooth and never builds up errors.
+const SUBS = {
+  water: { name: 'Water', em: '💧', mp: 0, bp: 100, col: '#3d7bff', names: { solid: 'ice', liquid: 'water', gas: 'water vapour' }, ems: { solid: '🧊', liquid: '💧', gas: '♨️' } },
+  wax:   { name: 'Wax', em: '🕯️', mp: 60, bp: null, col: '#f0892e', names: { solid: 'solid wax', liquid: 'melted wax' }, ems: { solid: '🕯️', liquid: '🫗' } }
+};
+const PB = {
+  N: 30,
+  phase(sub, T) { const S = SUBS[sub]; return T < S.mp || (T === S.mp && sub === 'water' && T <= 0) ? 'solid' : S.bp != null && T >= S.bp ? 'gas' : 'liquid'; },
+  geo() {
+    const { w, h, narrow } = stageSize();
+    const thermo = narrow ? 70 : 120, bs = Math.max(150, Math.min(h - (narrow ? 90 : 110), (w - thermo - 40) * .9, 470));
+    const bx = (w - bs - thermo) / 2, by = (narrow ? 64 : 70) + (h - (narrow ? 64 : 70) - bs) / 2;
+    return { w, h, narrow, bs, bx, by, r: bs / 24, tx: bx + bs + thermo * .55 };
+  },
+  // Where particle i would be, for this substance, state and temperature, at time t (seconds)
+  target(i, sub, ph, T, t, g) {
+    const { bx, by, bs, r } = g, heat = Math.max(0, Math.min(1, (T + 20) / 140)), rr = rng(i * 7919 + 1), p1 = rr() * 6.3, p2 = rr() * 6.3;
+    const lattice = gap => { const row = Math.floor(i / 6), col = i % 6; return [bx + bs / 2 + (col - 2.5 + (row & 1 ? .25 : -.25)) * gap * r, by + bs - r * 1.1 - row * gap * r * .87]; };
+    if (ph === 'solid') {
+      // A neat pattern. Ice has a more open pattern than liquid water; solid wax is packed tighter than melted wax.
+      const [x, y] = lattice(sub === 'water' ? 2.45 : 2.14), a = r * (.05 + .12 * heat);
+      return [x + a * Math.sin(t * 9 + p1), y + a * Math.cos(t * 11 + p2)];
+    }
+    if (ph === 'liquid') {
+      // Close together but not in a pattern. A liquid takes the shape of its container, so it spreads across the whole
+      // bottom of the box: three uneven rows of touching particles that slide past each other.
+      const row = Math.floor(i / 10), k = i % 10, rr2 = rng(row * 131 + 7), gaps = Array.from({ length: 10 }, () => 2.12 + rr2() * .2);
+      const width = gaps.slice(1).reduce((a, c) => a + c, 0), off = gaps.slice(1, k + 1).reduce((a, c) => a + c, 0), shift = (rr2() - .5) * .5;
+      const sp = .5 + heat, slide = r * .7 * Math.sin(t * .7 * sp + row * 1.9), dy = sub === 'water' ? 2.0 : 2.18;
+      const x = bx + bs / 2 + (off - width / 2 + shift) * r + slide + r * .08 * Math.sin(t * 3 * sp + p1);
+      return [Math.max(bx + r * 1.05, Math.min(bx + bs - r * 1.05, x)), by + bs - r * 1.1 - row * dy * r + r * .06 * Math.sin(t * 2.3 * sp + p2)];
+    }
+    // A gas: far apart, moving fast in straight lines and bouncing off the walls
+    const sp = .25 + .35 * heat, tri = u => { u = ((u % 2) + 2) % 2; return u < 1 ? u : 2 - u; };
+    return [bx + r + tri(rr() * 2 + (rr() - .5) * sp * t) * (bs - 2 * r), by + r + tri(rr() * 2 + (rr() - .5) * sp * t * 1.1) * (bs - 2 * r)];
+  },
+  stage() {
+    const b = state.box, S = SUBS[b.sub], g = PB.geo(), ph = PB.phase(b.sub, b.temp), { bx, by, bs, tx } = g;
+    let o = `<rect width="${g.w}" height="${g.h}" fill="#eef4fb"/>`;
+    o += `<text x="${bx + bs / 2}" y="${by - 12}" text-anchor="middle" class="gsmall">🔍 Zoomed in: each circle is one particle</text>`;
+    o += `<rect x="${bx}" y="${by}" width="${bs}" height="${bs}" rx="16" fill="#fff" stroke="#8a93ad" stroke-width="3"/>`;
+    o += `<g id="parts"></g>`;
+    // The thermometer
+    const T0 = -20, T1 = 120, y0 = by + bs - 24, y1 = by + 16, ty = T => y0 - (T - T0) / (T1 - T0) * (y0 - y1);
+    o += `<rect x="${tx - 9}" y="${y1 - 8}" width="18" height="${y0 - y1 + 16}" rx="9" fill="#fff" stroke="#8a93ad" stroke-width="2.5"/><circle cx="${tx}" cy="${y0 + 14}" r="16" fill="var(--coral)" stroke="#8a93ad" stroke-width="2.5"/>`;
+    o += `<rect x="${tx - 5}" y="${ty(b.temp)}" width="10" height="${y0 + 6 - ty(b.temp)}" fill="var(--coral)"/>`;
+    const mark = (T, txt) => `<path d="M${tx + 10} ${ty(T)} h10" stroke="var(--ink)" stroke-width="2"/><text x="${tx + 24}" y="${ty(T) + 4}" class="gsmall" style="fill:var(--ink)">${minus(T)} °C${g.narrow ? '' : ' ' + txt}</text>`;
+    o += mark(S.mp, 'melts');
+    if (S.bp != null) o += mark(S.bp, 'boils');
+    o += `<text x="${tx}" y="${y1 - 16}" text-anchor="middle" class="glabel">${minus(b.temp)} °C</text>`;
+    const label = { solid: 'Solid', liquid: 'Liquid', gas: 'Gas' }[ph];
+    return `<div class="lay-top"><span class="scaletag">${S.ems[ph]} ${label}</span><div class="readout"><b>${S.name}</b> at ${minus(b.temp)} °C: ${S.names[ph]}</div></div>
+      <svg id="boxSvg" viewBox="0 0 ${g.w} ${g.h}" aria-label="${S.name} particles at ${b.temp} degrees: ${label}">${o}</svg>`;
+  },
+  tick(now) {
+    const el = $('#parts');
+    if (state.view !== 'box' || !el) { PB.raf = null; return; }
+    const b = state.box, g = PB.geo(), ph = PB.phase(b.sub, b.temp), key = `${b.sub}-${ph}`, t = still ? 0 : now / 1000;
+    const tgt = Array.from({ length: PB.N }, (_, i) => PB.target(i, b.sub, ph, b.temp, t, g));
+    // When the state changes, the particles glide from where they were to their new places
+    if (key !== PB.key || !PB.cur) { PB.from = PB.cur || tgt; PB.t0 = now; PB.key = key; }
+    const k = Math.min(1, (now - PB.t0) / 800), e = k * k * (3 - 2 * k);
+    PB.cur = tgt.map(([x, y], i) => [PB.from[i][0] + (x - PB.from[i][0]) * e, PB.from[i][1] + (y - PB.from[i][1]) * e]);
+    const col = SUBS[b.sub].col;
+    el.innerHTML = PB.cur.map(([x, y]) => `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(g.r * .98).toFixed(1)}" fill="${col}" stroke="rgba(0,0,0,.3)" stroke-width="1.5"/>`).join('');
+    PB.raf = requestAnimationFrame(PB.tick);
+  },
+  start() { if (!PB.raf) PB.raf = requestAnimationFrame(PB.tick); },
+  DESCRIBE: {
+    solid: ['🧱 Solid', 'The particles are <b>close together</b> in a <b>neat pattern</b>.', 'They <b>vibrate</b> (wobble) on the spot, but stay in place.', 'So a solid keeps its <b>shape</b>.'],
+    liquid: ['💧 Liquid', 'The particles are <b>close together</b>, but <b>not in a pattern</b>.', 'They <b>move around</b> and <b>slide past</b> each other.', 'So a liquid can <b>flow</b>. It spreads out to take the <b>shape of its container</b>: look how it covers the bottom of the box!'],
+    gas: ['💨 Gas', 'The particles are <b>far apart</b>.', 'They move <b>quickly</b> in all directions, bumping into the walls.', 'So a gas <b>spreads out</b> to fill its container.']
+  },
+  stateCard() {
+    const b = state.box, S = SUBS[b.sub], ph = PB.phase(b.sub, b.temp), [title, ...lines] = PB.DESCRIBE[ph];
+    let note = '';
+    if (b.temp === S.mp) note = `At ${S.mp} °C, ${S.names.solid} <b>melts</b> into ${S.names.liquid}. This is the <b>melting point</b>.`;
+    if (S.bp != null && b.temp === S.bp) note = `At ${S.bp} °C, water <b>boils</b> and turns into water vapour. This is the <b>boiling point</b>.`;
+    if (b.sub === 'water' && ph === 'solid') note += ' Look: the particles in ice are in an <b>open</b> pattern, a tiny bit further apart than in liquid water.';
+    if (b.sub === 'wax' && b.temp > 100) note += ' Wax needs to be very much hotter than this to boil.';
+    return `<h3>${title}: ${S.names[ph]}</h3><ul class="facts">${lines.map(l => `<li>${l}</li>`).join('')}</ul>${note ? `<p class="spot">${note.trim()}</p>` : ''}`;
+  },
+  setTemp(T) {
+    const b = state.box, before = PB.phase(b.sub, b.temp);
+    b.temp = Math.max(-20, Math.min(120, Math.round(T)));
+    renderStage();
+    const sc = $('#stateCard'); if (sc) sc.innerHTML = PB.stateCard();
+    const sl = $('#tempSlider'); if (sl && +sl.value !== b.temp) sl.value = b.temp;
+    const ph = PB.phase(b.sub, b.temp);
+    if (ph !== before) emit('phase', { sub: b.sub, ph });
+  }
+};
+
+// ================= Water is odd =================
+const WO = {
+  WHY: [
+    ['In ice, the particles are a little <b>further apart</b> than in liquid water, so ice is lighter than the same amount of water. Solid wax is the other way round.', true],
+    ['Ice is colder than the water, and cold things always float.', false],
+    ['The wax piece was too big. A smaller piece would float.', false]
+  ],
+  floatStage() {
+    const o2 = state.odd, { w, h, narrow } = stageSize();
+    const bw = Math.min(w * .27, h * .3), bh = bw * 1.05, base = h * (narrow ? .62 : .58), lvl = base - bh * .72, piece = bw * .3;
+    let o = `<rect width="${w}" height="${h}" fill="#eef4fb"/><rect x="0" y="${base}" width="${w}" height="${h - base}" fill="#c9a77c"/><rect x="0" y="${base}" width="${w}" height="7" fill="#a8835a"/>`;
+    [['water', w * .28, '#9fd0ff', '#eaf7ff', 'Water at 20 °C', 'Ice'], ['wax', w * .72, '#f4c46c', '#fbeecb', 'Melted wax at 70 °C', 'Solid wax']].forEach(([id, cx, liq, sol, title, pname]) => {
+      const x0 = cx - bw / 2;
+      o += `<text x="${cx}" y="${base - bh - 60}" text-anchor="middle" class="glabel">${title}</text>`;
+      o += `<rect x="${x0}" y="${lvl}" width="${bw}" height="${base - lvl}" fill="${liq}" opacity=".85"/><path d="M${x0} ${base - bh} V${base} H${x0 + bw} V${base - bh}" fill="none" stroke="#7d8db0" stroke-width="3"/>`;
+      let px = cx - piece / 2, py;
+      // Not dropped yet: the piece waits above. Dropped: ice floats with a little showing; solid wax sinks to the bottom.
+      if (!o2.dropped[id]) py = base - bh - 45;
+      else py = id === 'water' ? lvl - piece * .1 : base - piece - 3;
+      o += `<rect x="${px}" y="${py}" width="${piece}" height="${piece}" rx="${piece * .15}" fill="${sol}" stroke="${id === 'water' ? '#8fc0e6' : '#c9a05a'}" stroke-width="2.5"/>`;
+      if (!o2.dropped[id]) o += `<text x="${cx + piece * .7}" y="${py + piece * .7}" class="gsmall">↓ ${pname}</text>`;
+      else o += `<text x="${cx}" y="${base + 28}" text-anchor="middle" class="glabel" style="fill:${id === 'water' ? 'var(--green)' : 'var(--coral)'}">${id === 'water' ? 'Ice floats!' : 'Solid wax sinks!'}</text>`;
+      // Close-ups of the particles once it has been dropped
+      if (o2.dropped[id]) {
+        const R = Math.min(w * .085, h * .1), zy = base + 50 + R + (narrow ? 0 : 10);
+        if (zy + R < h - 4) {
+          o += zoomCircle(cx - R * 1.15, zy, R, id === 'water' ? 'open' : 'solid', id === 'water' ? '#7fb2ff' : '#f0892e') + zoomLabel(cx - R * 1.15, zy + R + 16, pname);
+          o += zoomCircle(cx + R * 1.15, zy, R, 'liquid', id === 'water' ? '#3d7bff' : '#d9822b') + zoomLabel(cx + R * 1.15, zy + R + 16, id === 'water' ? 'Water' : 'Melted wax');
+        }
+      }
+    });
+    return `<div class="lay-top"><span class="scaletag">🧊 Float test</span><div class="readout">Drop a <b>solid</b> piece into its own <b>liquid</b>. Does it float or sink?</div></div>
+      <svg id="oddSvg" viewBox="0 0 ${w} ${h}" aria-label="Ice in water and solid wax in melted wax">${o}</svg>`;
+  },
+  // Measuring cylinders: 100 ml of water and of melted wax, before and after they turn solid
+  VOL: { water: 109, wax: 90 },
+  freezeStage() {
+    const o2 = state.odd, { w, h, narrow } = stageSize();
+    const cw = Math.min(w * .09, 64), top = h * .2, bot = h * .86, ml = v => bot - (v / 120) * (bot - top);
+    let o = `<rect width="${w}" height="${h}" fill="#eef4fb"/>`;
+    [['water', w * (narrow ? .17 : .16), o2.frozen ? '#e3f3ff' : '#9fd0ff', o2.frozen ? 'Ice' : 'Water'], ['wax', w * (narrow ? .62 : .6), o2.frozen ? '#fbeecb' : '#f4c46c', o2.frozen ? 'Solid wax' : 'Melted wax']].forEach(([id, cx, fill, name]) => {
+      const v = o2.frozen ? WO.VOL[id] : 100, x0 = cx - cw / 2;
+      // The cylinder, with a scale every 10 ml
+      o += `<text x="${cx}" y="${top - 28}" text-anchor="middle" class="glabel">${name}</text>`;
+      o += `<rect x="${x0}" y="${ml(v)}" width="${cw}" height="${bot - ml(v)}" fill="${fill}" stroke="${id === 'water' ? '#8fc0e6' : '#c9a05a'}" stroke-width="1.5"/>`;
+      if (o2.frozen && id === 'wax') o += `<path d="M${x0 + 3} ${ml(v)} Q${cx} ${ml(v) + 14} ${x0 + cw - 3} ${ml(v)}" fill="#eef4fb"/>`;
+      if (o2.frozen && id === 'water') o += `<path d="M${x0 + 2} ${ml(v) + 1} Q${cx} ${ml(v) - 7} ${x0 + cw - 2} ${ml(v) + 1}" fill="${fill}" stroke="#8fc0e6" stroke-width="1.5"/>`;
+      o += `<path d="M${x0} ${top - 8} V${bot} H${x0 + cw} V${top - 8}" fill="none" stroke="#7d8db0" stroke-width="3"/>`;
+      for (let m = 0; m <= 120; m += 10) o += `<path d="M${x0} ${ml(m)} h${m % 50 ? 8 : 14}" stroke="#5b6386" stroke-width="1.5"/>` + (m % 20 === 0 ? `<text x="${x0 - 6}" y="${ml(m) + 4}" text-anchor="end" class="gsmall" style="font-size:11px">${m}</text>` : '');
+      o += `<text x="${cx}" y="${bot + 20}" text-anchor="middle" class="gsmall">ml</text>`;
+      // A magnified close-up of the scale from 80 ml to 120 ml, joined to the cylinder
+      const zx = cx + cw / 2 + (narrow ? 14 : 30), zw = narrow ? 70 : 110, zt = top, zb = top + (bot - top) * .62, zv = m => zb - (m - 80) / 40 * (zb - zt);
+      o += `<path d="M${x0 + cw} ${ml(120)} L${zx} ${zt} M${x0 + cw} ${ml(80)} L${zx} ${zb}" stroke="var(--yellow)" stroke-width="2" stroke-dasharray="5 4"/>`;
+      o += `<rect x="${zx}" y="${zt}" width="${zw}" height="${zb - zt}" rx="8" fill="#fff" stroke="var(--yellow)" stroke-width="3"/>`;
+      o += `<rect x="${zx + 2}" y="${zv(v)}" width="${zw * .45}" height="${zb - zv(v) - 2}" fill="${fill}"/>`;
+      for (let m = 80; m <= 120; m++) {
+        const len = m % 10 === 0 ? zw * .45 : m % 5 === 0 ? zw * .3 : zw * .18;
+        o += `<path d="M${zx + 2} ${zv(m)} h${len}" stroke="#1d2340" stroke-width="${m % 10 === 0 ? 2 : 1}"/>`;
+        if (m % 10 === 0) o += `<text x="${zx + zw - 6}" y="${zv(m) + 5}" text-anchor="end" style="font-size:${narrow ? 12 : 15}px;font-weight:700;fill:#1d2340">${m}</text>`;
+      }
+      o += `<path d="M${zx + 2} ${zv(v)} h${zw * .62}" stroke="var(--coral)" stroke-width="2.5"/>`;
+      o += `<text x="${zx + zw / 2}" y="${zb + 18}" text-anchor="middle" class="gsmall">🔍 close-up (ml)</text>`;
+    });
+    return `<div class="lay-top"><span class="scaletag">📏 ${o2.frozen ? 'After' : 'Before'}</span><div class="readout">${o2.frozen ? 'The water froze and the wax cooled. Read the new volumes.' : '100 ml of water and 100 ml of melted wax.'}</div></div>
+      <svg id="oddSvg" viewBox="0 0 ${w} ${h}" aria-label="Two measuring cylinders">${o}</svg>`;
+  },
+  stage() { return state.odd.mode === 'float' ? WO.floatStage() : WO.freezeStage(); },
+  check() {
+    const o2 = state.odd, msgs = [];
+    ['water', 'wax'].forEach(id => {
+      if (o2.ok[id]) return;
+      const v = num(o2.read[id]), want = WO.VOL[id], name = id === 'water' ? 'ice' : 'solid wax';
+      if (!Number.isFinite(v)) { msgs.push(`Type a number for the ${name}.`); return; }
+      o2.tries[id] = (o2.tries[id] || 0) + 1;
+      if (Math.abs(v - want) <= 1) { o2.ok[id] = 'right'; return; }
+      if (o2.tries[id] >= 3) { o2.ok[id] = 'shown'; o2.read[id] = String(want); msgs.push(`The ${name} is <b>${want} ml</b>.`); return; }
+      msgs.push(`Look at the ${name} again. Your number is too ${v > want ? 'high' : 'low'}. In the close-up, each small mark is <b>1 ml</b>.`);
+    });
+    o2.said = msgs.length ? msgs : null;
+    render();
+    if (o2.ok.water && o2.ok.wax) emit('measure');
+  }
+};
+
+// ================= Evaporation and condensation =================
+const EC = {
+  // Three jugs of 100 ml, left for a day: the warmer it is, the more water evaporates
+  JUGS: [['❄️', 'Fridge', 5, 90, 1], ['🏫', 'Classroom', 20, 80, 2], ['☀️', 'Sunny windowsill', 35, 50, 5]],
+  evapStage() {
+    const e = state.evap, { w, h, narrow } = stageSize(), jw = Math.min(w * .17, 110), jh = h * .36, base = h * .6, ml = v => base - v / 110 * jh;
+    let o = `<rect width="${w}" height="${h}" fill="#eef4fb"/><rect x="0" y="${base}" width="${w}" height="${h - base}" fill="#c9a77c"/><rect x="0" y="${base}" width="${w}" height="7" fill="#a8835a"/>`;
+    EC.JUGS.forEach(([em, name, T, after, n], i) => {
+      const cx = w * (.18 + i * .32), x0 = cx - jw / 2, v = e.left ? after : 100;
+      o += `<text x="${cx}" y="${base - jh - 38}" text-anchor="middle" class="glabel">${em} ${narrow ? '' : name}</text><text x="${cx}" y="${base - jh - 18}" text-anchor="middle" class="gsmall">${T} °C</text>`;
+      o += `<rect x="${x0}" y="${ml(v)}" width="${jw}" height="${base - ml(v)}" fill="#9fd0ff"/><path d="M${x0} ${base - jh} V${base} H${x0 + jw} V${base - jh}" fill="none" stroke="#7d8db0" stroke-width="3"/>`;
+      for (let m = 0; m <= 100; m += 10) o += `<path d="M${x0} ${ml(m)} h${m % 50 ? 9 : 15}" stroke="#1d2340" stroke-width="${m % 50 ? 1.2 : 2}"/>` + (true ? `<text x="${x0 + 18}" y="${ml(m) + 4}" style="font-size:${narrow ? 10 : 12}px;font-weight:700;fill:#1d2340">${m}</text>` : '');
+      // Close-up of the water's surface: liquid below, air above, and particles escaping from the surface
+      if (e.left) {
+        const R = Math.min(w * .1, h * .12), zy = base + 22 + R, pr = R / 7 * .92;
+        if (zy + R < h - 2) {
+          const surf = zy - R * .05;
+          let air = `<rect x="${cx - R}" y="${zy - R}" width="${2 * R}" height="${surf - (zy - R) - pr * 1.1}" fill="#fff"/><path d="M${cx - R} ${surf - pr * 1.1} H${cx + R}" stroke="#5fa8e8" stroke-width="2"/>`;
+          for (let k = 0; k < n; k++) {
+            const ax = cx - R * .48 + k * (n > 1 ? R * .96 / (n - 1) : 0) + (n === 1 ? R * .48 : 0), ay = surf - pr * 3 - (k % 2) * R * .28;
+            air += `<circle cx="${ax}" cy="${ay}" r="${pr}" fill="#7fb2ff" stroke="rgba(0,0,0,.3)"/><path d="M${ax} ${ay - pr - 2} v-${R * .16}" stroke="var(--coral)" stroke-width="2.5"/><path d="M${ax - 4} ${ay - pr - R * .12} l4 -6 l4 6" stroke="var(--coral)" stroke-width="2.5" fill="none"/>`;
+          }
+          o += zoomCircle(cx, zy, R, 'liquid', '#3d7bff', air);
+          o += zoomLabel(cx, zy + R + 15, `${n} particle${n > 1 ? 's' : ''} escaping`);
+        }
+      }
+    });
+    return `<div class="lay-top"><span class="scaletag">💨 Evaporation</span><div class="readout">${e.left ? 'One day later. How much water is left in each jug?' : '100 ml of water in each jug, in three different places.'}</div></div>
+      <svg id="evapSvg" viewBox="0 0 ${w} ${h}" aria-label="Three jugs of water">${o}</svg>`;
+  },
+  condStage() {
+    const e = state.evap, { w, h, narrow } = stageSize(), cw = Math.min(w * .15, 90), ch = cw * 1.7, base = h * .66;
+    let o = `<rect width="${w}" height="${h}" fill="#fff6e0"/><rect x="0" y="${base}" width="${w}" height="${h - base}" fill="#c9a77c"/><rect x="0" y="${base}" width="${w}" height="7" fill="#a8835a"/>`;
+    [['cold', w * .2, '#3d7bff', 'Cold can (from the fridge, 5 °C)'], ['warm', w * (narrow ? .82 : .8), '#f0892e', 'Can at room temperature (25 °C)']].forEach(([id, cx, col, name]) => {
+      const x0 = cx - cw / 2, y0 = base - ch;
+      o += `<rect x="${x0}" y="${y0}" width="${cw}" height="${ch}" rx="${cw * .18}" fill="${col}"/><rect x="${x0 + cw * .1}" y="${y0 - 6}" width="${cw * .8}" height="10" rx="4" fill="#b8bfd3"/><rect x="${x0 + cw * .15}" y="${y0 + ch * .3}" width="${cw * .7}" height="${ch * .35}" rx="6" fill="rgba(255,255,255,.35)"/>`;
+      o += `<text x="${cx}" y="${base + 28}" text-anchor="middle" class="gsmall" style="fill:var(--ink)">${narrow ? (id === 'cold' ? 'Cold can' : 'Room-temperature can') : name}</text>`;
+      if (e.waited && id === 'cold') { const r2 = rng(5); for (let k = 0; k < 26; k++) o += `<ellipse cx="${x0 + 4 + r2() * (cw - 8)}" cy="${y0 + 8 + r2() * (ch - 16)}" rx="${2 + r2() * 2.5}" ry="${3 + r2() * 3}" fill="rgba(255,255,255,.85)" stroke="#8fc0e6"/>`; }
+      if (e.waited && id === 'warm') o += `<text x="${cx}" y="${y0 - 16}" text-anchor="middle" class="gsmall">still dry</text>`;
+    });
+    // Close-up: water vapour particles in the air slow down on the cold can and join into a droplet
+    if (e.waited) {
+      const R = Math.min(w * .12, h * .17), zx = w * .2 + cw / 2 + R + (narrow ? 4 : 24), zy = base - ch * .55;
+      const wall = `<rect x="${zx - R}" y="${zy - R}" width="${R * .35}" height="${R * 2}" fill="#3d7bff"/>`
+        + [[.0, -.5], [.15, .1], [-.05, .55]].map(([dx, dy]) => `<circle cx="${zx + dx * R + R * .35}" cy="${zy + dy * R}" r="${R / 9}" fill="#7fb2ff" stroke="rgba(0,0,0,.25)"/><path d="M${zx + dx * R + R * .2} ${zy + dy * R} h-${R * .2}" stroke="var(--coral)" stroke-width="2.5"/><path d="M${zx + dx * R + R * .06} ${zy + dy * R - 5} l-6 5 l6 5" stroke="var(--coral)" stroke-width="2.5" fill="none"/>`).join('')
+        + [[-.55, -.1], [-.5, .12], [-.57, .33], [-.45, .25], [-.43, .02]].map(([dx, dy]) => `<circle cx="${zx + dx * R}" cy="${zy + dy * R}" r="${R / 9}" fill="#3d7bff" stroke="rgba(0,0,0,.25)"/>`).join('');
+      o += `<clipPath id="cz"><circle cx="${zx}" cy="${zy}" r="${R}"/></clipPath><circle cx="${zx}" cy="${zy}" r="${R}" fill="#fff" stroke="#8a93ad" stroke-width="3"/><g clip-path="url(#cz)">${wall}</g>`;
+      o += zoomLabel(zx, zy + R + 16, 'Close-up of the cold can');
+    }
+    return `<div class="lay-top"><span class="scaletag">💧 Condensation</span><div class="readout">A warm day: 25 °C. ${e.waited ? '5 minutes later…' : 'Two cans on a table.'}</div></div>
+      <svg id="evapSvg" viewBox="0 0 ${w} ${h}" aria-label="A cold can and a room-temperature can">${o}</svg>`;
+  },
+  stage() { return state.evap.mode === 'evap' ? EC.evapStage() : EC.condStage(); },
+  Q1: [['From <b>water vapour in the air</b>: it cooled on the cold can and condensed.', true], ['It leaked through the metal from inside the can.', false], ['The cold made it out of nothing.', false]],
+  Q2: [['It was not cold enough to cool the water vapour and make it condense.', true], ['There was no water vapour near it.', false], ['Its colour stopped the water.', false]],
+  checkEvap() {
+    const e = state.evap, v = num(e.ans);
+    if (!Number.isFinite(v)) { e.said = 'Type a number of millilitres.'; render(); return; }
+    e.tries++;
+    if (Math.abs(v - 50) <= 2) { e.ok = 'right'; e.said = null; }
+    else if (e.tries >= 3) { e.ok = 'shown'; e.ans = '50'; e.said = null; }
+    else e.said = v === 50 ? null : (Math.abs(v - 50) > 30 ? 'It started with <b>100 ml</b>. How much is left? Take that away from 100.' : `Not quite. Your number is too ${v > 50 ? 'high' : 'low'}. Read the jug again, then work out 100 − what is left.`);
+    render();
+    if (e.ok) emit('evap');
+  }
+};
+
+// ================= Dissolving =================
+// [name, dissolves?, colour of its particles, what you see]
+const DIS = {
+  salt:   ['Salt', true, '#f2f2f2', 'It dissolves. The water looks clear again, but the salt is still there: you could taste it, or evaporate the water to get it back.'],
+  sugar:  ['Sugar', true, '#ffe9b0', 'It dissolves. The water looks clear, but the sugar is still there, spread out between the water particles.'],
+  coffee: ['Instant coffee', true, '#7a4a2a', 'It dissolves. The water turns brown, but it is still see-through, with no bits: a solution.'],
+  sand:   ['Sand', false, '#d9b26f', 'It does not dissolve. The sand sinks to the bottom.'],
+  oil:    ['Cooking oil', false, '#f2c94c', 'It does not dissolve. The oil floats on top in a layer.'],
+  pepper: ['Pepper', false, '#3a3a3a', 'It does not dissolve. The bits of pepper float, and some sink.']
+};
+const DORDER = ['salt', 'sugar', 'coffee', 'sand', 'oil', 'pepper'];
+const DS = {
+  stage() {
+    const d = state.dis, { w, h, narrow } = stageSize(), id = d.pick, D = DIS[id], done = id && d.stirred[id];
+    const bw = Math.min(w * (narrow ? .38 : .3), h * .42), bh = bw * 1.1, cx = w * (narrow ? .27 : .32), base = h * .78, lvl = base - bh * .72, x0 = cx - bw / 2;
+    let o = `<rect width="${w}" height="${h}" fill="#eef4fb"/><rect x="0" y="${base}" width="${w}" height="${h - base}" fill="#c9a77c"/><rect x="0" y="${base}" width="${w}" height="7" fill="#a8835a"/>`;
+    const water = done && id === 'coffee' ? '#e0b98f' : '#bfe3ff';
+    o += `<rect x="${x0}" y="${lvl}" width="${bw}" height="${base - lvl}" fill="${water}" opacity="${done && id === 'coffee' ? .7 : .9}"/>`;
+    // A solution is see-through: lines behind the beaker show through it
+    o += [.25, .5, .75].map(f => `<path d="M${x0 + 6} ${lvl + (base - lvl) * f} H${x0 + bw - 6}" stroke="#ffffff" stroke-width="2" opacity=".5"/>`).join('');
+    const r2 = rng(3);
+    if (done && id === 'sand') o += `<path d="M${x0} ${base} V${base - bh * .08} Q${cx} ${base - bh * .13} ${x0 + bw} ${base - bh * .08} V${base}Z" fill="#d9b26f"/>` + Array.from({ length: 30 }, () => `<circle cx="${x0 + 4 + r2() * (bw - 8)}" cy="${base - 3 - r2() * bh * .07}" r="1.6" fill="#a8823a"/>`).join('');
+    if (done && id === 'oil') o += `<rect x="${x0}" y="${lvl}" width="${bw}" height="${bh * .09}" fill="#f2c94c" opacity=".9"/>`;
+    if (done && id === 'pepper') o += Array.from({ length: 26 }, (_, k) => `<circle cx="${x0 + 5 + r2() * (bw - 10)}" cy="${k < 20 ? lvl + 2 + r2() * 4 : base - 3 - r2() * 4}" r="2" fill="#3a3a3a"/>`).join('');
+    o += `<path d="M${x0} ${base - bh} V${base} H${x0 + bw} V${base - bh}" fill="none" stroke="#7d8db0" stroke-width="3"/>`;
+    o += `<text x="${cx}" y="${base + 28}" text-anchor="middle" class="glabel">${id ? (done ? `Water + ${D[0].toLowerCase()}` : `Water, ready for ${D[0].toLowerCase()}`) : 'Water'}</text>`;
+    // Before stirring: a spoonful waits above the beaker
+    if (id && !done) {
+      const sx = cx + bw * .1, sy = base - bh - 30;
+      o += `<path d="M${sx - 70} ${sy - 8} L${sx - 10} ${sy}" stroke="#9aa6c7" stroke-width="6" stroke-linecap="round"/><ellipse cx="${sx + 12}" cy="${sy + 2}" rx="26" ry="11" fill="#c9d0e4" stroke="#8a93ad" stroke-width="2"/>`;
+      o += Array.from({ length: 9 }, (_, k) => `<circle cx="${sx + 12 + (k % 5 - 2) * 7}" cy="${sy - 2 - Math.floor(k / 5) * 5}" r="${id === 'oil' ? 5 : 3.2}" fill="${D[2]}" stroke="rgba(0,0,0,.3)"/>`).join('');
+    }
+    // A close-up of the particles: water (blue) and the other substance
+    const R = Math.min(w * (narrow ? .2 : .17), h * .28), zx = narrow ? w * .73 : w * .74, zy = h * .45;
+    let extra = '';
+    if (done) {
+      const rr = rng(11), pr = R / 7 * .92;
+      if (!D[1]) {
+        const cy2 = id === 'sand' ? zy + R * .7 : zy - R * .7, rows = id === 'sand' ? [0, -1] : [0, 1];
+        extra = `<rect x="${zx - R}" y="${id === 'sand' ? cy2 - pr * 3 : zy - R}" width="${2 * R}" height="${id === 'sand' ? R * 2 : cy2 - zy + R + pr * 3}" fill="#fff"/>`
+          + rows.map(rw => Array.from({ length: 8 }, (_, k) => `<circle cx="${zx - R + pr + k * pr * 2.05 + (rw & 1) * pr}" cy="${cy2 + rw * pr * 1.8}" r="${pr}" fill="${D[2]}" stroke="rgba(0,0,0,.45)" stroke-width="1.5"/>`).join('')).join('');
+      }
+    }
+    o += zoomCircle(zx, zy, R, 'liquid', '#7fb2ff', extra, done && D[1] ? { n: 9, col: D[2] } : null);
+    o += zoomLabel(zx, zy + R + 18, done ? (D[1] ? `${D[0]} particles in the gaps between the water particles` : `${D[0]} particles stay together`) : 'Water particles');
+    if (done && D[1]) o += zoomLabel(zx, zy + R + 36, 'All the water particles are still there');
+    return `<div class="lay-top"><span class="scaletag">🧂 Dissolving</span><div class="readout">${done ? (D[1] ? `<b>${D[0]}</b> dissolved: it made a <b>solution</b>.` : `<b>${D[0]}</b> did not dissolve.`) : id ? `Will <b>${D[0].toLowerCase()}</b> dissolve? Predict, then stir.` : 'Choose something to stir into the water.'}</div></div>
+      <svg id="disSvg" viewBox="0 0 ${w} ${h}" aria-label="A beaker of water">${o}</svg>`;
+  }
+};
+
+// ================= Gases =================
+const GASES = {
+  hydrogen: { name: 'Hydrogen', col: '#ff8fa3', move: '⬆ floats up', facts: ['The <b>lightest</b> gas of all, so a balloon of it floats up.', 'It is used as a fuel, even for some rockets.', 'It burns very easily, so party balloons use helium instead.'] },
+  oxygen:   { name: 'Oxygen', col: '#7fd1ff', move: '⬇ sinks slowly', facts: ['About <b>21%</b> of the air.', 'We <b>breathe it in</b>, and so do other animals.', 'Things need it to burn.'] },
+  nitrogen: { name: 'Nitrogen', col: '#b5a6ff', move: '⬇ sinks slowly', facts: ['About <b>78%</b> of the air: most of it!', 'Nearly as heavy as air, so a balloon of it sinks slowly.', 'Plants need it to grow.'] },
+  co2:      { name: 'Carbon dioxide', col: '#9be39b', move: '⬇ sinks quickly', facts: ['Only about <b>0.04%</b> of the air.', 'We <b>breathe it out</b>, and plants take it in.', 'It makes the bubbles in fizzy drinks. It is heavier than air.'] },
+  vapour:   { name: 'Water vapour', col: '#d6ecff', move: 'in the air', facts: ['Water as a <b>gas</b>. It is invisible.', 'It is in the air all around us, made when water <b>evaporates</b>.', 'You can\'t fill a balloon with it at room temperature: it would <b>condense</b> back into water. It stays a gas when it is spread out in the air.'] }
+};
+const GORDER = ['hydrogen', 'oxygen', 'nitrogen', 'co2', 'vapour'];
+// At room temperature (about 20 °C): 0 solid, 1 liquid, 2 gas
+const SORTS = { oxygen: ['Oxygen', 2], nitrogen: ['Nitrogen', 2], co2: ['Carbon dioxide', 2], hydrogen: ['Hydrogen', 2], vapour: ['Water vapour', 2],
+  water: ['Water', 1], milk: ['Milk', 1], oil: ['Cooking oil', 1], salt: ['Salt', 0], nail: ['Iron nail', 0], wood: ['Wood', 0], wax: ['Candle wax', 0] };
+const SORDER = ['oxygen', 'water', 'salt', 'nitrogen', 'milk', 'nail', 'co2', 'oil', 'wood', 'hydrogen', 'wax', 'vapour'];
+const BINS = [['🧱', 'Solid', 'solid'], ['💧', 'Liquid', 'liquid'], ['💨', 'Gas', 'gas']];
+const GS = {
+  balloonStage() {
+    const s = state.gas, { w, h, narrow } = stageSize(), ceil = h * .16, floor = h * .86, br = Math.min(w * .065, h * .08);
+    let o = `<rect width="${w}" height="${h}" fill="#f6f1e7"/><rect x="0" y="0" width="${w}" height="${ceil}" fill="#e7dfcf"/><rect x="0" y="${floor}" width="${w}" height="${h - floor}" fill="#c9a77c"/>`;
+    const pos = { hydrogen: [.13, ceil + br * 1.15], oxygen: [.33, floor - br * 1.05], nitrogen: [.52, floor - br * 1.05], co2: [.71, floor - br * 1.05] };
+    GORDER.forEach(id => {
+      const G = GASES[id], on = s.open === id;
+      if (id === 'vapour') {
+        // Water vapour: a warm cup of water, with invisible vapour going into the air
+        const cx = w * .89, base = floor;
+        o += `<g class="tapme" data-gas="vapour"><rect x="${cx - br * 1.2}" y="${base - br * 2.4}" width="${br * 2.4}" height="${br * 2.6}" fill="transparent"/><path d="M${cx - br * .6} ${base - br * 1.1} h${br * 1.2} l-${br * .12} ${br * 1.1} h-${br * .96}Z" fill="#d6ecff" stroke="#7d8db0" stroke-width="2.5"/>`
+          + [-.3, 0, .3].map(f => `<path class="rise" style="--d:-${br}px" d="M${cx + f * br} ${base - br * 1.25} q5 -${br * .3} 0 -${br * .6}" stroke="#8fb8e6" stroke-width="2.5" fill="none" stroke-dasharray="4 4"/>`).join('')
+          + `${on ? `<circle cx="${cx}" cy="${base - br * 1.2}" r="${br * 1.35}" fill="none" stroke="var(--yellow)" stroke-width="4"/>` : ''}</g>`;
+        o += `<text x="${cx}" y="${floor + 22}" text-anchor="middle" class="wsmall">${G.name}</text><text x="${cx}" y="${floor + 40}" text-anchor="middle" class="gsmall" style="font-size:12px">${G.move}</text>`;
+        return;
+      }
+      const [fx, cy] = pos[id], cx = w * fx;
+      o += `<g class="tapme" data-gas="${id}"><path d="M${cx} ${cy + br * 1.15} ${id === 'hydrogen' ? `q-8 ${br * .7} 0 ${br * 1.5} q8 ${br * .5} 0 ${br}` : `q-6 ${br * .2} -${br * .35} ${br * .15}`}" stroke="#5b6386" stroke-width="2" fill="none"/>`
+        + `<ellipse cx="${cx}" cy="${cy}" rx="${br * .9}" ry="${br * 1.1}" fill="${G.col}" stroke="${on ? 'var(--ink)' : 'rgba(0,0,0,.25)'}" stroke-width="${on ? 4 : 2}"/><path d="M${cx - 5} ${cy + br * 1.1} h10 l-5 7Z" fill="${G.col}"/>`
+        + `<ellipse cx="${cx - br * .35}" cy="${cy - br * .45}" rx="${br * .15}" ry="${br * .28}" fill="rgba(255,255,255,.6)"/></g>`;
+      // Hydrogen's label sits beside it, clear of its string
+      const up = id === 'hydrogen', ly = up ? cy : floor + 22, lx = up ? cx + br * 1.2 : cx, anchor = up ? 'start' : 'middle';
+      o += `<text x="${lx}" y="${ly}" text-anchor="${anchor}" class="wsmall">${narrow && id === 'co2' ? 'CO₂' : G.name}</text><text x="${lx}" y="${ly + 18}" text-anchor="${anchor}" class="gsmall" style="font-size:12px">${G.move}</text>`;
+      if (s.seen.includes(id)) o += `<text x="${cx + br}" y="${cy - br}" class="glabel" style="fill:var(--green)">✓</text>`;
+    });
+    return `<div class="lay-top"><span class="scaletag">🎈 Five gases</span><div class="readout">All five are <b>gases</b> at room temperature. Tap each one.</div></div>
+      <svg id="gasSvg" viewBox="0 0 ${w} ${h}" aria-label="Balloons filled with different gases">${o}</svg>`;
+  },
+  binGeo() { const { w, h, narrow } = stageSize(), bw = (w - 40) / 3; return BINS.map((_, i) => ({ x: 10 + i * (bw + 10), y: narrow ? 56 : 62, w: bw, h: h - (narrow ? 66 : 74) })); },
+  sortStage() {
+    const s = state.gas, { w, h, narrow } = stageSize(), geo = GS.binGeo();
+    let o = `<rect width="${w}" height="${h}" fill="#eef4fb"/>`;
+    BINS.forEach(([em, name, kind], i) => {
+      const b = geo[i], R = Math.min(b.w * .2, 34);
+      o += `<g class="tapme" data-bin="${i}"><rect x="${b.x}" y="${b.y}" width="${b.w}" height="${b.h}" rx="16" fill="#fff" stroke="${s.chip ? 'var(--yellow)' : '#c9d3ea'}" stroke-width="3" ${s.chip ? 'stroke-dasharray="8 6"' : ''}/>`;
+      o += `<text x="${b.x + b.w / 2}" y="${b.y + 28}" text-anchor="middle" class="glabel">${em} ${name}</text>`;
+      o += zoomCircle(b.x + b.w / 2, b.y + 48 + R, R, kind, ['#c0a074', '#3d7bff', '#9be39b'][i]);
+      const items = SORDER.filter(id => s.placed[id] === i);
+      items.forEach((id, k) => {
+        const y = b.y + 64 + 2 * R + k * (narrow ? 24 : 30), right = SORTS[id][1] === i;
+        o += `<g data-item="${id}"><rect x="${b.x + 8}" y="${y - (narrow ? 10 : 13)}" width="${b.w - 16}" height="${narrow ? 22 : 27}" rx="8" fill="${s.checked && !right ? '#ffe0e3' : '#f3f5fc'}"/>`
+          + `<text x="${b.x + b.w / 2}" y="${y + 6}" text-anchor="middle" style="font-size:${narrow ? 11 : 15}px;font-weight:600;fill:var(--ink)">${SORTS[id][0]}${s.checked ? (right ? ' ✅' : ' ❌') : ''}</text></g>`;
+      });
+      o += `</g>`;
+    });
+    return `<div class="lay-top" style="left:auto"><span class="scaletag">🌡️ Room temperature: about 20 °C</span></div>
+      <svg id="gasSvg" viewBox="0 0 ${w} ${h}" aria-label="Sort into solid, liquid and gas">${o}</svg>`;
+  },
+  stage() { return state.gas.mode === 'balloons' ? GS.balloonStage() : GS.sortStage(); },
+  put(id, bin) { const s = state.gas; s.placed[id] = bin; s.chip = null; s.checked = false; render(); },
+  check() {
+    const s = state.gas; s.checked = true; render();
+    if (SORDER.every(id => s.placed[id] === SORTS[id][1])) emit('sort');
+  }
+};
+
+// ================= Dragging chips =================
+// A chip can be tapped (then tap a box on the picture) or dragged onto the picture.
+const TAP = { sort: id => { const s = state.gas; s.chip = s.chip === id ? null : id; render(); } };
+const DROP = { sort: (id, e) => { const bin = document.elementFromPoint(e.clientX, e.clientY)?.closest('[data-bin]'); if (bin) GS.put(id, +bin.dataset.bin); } };
+const Chips = {
+  start(e, btn) {
+    if (btn.disabled) return;
+    e.preventDefault();
+    Chips.d = { kind: btn.dataset.kind, id: btn.dataset.id, x: e.clientX, y: e.clientY, pid: e.pointerId, ghost: null, btn };
+    try { btn.setPointerCapture(e.pointerId); } catch {}
+  },
+  move(e) {
+    const d = Chips.d; if (!d || d.pid !== e.pointerId) return;
+    if (!d.ghost && Math.hypot(e.clientX - d.x, e.clientY - d.y) > 8) {
+      d.ghost = d.btn.cloneNode(true); d.ghost.classList.add('chip-ghost'); d.ghost.style.width = d.btn.offsetWidth + 'px';
+      document.body.appendChild(d.ghost);
+    }
+    if (d.ghost) { d.ghost.style.left = e.clientX + 'px'; d.ghost.style.top = e.clientY + 'px'; }
+  },
+  end(e) {
+    const d = Chips.d; if (!d || d.pid !== e.pointerId) return;
+    Chips.d = null;
+    if (!d.ghost) return TAP[d.kind](d.id);
+    d.ghost.remove();
+    const r = $('#stage').getBoundingClientRect();
+    if (e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom) DROP[d.kind](d.id, e);
+  }
+};
+document.addEventListener('pointerdown', e => { const b = e.target.closest('.chip'); if (b) Chips.start(e, b); });
+document.addEventListener('pointermove', e => Chips.move(e));
+document.addEventListener('pointerup', e => Chips.end(e));
+document.addEventListener('pointercancel', () => { if (Chips.d) { Chips.d.ghost?.remove(); Chips.d = null; } });
+
+// ================= Missions =================
+// Each mission sets up a view; activities call emit() when something happens, and on() says whether that completes it.
+const MISSIONS = [
+  { id: 'melt', icon: '🧊', title: 'Melt the ice', task: 'In <b>Particle box</b>, the water is frozen. Make the ice <b>melt</b>.',
+    hint: 'Ice melts at its melting point. Warm it up with the temperature slider.',
+    setup() { state.view = 'box'; state.box = { sub: 'water', temp: -10 }; },
+    on: (ev, d) => ev === 'phase' && d.sub === 'water' && d.ph === 'liquid',
+    win: () => 'Ice melts at <b>0 °C</b>. The particles start to move around and slide past each other: the solid has become a <b>liquid</b>.' },
+  { id: 'boil', icon: '♨️', title: 'Boil the water', task: 'In <b>Particle box</b>, turn the water into a <b>gas</b>.',
+    hint: 'Water boils at its boiling point. How hot is that?',
+    setup() { state.view = 'box'; state.box = { sub: 'water', temp: 20 }; },
+    on: (ev, d) => ev === 'phase' && d.sub === 'water' && d.ph === 'gas',
+    win: () => 'Water boils at <b>100 °C</b>. The particles move so fast that they spread far apart: the water has become <b>water vapour</b>, a gas.' },
+  { id: 'wax', icon: '🕯️', title: 'Melt the wax', task: 'In <b>Particle box</b>, choose <b>wax</b> and make it melt. Is its melting point the same as water\'s?',
+    hint: 'Wax melts at about 60 °C.',
+    setup() { state.view = 'box'; state.box = { sub: 'wax', temp: 20 }; },
+    on: (ev, d) => ev === 'phase' && d.sub === 'wax' && d.ph === 'liquid',
+    win: () => 'This wax melts at about <b>60 °C</b>. Different substances have different melting points. Water melts at 0 °C.' },
+  { id: 'float', icon: '🛟', title: 'Make the wax float', task: 'In <b>Water is odd</b>, drop the ice into water. Then try to make the solid wax <b>float</b>. Can you?',
+    hint: 'Try more than once. Then look at the close-ups of the particles.',
+    setup() { state.view = 'odd'; state.odd = freshOdd(); },
+    on: ev => ev === 'why',
+    win: () => 'Solid wax always sinks in melted wax. Most solids do! Ice floats because, when water freezes, its particles move a little <b>further apart</b>. Water is <b>odd</b>.' },
+  { id: 'measure', icon: '📏', title: 'Measure the change', task: 'In <b>Water is odd</b>, choose <b>Freeze and measure</b>. Read the volume of the ice and the solid wax.',
+    hint: 'Use the close-ups. Each small mark is 1 ml.',
+    setup() { state.view = 'odd'; state.odd = Object.assign(freshOdd(), { mode: 'freeze' }); },
+    on: ev => ev === 'measure',
+    win: () => 'Water <b>expands</b> (gets bigger) when it freezes: 100 ml became about 109 ml of ice. Wax <b>shrinks</b> when it becomes solid, like most substances.' },
+  { id: 'evap', icon: '☀️', title: 'Where did the water go?', task: 'In <b>Evaporate & condense</b>, predict, then leave the three jugs for a day. How much water evaporated from the warmest jug?',
+    hint: 'It started with 100 ml. Take away what is left.',
+    setup() { state.view = 'evap'; state.evap = freshEvap(); },
+    on: ev => ev === 'evap',
+    win: () => 'Water <b>evaporates</b> at any temperature, but faster when it is warmer. Warmer particles move faster, so more of them escape from the surface into the air.' },
+  { id: 'cond', icon: '🥫', title: 'Mystery drops', task: 'In <b>Evaporate & condense</b>, choose <b>Condensation</b>. Find out where the drops on the cold can come from.',
+    hint: 'Think about what is in the air, even when you can\'t see it.',
+    setup() { state.view = 'evap'; state.evap = Object.assign(freshEvap(), { mode: 'cond' }); },
+    on: ev => ev === 'cond',
+    win: () => 'Water vapour in the air touches the cold can, <b>cools</b>, and <b>condenses</b> into drops of liquid water. The warm can stays dry: that was a fair test!' },
+  { id: 'dissolve', icon: '🧂', title: 'Dissolving detective', task: 'In <b>Dissolving</b>, test all <b>6</b> substances. Which ones dissolve in water?',
+    hint: 'Predict first, then stir. Look at the close-up of the particles.',
+    setup() { state.view = 'dis'; state.dis = freshDis(); },
+    on: ev => ev === 'dissolve',
+    win: () => 'Salt, sugar and instant coffee <b>dissolve</b>: their particles spread out between the water particles to make a <b>solution</b>. Water can dissolve lots of different substances.' },
+  { id: 'balloons', icon: '🎈', title: 'Five gases', task: 'In <b>Gases</b>, find out about all <b>5</b> gases.',
+    hint: 'Tap each balloon, and the cup of water.',
+    setup() { state.view = 'gas'; state.gas = freshGas(); },
+    on: (ev, d) => ev === 'gases' && d.n === 5,
+    win: () => 'Oxygen, nitrogen, carbon dioxide, hydrogen and water vapour are all <b>gases at room temperature</b>.' },
+  { id: 'sort', icon: '🗂️', title: 'Solid, liquid or gas?', task: 'In <b>Gases</b>, choose <b>Sort them</b> and sort all <b>12</b> into solids, liquids and gases at room temperature.',
+    hint: 'All five gases from the balloons are gases at room temperature.',
+    setup() { state.view = 'gas'; state.gas = Object.assign(freshGas(), { mode: 'sort' }); },
+    on: ev => ev === 'sort',
+    win: () => 'At room temperature, salt, iron, wood and wax are <b>solids</b>, water, milk and oil are <b>liquids</b>, and the five gases are <b>gases</b>.' }
+];
+function emit(ev, data = {}) {
+  if (state.mission == null) return;
+  const i = state.mission, m = MISSIONS[i];
+  if (!m.on(ev, data)) return;
+  stopMission();
+  if (!state.done.includes(m.id)) { state.done.push(m.id); store.set('pp-done', state.done); }
+  updateStars();
+  setTimeout(() => {
+    $('#winTitle').textContent = `${m.icon} Mission complete!`;
+    $('#winText').innerHTML = m.win(data);
+    $('#winNext').style.display = i < MISSIONS.length - 1 ? '' : 'none';
+    $('#winPractise').style.display = i < MISSIONS.length - 1 ? 'none' : '';
+    $('#winNext').dataset.i = i + 1;
+    $('#winModal').classList.remove('hidden'); confetti();
+  }, 1200);
+}
+function startMission(i) {
+  closeModals();
+  state.mission = i; MISSIONS[i].setup();
+  location.hash = 'view=' + state.view;
+  const m = MISSIONS[i];
+  $('#bannerKicker').textContent = `Mission ${i + 1} of ${MISSIONS.length}: ${m.title}`;
+  $('#bannerText').innerHTML = m.task; $('#bannerHint').innerHTML = m.hint;
+  $('#bannerHint').classList.add('hidden'); $('#hintBtn').textContent = '💡 Show a hint';
+  $('#banner').classList.remove('hidden');
+  render();
+}
+function stopMission() { state.mission = null; $('#banner').classList.add('hidden'); fitBanner(); }
+// The banner sits over the top of the drawer, so the drawer's cards start below it
+function fitBanner() { $('#drawer').style.paddingTop = state.mission == null ? '' : `${$('#banner').offsetHeight + 18}px`; }
+function updateStars() { $('#starCount').textContent = `${state.done.filter(id => MISSIONS.some(m => m.id === id)).length}/${MISSIONS.length} ⭐`; }
+function closeModals() { document.querySelectorAll('.modal').forEach(m => m.classList.add('hidden')); }
+function confetti() {
+  const em = ['⭐', '🌟', '🫧', '🧊', '🎉'];
+  for (let i = 0; i < 30; i++) {
+    const s = document.createElement('span'); s.className = 'confetti'; s.textContent = em[i % em.length];
+    s.style.left = `${Math.random() * 100}vw`; s.style.animationDuration = `${2 + Math.random() * 2}s`; s.style.animationDelay = `${Math.random() * .6}s`;
+    document.body.appendChild(s); setTimeout(() => s.remove(), 5000);
+  }
+}
+
+// ================= Views =================
+const said = (msgs, good) => msgs ? `<div class="card says${good ? ' good' : ''}"><h3>${good ? '🎉 Well done!' : '🔎 Check'}</h3>${Array.isArray(msgs) ? `<ul>${msgs.map(m => `<li>${m}</li>`).join('')}</ul>` : `<p>${msgs}</p>`}</div>` : '';
+const mcq = (opts, chosen, wrong, act) => opts.map(([t, ok], k) => {
+  const cls = chosen === k ? ' done' : wrong.includes(k) ? ' wrong' : '';
+  return `<button class="opt${cls}" data-act="${act}" data-k="${k}"${chosen != null || wrong.includes(k) ? ' disabled' : ''}>${t.replace(/<\/?b>/g, '')}</button>`;
+}).join('');
+const VIEWS = {
+  box: {
+    label: '🫧 <span class="tl">Particle box</span>',
+    stage: () => PB.stage(),
+    after: () => PB.start(),
+    drawer() {
+      const b = state.box, S = SUBS[b.sub];
+      const presets = [[-18, '❄️ Freezer'], [20, '🏫 Room'], b.sub === 'water' ? [100, '♨️ 100 °C'] : [80, '🔥 80 °C']];
+      return `<div class="card"><h2>Particle box</h2>
+          <p>Everything is made of tiny <b>particles</b>. Change the temperature and watch how the particles behave.</p>
+          <div class="stops">${Object.entries(SUBS).map(([id, x]) => `<button class="opt${id === b.sub ? ' on' : ''}" data-act="bsub" data-s="${id}">${x.em} ${x.name}</button>`).join('')}</div>
+          <div class="slide"><span>❄️</span><input type="range" id="tempSlider" min="-20" max="120" step="1" value="${b.temp}" aria-label="Temperature"><span>🔥</span></div>
+          <div class="stops">${presets.map(([T, n]) => `<button class="opt" data-act="bpreset" data-t="${T}">${n}</button>`).join('')}</div></div>
+        <div class="card" id="stateCard">${PB.stateCard()}</div>
+        <div class="card"><h3>🌡️ ${S.name}</h3>
+          <p>${b.sub === 'water' ? '<b>Melting point:</b> 0 °C. <b>Boiling point:</b> 100 °C.' : '<b>Melting point:</b> about 60 °C. Wax needs to be very much hotter to boil.'}</p>
+          <p class="muted">${b.sub === 'water' ? 'Below 0 °C it is ice. Between 0 °C and 100 °C it is liquid water. At 100 °C it boils and becomes water vapour.' : 'Different substances melt and boil at different temperatures.'}</p></div>`;
+    }
+  },
+  odd: {
+    label: '🧊 <span class="tl">Water is odd</span>',
+    stage: () => WO.stage(),
+    drawer() {
+      const o2 = state.odd;
+      const top = `<div class="card"><h2>Water is odd</h2>
+          <p>Water does not always behave like other substances.</p>
+          <div class="stops"><button class="opt${o2.mode === 'float' ? ' on' : ''}" data-act="omode" data-m="float">🧊 Float test</button><button class="opt${o2.mode === 'freeze' ? ' on' : ''}" data-act="omode" data-m="freeze">📏 Freeze and measure</button></div></div>`;
+      const props = `<div class="card"><h3>💧 Water's special properties</h3><ul class="facts"><li><b>Melts</b> at 0 °C and <b>boils</b> at 100 °C.</li><li><b>Expands</b> (gets bigger) when it freezes, so ice floats.</li><li>Can <b>dissolve</b> lots of different substances (see <b>Dissolving</b>).</li></ul></div>`;
+      if (o2.mode === 'float') {
+        const both = o2.dropped.water && o2.dropped.wax;
+        const ask = both ? `<div class="card says${o2.why != null ? ' good' : ''} wq"><h3>❓ Why does ice float, but solid wax sinks?</h3><p class="muted">Look at the close-ups of the particles.</p>${mcq(WO.WHY, o2.why, o2.whyWrong, 'owhy')}
+            ${o2.whyWrong.length && o2.why == null ? '<p class="spot">💡 Not quite. Compare how close the particles are in the solid and in the liquid.</p>' : ''}
+            ${o2.why != null ? '<p class="job">Most substances, like wax, shrink when they turn solid, so the solid sinks in its own liquid. Water is <b>odd</b>: it <b>expands</b> when it freezes, so ice floats.</p>' : ''}</div>` : '';
+        return `${ask}${top}
+          <div class="card"><h3>🧊 Float test</h3>
+            <div class="navrow"><button class="btn${o2.dropped.water ? ' active' : ''}" data-act="odrop" data-id="water"${o2.dropped.water ? ' disabled' : ''}>🧊 Drop ice into water</button>
+            <button class="btn" data-act="odrop" data-id="wax">🕯️ ${o2.dropped.wax ? 'Try again with a different piece of wax' : 'Drop solid wax into melted wax'}</button></div>
+            ${o2.waxTries > 1 ? `<p class="spot">You have tried ${o2.waxTries} pieces of wax. Every one sinks!</p>` : ''}</div>${props}`;
+      }
+      const all = o2.ok.water && o2.ok.wax;
+      const row = (id, name) => `<div class="ansrow"><label for="v-${id}">${name}:</label><input class="numin${o2.ok[id] ? ' ok' : ''}" id="v-${id}" data-id="${id}" type="text" inputmode="decimal" value="${esc(o2.read[id])}"${o2.ok[id] ? ' readonly' : ''}> ml ${o2.ok[id] === 'right' ? '✅' : ''}</div>`;
+      return `${said(o2.said)}${all ? '<div class="card says good"><h3>🧊 Water expands!</h3><p>100 ml of water froze into about <b>109 ml</b> of ice: it got <b>bigger</b>. That is why frozen water pipes and bottles can burst.</p><p>100 ml of melted wax became about <b>90 ml</b> of solid wax: it got <b>smaller</b>, like most substances do. Water is odd!</p></div>' : ''}${top}
+        <div class="card"><h3>📏 Freeze and measure</h3>
+          <p>Both cylinders hold <b>100 ml</b>. What happens when they turn solid?</p>
+          ${o2.frozen ? `<p>Read the new volumes in the <b>close-ups</b>. Each small mark is <b>1 ml</b>.</p>${row('water', '🧊 Ice')}${row('wax', '🕯️ Solid wax')}`
+            : '<div class="navrow"><button class="btn go" data-act="ofreeze">❄️ Freeze the water and cool the wax</button></div>'}</div>
+        ${o2.frozen && !all ? '<div class="checkbar"><button class="btn go" data-act="ocheck">✔ Check</button></div>' : ''}${props}`;
+    }
+  },
+  evap: {
+    label: '💨 <span class="tl">Evaporate &amp; condense</span>',
+    stage: () => EC.stage(),
+    drawer() {
+      const e = state.evap;
+      const top = `<div class="card"><h2>Evaporate &amp; condense</h2>
+          <div class="stops"><button class="opt${e.mode === 'evap' ? ' on' : ''}" data-act="emode" data-m="evap">☀️ Evaporation</button><button class="opt${e.mode === 'cond' ? ' on' : ''}" data-act="emode" data-m="cond">🥫 Condensation</button></div></div>`;
+      if (e.mode === 'evap') {
+        const result = e.ok ? `<div class="card says good"><h3>💨 Evaporation</h3><p>The warmest jug lost <b>50 ml</b>, the classroom jug lost 20 ml and the fridge jug lost only 10 ml.</p>
+            <p>The particles in a liquid are always moving. Some at the surface move fast enough to <b>escape</b> into the air as water vapour: this is <b>evaporation</b>.</p>
+            <p>When it is <b>warmer</b>, the particles move <b>faster</b>, so more escape. Look at the close-ups!</p>
+            ${e.pred != null ? `<p class="muted">You predicted the ${EC.JUGS[e.pred][1].toLowerCase()} jug would have the least left. ${e.pred === 2 ? '✅ Right!' : '❌ It was the jug on the sunny windowsill.'}</p>` : ''}</div>` : '';
+        const step = !e.left
+          ? `<div class="card says wq"><h3>🤔 Predict</h3><p>Each jug has 100 ml of water. Some of it will evaporate. After a day, which jug will have the <b>least water left</b> in it?</p>
+              ${EC.JUGS.map(([em, name, T], k) => `<button class="opt${e.pred === k ? ' on' : ''}" data-act="epred" data-k="${k}">${em} ${name} (${T} °C)</button>`).join('')}
+              <div class="navrow" style="margin-top:8px"><button class="btn go" data-act="eleave"${e.pred == null ? ' disabled' : ''}>⏱️ Leave them for a day</button></div></div>`
+          : e.ok ? '' : `<div class="card says"><h3>📏 Read the jugs</h3><p>How much water <b>evaporated</b> from the jug on the <b>sunny windowsill</b>?</p>
+              <div class="ansrow"><input class="numin" id="evapAns" type="text" inputmode="decimal" value="${esc(e.ans)}"> ml</div>
+              ${e.said ? `<p class="spot">💡 ${e.said}</p>` : ''}</div><div class="checkbar"><button class="btn go" data-act="echeck">✔ Check</button></div>`;
+        return `${result}${step}${top}`;
+      }
+      const qs = e.waited ? `<div class="card says${e.q2 != null ? ' good' : ''} wq"><h3>❓ Where did the drops on the cold can come from?</h3>${mcq(EC.Q1, e.q1, e.q1w, 'eq1')}
+          ${e.q1w.length && e.q1 == null ? '<p class="spot">💡 The can is sealed. What is in the air, even though you can\'t see it?</p>' : ''}
+          ${e.q1 != null ? `<h3 style="margin-top:10px">❓ Why did the can at room temperature stay dry?</h3>${mcq(EC.Q2, e.q2, e.q2w, 'eq2')}${e.q2w.length && e.q2 == null ? '<p class="spot">💡 What is different about the two cans?</p>' : ''}` : ''}
+          ${e.q2 != null ? '<p class="job">When water vapour particles touch something <b>cold</b>, they slow down and come close together: they <b>condense</b> into liquid water. Condensation is the opposite of evaporation.</p>' : ''}</div>`
+        : `<div class="card says"><h3>🥫 A fair test</h3><p>One can is cold from the fridge. The other is at room temperature. Everything else is the same.</p><div class="navrow"><button class="btn go" data-act="ewait">⏱️ Wait 5 minutes</button></div></div>`;
+      return `${qs}${top}`;
+    }
+  },
+  dis: {
+    label: '🧂 <span class="tl">Dissolving</span>',
+    stage: () => DS.stage(),
+    drawer() {
+      const d = state.dis, id = d.pick, D = DIS[id], tested = DORDER.filter(x => d.stirred[x]).length;
+      const chooser = `<div class="card"><h2>Dissolving</h2><p>Water can <b>dissolve</b> lots of substances. Which of these dissolve?</p>
+          <div class="stops">${DORDER.map(x => `<button class="opt${x === id ? ' on' : ''}" data-act="dpick" data-id="${x}"><span class="sw" style="background:${DIS[x][2]}"></span> ${DIS[x][0]}${d.stirred[x] ? ' <span class="tick">✔</span>' : ''}</button>`).join('')}</div></div>`;
+      let step = '';
+      if (id && !d.stirred[id]) step = `<div class="card says"><h3>🤔 Will ${D[0].toLowerCase()} dissolve in water?</h3>
+          <div class="navrow"><button class="btn${d.pred[id] === true ? ' active' : ''}" data-act="dpred" data-v="1">✅ Yes</button><button class="btn${d.pred[id] === false ? ' active' : ''}" data-act="dpred" data-v="0">❌ No</button></div>
+          <div class="navrow" style="margin-top:8px"><button class="btn go" data-act="dstir"${d.pred[id] == null ? ' disabled' : ''}>🥄 Stir it in</button></div></div>`;
+      else if (id) step = `<div class="card says${D[1] ? ' good' : ''}"><h3>${D[1] ? '✅ It dissolves' : '❌ It does not dissolve'}</h3><p>${D[3]}</p><p class="muted">You predicted: ${d.pred[id] ? 'yes' : 'no'} ${d.pred[id] === D[1] ? '✅' : '❌'}</p></div>`;
+      else step = `<div class="card says"><h3>👆 Choose a substance</h3><p>Pick one of the six below, predict, then stir it into the water.</p></div>`;
+      const table = tested ? `<div class="card"><h3>📋 Results</h3><table class="gtable"><tr><th>Substance</th><th>You predicted</th><th>Dissolved?</th></tr>
+          ${DORDER.filter(x => d.stirred[x]).map(x => `<tr><td>${DIS[x][0]}</td><td>${d.pred[x] ? 'yes' : 'no'}</td><td>${DIS[x][1] ? '✅ yes' : '❌ no'}</td></tr>`).join('')}</table><p class="muted">${tested} of 6 tested.</p></div>` : '';
+      const end = tested === 6 ? `<div class="card says good"><h3>🌍 What did you find out?</h3><p>Salt, sugar and instant coffee <b>dissolve</b> in water. Their particles spread out between the water particles to make a <b>solution</b>. A solution is a liquid: you can see through it, with no bits.</p><p>Sand, oil and pepper do <b>not</b> dissolve. Water can dissolve a <b>range</b> of substances, but not everything.</p></div>` : '';
+      return `${step}${end}${chooser}${table}`;
+    }
+  },
+  gas: {
+    label: '🎈 <span class="tl">Gases</span>',
+    stage: () => GS.stage(),
+    drawer() {
+      const s = state.gas;
+      const top = `<div class="card"><h2>Gases</h2><p>Some substances are <b>gases</b> at room temperature (about 20 °C).</p>
+          <div class="stops"><button class="opt${s.mode === 'balloons' ? ' on' : ''}" data-act="gmode" data-m="balloons">🎈 Five gases</button><button class="opt${s.mode === 'sort' ? ' on' : ''}" data-act="gmode" data-m="sort">🗂️ Sort them</button></div></div>`;
+      if (s.mode === 'balloons') {
+        const G = GASES[s.open];
+        const card = G ? `<div class="card says good"><h3><span class="sw" style="background:${G.col}"></span> ${G.name}</h3><p><b>A gas at room temperature</b> ✔</p><ul class="facts">${G.facts.map(f => `<li>${f}</li>`).join('')}</ul></div>`
+          : `<div class="card says"><h3>👆 Tap a balloon</h3><p>Each balloon holds a different gas. Tap one to find out about it. Don't forget the cup of water!</p></div>`;
+        return `${card}${top}<div class="card"><h3>💨 Gas particles</h3><p>In a gas, the particles are <b>far apart</b> and move <b>quickly</b> in all directions. That is why a gas spreads out to fill its container.</p>
+          <p class="muted">You have looked at ${s.seen.length} of 5 gases.</p></div>`;
+      }
+      const left = SORDER.filter(id => s.placed[id] == null), right = SORDER.filter(id => s.placed[id] === SORTS[id][1]).length, placed = SORDER.length - left.length;
+      const fb = s.checked ? (right === 12 ? said('All 12 are right! At room temperature, these five gases are all gases.', true) : said([`${right} of ${placed} placed ones are right. Move the ones with ❌.`, 'Think about what each one is like in a room at 20 °C.'])) : '';
+      return `${fb}${top}<div class="card"><h3>🗂️ Solid, liquid or gas?</h3><p class="muted">Is each one a solid, a liquid or a gas at room temperature? Drag it to a box, or tap it, then tap a box. To move something, tap it in its box to send it back here.</p>
+          ${left.length ? `<div class="stops">${left.map(id => `<button class="chip${s.chip === id ? ' sel' : ''}" data-kind="sort" data-id="${id}">${SORTS[id][0]}</button>`).join('')}</div>` : '<p class="job">Everything is in a box.</p>'}
+          <div class="navrow" style="margin-top:8px"><button class="btn" data-act="greset">↺ Start again</button></div></div>
+        <div class="checkbar"><button class="btn go" data-act="gcheck"${placed ? '' : ' disabled'}>✔ Check (${placed} of 12 placed)</button></div>`;
+    }
+  },
+  help: {
+    label: 'Help',
+    stage: () => PB.stage(),
+    after: () => PB.start(),
+    drawer() {
+      return `<div class="card"><h2>Help</h2>
+        <p><b>🫧 Particle box</b>: heat and cool water or wax, and watch the particles in a solid, a liquid and a gas.</p>
+        <p><b>🧊 Water is odd</b>: see why ice floats but solid wax sinks, then freeze water and wax and measure what happens.</p>
+        <p><b>💨 Evaporate &amp; condense</b>: leave jugs of water in three places, and find out where the drops on a cold can come from.</p>
+        <p><b>🧂 Dissolving</b>: test which substances dissolve in water.</p>
+        <p><b>🎈 Gases</b>: find out about five gases, then sort things into solids, liquids and gases.</p>
+        <p><b>🚀 Missions</b>: challenges to try. <b>🤔 Real life?</b>: how this model is different from real particles.</p></div>
+        <div class="card"><h3>🎯 What you are learning</h3>
+          <p><b>5Cm.01</b> Use the particle model to describe solid, liquids (including solutions) and gases.</p>
+          <p><b>5Cm.02</b> Understand that substances can be gaseous and know the common gases at room temperature (limited to oxygen, carbon dioxide, water vapour, nitrogen and hydrogen).</p>
+          <p><b>5Cc.01</b> Describe the processes of evaporation and condensation, using the particle model and relating the processes to changes in temperature.</p>
+          <p><b>5Cp.02</b> Know the main properties of water (limited to boiling point, melting point, expands when it solidifies, and its ability to dissolve a range of substances) and know that water acts differently from many other substances.</p>
+          <p class="muted"><b>Also:</b> <b>5TWSm.01</b> Know that a model presents an object, process or idea in a way that shows some of the important features.</p></div>
+        <div class="navrow"><a class="btn go" href="../practice/index.html#particles">✏️ Practise this</a></div>`;
+    }
+  }
+};
+
+function renderStage() { const v = VIEWS[state.view]; $('#stage').innerHTML = v.stage(); if (v.after) v.after(); }
+function render() {
+  const v = VIEWS[state.view];
+  // Help is the ❓ button at the end of the top bar, like the other tools, so it isn't one of the tabs
+  $('#helpBtn').classList.toggle('active', state.view === 'help');
+  $('#tabs').innerHTML = Object.entries(VIEWS).filter(([id]) => id !== 'help').map(([id, x]) =>
+    `<button class="btn${id === state.view ? ' active' : ''}" data-act="view" data-view="${id}" aria-label="${x.label.replace(/<[^>]+>/g, '').replace(/^\S+ /, '').replace('&amp;', '&')}">${x.label}</button>`).join('');
+  const keep = $('#drawer').scrollTop, same = render.last === state.view;
+  $('#drawer').innerHTML = v.drawer();
+  renderStage();
+  // Staying on the same tab keeps the drawer where it was scrolled to
+  if (same) $('#drawer').scrollTop = keep;
+  render.last = state.view;
+  fitBanner();
+}
+
+// ================= Actions =================
+const ACTIONS = {
+  view(el) { state.view = el.dataset.view; location.hash = 'view=' + state.view; render(); },
+  bsub(el) { state.box.sub = el.dataset.s; render(); },
+  bpreset(el) { PB.setTemp(+el.dataset.t); },
+  omode(el) { state.odd.mode = el.dataset.m; state.odd.said = null; render(); },
+  odrop(el) { const o2 = state.odd; o2.dropped[el.dataset.id] = true; if (el.dataset.id === 'wax') o2.waxTries++; render(); },
+  owhy(el) { const o2 = state.odd, k = +el.dataset.k; if (WO.WHY[k][1]) { o2.why = k; render(); emit('why'); } else { o2.whyWrong.push(k); render(); } },
+  ofreeze() { state.odd.frozen = true; render(); },
+  ocheck() { WO.check(); },
+  emode(el) { const e = state.evap; e.mode = el.dataset.m; render(); },
+  epred(el) { state.evap.pred = +el.dataset.k; render(); },
+  eleave() { const e = state.evap; if (e.pred != null) { e.left = true; render(); } },
+  echeck() { EC.checkEvap(); },
+  ewait() { state.evap.waited = true; render(); },
+  eq1(el) { const e = state.evap, k = +el.dataset.k; if (EC.Q1[k][1]) e.q1 = k; else e.q1w.push(k); render(); },
+  eq2(el) { const e = state.evap, k = +el.dataset.k; if (EC.Q2[k][1]) { e.q2 = k; render(); emit('cond'); } else { e.q2w.push(k); render(); } },
+  dpick(el) { state.dis.pick = el.dataset.id; render(); },
+  dpred(el) { const d = state.dis; d.pred[d.pick] = el.dataset.v === '1'; render(); },
+  dstir() { const d = state.dis; if (d.pick && d.pred[d.pick] != null) { d.stirred[d.pick] = true; render(); $('#drawer').scrollTop = 0; if (DORDER.every(x => d.stirred[x])) emit('dissolve'); } },
+  gmode(el) { state.gas.mode = el.dataset.m; state.gas.chip = null; render(); },
+  gcheck() { GS.check(); },
+  greset() { state.gas = Object.assign(freshGas(), { mode: 'sort', seen: state.gas.seen }); render(); },
+  missions() {
+    $('#missionList').innerHTML = MISSIONS.map((m, i) => `<button class="mission-item${state.done.includes(m.id) ? ' done' : ''}" data-act="startMission" data-i="${i}">
+      <span class="em">${m.icon}</span><span class="t">${i + 1}. ${m.title}</span><span class="star">⭐</span></button>`).join('');
+    $('#missionsModal').classList.remove('hidden');
+  },
+  startMission(el) { startMission(+el.dataset.i); },
+  nextMission(el) { startMission(+el.dataset.i); },
+  stopMission() { stopMission(); },
+  hint() {
+    const h = $('#bannerHint');
+    h.classList.toggle('hidden');
+    $('#hintBtn').textContent = h.classList.contains('hidden') ? '💡 Show a hint' : '💡 Hide the hint';
+    fitBanner();
+  },
+  resetStars() { state.done = []; store.set('pp-done', []); updateStars(); ACTIONS.missions(); },
+  closeModals() { closeModals(); },
+  model() { $('#modelModal').classList.remove('hidden'); }
+};
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-act]');
+  if (el && ACTIONS[el.dataset.act]) ACTIONS[el.dataset.act](el);
+});
+// Typed answers are kept as you type, so they survive the drawer being redrawn
+document.addEventListener('input', e => {
+  if (e.target.id === 'tempSlider') PB.setTemp(+e.target.value);
+  if (e.target.matches('.numin[data-id]')) state.odd.read[e.target.dataset.id] = e.target.value;
+  if (e.target.id === 'evapAns') state.evap.ans = e.target.value;
+});
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return;
+  if (e.target.matches('.numin[data-id]')) WO.check();
+  if (e.target.id === 'evapAns') EC.checkEvap();
+});
+// Taps on the pictures: a balloon to read about it; a box to put the chosen word in (or take things back out)
+$('#stage').addEventListener('click', e => {
+  const gas = e.target.closest('[data-gas]')?.dataset.gas;
+  if (gas) { const s = state.gas; s.open = gas; if (!s.seen.includes(gas)) s.seen.push(gas); render(); $('#drawer').scrollTop = 0; emit('gases', { n: s.seen.length }); return; }
+  const bin = e.target.closest('[data-bin]')?.dataset.bin;
+  if (bin != null) {
+    const s = state.gas;
+    if (s.chip) GS.put(s.chip, +bin);
+    // Nothing chosen: tapping one thing in a box sends just that one back to the panel
+    else { const item = e.target.closest('[data-item]')?.dataset.item; if (item) { delete s.placed[item]; s.checked = false; render(); } }
+  }
+});
+// Tapping the dark background or pressing Escape closes a pop-up
+document.querySelectorAll('.modal').forEach(m => m.addEventListener('click', e => { if (e.target === m) closeModals(); }));
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModals(); });
+let resizeT;
+addEventListener('resize', () => { fitBanner(); clearTimeout(resizeT); resizeT = setTimeout(renderStage, 120); });
+
+// ================= Start =================
+// Test hooks: #view=box&sub=wax&temp=70 · #view=odd&mode=freeze&frozen=1 · #view=odd&dropped=1 · #view=evap&left=1 · #view=evap&mode=cond&waited=1
+// #view=dis&pick=salt&stirred=salt · #view=gas&open=co2 · #view=gas&mode=sort&placed=all · #mission=3
+const hp = new URLSearchParams(location.hash.slice(1));
+if (VIEWS[hp.get('view')]) state.view = hp.get('view');
+if (SUBS[hp.get('sub')]) state.box.sub = hp.get('sub');
+if (hp.has('temp')) state.box.temp = Math.max(-20, Math.min(120, +hp.get('temp')));
+if (state.view === 'odd') {
+  if (hp.get('mode') === 'freeze') state.odd.mode = 'freeze';
+  if (hp.has('frozen')) state.odd.frozen = true;
+  if (hp.has('dropped')) { state.odd.dropped = { water: true, wax: true }; state.odd.waxTries = 1; }
+}
+if (state.view === 'evap') {
+  if (hp.get('mode') === 'cond') state.evap.mode = 'cond';
+  if (hp.has('left')) { state.evap.pred = 2; state.evap.left = true; }
+  if (hp.has('waited')) state.evap.waited = true;
+}
+if (DIS[hp.get('pick')]) state.dis.pick = hp.get('pick');
+if (hp.has('stirred')) hp.get('stirred').split(',').filter(id => DIS[id]).forEach(id => { state.dis.stirred[id] = true; state.dis.pred[id] = true; });
+if (GASES[hp.get('open')]) { state.gas.open = hp.get('open'); state.gas.seen.push(hp.get('open')); }
+if (state.view === 'gas' && hp.get('mode') === 'sort') state.gas.mode = 'sort';
+if (hp.get('placed') === 'all') SORDER.forEach(id => { state.gas.placed[id] = SORTS[id][1]; });
+updateStars();
+if (MISSIONS[hp.get('mission')]) startMission(+hp.get('mission'));
+else render();
+</script>
+</body>
+</html>

@@ -1,0 +1,2077 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Adaptation Studio</title>
+<meta name="description" content="Explore how plants and animals are adapted to hot, cold, wet and dry habitats – an interactive 3D tool for Year 5.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ================= Shared look (matches Seasons Explorer) ================= */
+  :root {
+    --ink: #1d2340; --muted: #5b6386; --soft: #eef2ff;
+    --yellow: #ffc83d; --blue: #3d7bff; --coral: #ff5f6d; --green: #22b07d; --orange: #f0892e; --grey: #8a93ad;
+    --space: #070d24; --drawerW: 360px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: var(--space); color: var(--ink); font-family: 'Fredoka', system-ui, sans-serif; font-size: 17px; line-height: 1.35; -webkit-tap-highlight-color: transparent; }
+  body { display: flex; flex-direction: column; }
+  button, input, textarea { font: inherit; color: inherit; }
+  b { font-weight: 700; }
+  .btn { border: 0; border-radius: 14px; padding: 9px 14px; min-height: 44px; cursor: pointer; background: #fff; color: var(--ink); font-weight: 600; font-size: 16px; box-shadow: 0 3px 0 rgba(0,0,0,.18); }
+  .btn:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,.18); }
+  a.btn { display: inline-block; text-decoration: none; }
+  .btn.active { background: var(--yellow); }
+  .btn.primary { background: var(--blue); color: #fff; }
+  .btn.go { background: var(--green); color: #fff; font-size: 19px; width: 100%; }
+  .btn.small { font-size: 14px; padding: 6px 10px; min-height: 38px; border-radius: 12px; }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .btn:focus-visible, .chip:focus-visible, .opt:focus-visible { outline: 3px solid var(--yellow); outline-offset: 2px; }
+
+  /* ---------- Top bar ---------- */
+  .topbar { flex: none; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 8px 10px; background: rgba(7,13,36,.95); z-index: 15; }
+  .brand { color: #fff; font-size: 21px; font-weight: 700; margin-right: auto; white-space: nowrap; }
+  .hub-link { flex: none; display: grid; place-items: center; width: 38px; height: 38px; border-radius: 12px; text-decoration: none; font-size: 20px; background: rgba(255,255,255,.14); box-shadow: 0 3px 0 rgba(0,0,0,.25); transition: background .15s, transform .08s; }
+  .hub-link:hover { background: rgba(255,255,255,.26); }
+  .hub-link:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,.25); }
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+
+  /* ---------- Main area: stage on the left, drawer on the right ---------- */
+  main { position: relative; flex: 1; min-height: 0; }
+  #stage { position: absolute; top: 0; bottom: 0; left: 0; right: var(--drawerW); overflow: hidden; background: #bfdcff; }
+  #gl { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+  #flat { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; padding: 10px 10px 92px 146px; }
+  #flat.on { display: flex; }
+  #flat.full { padding: 10px; }
+  #flat svg.org { width: 100%; height: 100%; max-height: 100%; }
+  #drawer { position: absolute; top: 0; right: 0; bottom: 0; width: var(--drawerW); background: #dfe6ff; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+  .card { background: #fff; border-radius: 16px; padding: 12px 14px; }
+  .card h2 { margin: 0 0 4px; font-size: 21px; line-height: 1.2; }
+  .card h3 { margin: 0 0 6px; font-size: 17px; }
+  .card p { margin: 4px 0; }
+  .muted { color: var(--muted); font-size: 14.5px; }
+  .term { background: #fff3c4; border-radius: 6px; padding: 0 4px; font-weight: 600; }
+  .opts { display: flex; flex-wrap: wrap; gap: 6px; }
+  .opt { border: 2px solid #d3dbf7; background: #fff; border-radius: 12px; padding: 6px 10px; min-height: 42px; font-weight: 600; font-size: 15px; cursor: pointer; }
+  .opt.on { background: var(--yellow); border-color: #e0a800; }
+  .opt.yes.on { background: #c9f2df; border-color: var(--green); }
+  .opt.no.on { background: #ffd9b8; border-color: var(--orange); }
+  .opt:disabled { opacity: .35; cursor: not-allowed; }
+  .gname { font-weight: 700; margin: 8px 0 4px; font-size: 15px; }
+  .gname:first-child { margin-top: 0; }
+  textarea { width: 100%; border-radius: 12px; border: 2px solid #d3dbf7; padding: 8px 10px; font-size: 15px; resize: vertical; min-height: 54px; }
+  .note { background: #fff8db; border-radius: 12px; padding: 8px 10px; font-size: 14.5px; }
+  .score { font-size: 24px; font-weight: 700; }
+  #drawerToggle { display: none; }
+
+  /* ---------- Overlays on the stage ---------- */
+  .habbar { position: absolute; top: 10px; left: 292px; right: 10px; display: flex; gap: 6px; flex-wrap: wrap; z-index: 3; pointer-events: none; }
+  .habbar > * { pointer-events: auto; }
+  .habbar .title { background: rgba(255,255,255,.92); border-radius: 14px; padding: 8px 12px; font-weight: 700; font-size: 17px; display: flex; align-items: center; gap: 6px; }
+  /* Gauges stand side by side, each as tall as the stage allows */
+  .gauges { position: absolute; left: 10px; top: 10px; bottom: 96px; display: flex; flex-direction: row; gap: 8px; z-index: 3; }
+  .gauge { width: 86px; display: flex; flex-direction: column; align-items: center; gap: 4px; background: rgba(255,255,255,.94); border-radius: 16px; padding: 8px 6px; cursor: pointer; border: 0; text-align: center; }
+  .gauge .gt { font-weight: 700; font-size: 14px; line-height: 1.15; display: flex; flex-direction: column; align-items: center; min-height: 48px; }
+  .gauge .gi { font-size: 20px; line-height: 1.2; }
+  .gauge .end { font-size: 12px; color: var(--muted); font-weight: 600; line-height: 1.1; }
+  .gauge .tube { position: relative; flex: 1; min-height: 60px; width: 28px; border-radius: 14px; margin: 14px 0; }
+  .gauge .gs { font-weight: 700; font-size: 13.5px; line-height: 1.15; min-height: 32px; display: flex; align-items: center; }
+  .gauge.bad .gs { color: #b23a12; }
+  .gauge.good .gs { color: #0b6644; }
+  .tube.heat { background: linear-gradient(to top, #3d7bff 0%, #8fd0ff 28%, #22b07d 40%, #22b07d 60%, #ffb347 72%, #ff4d3d 100%); }
+  .tube.up { background: linear-gradient(to top, #ff7a5a 0%, #ffd27a 32%, #9ad48a 62%, #22a06b 100%); }
+  .marker { position: absolute; left: 50%; width: 34px; height: 34px; margin: -17px 0 0 -17px; border-radius: 50%; background: #fff; border: 3px solid var(--ink); display: flex; align-items: center; justify-content: center; font-size: 15px; transition: top .8s cubic-bezier(.3,1.4,.5,1); }
+  .tray { position: absolute; left: 10px; right: 10px; bottom: 10px; display: flex; gap: 6px; overflow-x: auto; z-index: 3; padding-bottom: 2px; scrollbar-width: thin; }
+  .chip { flex: none; display: flex; flex-direction: column; justify-content: center; border: 0; border-radius: 14px; padding: 6px 12px; min-height: 64px; max-width: 190px; background: rgba(255,255,255,.95); cursor: pointer; text-align: left; font-weight: 700; font-size: 15px; box-shadow: 0 2px 0 rgba(0,0,0,.15); }
+  .chip small { font-weight: 600; font-size: 13px; color: var(--muted); }
+  .chip.help { background: #d9f6ea; } .chip.problem { background: #ffe0c7; } .chip.little { background: #eceff6; }
+  .chip.on { outline: 3px solid var(--blue); }
+  .chip .res { font-size: 13px; font-weight: 700; }
+  .bubble { position: absolute; z-index: 4; max-width: 300px; background: #fff; border-radius: 16px; padding: 10px 34px 10px 12px; box-shadow: 0 6px 20px rgba(0,0,0,.3); font-size: 16px; }
+  .bubble h4 { margin: 0 0 3px; font-size: 17px; }
+  .bubble p { margin: 3px 0; }
+  .bubble .x { position: absolute; top: 6px; right: 6px; border: 0; background: var(--soft); width: 26px; height: 26px; border-radius: 50%; cursor: pointer; }
+  .bubble ul { margin: 4px 0 0; padding-left: 0; list-style: none; }
+  .bubble li { margin: 3px 0; font-size: 14.5px; }
+  .st { display: inline-block; border-radius: 999px; padding: 1px 9px; font-weight: 600; font-size: 13.5px; white-space: nowrap; }
+  .st.help { background: #d9f6ea; color: #0b6644; } .st.problem { background: #ffe3cc; color: #8a4300; } .st.little { background: #eceff6; color: #4a5170; }
+  /* Photo hotspots: small numbered dots that grow and show their name when pointed at, so the animal stays visible */
+  .hs { position: absolute; width: 24px; height: 24px; margin: -12px 0 0 -12px; padding: 0; border-radius: 50%; border: 2.5px solid #fff; background: rgba(255,95,109,.88); color: #fff; font-size: 12px; font-weight: 700; cursor: pointer; z-index: 2; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 5px rgba(0,0,0,.45); transition: transform .15s; }
+  .hs.seen { background: rgba(34,176,125,.9); }
+  .hs::after { content: ''; position: absolute; inset: -5px; border-radius: 50%; border: 2px solid rgba(255,255,255,.85); animation: pulse 1.8s ease-out infinite; pointer-events: none; }
+  .hs.seen::after { display: none; }
+  .hs .lab { position: absolute; left: 50%; bottom: calc(100% + 7px); transform: translateX(-50%); white-space: nowrap; background: rgba(10,20,60,.9); color: #fff; padding: 3px 10px; border-radius: 999px; font-size: 14px; font-weight: 600; opacity: 0; pointer-events: none; transition: opacity .15s; }
+  .hs:hover, .hs:focus-visible { transform: scale(1.3); z-index: 3; }
+  .hs:hover .lab, .hs:focus-visible .lab { opacity: 1; }
+  /* Face-offs */
+  .faceoff { width: 100%; align-self: flex-start; margin-top: 8px; max-width: 980px; display: flex; flex-direction: column; gap: 10px; }
+  .fo-head { display: grid; grid-template-columns: 1fr auto 1fr; gap: 12px; align-items: center; }
+  .fo-animal { border-radius: 20px; padding: 8px 14px; display: grid; grid-template-columns: auto auto; grid-template-rows: auto auto; column-gap: 12px; justify-content: center; align-items: center; color: #fff; }
+  .fo-animal .fo-em { grid-row: span 2; } .fo-animal .fo-name { align-self: end; } .fo-animal .fo-role { align-self: start; }
+  .fo-animal.pred { background: linear-gradient(135deg, #d9534f, #b8362f); } .fo-animal.prey { background: linear-gradient(135deg, #3d7bff, #2958c9); }
+  .fo-em { font-size: 52px; line-height: 1.1; } .fo-name { font-size: 24px; font-weight: 700; } .fo-role { font-size: 14px; font-weight: 600; opacity: .9; text-transform: uppercase; letter-spacing: .05em; }
+  .fo-vs { font-size: 28px; font-weight: 700; color: #fff; background: var(--ink); border-radius: 50%; width: 58px; height: 58px; display: flex; align-items: center; justify-content: center; }
+  .fo-hab { text-align: center; background: rgba(255,255,255,.9); border-radius: 14px; padding: 6px 12px; font-weight: 600; }
+  .fo-rows { display: grid; grid-template-columns: 1fr 40px 1fr; gap: 8px; align-items: stretch; }
+  .fo-col-h { text-align: center; font-weight: 700; color: var(--ink); background: rgba(255,255,255,.75); border-radius: 10px; padding: 3px; font-size: 15px; }
+  .fo-tool { display: flex; align-items: center; gap: 10px; border: 3px solid transparent; border-radius: 16px; padding: 8px 12px; min-height: 56px; font-weight: 700; font-size: 16.5px; cursor: pointer; text-align: left; color: var(--ink); }
+  .fo-tool.pred { background: #ffe3e0; } .fo-tool.prey { background: #e1ebff; }
+  .fo-tool .fi { font-size: 26px; flex: none; }
+  .fo-tool.hit { border-color: var(--yellow); box-shadow: 0 0 0 3px rgba(255,200,61,.5); }
+  .fo-link { display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 700; color: var(--ink); }
+  .fo-pick { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .fo-pick .opt { font-size: 20px; }
+  #flat:has(.faceoff) { overflow-y: auto; align-items: flex-start; }
+  @media (max-height: 760px) { .faceoff { gap: 7px; margin-top: 0; } .fo-em { font-size: 40px; } .fo-name { font-size: 20px; } .fo-vs { width: 48px; height: 48px; font-size: 22px; } .fo-tool { min-height: 46px; padding: 5px 10px; font-size: 15.5px; } .fo-tool .fi { font-size: 22px; } .fo-rows { gap: 6px; } .fo-hab { padding: 4px 10px; } }
+  #huntCanvas { width: 100%; height: 100%; display: block; }
+  @media (max-width: 820px) { .fo-em { font-size: 40px; } .fo-name { font-size: 18px; } .fo-vs { width: 48px; height: 48px; font-size: 22px; } .fo-tool { font-size: 14px; min-height: 48px; padding: 6px 8px; } .fo-tool .fi { font-size: 20px; } .fo-rows { grid-template-columns: 1fr 22px 1fr; } }
+  @keyframes pulse { to { transform: scale(1.7); opacity: 0; } }
+  .photo-wrap { position: relative; max-width: 100%; max-height: 100%; }
+  .photo-wrap img { display: block; max-width: 100%; max-height: calc(100vh - 250px); border-radius: 16px; }
+  @media (max-width: 820px) { .photo-wrap img { max-height: calc(58vh - 190px); } }
+  .credit { position: absolute; right: 6px; bottom: 6px; background: rgba(0,0,0,.55); color: #fff; font-size: 11px; padding: 2px 6px; border-radius: 6px; }
+  .nophoto { background: rgba(255,255,255,.9); border-radius: 20px; padding: 26px; text-align: center; max-width: 420px; }
+  .nophoto .em { font-size: 90px; line-height: 1; }
+  #no3d { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 10px 10px 92px 146px; }
+  #no3d[hidden] { display: none; }
+  .thumbs { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; width: 100%; max-width: 760px; }
+  .thumb { background: rgba(255,255,255,.94); border: 3px solid transparent; border-radius: 16px; padding: 10px; cursor: pointer; text-align: center; font-weight: 700; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .thumb img { width: 100%; aspect-ratio: 4/3; object-fit: cover; border-radius: 10px; }
+  .thumb .em { font-size: 54px; line-height: 1.2; }
+  .thumb small { color: var(--muted); font-weight: 600; }
+
+  /* ---------- Eyes & camouflage ---------- */
+  #eyeSvg { width: 100%; height: 100%; max-height: 100%; }
+  .camo-wrap { position: relative; width: 100%; height: 100%; border-radius: 16px; overflow: hidden; touch-action: manipulation; }
+  #camoCanvas { width: 100%; height: 100%; display: block; cursor: crosshair; }
+  .camo-hud { position: absolute; top: 8px; left: 8px; right: 8px; display: flex; justify-content: space-between; pointer-events: none; }
+  .camo-hud span { background: rgba(10,20,60,.8); color: #fff; padding: 5px 12px; border-radius: 999px; font-weight: 600; }
+  .camo-cover { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; text-align: center; padding: 20px; background: rgba(7,13,36,.5); color: #fff; font-size: 21px; font-weight: 600; }
+  .swatch { width: 46px; height: 46px; border-radius: 12px; border: 3px solid #d3dbf7; cursor: pointer; padding: 0; }
+  .swatch.on { border-color: var(--ink); box-shadow: 0 0 0 3px var(--yellow); }
+  table.results { width: 100%; border-collapse: collapse; font-size: 14px; }
+  table.results td, table.results th { text-align: left; padding: 4px 3px; border-bottom: 1px solid #e3e8f8; }
+  input[type=range] { width: 100%; -webkit-appearance: none; appearance: none; background: transparent; height: 48px; margin: 4px 0; cursor: pointer; }
+  input[type=range]::-webkit-slider-runnable-track { height: 14px; border-radius: 7px; background: linear-gradient(90deg, #ffd27a, #9ad48a); }
+  input[type=range]::-moz-range-track { height: 14px; border-radius: 7px; background: linear-gradient(90deg, #ffd27a, #9ad48a); }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 38px; height: 38px; border-radius: 50%; background: var(--blue); border: 5px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,.35); margin-top: -12px; }
+  input[type=range]::-moz-range-thumb { width: 30px; height: 30px; border-radius: 50%; background: var(--blue); border: 5px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,.35); }
+  .range-ends { display: flex; justify-content: space-between; font-weight: 600; font-size: 15px; }
+
+  /* ---------- Banner, modals, toast ---------- */
+  .banner { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); z-index: 6; width: min(560px, calc(100% - 230px)); background: #fff; border-radius: 16px; padding: 9px 40px 9px 14px; box-shadow: 0 8px 24px rgba(0,0,0,.35); font-size: 15.5px; }
+  .banner.hidden { display: none; }
+  .banner .kicker { font-size: 12px; font-weight: 700; color: var(--blue); text-transform: uppercase; letter-spacing: .04em; }
+  .banner .close { position: absolute; top: 6px; right: 6px; border: 0; background: var(--soft); border-radius: 50%; width: 28px; height: 28px; cursor: pointer; }
+  .banner .hint { margin-top: 4px; color: var(--muted); font-size: 14px; }
+  .banner .hint.hidden { display: none; }
+  .linkbtn { border: 0; background: none; color: var(--blue); font-weight: 600; cursor: pointer; padding: 0; font-size: 14px; }
+  .modal { position: fixed; inset: 0; background: rgba(5,10,30,.6); display: flex; align-items: center; justify-content: center; z-index: 20; padding: 16px; }
+  .modal.hidden { display: none; }
+  .modal-box { background: #fff; border-radius: 24px; padding: 20px; width: min(580px, 100%); max-height: calc(100vh - 32px); overflow-y: auto; }
+  .modal-box h2 { margin: 0 0 8px; font-size: 25px; }
+  .objectives { background: #f3f5ff; border-radius: 14px; padding: 10px 14px; margin: 0 0 14px; font-size: 15px; line-height: 1.4; }
+  .objectives h3 { margin: 0 0 4px; font-size: 17px; }
+  .objectives p { margin: 4px 0; }
+  ul.icons { padding: 0; list-style: none; margin: 0 0 14px; }
+  ul.icons li { display: flex; gap: 10px; padding: 6px 0; font-size: 16.5px; }
+  ul.icons .em { font-size: 23px; width: 30px; flex: none; text-align: center; }
+  .mission-list { display: grid; gap: 8px; margin-bottom: 14px; }
+  .mission-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 16px; background: var(--soft); border: 0; text-align: left; cursor: pointer; font-size: 16px; }
+  .mission-item .em { font-size: 25px; } .mission-item .t { flex: 1; font-weight: 600; }
+  .mission-item .star { font-size: 21px; filter: grayscale(1); opacity: .35; }
+  .mission-item.done .star { filter: none; opacity: 1; }
+  .win-emoji { font-size: 56px; text-align: center; }
+  .win-text { font-size: 17.5px; line-height: 1.5; margin-bottom: 14px; }
+  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+  #toast { position: fixed; left: 50%; top: 70px; transform: translateX(-50%); background: rgba(10,20,60,.92); color: #fff; padding: 9px 16px; border-radius: 14px; opacity: 0; transition: opacity .3s; pointer-events: none; z-index: 30; }
+  #toast.show { opacity: 1; }
+  .confetti { position: fixed; top: -40px; font-size: 26px; z-index: 40; pointer-events: none; animation: fall linear forwards; }
+  @keyframes fall { to { transform: translateY(110vh) rotate(540deg); } }
+
+  /* ---------- Small screens: drawer becomes a sheet underneath ---------- */
+  @media (max-width: 820px) {
+    :root { --drawerW: 0px; }
+    #stage { bottom: 42%; right: 0; }
+    #drawer { top: 58%; width: 100%; }
+    .brand { flex: 1 1 calc(100% - 50px); font-size: 18px; }
+    .long { display: none; }
+    .topbar .btn { font-size: 14px; padding: 6px 9px; min-height: 38px; }
+    .gauges { bottom: 82px; gap: 4px; }
+    /* On phones the gauges show just their icon; tapping one still explains it */
+    .gauge { width: 50px; padding: 6px 3px; }
+    .gauge .gt { min-height: 0; } .gauge .gn { display: none; } .gauge .gi { font-size: 20px; }
+    .gauge .gs { font-size: 10.5px; min-height: 26px; }
+    .gauge .end { display: none; }
+    .gauge .tube { width: 20px; margin: 12px 0; }
+    .gauge .marker { width: 28px; height: 28px; margin: -14px 0 0 -14px; font-size: 13px; }
+    .habbar { left: 172px; }
+    #flat { padding: 6px 6px 80px 92px; }
+    #no3d { padding: 6px 6px 80px 92px; }
+    .chip { min-height: 54px; font-size: 13.5px; padding: 4px 9px; }
+    .banner { width: calc(100% - 20px); top: auto; bottom: 8px; }
+    .bubble { max-width: 240px; font-size: 14.5px; }
+  }
+</style>
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/" },
+  "scopes": { "./lib/": { "three": "./lib/three.module.js" } } }
+</script>
+</head>
+<body>
+<header class="topbar">
+  <a class="hub-link" href="../index.html" title="Back to the Science Hub" aria-label="Back to the Science Hub">🏠</a>
+  <div class="brand">🦊 Adaptation Studio</div>
+  <nav class="tabs" aria-label="Parts of the tool">
+    <button class="btn" data-act="view" data-view="habitats">🌍 Habitats</button>
+    <button class="btn" data-act="view" data-view="design">🛠️ Design</button>
+    <button class="btn" data-act="view" data-view="move">🚚 Move it</button>
+    <button class="btn" data-act="view" data-view="pp">🦁 Predator &amp; prey</button>
+  </nav>
+  <button class="btn" data-act="missions">🚀 <span class="long">Missions </span><span id="starCount"></span></button>
+  <button class="btn" data-act="model" title="How is this model different from real life?">🤔<span class="long"> Real life?</span></button>
+  <button class="btn" data-act="help" aria-label="How to use">❓</button>
+</header>
+
+<main>
+  <div id="stage">
+    <canvas id="gl" aria-label="3D model"></canvas>
+    <div id="no3d" hidden><div class="nophoto"><div class="em">🧊</div><p><b>The 3D model can't start on this device.</b></p><p class="muted">Everything else still works: choose features, read the gauges and try the other tabs.</p></div></div>
+    <div id="flat"></div>
+    <div class="habbar" id="habbar"></div>
+    <div class="gauges" id="gauges"></div>
+    <div class="tray" id="tray"></div>
+    <div id="bubble" class="bubble" hidden></div>
+    <div id="banner" class="banner hidden" role="status">
+      <div class="kicker" id="bannerKicker"></div>
+      <div id="bannerText"></div>
+      <button class="linkbtn" id="hintBtn">💡 Show a hint</button>
+      <div class="hint hidden" id="bannerHint"></div>
+      <button class="close" id="bannerClose" aria-label="Stop this mission">✖</button>
+    </div>
+  </div>
+  <aside id="drawer" aria-label="Controls and information"></aside>
+</main>
+
+<div id="helpModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+  <div class="modal-box">
+    <h2 id="helpTitle">🦊 Welcome to Adaptation Studio!</h2>
+    <p style="margin-top:0">Animals and plants are <span class="term">adapted</span> to their <span class="term">habitat</span>: they have features that help them live there.</p>
+    <ul class="icons">
+      <li><span class="em">🌍</span><span><b>Habitats:</b> tap the circles on real animals and plants.</span></li>
+      <li><span class="em">🛠️</span><span><b>Design:</b> build a creature and watch the gauges.</span></li>
+      <li><span class="em">🌡️</span><span><b>Gauges</b> show how the creature is coping. Tap a gauge to see why.</span></li>
+      <li><span class="em">🚚</span><span><b>Move it:</b> predict, then move a living thing to a new habitat.</span></li>
+      <li><span class="em">👀</span><span><b>Eyes</b> and <b>Camouflage:</b> predators and prey.</span></li>
+      <li><span class="em">🔄</span><span>Drag the 3D creature to turn it round. Pinch or scroll to zoom.</span></li>
+    </ul>
+    <div class="objectives"><h3>🎯 What you are learning</h3>
+      <p><b>5Be.01</b> Describe how plants and animals are adapted to environments that are hot, cold, wet and/or dry.</p>
+      <p><b>5Be.03</b> Describe the common adaptations of predator and prey animals.</p>
+      <p class="muted"><b>Also:</b> <b>5TWSm.01</b> Know that a model presents an object, process or idea in a way that shows some of the important features.</p></div>
+    <div class="modal-actions"><a class="btn" href="../practice/index.html#adaptations">✏️ Practise this</a><button class="btn primary" data-act="close-modal">Let's explore! 🚀</button></div>
+  </div>
+</div>
+<div id="modelModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modelTitle">
+  <div class="modal-box">
+    <h2 id="modelTitle">🤔 How is this model different from real life?</h2>
+    <p style="margin-top:0">A <span class="term">model</span> shows some important features of something real – but not everything.</p>
+    <ul class="icons">
+      <li><span class="em">🧸</span><span>The 3D creature is a toy-like model. Real animals have many more features that work together.</span></li>
+      <li><span class="em">🌡️</span><span>The gauges are simple. In real life, how much a feature helps depends on the season, the weather and what the animal is doing.</span></li>
+      <li><span class="em">🚚</span><span>In <b>Move it</b>, the animal's body does <b>not</b> change. We only look at which features would stop helping.</span></li>
+      <li><span class="em">🏜️</span><span>Real habitats vary. Not every desert is sandy, and some are cold in winter.</span></li>
+      <li><span class="em">🍽️</span><span>Surviving also depends on food, shelter and other animals. The model only looks at body features.</span></li>
+      <li><span class="em">👀</span><span>Real animals see in different ways. Many hunt using smell or hearing too.</span></li>
+    </ul>
+    <div class="modal-actions"><button class="btn primary" data-act="close-modal">Got it!</button></div>
+  </div>
+</div>
+<div id="missionsModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="missionsTitle">
+  <div class="modal-box">
+    <h2 id="missionsTitle">🚀 Missions</h2>
+    <div class="mission-list" id="missionList"></div>
+    <div class="modal-actions"><button class="btn small" data-act="reset-stars">Reset stars</button><button class="btn primary" data-act="close-modal">Close</button></div>
+  </div>
+</div>
+<div id="winModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="winTitle">
+  <div class="modal-box">
+    <div class="win-emoji">⭐</div>
+    <h2 id="winTitle" style="text-align:center">Mission complete!</h2>
+    <div class="win-text" id="winText"></div>
+    <div class="modal-actions"><button class="btn" data-act="close-modal">Keep exploring</button><a class="btn primary" id="winPractise" href="../practice/index.html#adaptations">✏️ Practise this</a><button class="btn primary" id="winNext">Next mission ▶</button></div>
+  </div>
+</div>
+<div id="toast"></div>
+
+<script type="module">
+/* =====================================================================
+   Adaptation Studio v2 – Year 5 (Cambridge Primary Science 5Be.01, 5Be.03)
+   Sections: utilities · habitats · features · gauges · living things ·
+   3D world (scenes, creature) · 2D plants · views · missions · start
+   ===================================================================== */
+// three.js 0.160.0: our own copy in lib/ first (in case the school network blocks the CDN),
+// then the CDN (browsers won't load lib/ when the page is opened straight from a folder)
+let THREE = null, OrbitControls = null;
+for (const [lib, ctl] of [['./lib/three.module.js', './lib/addons/controls/OrbitControls.js'], ['three', 'three/addons/controls/OrbitControls.js']]) {
+  try { THREE = await import(lib); ({ OrbitControls } = await import(ctl)); break; } catch { THREE = null; }
+}
+const hasWebGL = (() => { try { const c = document.createElement('canvas'); return !!(c.getContext('webgl2') || c.getContext('webgl')); } catch { return false; } })();
+const can3D = !!THREE && hasWebGL;
+
+// ================= Utilities =================
+const $ = (s, el = document) => el.querySelector(s);
+const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} },
+};
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+function shadeHex(hex, amt) {
+  const n = parseInt(hex.slice(1), 16), f = v => Math.round(amt < 0 ? v * (1 + amt) : v + (255 - v) * amt);
+  return '#' + [n >> 16 & 255, n >> 8 & 255, n & 255].map(v => f(v).toString(16).padStart(2, '0')).join('');
+}
+let toastTimer;
+function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2400); }
+let uidN = 0; const uid = p => `${p}${++uidN}`;
+
+// ================= Habitats =================
+const HABITATS = {
+  desert: { name: 'Desert', tag: 'Hot and dry', icon: '🏜️', the: 'the desert', facts: ['🌡️ Very hot days, cold nights', '💧 Hardly any rain', '🏜️ Soft sand and rock'] },
+  arctic: { name: 'Arctic', tag: 'Cold', icon: '❄️', the: 'the Arctic', facts: ['🌡️ Freezing – down to −40 °C', '💨 Icy winds', '🧊 Deep snow and ice'] },
+  rainforest: { name: 'Rainforest', tag: 'Hot and wet', icon: '🌧️', the: 'the rainforest', facts: ['🌡️ Hot all year', '🌧️ Rain nearly every day', '🌳 Tall trees, dark shady floor'] },
+  woodland: { name: 'Woodland', tag: 'Warm summers, cold winters', icon: '🍂', the: 'the woodland', facts: ['🌡️ Warm summers, frosty winters', '🌧️ Some rain all year', '🍂 Many trees drop their leaves'] },
+};
+const HAB_ORDER = ['desert', 'arctic', 'rainforest', 'woodland'];
+const STATUS = { help: { icon: '✅', label: 'Helps here' }, problem: { icon: '⚠️', label: 'A problem here' }, little: { icon: '➖', label: 'Little difference here' } };
+const stLabel = st => `<span class="st ${st}">${STATUS[st].icon} ${STATUS[st].label}</span>`;
+
+// ================= Features =================
+// Each option: how it does in every habitat – [status, one short reason]
+const ANIMAL_TRAITS = [
+  { key: 'coat', name: 'Coat', icon: '🧥', options: {
+    thick: { label: 'Thick fur', in: { desert: ['problem', 'Thick fur traps heat. It would be hard to cool down.'], arctic: ['help', 'Thick fur traps warm air and keeps the cold out.'], rainforest: ['problem', 'Far too hot, and it would stay soggy in the rain.'], woodland: ['help', 'Keeps it warm in the frosty winters.'] } },
+    thin: { label: 'Short fur', in: { desert: ['help', 'Short fur lets heat escape, so it stays cooler.'], arctic: ['problem', 'Short fur lets body heat escape. Far too cold!'], rainforest: ['help', 'Short fur dries quickly and keeps it cool.'], woodland: ['little', 'Fine in summer, but chilly in winter.'] } },
+    skin: { label: 'Damp skin', in: { desert: ['problem', 'Damp skin dries out fast in the hot, dry air.'], arctic: ['problem', 'Damp skin gives no warmth – the water on it would freeze.'], rainforest: ['help', 'The wet air keeps damp skin moist.'], woodland: ['little', 'OK near ponds, but winters are very cold.'] } },
+  } },
+  { key: 'ears', name: 'Ears', icon: '👂', options: {
+    large: { label: 'Huge ears', in: { desert: ['help', 'Big ears let lots of heat out of the body.'], arctic: ['problem', 'Big ears lose lots of heat and could get frostbite.'], rainforest: ['little', 'Good for hearing, but little difference here.'], woodland: ['little', 'Good for hearing, but little difference here.'] } },
+    medium: { label: 'Medium ears', in: { desert: ['little', 'They let out a little heat.'], arctic: ['little', 'They lose some heat. Small ears would be better.'], rainforest: ['little', 'Medium ears are fine here.'], woodland: ['little', 'Medium ears are fine here.'] } },
+    small: { label: 'Small ears', in: { desert: ['little', 'Small ears let out only a little heat.'], arctic: ['help', 'Small ears lose less heat and don\'t get frostbite.'], rainforest: ['little', 'Small ears are fine here.'], woodland: ['little', 'Small ears are fine here.'] } },
+  } },
+  { key: 'fat', name: 'Body fat', icon: '🍖', options: {
+    thick: { label: 'Thick fat', in: { desert: ['problem', 'A layer of fat all over traps heat. Too hot!'], arctic: ['help', 'A thick layer of fat keeps heat in, and stores food.'], rainforest: ['problem', 'A layer of fat would make it far too hot.'], woodland: ['little', 'A little extra fat helps in winter.'] } },
+    hump: { label: 'Fat in a hump', in: { desert: ['help', 'Fat in one place lets the rest of the body lose heat. It is also a food store.'], arctic: ['little', 'A hump stores food but doesn\'t keep the body warm.'], rainforest: ['little', 'Food is easy to find here, so a store makes little difference.'], woodland: ['little', 'A food store could help in winter, but doesn\'t keep it warm.'] } },
+    little: { label: 'Little fat', in: { desert: ['help', 'With little fat, heat escapes easily.'], arctic: ['problem', 'Without fat it loses heat fast.'], rainforest: ['help', 'Little fat helps it stay cool.'], woodland: ['little', 'Fine in summer, but no food store for winter.'] } },
+  } },
+  { key: 'colour', name: 'Colour', icon: '🎨', options: {
+    white: { label: 'White', in: { desert: ['problem', 'White stands out against the yellow sand.'], arctic: ['help', 'White matches the snow. This is camouflage.'], rainforest: ['problem', 'White stands out against the green leaves.'], woodland: ['problem', 'White stands out against brown leaves.'] } },
+    sandy: { label: 'Sandy', in: { desert: ['help', 'Sandy colours match the desert. This is camouflage.'], arctic: ['problem', 'It shows up against the white snow.'], rainforest: ['problem', 'It stands out against the green leaves.'], woodland: ['little', 'Blends in a little with dead leaves.'] } },
+    spotted: { label: 'Spotty', in: { desert: ['problem', 'Spots don\'t match the plain sand.'], arctic: ['problem', 'Spots show up against the snow.'], rainforest: ['help', 'Spots look like patches of light and shade. Great camouflage!'], woodland: ['help', 'Spots blend in with the light and shade under the trees.'] } },
+    brown: { label: 'Brown', in: { desert: ['little', 'Brown blends in with rocks, but not sand.'], arctic: ['problem', 'Brown stands out against the snow.'], rainforest: ['little', 'Brown matches tree trunks but not green leaves.'], woodland: ['help', 'Brown matches tree trunks and fallen leaves.'] } },
+    warning: { label: 'Warning stripes', in: { desert: ['little', 'Bright colours warn predators – but only if it is poisonous.'], arctic: ['problem', 'Very easy to spot against the snow.'], rainforest: ['help', 'Bright colours warn: "I\'m poisonous – don\'t eat me!"'], woodland: ['little', 'Fire salamanders do this – but only works if it is poisonous.'] } },
+  } },
+  { key: 'feet', name: 'Feet', icon: '🦶', options: {
+    plain: { label: 'Plain paws', in: { desert: ['little', 'Plain paws sink a little in soft sand.'], arctic: ['little', 'Plain paws sink into deep snow.'], rainforest: ['little', 'Plain paws can\'t grip branches well.'], woodland: ['little', 'Plain paws are fine here.'] } },
+    wide: { label: 'Wide feet', in: { desert: ['help', 'Wide feet don\'t sink into soft sand.'], arctic: ['help', 'Wide feet work like snowshoes.'], rainforest: ['little', 'Wide feet don\'t help with climbing.'], woodland: ['little', 'Wide feet make little difference here.'] } },
+    furry: { label: 'Furry soles', in: { desert: ['help', 'Fur protects its feet from the burning-hot sand.'], arctic: ['help', 'Fur keeps its feet warm and stops slipping.'], rainforest: ['little', 'Furry feet just get wet and muddy.'], woodland: ['little', 'Furry feet make little difference here.'] } },
+    claws: { label: 'Sharp claws', in: { desert: ['help', 'Claws dig a cool burrow underground.'], arctic: ['help', 'Claws grip on slippery ice.'], rainforest: ['help', 'Claws grip tree trunks for climbing.'], woodland: ['help', 'Claws help it climb and dig.'] } },
+    sticky: { label: 'Sticky pads', in: { desert: ['little', 'Few trees to climb, and sand clogs the pads.'], arctic: ['little', 'No trees to climb, and pads don\'t grip ice.'], rainforest: ['help', 'Sticky pads grip wet, slippery leaves.'], woodland: ['little', 'They work best on wet leaves.'] } },
+    webbed: { label: 'Webbed feet', in: { desert: ['little', 'There is hardly any water to swim in.'], arctic: ['little', 'The water is frozen for much of the year.'], rainforest: ['help', 'Lots of rivers – webbed feet help it swim.'], woodland: ['little', 'Useful in ponds, not much use on land.'] } },
+  } },
+  { key: 'water', name: 'Water', icon: '💧', options: {
+    saver: { label: 'Saves water', in: { desert: ['help', 'It gets water from food and loses very little.'], arctic: ['help', 'Most water is frozen, so saving water helps.'], rainforest: ['little', 'Water is everywhere here.'], woodland: ['little', 'Water is easy to find here.'] } },
+    drinks: { label: 'Drinks every day', in: { desert: ['problem', 'Water is very hard to find in the desert.'], arctic: ['problem', 'The water is frozen. Eating snow uses up body heat.'], rainforest: ['little', 'Lots of rain and rivers – easy to find water.'], woodland: ['little', 'Streams and ponds – easy to find water.'] } },
+    damp: { label: 'Must stay damp', in: { desert: ['problem', 'It would dry out very quickly.'], arctic: ['problem', 'Water on its body would freeze.'], rainforest: ['help', 'It rains nearly every day, so it stays damp.'], woodland: ['little', 'It must stay near ponds or streams.'] } },
+  } },
+  { key: 'active', name: 'Active', icon: '🌙', options: {
+    day: { label: 'Day', in: { desert: ['little', 'Some desert animals are out by day, but they need other ways to keep cool.'], arctic: ['little', 'In winter it is dark nearly all day anyway!'], rainforest: ['little', 'Hot and wet day and night.'], woodland: ['little', 'Lots of woodland animals are out by day.'] } },
+    night: { label: 'Night', in: { desert: ['help', 'The desert is much cooler at night.'], arctic: ['little', 'In winter it is dark nearly all day anyway!'], rainforest: ['little', 'Hot and wet day and night.'], woodland: ['little', 'Hedgehogs and owls come out at night here.'] } },
+  } },
+];
+const PLANT_TRAITS = [
+  { key: 'leaves', name: 'Leaves', icon: '🍃', options: {
+    big: { label: 'Big leaves', in: { desert: ['problem', 'Big leaves lose lots of water.'], arctic: ['problem', 'Big leaves are torn by icy wind and frost.'], rainforest: ['help', 'Big leaves catch light in the dark shade.'], woodland: ['help', 'Big leaves catch lots of summer sunlight.'] } },
+    small: { label: 'Small leaves', in: { desert: ['help', 'Small leaves lose less water.'], arctic: ['help', 'Small leaves are less damaged by wind and frost.'], rainforest: ['problem', 'Small leaves catch too little light in the shade.'], woodland: ['little', 'Small leaves are fine here.'] } },
+    spines: { label: 'Spines', in: { desert: ['help', 'Spines are a kind of leaf that loses very little water. They also stop animals eating it.'], arctic: ['little', 'Spines stop animals eating it, but don\'t help with cold.'], rainforest: ['problem', 'Spines can\'t catch light in the dark forest.'], woodland: ['little', 'Spines stop animals eating it.'] } },
+  } },
+  { key: 'surface', name: 'Leaf surface', icon: '✨', options: {
+    waxy: { label: 'Waxy coat', in: { desert: ['help', 'A waxy coat keeps water in.'], arctic: ['help', 'A waxy coat stops the dry wind drying it out.'], rainforest: ['help', 'A waxy, shiny surface lets rain run off.'], woodland: ['little', 'Little difference here.'] } },
+    driptip: { label: 'Drip tips', in: { desert: ['little', 'It hardly ever rains here.'], arctic: ['little', 'Most water is frozen.'], rainforest: ['help', 'Pointed tips let rain drip off, so mould can\'t grow.'], woodland: ['little', 'It doesn\'t rain enough to need them.'] } },
+    hairy: { label: 'Hairy', in: { desert: ['help', 'Tiny hairs shade the leaf and save water.'], arctic: ['help', 'Hairs trap warm air and block the wind.'], rainforest: ['little', 'Hairs just stay wet here.'], woodland: ['little', 'Little difference here.'] } },
+    thin: { label: 'Thin, plain', in: { desert: ['problem', 'A thin leaf dries out quickly.'], arctic: ['problem', 'A thin leaf is damaged by frost.'], rainforest: ['little', 'Fine, but it stays wet.'], woodland: ['little', 'Fine here – many trees drop them in autumn.'] } },
+  } },
+  { key: 'stem', name: 'Stem', icon: '🌵', options: {
+    stores: { label: 'Stores water', in: { desert: ['help', 'A thick stem stores water for dry times.'], arctic: ['problem', 'Stored water could freeze.'], rainforest: ['little', 'Water is everywhere here.'], woodland: ['little', 'It rains often enough here.'] } },
+    normal: { label: 'Ordinary', in: { desert: ['problem', 'No water store – it dries out between rains.'], arctic: ['little', 'Little difference here.'], rainforest: ['little', 'Fine here.'], woodland: ['little', 'Fine here.'] } },
+  } },
+  { key: 'roots', name: 'Roots', icon: '🌱', options: {
+    deep: { label: 'Deep', in: { desert: ['help', 'Long roots reach water deep down.'], arctic: ['problem', 'The ground is frozen not far down.'], rainforest: ['little', 'The good soil is near the top.'], woodland: ['help', 'Deep roots hold a tall tree steady in storms.'] } },
+    wide: { label: 'Wide and shallow', in: { desert: ['help', 'Wide roots soak up rain fast.'], arctic: ['help', 'They spread out above the frozen ground.'], rainforest: ['help', 'The goodness is in the thin top soil.'], woodland: ['little', 'Fine here.'] } },
+    buttress: { label: 'Buttress', in: { desert: ['little', 'No giant trees to prop up.'], arctic: ['little', 'Plants here are too small to need them.'], rainforest: ['help', 'Huge buttresses prop up very tall trees.'], woodland: ['little', 'Deep roots do this job here.'] } },
+  } },
+  { key: 'height', name: 'Height', icon: '📏', options: {
+    tall: { label: 'Very tall', in: { desert: ['problem', 'Tall plants need lots of water.'], arctic: ['problem', 'The icy wind would batter it.'], rainforest: ['help', 'Grows up into the sunlight.'], woodland: ['help', 'Reaches the sunlight.'] } },
+    medium: { label: 'Medium', in: { desert: ['little', 'Little difference here.'], arctic: ['problem', 'Even medium plants get battered by wind.'], rainforest: ['little', 'Lives in the shade under tall trees.'], woodland: ['little', 'Little difference here.'] } },
+    low: { label: 'Low to the ground', in: { desert: ['little', 'Little difference here.'], arctic: ['help', 'Out of the wind – snow covers it like a blanket.'], rainforest: ['problem', 'Too dark down on the forest floor.'], woodland: ['little', 'Bluebells grow before the trees\' leaves come out.'] } },
+  } },
+];
+const TRAITS = { animal: ANIMAL_TRAITS, plant: PLANT_TRAITS };
+const traitDef = (kind, key) => TRAITS[kind].find(t => t.key === key);
+const traitStatus = (kind, key, val, hab) => traitDef(kind, key).options[val].in[hab];
+const everywhere = (st, why) => Object.fromEntries(HAB_ORDER.map(h => [h, [st, why]]));
+
+// ================= Gauges =================
+// Each habitat shows the three gauges that matter most there.
+const GAUGES = {
+  heat: { icon: '🌡️', name: 'Body heat', tube: 'heat', top: 'too hot', bottom: 'too cold' },
+  water: { icon: '💧', name: 'Water', tube: 'up', top: 'plenty', bottom: 'drying out', bad: 'Drying out', good: 'Plenty' },
+  hidden: { icon: '👀', name: 'Hidden', tube: 'up', top: 'hidden', bottom: 'easy to spot', bad: 'Easy to spot', good: 'Well hidden' },
+  move: { icon: '🦶', name: 'Getting about', tube: 'up', top: 'easy', bottom: 'stuck', bad: 'Struggling', good: 'Easy' },
+  pwater: { icon: '💧', name: 'Water', tube: 'up', top: 'plenty', bottom: 'drying out', bad: 'Drying out', good: 'Plenty' },
+  light: { icon: '☀️', name: 'Light', tube: 'up', top: 'plenty', bottom: 'too dark', bad: 'Too dark', good: 'Plenty' },
+  weather: { icon: '🌬️', name: 'Weather', tube: 'up', top: 'safe', bottom: 'damaged', bad: 'Getting damaged', good: 'Safe' },
+};
+const HAB_GAUGES = { desert: ['heat', 'water', 'move'], arctic: ['heat', 'hidden', 'move'], rainforest: ['heat', 'hidden', 'move'], woodland: ['heat', 'hidden', 'water'] };
+const PLANT_GAUGES = ['pwater', 'light', 'weather'];
+// Which plant feature affects which plant gauge, in each habitat
+const PLANT_GAUGE_OF = {
+  leaves: { desert: 'pwater', arctic: 'weather', rainforest: 'light', woodland: 'light' },
+  surface: { desert: 'pwater', arctic: 'weather', rainforest: 'weather', woodland: 'weather' },
+  stem: { desert: 'pwater', arctic: 'weather', rainforest: 'pwater', woodland: 'pwater' },
+  roots: { desert: 'pwater', arctic: 'pwater', rainforest: 'weather', woodland: 'weather' },
+  height: { desert: 'pwater', arctic: 'weather', rainforest: 'light', woodland: 'light' },
+};
+// How well each kind of foot copes with getting about in each habitat (0 = stuck, 1 = easy)
+const MOVE_SCORE = {
+  desert: { wide: 0.9, furry: 0.8, plain: 0.42, claws: 0.42, sticky: 0.25, webbed: 0.35 },
+  arctic: { wide: 0.92, furry: 0.8, claws: 0.7, plain: 0.3, sticky: 0.2, webbed: 0.4 },
+  rainforest: { claws: 0.9, sticky: 0.92, plain: 0.32, wide: 0.28, furry: 0.3, webbed: 0.55 },
+  woodland: { claws: 0.8, plain: 0.6, wide: 0.55, furry: 0.55, sticky: 0.5, webbed: 0.5 },
+};
+const MOVE_WHY = { desert: 'soft sand', arctic: 'deep snow and ice', rainforest: 'climbing trees', woodland: 'the woodland floor' };
+const statusValue = st => ({ help: 0.86, little: 0.55, problem: 0.16 })[st];
+
+// Work out every gauge for an animal's features in a habitat
+function animalGauges(t, hab) {
+  const out = {};
+  // Heat: the habitat pushes the body too cold or too hot; helpful features push back
+  const E = { arctic: -1, woodland: -0.45, desert: 1, rainforest: 0.6 }[hab];
+  const heatKeys = ['coat', 'ears', 'fat'];
+  if (hab === 'desert') heatKeys.push('active');
+  if (t.feet === 'furry' && hab === 'arctic') heatKeys.push('feet');
+  let push = Math.abs(E); const items = [];
+  for (const k of heatKeys) {
+    const [st, why] = traitStatus('animal', k, t[k], hab);
+    push += st === 'help' ? -0.35 : st === 'problem' ? 0.35 : 0;
+    items.push({ k, st, why });
+  }
+  push = Math.max(0, push);
+  out.heat = { v: 0.5 + Math.sign(E) * Math.min(0.47, push * 0.5), items };
+  // Water
+  const wItems = [{ k: 'water', st: traitStatus('animal', 'water', t.water, hab)[0], why: traitStatus('animal', 'water', t.water, hab)[1] }];
+  if (t.coat === 'skin') wItems.push({ k: 'coat', st: traitStatus('animal', 'coat', 'skin', hab)[0], why: traitStatus('animal', 'coat', 'skin', hab)[1] });
+  out.water = { v: wItems.reduce((a, i) => a + statusValue(i.st), 0) / wItems.length, items: wItems };
+  // Hidden
+  const [cst, cwhy] = traitStatus('animal', 'colour', t.colour, hab);
+  out.hidden = { v: t.colour === 'warning' ? 0.12 : statusValue(cst), items: [{ k: 'colour', st: cst, why: cwhy }], warning: t.colour === 'warning' };
+  // Getting about
+  const [fst, fwhy] = traitStatus('animal', 'feet', t.feet, hab);
+  out.move = { v: MOVE_SCORE[hab][t.feet], items: [{ k: 'feet', st: fst, why: fwhy }] };
+  return out;
+}
+function plantGauges(t, hab) {
+  const out = Object.fromEntries(PLANT_GAUGES.map(g => [g, { items: [] }]));
+  for (const k of Object.keys(PLANT_GAUGE_OF)) {
+    const [st, why] = traitStatus('plant', k, t[k], hab);
+    out[PLANT_GAUGE_OF[k][hab]].items.push({ k, st, why });
+  }
+  for (const g of PLANT_GAUGES) {
+    const it = out[g].items;
+    out[g].v = it.length ? Math.min(...it.map(i => statusValue(i.st))) * 0.6 + it.reduce((a, i) => a + statusValue(i.st), 0) / it.length * 0.4 : 0.7;
+  }
+  return out;
+}
+function gaugeState(key, g) {
+  if (key === 'heat') return g.v < 0.34 ? ['🥶', 'Too cold', 'bad'] : g.v > 0.66 ? ['🥵', 'Too hot', 'bad'] : ['🙂', 'Just right', 'good'];
+  if (key === 'hidden' && g.warning) return ['⚠️', 'Warning!', ''];
+  const G = GAUGES[key];
+  return g.v < 0.36 ? ['😟', G.bad, 'bad'] : g.v > 0.64 ? ['🙂', G.good, 'good'] : ['😐', 'OK', ''];
+}
+
+// ================= Real living things =================
+// photo: put the file in photos/ ; hs: where each numbered circle sits on the photo, in % across and down.
+// preset / plant: how to build it in 3D or 2D for Move it.
+const ORGS = [
+  { id: 'fennec', name: 'Fennec fox', em: '🦊', kind: 'animal', home: 'desert', intro: 'The smallest fox in the world.', photo: 'fennec.jpg', credit: 'Photo: Drew Avery, CC BY 2.0', hs: { ears: [30, 24], colour: [60, 38], feet: [34, 87], active: [29, 40], water: [16, 61] },
+    preset: { shape: 'fox', coat: 'thin', ears: 'large', fat: 'little', colour: 'sandy', feet: 'furry', water: 'saver', active: 'night' },
+    features: [
+      { id: 'ears', label: 'Huge ears', trait: ['ears', 'large'], what: 'Up to 15 cm long – as long as your hand!' },
+      { id: 'colour', label: 'Sandy fur', trait: ['colour', 'sandy'], what: 'Its fur is the colour of sand.' },
+      { id: 'feet', label: 'Furry soles', trait: ['feet', 'furry'], what: 'Thick fur grows under its feet.' },
+      { id: 'active', label: 'Out at night', trait: ['active', 'night'], what: 'It rests in a cool burrow by day.' },
+      { id: 'water', label: 'Gets water from food', trait: ['water', 'saver'], what: 'It hardly ever needs to drink.' },
+    ] },
+  { id: 'camel', name: 'Camel', em: '🐫', kind: 'animal', home: 'desert', intro: 'A one-humped camel, called a dromedary.', photo: 'camel.jpg', credit: 'Photo: albinfo, CC BY-SA 4.0', hs: { hump: [55, 14], eyes: [35, 21], feet: [52, 80], water: [58, 33], coat: [47, 39], colour: [62, 48] },
+    preset: { shape: 'camel', coat: 'thin', ears: 'small', fat: 'hump', colour: 'sandy', feet: 'wide', water: 'saver', active: 'day' },
+    features: [
+      { id: 'hump', label: 'Hump full of fat', trait: ['fat', 'hump'], what: 'The hump stores FAT, not water!' },
+      { id: 'eyes', label: 'Long eyelashes', what: 'Two rows of lashes, and nostrils it can close.', in: { desert: ['help', 'They keep sand out in sandstorms.'], arctic: ['little', 'No sandstorms here.'], rainforest: ['little', 'No sandstorms here.'], woodland: ['little', 'No sandstorms here.'] } },
+      { id: 'feet', label: 'Wide, padded feet', trait: ['feet', 'wide'], what: 'Wide, flat feet with tough pads.' },
+      { id: 'water', label: 'Saves water', trait: ['water', 'saver'], what: 'It can go over a week without drinking.' },
+      { id: 'coat', label: 'Short fur', trait: ['coat', 'thin'], what: 'Its fur is quite short.', in: { desert: ['help', 'Its fur shades its skin from the hot sun and slows heat getting in.'] } },
+      { id: 'colour', label: 'Sandy colour', trait: ['colour', 'sandy'], what: 'A sandy-brown coat.' },
+    ] },
+  { id: 'saguaro', name: 'Saguaro cactus', em: '🌵', kind: 'plant', home: 'desert', intro: 'A giant cactus, taller than a house.', photo: 'saguaro.jpg', credit: 'Photo: Tomas Castelazo, CC BY-SA 4.0', hs: { spines: [63, 39], stem: [50, 30], skin: [37, 55] },
+    plant: { leaves: 'spines', surface: 'waxy', stem: 'stores', roots: 'wide', height: 'tall' },
+    features: [
+      { id: 'spines', label: 'Spines', trait: ['leaves', 'spines'], what: 'Spines are a special kind of leaf.' },
+      { id: 'stem', label: 'Stem stores water', trait: ['stem', 'stores'], what: 'It swells up like a sponge when it rains.' },
+      { id: 'skin', label: 'Waxy skin', trait: ['surface', 'waxy'], what: 'A thick, waxy outer layer.' },
+      { id: 'roots', label: 'Wide, shallow roots', trait: ['roots', 'wide'], what: 'Roots spread out just under the ground.' },
+    ] },
+  { id: 'polarbear', name: 'Polar bear', em: '🐻‍❄️', kind: 'animal', home: 'arctic', intro: 'The biggest meat-eater on land.', photo: 'polarbear.jpg', credit: 'Photo: Arturo de Frias Marques, CC BY-SA 4.0', hs: { coat: [50, 30], fat: [55, 48], colour: [75, 45], feet: [83, 80], ears: [28, 30] },
+    preset: { shape: 'bear', coat: 'thick', ears: 'small', fat: 'thick', colour: 'white', feet: 'wide', water: 'saver', active: 'day' },
+    features: [
+      { id: 'coat', label: 'Thick fur', trait: ['coat', 'thick'], what: 'Two layers: woolly underfur and long hairs.' },
+      { id: 'fat', label: 'Thick fat', trait: ['fat', 'thick'], what: 'A layer of fat (blubber) up to 10 cm thick.' },
+      { id: 'colour', label: 'White fur', trait: ['colour', 'white'], what: 'Its fur looks white, like snow.' },
+      { id: 'feet', label: 'Huge paws', trait: ['feet', 'wide'], what: 'Paws up to 30 cm across.' },
+      { id: 'ears', label: 'Small ears', trait: ['ears', 'small'], what: 'Small, rounded ears.' },
+    ] },
+  { id: 'arcticfox', name: 'Arctic fox', em: '🦊', kind: 'animal', home: 'arctic', intro: 'A small fox in one of the coldest places on Earth.', photo: 'arcticfox.jpg', credit: 'Photo: Jonatan Pie, CC0', hs: { coat: [40, 58], ears: [30, 33], colour: [22, 75], feet: [38, 86], fat: [47, 70] },
+    preset: { shape: 'fox', coat: 'thick', ears: 'small', fat: 'thick', colour: 'white', feet: 'furry', water: 'saver', active: 'day' },
+    features: [
+      { id: 'coat', label: 'Very thick fur', trait: ['coat', 'thick'], what: 'The warmest fur of any land mammal for its size.' },
+      { id: 'ears', label: 'Small ears', trait: ['ears', 'small'], what: 'Small, rounded ears.' },
+      { id: 'colour', label: 'White winter coat', trait: ['colour', 'white'], what: 'In winter its fur is white.' },
+      { id: 'feet', label: 'Furry feet', trait: ['feet', 'furry'], what: 'Fur even underneath its paws.' },
+      { id: 'fat', label: 'Fat for winter', trait: ['fat', 'thick'], what: 'It builds up fat before winter.' },
+    ] },
+  { id: 'hare', name: 'Arctic hare', em: '🐇', kind: 'animal', home: 'arctic', intro: 'A big hare that lives where few animals can.', photo: 'hare.jpg', credit: 'Photo: Steve Sayles, CC BY-SA 2.0', hs: { eyes: [40, 30], feet: [62, 87], coat: [60, 46], colour: [42, 58], speed: [76, 62] },
+    features: [
+      { id: 'eyes', label: 'Eyes on the sides', what: 'Its eyes are on the sides of its head.', in: everywhere('help', 'It can see nearly all the way round to spot predators.') },
+      { id: 'feet', label: 'Big back feet', trait: ['feet', 'wide'], what: 'Long, wide back feet.' },
+      { id: 'coat', label: 'Thick fur', trait: ['coat', 'thick'], what: 'Thick, soft fur.' },
+      { id: 'colour', label: 'White fur', trait: ['colour', 'white'], what: 'White for most of the year.' },
+      { id: 'speed', label: 'Strong back legs', what: 'It can run at 60 km per hour!', in: everywhere('help', 'Running fast helps it escape predators.') },
+    ] },
+  { id: 'willow', name: 'Arctic willow', em: '🌿', kind: 'plant', home: 'arctic', intro: 'A tree that only grows a few centimetres tall!', photo: 'willow.jpg', credit: 'Photo: © David McCorquodale, CC BY 4.0', hs: { height: [26, 51], hairy: [64, 63], leaves: [54, 56] },
+    plant: { leaves: 'small', surface: 'hairy', stem: 'normal', roots: 'wide', height: 'low' },
+    features: [
+      { id: 'height', label: 'Grows low', trait: ['height', 'low'], what: 'It creeps along the ground.' },
+      { id: 'hairy', label: 'Hairy leaves', trait: ['surface', 'hairy'], what: 'Soft hairs, especially on young leaves.' },
+      { id: 'leaves', label: 'Small leaves', trait: ['leaves', 'small'], what: 'Its leaves are small.' },
+      { id: 'roots', label: 'Shallow roots', trait: ['roots', 'wide'], what: 'Roots spread out sideways.' },
+    ] },
+  { id: 'frog', name: 'Poison dart frog', em: '🐸', kind: 'animal', home: 'rainforest', intro: 'Smaller than your thumb – and very poisonous.', photo: 'frog.jpg', credit: 'Photo: H. Zell, CC BY-SA 3.0', hs: { colour: [48, 34], poison: [55, 56], skin: [39, 50], feet: [21, 70] },
+    features: [
+      { id: 'colour', label: 'Warning colours', trait: ['colour', 'warning'], what: 'Bright blue with black spots.' },
+      { id: 'poison', label: 'Poison skin', what: 'Its skin makes predators very ill.', in: everywhere('help', 'Its poison stops it being eaten.') },
+      { id: 'skin', label: 'Damp skin', trait: ['coat', 'skin'], what: 'Smooth and always damp.' },
+      { id: 'feet', label: 'Sticky toe pads', trait: ['feet', 'sticky'], what: 'Round, sticky pads on its toes.' },
+    ] },
+  { id: 'jaguar', name: 'Jaguar', em: '🐆', kind: 'animal', home: 'rainforest', intro: 'A big cat that hunts in the rainforest.', photo: 'jaguar.jpg', credit: 'Photo: Giles Laurent, CC BY-SA 4.0', hs: { colour: [68, 30], eyes: [33, 31], jaws: [28, 44], feet: [40, 68], coat: [55, 47] },
+    preset: { shape: 'cat', coat: 'thin', ears: 'small', fat: 'little', colour: 'spotted', feet: 'claws', water: 'drinks', active: 'night' },
+    features: [
+      { id: 'colour', label: 'Spotty coat', trait: ['colour', 'spotted'], what: 'Dark spots called rosettes.' },
+      { id: 'eyes', label: 'Eyes facing forwards', what: 'Both eyes face the front.', in: everywhere('help', 'It can judge how far away its prey is.') },
+      { id: 'jaws', label: 'Strong jaws', what: 'One of the strongest bites of any big cat.', in: everywhere('help', 'Sharp teeth catch and eat prey.') },
+      { id: 'feet', label: 'Sharp claws', trait: ['feet', 'claws'], what: 'Claws it can pull in when walking.' },
+      { id: 'coat', label: 'Short fur', trait: ['coat', 'thin'], what: 'Short, sleek fur.' },
+    ] },
+  { id: 'elephantear', name: 'Elephant ear plant', em: '🌿', kind: 'plant', home: 'rainforest', intro: 'Grows in the shade under tall trees.', photo: 'elephantear.jpg', credit: 'Photo: Vijayanrajapuram, CC BY-SA 4.0', hs: { leaves: [75, 55], tips: [87, 18] },
+    plant: { leaves: 'big', surface: 'driptip', stem: 'normal', roots: 'wide', height: 'medium' },
+    features: [
+      { id: 'leaves', label: 'Huge leaves', trait: ['leaves', 'big'], what: 'Leaves can be over 1 metre long!' },
+      { id: 'tips', label: 'Drip tips', trait: ['surface', 'driptip'], what: 'Each leaf ends in a long point.' },
+      { id: 'roots', label: 'Shallow roots', trait: ['roots', 'wide'], what: 'Roots stay near the surface.' },
+    ] },
+  { id: 'kapok', name: 'Kapok tree', em: '🌳', kind: 'plant', home: 'rainforest', intro: 'One of the tallest rainforest trees.', photo: 'kapok.jpg', credit: 'Photo: Sylvain Montagner, CC BY 4.0', hs: { height: [50, 12], roots: [40, 78] },
+    plant: { leaves: 'big', surface: 'thin', stem: 'normal', roots: 'buttress', height: 'tall', crown: 'flat' },
+    features: [
+      { id: 'height', label: 'Very tall', trait: ['height', 'tall'], what: 'Up to 60 metres tall.' },
+      { id: 'roots', label: 'Buttress roots', trait: ['roots', 'buttress'], what: 'Huge roots like walls at the bottom.' },
+    ] },
+  { id: 'hedgehog', name: 'Hedgehog', em: '🦔', kind: 'animal', home: 'woodland', intro: 'A small, spiky animal of woods and gardens.', photo: 'hedgehog.jpg', credit: 'Photo: Hrald, edit by Papa Lima Whiskey, CC BY-SA 3.0', hs: { spines: [35, 42], active: [53, 44], colour: [20, 65], hibernate: [8, 58] },
+    features: [
+      { id: 'spines', label: 'Spines', what: 'About 5,000 to 7,000 spines.', in: everywhere('help', 'It rolls into a spiky ball so predators can\'t bite it.') },
+      { id: 'active', label: 'Out at night', trait: ['active', 'night'], what: 'It hunts beetles, worms and slugs at night.', in: { woodland: ['help', 'It stays hidden from many predators at night.'] } },
+      { id: 'colour', label: 'Brown', trait: ['colour', 'brown'], what: 'Brown spines and fur.' },
+      { id: 'hibernate', label: 'Hibernates', what: 'It sleeps through winter in a nest of leaves.', in: { woodland: ['help', 'Hardly any food in winter, so it sleeps.'], arctic: ['help', 'It would sleep through the freezing winter.'], desert: ['little', 'Winters aren\'t cold enough to need it.'], rainforest: ['little', 'Warm all year with plenty of food.'] } },
+    ] },
+  { id: 'owl', name: 'Tawny owl', em: '🦉', kind: 'animal', home: 'woodland', intro: 'A night-time hunter of mice and voles.', photo: 'owl.jpg', credit: 'Photo: Chrumps, CC BY-SA 3.0', hs: { eyes: [57, 22], talons: [37, 67], feathers: [73, 48], colour: [45, 45] },
+    features: [
+      { id: 'eyes', label: 'Big forward eyes', what: 'Huge eyes facing the front.', in: everywhere('help', 'It can judge how far away its prey is, even at night.') },
+      { id: 'talons', label: 'Sharp talons', what: 'Long, curved, sharp claws.', in: everywhere('help', 'Talons grab prey.') },
+      { id: 'feathers', label: 'Silent feathers', what: 'Soft, fluffy edges on its wing feathers.', in: everywhere('help', 'Mice don\'t hear it coming.') },
+      { id: 'colour', label: 'Brown feathers', trait: ['colour', 'brown'], what: 'Brown and speckled.', in: { woodland: ['help', 'It blends in with tree bark by day.'] } },
+    ] },
+  { id: 'deer', name: 'Roe deer', em: '🦌', kind: 'animal', home: 'woodland', intro: 'A small deer seen at the edges of woods.', photo: 'deer.jpg', credit: 'Photo: Charles J. Sharp, CC BY-SA 4.0', hs: { eyes: [64, 28], ears: [69, 18], speed: [49, 78], colour: [35, 45] },
+    features: [
+      { id: 'eyes', label: 'Eyes on the sides', what: 'Eyes on the sides of its head.', in: everywhere('help', 'It can see nearly all the way round.') },
+      { id: 'ears', label: 'Big ears that turn', what: 'Ears that swivel to listen.', in: everywhere('help', 'It hears danger from any direction.') },
+      { id: 'speed', label: 'Long legs', what: 'It can run fast and leap.', in: everywhere('help', 'Running fast helps it escape predators.') },
+      { id: 'colour', label: 'Reddish-brown coat', trait: ['colour', 'brown'], what: 'Reddish-brown in summer.' },
+    ] },
+  { id: 'oak', name: 'Oak tree', em: '🌳', kind: 'plant', home: 'woodland', intro: 'A big tree that can live for hundreds of years.', photo: 'oak.jpg', credit: 'Photo: David Hawgood, CC BY-SA 2.0', hs: { leaves: [45, 20], height: [55, 6], drop: [25, 87] },
+    plant: { leaves: 'big', surface: 'thin', stem: 'normal', roots: 'deep', height: 'tall', fallen: true },
+    features: [
+      { id: 'leaves', label: 'Broad leaves', trait: ['leaves', 'big'], what: 'Broad, flat leaves.' },
+      { id: 'height', label: 'Tall', trait: ['height', 'tall'], what: 'Over 30 metres tall.' },
+      { id: 'roots', label: 'Deep roots', trait: ['roots', 'deep'], what: 'A long, deep root when young.' },
+      { id: 'drop', label: 'Drops leaves', what: 'Leaves fall in autumn and grow back in spring.', in: { woodland: ['help', 'Frost and snow can\'t damage leaves it has dropped.'], arctic: ['help', 'Many Arctic plants, like the Arctic willow, drop their leaves before the long, dark winter.'], desert: ['little', 'Dropping leaves isn\'t what helps here – saving water is.'], rainforest: ['little', 'Warm all year – no winter to get through.'] } },
+    ] },
+];
+const orgById = id => ORGS.find(o => o.id === id);
+function featStatus(org, f, hab) {
+  if (f.in && f.in[hab]) return f.in[hab];
+  if (f.trait) return traitStatus(org.kind, f.trait[0], f.trait[1], hab);
+  return ['little', 'Little difference here.'];
+}
+
+// ================= 3D world =================
+// The 3D parts the rest of the tool uses. If 3D can't start (no WebGL, or three.js didn't load),
+// they stay empty, and the 3D views show a friendly message instead
+const glCanvas = $('#gl');
+let camera = null, buildHabitat, placeCreature, resize3D, buildCreature, frameCamera, buildPlant, applyPlantMood, loop;
+let creature = null, rig = null, creatureTraits = null, creatureKind = null, curHab = null, use3D = false;
+if (can3D) {
+  const renderer = new THREE.WebGLRenderer({ canvas: glCanvas, antialias: true, preserveDrawingBuffer: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  const scene = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera(35, 1, 0.1, 200);
+  camera.position.set(4.4, 2.6, 7.2);
+  const controls = new OrbitControls(camera, glCanvas);
+  controls.enablePan = false; controls.enableDamping = true; controls.dampingFactor = 0.12;
+  controls.rotateSpeed = 1.8; controls.zoomSpeed = 1.4;
+  controls.minDistance = 3.5; controls.maxDistance = 28; controls.maxPolarAngle = Math.PI * 0.52;
+  const hemi = new THREE.HemisphereLight(0xffffff, 0x8899bb, 1.5); scene.add(hemi);
+  const sunLight = new THREE.DirectionalLight(0xffffff, 2.4); sunLight.position.set(3, 6, 4); scene.add(sunLight);
+
+  const grad = new THREE.DataTexture(new Uint8Array([120, 170, 215, 255]), 4, 1, THREE.RedFormat);
+  grad.minFilter = grad.magFilter = THREE.NearestFilter; grad.needsUpdate = true;
+  const toon = (c, extra = {}) => new THREE.MeshToonMaterial({ color: c, gradientMap: grad, ...extra });
+  const OUTLINE = new THREE.MeshBasicMaterial({ color: 0x2a1d14, side: THREE.BackSide });
+  const SPH = new THREE.SphereGeometry(1, 48, 32);
+  const BODY = SPH.clone().rotateZ(Math.PI / 2).rotateX(Math.PI / 2);
+
+  // A mesh plus a slightly larger dark copy turned inside out: a cartoon outline
+  function part(geo, mat, { pos = [0, 0, 0], scale = [1, 1, 1], rot = [0, 0, 0], outline = 0.04, quat = null, trait = null } = {}) {
+    const g = new THREE.Group();
+    g.add(new THREE.Mesh(geo, mat));
+    if (outline) { const o = new THREE.Mesh(geo, OUTLINE); o.scale.setScalar(1 + outline); g.add(o); }
+    g.position.set(...pos); g.scale.set(...scale); g.rotation.set(...rot);
+    if (quat) g.quaternion.copy(quat);
+    if (trait) g.userData.trait = trait;
+    return g;
+  }
+
+  // ---------- Habitat scenes ----------
+  const world = new THREE.Group(); scene.add(world);
+  const ground = new THREE.Mesh(new THREE.CircleGeometry(60, 64), toon(0xffffff)); ground.rotation.x = -Math.PI / 2; world.add(ground);
+  scene.fog = new THREE.Fog(0xffffff, 16, 42);   // fades the far ground into the sky
+  const props = new THREE.Group(); world.add(props);
+  const particles = (() => {
+    const n = 500, p = new Float32Array(n * 3);
+    for (let i = 0; i < n; i++) p.set([(Math.random() - .5) * 16, Math.random() * 9, (Math.random() - .5) * 12], i * 3);
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(p, 3));
+    const pts = new THREE.Points(g, new THREE.PointsMaterial({ color: 0xffffff, size: 0.06, transparent: true, opacity: 0.9 }));
+    scene.add(pts); return pts;
+  })();
+  let branch = null;   // rainforest branch the creature can climb onto
+  buildHabitat = function buildHabitat(hab) {
+    props.clear(); branch = null;
+    const add = (geo, col, o) => { const p = part(geo, toon(col), o); props.add(p); return p; };
+    const look = {
+      desert: { bg: 0xffd29a, ground: 0xf0c77a, hemi: 1.5, sun: 3 },
+      arctic: { bg: 0xbfdcff, ground: 0xffffff, hemi: 1.5, sun: 2.2 },
+      rainforest: { bg: 0x5f9e6a, ground: 0x4e6b2e, hemi: 1.1, sun: 1.6 },
+      woodland: { bg: 0xb8dcff, ground: 0x84b85d, hemi: 1.4, sun: 2.3 },
+    }[hab];
+    scene.background = new THREE.Color(look.bg); scene.fog.color.set(look.bg);
+    ground.material.color.set(look.ground);
+    hemi.intensity = look.hemi; sunLight.intensity = look.sun;
+    particles.visible = hab === 'arctic' || hab === 'rainforest';
+    particles.material.color.set(hab === 'arctic' ? 0xffffff : 0xcfe9ff);
+    particles.material.size = hab === 'arctic' ? 0.06 : 0.035;
+    if (hab === 'desert') {
+      add(SPH, 0xf5d28c, { pos: [-7, -1.2, -12], scale: [6, 2.2, 3], outline: 0 });
+      add(SPH, 0xeec27a, { pos: [6, -1.4, -14], scale: [7, 2.6, 3.4], outline: 0 });
+      const sunBall = new THREE.Mesh(new THREE.SphereGeometry(1.4, 24, 16), new THREE.MeshBasicMaterial({ color: 0xffd23f, fog: false }));
+      sunBall.position.set(-9, 9, -22); props.add(sunBall);
+      const cactus = (x, z, s) => {
+        add(new THREE.CapsuleGeometry(0.22, 1.4, 6, 12), 0x4f9a4a, { pos: [x, 0.9 * s, z], scale: [s, s, s] });
+        add(new THREE.CapsuleGeometry(0.13, 0.5, 6, 12), 0x4f9a4a, { pos: [x + 0.32 * s, 1.1 * s, z], scale: [s, s, s] });
+      };
+      cactus(-3.2, -2.5, 1); cactus(3.4, -2.8, 0.8);
+      add(new THREE.DodecahedronGeometry(0.4), 0xc79a5a, { pos: [2.6, 0.15, 1.6] });
+    } else if (hab === 'arctic') {
+      add(SPH, 0xeef5ff, { pos: [-8, -1.4, -13], scale: [6, 2.8, 3.5], outline: 0 });
+      add(SPH, 0xe3eefb, { pos: [7, -1.4, -14], scale: [7, 3.4, 3.5], outline: 0 });
+      add(new THREE.BoxGeometry(1, 0.7, 0.8), 0xcde8ff, { pos: [-3, 0.3, -1.6], rot: [0, 0.4, 0] });
+      add(new THREE.BoxGeometry(0.7, 0.5, 0.6), 0xd8efff, { pos: [3, 0.25, -1.2], rot: [0, -0.3, 0] });
+    } else if (hab === 'rainforest') {
+      const tree = (x, z, h) => { add(new THREE.CylinderGeometry(0.28, 0.4, h, 12), 0x5a4128, { pos: [x, h / 2, z] }); add(SPH, 0x2f7a3a, { pos: [x, h, z], scale: [2, 1, 2], outline: 0.02 }); };
+      tree(-3.5, -3, 6); tree(3.8, -3.5, 7); tree(-0.5, -6, 8);
+      add(SPH, 0x3f8f45, { pos: [-2.6, 0.3, 1.5], scale: [0.9, 0.35, 0.6], outline: 0.02 });
+      add(SPH, 0x3a8540, { pos: [3, 0.25, 1.2], scale: [0.8, 0.3, 0.5], outline: 0.02 });
+      // The climbing branch: a big tree trunk on the left with a branch reaching across
+      add(new THREE.CylinderGeometry(0.45, 0.6, 7, 14), 0x5a4128, { pos: [-2.9, 3.5, -0.6] });
+      branch = add(new THREE.CylinderGeometry(0.22, 0.3, 5.2, 12), 0x6b4c2e, { pos: [-0.3, 1.9, -0.3], rot: [0, 0, Math.PI / 2 - 0.06] });
+      branch.userData.top = 1.9 + 0.24;
+    } else {
+      const tree = (x, z, h, c) => { add(new THREE.CylinderGeometry(0.22, 0.3, h, 10), 0x7a5a3a, { pos: [x, h / 2, z] }); add(SPH, c, { pos: [x, h + 0.6, z], scale: [1.4, 1.5, 1.4], outline: 0.02 }); };
+      tree(-3.6, -3, 3, 0x6aa95a); tree(3.6, -3.4, 3.4, 0x78b866); tree(0.6, -6, 3.8, 0x5d9c4f);
+      for (let i = 0; i < 26; i++) { const a = Math.random() * Math.PI * 2, r = 1.8 + Math.random() * 5; add(SPH, [0xc07a2c, 0xa8582a, 0xd09a3a][i % 3], { pos: [Math.cos(a) * r, 0.02, Math.sin(a) * r], scale: [0.14, 0.02, 0.09], rot: [0, a, 0], outline: 0 }); }
+    }
+  }
+
+  // ---------- Creature textures ----------
+  const COLOURS = {
+    white: { main: '#f2f4f8', light: '#ffffff', dark: '#c3ccdc' },
+    sandy: { main: '#e2b064', light: '#fbecd0', dark: '#b8853c' },
+    brown: { main: '#8f6040', light: '#d9b48c', dark: '#5e3c24' },
+    spotted: { main: '#e2a945', light: '#f8e3bc', dark: '#a8792a', spot: '#3a240c' },
+    warning: { main: '#ffd21f', light: '#ffd21f', dark: '#d9a800', spot: '#141414' },
+  };
+  const texCache = {};
+  function coatTexture(key) {
+    if (texCache[key]) return texCache[key];
+    const c = COLOURS[key], cv = document.createElement('canvas'); cv.width = 512; cv.height = 256;
+    const x = cv.getContext('2d');
+    x.fillStyle = c.main; x.fillRect(0, 0, 512, 256);
+    if (key !== 'warning') {
+      const g = x.createLinearGradient(0, 130, 0, 200); g.addColorStop(0, c.main); g.addColorStop(1, c.light);
+      x.fillStyle = g; x.fillRect(0, 130, 512, 126);
+      const t = x.createLinearGradient(0, 0, 0, 70); t.addColorStop(0, c.dark); t.addColorStop(1, c.main);
+      x.globalAlpha = 0.5; x.fillStyle = t; x.fillRect(0, 0, 512, 70); x.globalAlpha = 1;
+    }
+    let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    if (key === 'spotted') {
+      for (let i = 0; i < 70; i++) {
+        const px = rnd() * 512, py = 30 + rnd() * 150, r = 7 + rnd() * 6;
+        x.fillStyle = shadeHex(c.main, -0.12); x.beginPath(); x.ellipse(px, py, r, r * 0.8, 0, 0, Math.PI * 2); x.fill();
+        x.strokeStyle = c.spot; x.lineWidth = 3.2;
+        for (let k = 0; k < 4; k++) { const a0 = k * Math.PI / 2 + rnd() * 0.5; x.beginPath(); x.ellipse(px, py, r, r * 0.8, 0, a0, a0 + 1.1); x.stroke(); }
+      }
+    } else if (key === 'warning') {
+      x.fillStyle = c.spot;
+      for (let i = 0; i < 7; i++) { const sx = i * 512 / 7; x.beginPath(); x.moveTo(sx, 0); x.bezierCurveTo(sx + 30, 80, sx - 20, 170, sx + 18, 256); x.lineTo(sx + 44, 256); x.bezierCurveTo(sx + 4, 170, sx + 54, 80, sx + 34, 0); x.fill(); }
+    }
+    const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace;
+    return (texCache[key] = tex);
+  }
+  const NOISE = (() => {
+    const cv = document.createElement('canvas'); cv.width = cv.height = 256;
+    const x = cv.getContext('2d'), d = x.createImageData(256, 256);
+    for (let i = 0; i < 256 * 256; i++) { const v = Math.random() * 255; d.data.set([v, v, v, 255], i * 4); }
+    x.putImageData(d, 0, 0);
+    const t = new THREE.CanvasTexture(cv); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(3, 2);
+    t.magFilter = t.minFilter = THREE.NearestFilter; return t;
+  })();
+  const WISP = (() => {
+    const cv = document.createElement('canvas'); cv.width = 64; cv.height = 128;
+    const x = cv.getContext('2d'); x.lineCap = 'round';
+    for (const [w, a] of [[14, 0.25], [7, 0.9]]) {
+      x.strokeStyle = `rgba(255,120,40,${a})`; x.lineWidth = w; x.beginPath();
+      for (let y = 10; y <= 118; y += 2) { const px = 32 + Math.sin(y / 14) * 12; y === 10 ? x.moveTo(px, y) : x.lineTo(px, y); }
+      x.stroke();
+    }
+    return new THREE.CanvasTexture(cv);
+  })();
+  // Fur: stacked see-through copies ("shells"); each one only shows the hair tips that reach it
+  function furShells(geo, coatTex, colourKey, len, n) {
+    const g = new THREE.Group(), c = COLOURS[colourKey];
+    for (let i = 1; i <= n; i++) {
+      const f = i / n;
+      const m = new THREE.MeshToonMaterial({ map: coatTex, alphaMap: NOISE, alphaTest: 0.2 + 0.75 * f, gradientMap: grad,
+        color: new THREE.Color(c.light).lerp(new THREE.Color('#6b5a4a'), 0.35 * (1 - f)) });
+      const mesh = new THREE.Mesh(geo, m); mesh.scale.setScalar(1 + len * f); g.add(mesh);
+    }
+    return g;
+  }
+
+  // ---------- The creature ----------
+  // Body shapes are only for looks: they make the real animals recognisable and do not change any gauge.
+  const SHAPES = {
+    fox: { bodyLen: 1, head: 0.5, neck: [0.32, 40], snout: 1, legLen: 0.5, legR: 0.12, tail: 'bushy' },
+    camel: { bodyLen: 1.15, head: 0.34, neck: [1.25, 62], snout: 1.6, legLen: 1.15, legR: 0.11, tail: 'tuft' },
+    bear: { bodyLen: 1.25, head: 0.5, neck: [0.4, 15], snout: 1.3, legLen: 0.45, legR: 0.22, tail: 'stub' },
+    cat: { bodyLen: 1.12, head: 0.46, neck: [0.3, 30], snout: 0.6, legLen: 0.48, legR: 0.13, tail: 'long' },
+  };
+  buildCreature = function buildCreature(t) {
+    if (creature) world.remove(creature);
+    creatureTraits = t; creatureKind = 'animal';
+    ground.position.y = props.position.y = 0;
+    if (branch) branch.visible = true;
+    const S = SHAPES[t.shape || 'fox'], c = COLOURS[t.colour];
+    const skin = t.coat === 'skin', coatTex = coatTexture(t.colour);
+    const main = skin ? new THREE.MeshPhongMaterial({ map: coatTex, shininess: 110, specular: 0xffffff }) : toon('#ffffff', { map: coatTex });
+    const plain = skin ? new THREE.MeshPhongMaterial({ color: c.main, shininess: 110, specular: 0xffffff }) : toon(c.main);
+    const light = toon(c.light), dark = toon(c.dark), black = toon(0x1b1b1b), white = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    const furLen = t.coat === 'thick' ? 0.16 : t.coat === 'thin' ? 0.035 : 0, furN = t.coat === 'thick' ? 16 : 5;
+    const addFur = (target, geo) => { if (furLen) target.add(furShells(geo, coatTex, t.colour, furLen / Math.max(0.3, target.scale.y), furN)); };
+    const g = new THREE.Group();
+    const fatS = { little: [1, 0.7, 0.62], thick: [1.12, 0.9, 0.84], hump: [1, 0.74, 0.66] }[t.fat];
+    const bs = [fatS[0] * S.bodyLen, fatS[1], fatS[2]];
+
+    const body = part(BODY, main, { scale: bs, trait: 'coat' }); g.add(body); addFur(body.children[0], BODY);
+    if (t.fat === 'hump') { const h = part(SPH, plain, { pos: [-0.05, bs[1] * 0.72, 0], scale: [0.55, 0.62, 0.48], trait: 'fat' }); g.add(h); addFur(h.children[0], SPH); }
+
+    // Legs and feet
+    const legTop = -bs[1] * 0.35, legGeo = new THREE.CapsuleGeometry(S.legR, S.legLen, 6, 16);
+    const footY = legTop - S.legLen - S.legR + 0.06;
+    const feet = new THREE.Group(); feet.userData.trait = 'feet'; g.add(feet);
+    for (const [sx, sz, far] of [[1, 1, false], [1, -1, true], [-1, 1, false], [-1, -1, true]]) {
+      const x = sx * bs[0] * 0.55, z = sz * bs[2] * 0.48;
+      const leg = part(legGeo, far ? dark : plain, { pos: [x, legTop - S.legLen / 2, z], trait: 'feet' }); g.add(leg);
+      if (t.coat === 'thick') addFur(leg.children[0], legGeo);
+      const fy = footY, fr = Math.min(S.legR / 0.12, 1.3);
+      if (t.feet === 'wide') feet.add(part(SPH, dark, { pos: [x + 0.06, fy, z], scale: [0.27 * fr, 0.08, 0.22 * fr] }));
+      else if (t.feet === 'furry') { const f = part(SPH, light, { pos: [x + 0.04, fy + 0.01, z], scale: [0.18 * fr, 0.1, 0.15 * fr] }); feet.add(f); f.children[0].add(furShells(SPH, null, t.colour, 0.35, 8)); }
+      else if (t.feet === 'webbed') {
+        const shape = new THREE.Shape(); shape.moveTo(0, 0); shape.lineTo(0.3, 0.16); shape.quadraticCurveTo(0.34, 0, 0.3, -0.16); shape.lineTo(0, 0);
+        feet.add(part(new THREE.ExtrudeGeometry(shape, { depth: 0.03, bevelEnabled: false }).rotateX(-Math.PI / 2), toon('#e98a3a'), { pos: [x - 0.04, fy - 0.03, z], outline: 0.06 }));
+      } else if (t.feet === 'sticky') {
+        feet.add(part(SPH, plain, { pos: [x + 0.03, fy, z], scale: [0.14, 0.07, 0.12] }));
+        for (const dz of [-0.08, 0, 0.08]) feet.add(part(SPH, toon('#ffcf9a'), { pos: [x + 0.16, fy - 0.01, z + dz], scale: [0.055, 0.055, 0.055], outline: 0.1 }));
+      } else feet.add(part(SPH, dark, { pos: [x + 0.04, fy, z], scale: [0.15 * fr, 0.08, 0.13 * fr] }));
+      if (t.feet === 'claws') for (const dz of [-0.06, 0, 0.06]) feet.add(part(new THREE.ConeGeometry(0.028, 0.13, 8), black, { pos: [x + 0.19, fy - 0.03, z + dz], rot: [0, 0, -Math.PI / 2 - 0.5], outline: 0 }));
+    }
+
+    // Tail
+    const tx = -bs[0] * 0.92, ty = bs[1] * 0.2;
+    const tailKind = t.coat === 'thick' && (S.tail === 'bushy' || S.tail === 'long') ? 'bushy' : skin ? 'skin' : S.tail;
+    const capsuleTo = (r, len, from, ang, mat) => part(new THREE.CapsuleGeometry(r, len, 6, 14), mat, { pos: [from[0] - Math.cos(ang) * len / 2, from[1] + Math.sin(ang) * len / 2, 0], rot: [0, 0, Math.PI / 2 - ang + Math.PI], trait: 'coat' });
+    if (tailKind === 'bushy') { const tl = part(SPH, main, { pos: [tx - 0.35, ty + 0.12, 0], scale: [0.5, 0.2, 0.2], rot: [0, 0, 0.55], trait: 'coat' }); g.add(tl); addFur(tl.children[0], SPH); g.add(part(SPH, light, { pos: [tx - 0.72, ty + 0.36, 0], scale: [0.13, 0.12, 0.12] })); }
+    else if (tailKind === 'long') { g.add(capsuleTo(0.07, 0.75, [tx + 0.05, ty], -0.5, plain)); g.add(capsuleTo(0.07, 0.5, [tx - 0.6, ty - 0.33], 0.7, plain)); }
+    else if (tailKind === 'tuft') { g.add(capsuleTo(0.05, 0.6, [tx + 0.05, ty + 0.05], -1.2, plain)); g.add(part(SPH, dark, { pos: [tx - 0.17, ty - 0.55, 0], scale: [0.07, 0.13, 0.07] })); }
+    else if (tailKind === 'stub') { const tl = part(SPH, plain, { pos: [tx + 0.02, ty + 0.05, 0], scale: [0.14, 0.14, 0.14], trait: 'coat' }); g.add(tl); addFur(tl.children[0], SPH); }
+    else g.add(capsuleTo(0.07, 0.4, [tx + 0.05, ty], -0.4, plain));
+
+    // Neck and head
+    const hr = S.head, [nl, na] = S.neck, a = na * Math.PI / 180;
+    const nBase = new THREE.Vector3(bs[0] * 0.62, bs[1] * 0.42, 0), dir = new THREE.Vector3(Math.cos(a), Math.sin(a), 0);
+    const nEnd = nBase.clone().addScaledVector(dir, nl);
+    const neckGeo = new THREE.CapsuleGeometry(hr * 0.5, nl, 6, 16);
+    const neck = part(neckGeo, plain, { pos: nBase.clone().addScaledVector(dir, nl / 2).toArray(), quat: new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir), trait: 'coat' });
+    g.add(neck); addFur(neck.children[0], neckGeo);
+    const H = new THREE.Group(); H.position.copy(nEnd).addScaledVector(dir, hr * 0.25); g.add(H);
+    const head = part(SPH, plain, { scale: [hr * 1.02, hr * 0.9, hr * 0.92], trait: 'coat' }); H.add(head); addFur(head.children[0], SPH);
+    const sn = S.snout;
+    H.add(part(SPH, light, { pos: [hr * (0.55 + 0.4 * sn), -hr * 0.22, 0], scale: [hr * 0.5 * sn + 0.05, hr * 0.42, hr * 0.46] }));
+    H.add(part(SPH, black, { pos: [hr * (0.55 + 0.4 * sn) + hr * 0.5 * sn + 0.02, -hr * 0.12, 0], scale: [0.065, 0.055, 0.075], outline: 0 }));
+    const tongue = part(new THREE.CapsuleGeometry(0.05, 0.12, 4, 8), toon('#ff7a8a'), { pos: [hr * (0.5 + 0.4 * sn), -hr * 0.62, 0], rot: [0, 0, 0.3], outline: 0.08 });
+    tongue.visible = false; H.add(tongue);
+    const eyes = [], out = 1 + (t.coat === 'thick' ? 0.14 : 0.03);
+    for (const s of [1, -1]) {
+      const e = new THREE.Group(); e.position.set(hr * 0.5 * out, hr * 0.22 * out, s * hr * 0.66 * out); H.add(e);
+      e.add(part(SPH, white, { scale: [hr * 0.2, hr * 0.22, hr * 0.17], outline: 0.1 }));
+      e.add(part(SPH, black, { pos: [hr * 0.09, 0, s * hr * 0.07], scale: [hr * 0.13, hr * 0.15, hr * 0.12], outline: 0 }));
+      e.add(part(SPH, white, { pos: [hr * 0.16, hr * 0.06, s * hr * 0.12], scale: [0.025, 0.025, 0.025], outline: 0 }));
+      eyes.push(e);
+    }
+    const earTips = [];
+    const E = { small: [0.15, 0.2], medium: [0.19, 0.42], large: [0.3, 0.95] }[t.ears].map(v => v * hr / 0.5);
+    for (const s of [1, -1]) {
+      const ear = new THREE.Group(); ear.position.set(-hr * 0.12, hr * 0.7, s * hr * 0.5); ear.rotation.set(s * 0.35, 0, 0.15); ear.userData.trait = 'ears'; H.add(ear);
+      if (t.ears === 'small') {
+        const e1 = part(SPH, plain, { pos: [0, E[1] * 0.45, 0], scale: [E[0] * 0.45, E[1] * 0.75, E[0]] }); ear.add(e1); addFur(e1.children[0], SPH);
+        ear.add(part(SPH, toon('#e8a49a'), { pos: [E[0] * 0.25, E[1] * 0.45, 0], scale: [E[0] * 0.22, E[1] * 0.5, E[0] * 0.6], outline: 0 }));
+      } else {
+        ear.add(part(new THREE.ConeGeometry(E[0], E[1], 24), plain, { pos: [0, E[1] / 2, 0], scale: [0.42, 1, 1] }));
+        ear.add(part(new THREE.ConeGeometry(E[0] * 0.66, E[1] * 0.74, 24), toon('#e8a49a'), { pos: [0.05, E[1] * 0.42, 0], scale: [0.3, 1, 1], outline: 0 }));
+      }
+      const tip = new THREE.Object3D(); tip.position.set(0, E[1], 0); ear.add(tip); earTips.push(tip);
+    }
+    const lift = -footY + 0.08;
+    creature = g; world.add(g);
+    rig = { body, eyes, earTips, tongue, bs, lift, footY, height: H.position.y + hr };
+    placeCreature();
+  }
+  // Feet decide where the creature stands: sunk into sand or snow, or up on the rainforest branch
+  const mounds = new THREE.Group(); world.add(mounds);
+  placeCreature = function placeCreature() {
+    if (!creature || !curHab) return;
+    mounds.clear();
+    if (creatureKind === 'plant') { creature.position.set(0, 0, 0); frameCamera(); return; }
+    const move = MOVE_SCORE[curHab][creatureTraits.feet];
+    let y = rig.lift;
+    if ((curHab === 'desert' || curHab === 'arctic') && move < 0.6) {
+      const sink = move < 0.35 ? 0.42 : 0.22;
+      y -= sink;
+      const col = curHab === 'desert' ? 0xf0c77a : 0xffffff;
+      for (const [sx, sz] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]) {
+        const m = new THREE.Mesh(SPH, toon(col)); m.scale.set(0.38, 0.12, 0.3);
+        m.position.set(sx * rig.bs[0] * 0.55, 0.02, sz * rig.bs[2] * 0.48); mounds.add(m);
+      }
+    }
+    if (curHab === 'rainforest' && branch && move >= 0.7) y = branch.userData.top + rig.lift - 0.02;
+    creature.position.set(0, y, 0);
+    rig.baseY = y;
+    frameCamera();
+  }
+  // Point the camera at the creature, backing off far enough to see all of it (and a bit of the habitat)
+  const _box = new THREE.Box3(), _size = new THREE.Vector3(), _ctr = new THREE.Vector3();
+  frameCamera = function frameCamera(force) {
+    if (!creature) return;
+    _box.setFromObject(creature); _box.getSize(_size); _box.getCenter(_ctr);
+    controls.target.set(_ctr.x + 0.2, _ctr.y - _size.y * 0.08, 0);
+    if (force) {
+      let d = creatureKind === 'plant' ? Math.max(_size.x * 1.15, _size.y * 1.3) * 1.75 + 2 : Math.max(_size.x, _size.y * 1.4) * 2.3 + 3.2;
+      // On narrow screens (and with the gauges taking up the left), back off so the whole thing fits across
+      const s = $('#stage'), gEl = $('#gauges'), free = (s.clientWidth - (gEl.style.display === 'none' ? 0 : gEl.offsetWidth + 10)) / Math.max(1, s.clientHeight);
+      if (free < 1.4) d *= Math.min(2.4, 1.4 / Math.max(0.3, free));
+      camera.position.set(controls.target.x + d * 0.5, controls.target.y + d * 0.22, d * 0.86);
+    }
+  }
+
+  // ---------- Heat wisps ----------
+  const wisps = [];
+  for (let i = 0; i < 40; i++) {
+    const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: WISP, transparent: true, opacity: 0, depthWrite: false }));
+    s.userData = { life: 0 }; scene.add(s); wisps.push(s);
+  }
+  let wispClock = 0;
+  function emitWisp(age = 0) {
+    const w = wisps.find(q => q.userData.life <= 0); if (!w || !creature) return;
+    const v = new THREE.Vector3();
+    if (Math.random() < (creatureTraits.ears === 'large' ? 0.5 : 0.15)) rig.earTips[Math.floor(Math.random() * 2)].getWorldPosition(v);
+    else { const a = (Math.random() - 0.5) * 2.4; v.set(Math.cos(a) * rig.bs[0] * 0.8, rig.bs[1] * 0.95, Math.sin(a) * rig.bs[2] * 0.6); creature.localToWorld(v); }
+    w.position.copy(v);
+    w.userData = { life: 1.8 - age, vel: new THREE.Vector3((Math.random() - 0.5) * 0.3, 0.75, (Math.random() - 0.5) * 0.3) };
+    w.position.addScaledVector(w.userData.vel, age);
+  }
+  function stepWisps(dt) {
+    for (const w of wisps) {
+      const u = w.userData; if (u.life <= 0) continue;
+      u.life -= dt; w.position.addScaledVector(u.vel, dt);
+      const k = 1 - u.life / 1.8;
+      w.scale.set(0.22 + k * 0.2, 0.44 + k * 0.35, 1);
+      w.material.opacity = u.life <= 0 ? 0 : Math.max(0, Math.min(1, u.life * 1.2, k * 5)) * 0.85;
+    }
+  }
+  // How much heat leaves the body: lots with short fur, little fat and big ears
+  const heatLoss = t => Math.max(0.1, 0.7 - ({ thick: 0.5, thin: -0.1, skin: -0.2 }[t.coat] + { thick: 0.35, hump: -0.15, little: -0.1 }[t.fat] + { small: 0.15, medium: 0, large: -0.3 }[t.ears]));
+
+  // ---------- Render loop ----------
+  const clock = new THREE.Clock();
+  resize3D = function resize3D() {
+    const s = $('#stage'), w = s.clientWidth, h = s.clientHeight;
+    if (!w || !h) return;
+    renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix();
+    updateViewOffset();
+  }
+  function animateCreature(t) {
+    if (!creature) return;
+    if (creatureKind === 'plant') { rig.plant.rotation.z = Math.sin(t * (rig.sway > 0.03 ? 3 : 1.2)) * rig.sway; return; }
+    const g = state.gauges && state.gauges.heat;
+    const cold = g && g.v < 0.34, hot = g && g.v > 0.66;
+    rig.body.scale.y = rig.bs[1] * (1 + Math.sin(t * (hot ? 9 : 2.2)) * (hot ? 0.03 : 0.015));
+    creature.position.x = cold ? Math.sin(t * 60) * 0.012 : 0;
+    rig.tongue.visible = !!hot;
+    const blink = (t % 3.6) < 0.12 ? 0.1 : 1;
+    rig.eyes.forEach(e => e.scale.y = blink);
+  }
+  loop = function loop() {
+    requestAnimationFrame(loop);
+    if (!use3D) return;
+    const dt = Math.min(clock.getDelta(), 0.05), t = clock.elapsedTime;
+    animateCreature(t);
+    if (creature && creatureKind === 'animal') {
+      wispClock += dt * heatLoss(creatureTraits) * (curHab === 'arctic' ? 9 : curHab === 'woodland' ? 6 : 5);
+      while (wispClock > 1) { emitWisp(); wispClock--; }
+    }
+    stepWisps(dt);
+    if (particles.visible) {
+      const a = particles.geometry.attributes.position, rain = curHab === 'rainforest';
+      for (let i = 0; i < a.count; i++) {
+        let y = a.getY(i) - dt * (rain ? 7 : 1.2); if (y < 0) y = 9; a.setY(i, y);
+        if (!rain) { let x = a.getX(i) + dt * 0.6; if (x > 8) x = -8; a.setX(i, x); }
+      }
+      a.needsUpdate = true;
+    }
+    controls.update();
+    renderer.render(scene, camera);
+    positionBubble();
+  }
+
+  // Tapping a part of the creature shows what it does
+  const raycaster = new THREE.Raycaster(), ndc = new THREE.Vector2();
+  let downAt = null;
+  glCanvas.addEventListener('pointerdown', e => { downAt = [e.clientX, e.clientY]; });
+  glCanvas.addEventListener('pointerup', e => {
+    if (!downAt || Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) > 6 || !creature) return;
+    const r = glCanvas.getBoundingClientRect();
+    ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+    raycaster.setFromCamera(ndc, camera);
+    const hit = raycaster.intersectObject(creature, true).find(h => h.object.material !== OUTLINE);
+    if (!hit) { hideBubble(); return; }
+    let o = hit.object; while (o && !o.userData.trait) o = o.parent;
+    if (o) onCreatureTap(o.userData.trait, hit.point);
+  });
+
+  // ================= 3D plants (shared by Design and Move it) =================
+  // The plant stands on a block of soil with a slice cut away (facing the camera), so its roots can be seen.
+  const SOIL_DEPTH = 1.7, SOIL_R = 2.4, TOP_SOIL = 0.42;
+  const CUT_START = 75 * Math.PI / 180, CUT_LEN = 1.5 * Math.PI;
+  function ribbed(geo, n, amt) {
+    const p = geo.attributes.position;
+    for (let i = 0; i < p.count; i++) {
+      const x = p.getX(i), z = p.getZ(i), k = 1 + amt * Math.cos(n * Math.atan2(z, x));
+      p.setX(i, x * k); p.setZ(i, z * k);
+    }
+    geo.computeVertexNormals(); return geo;
+  }
+  const LEAF = new THREE.SphereGeometry(1, 20, 10).scale(1, 0.07, 0.42).translate(1, 0, 0);   // a flat leaf, 2 long, stalk end at 0
+  const LEAF_WIDE = new THREE.SphereGeometry(1, 24, 10).scale(1, 0.06, 0.78).translate(1, 0, 0);
+  const COLUMN = ribbed(new THREE.CylinderGeometry(1, 1.08, 1, 32, 8), 12, 0.07);
+  const BARREL = ribbed(new THREE.SphereGeometry(1, 32, 20), 12, 0.07);
+  function soilBlock(hab) {
+    const g = new THREE.Group();
+    const soil = { desert: '#c9944a', arctic: '#6e5640', rainforest: '#4a321d', woodland: '#634529' }[hab];
+    const top = { desert: '#f0c77a', arctic: '#ffffff', rainforest: '#4e6b2e', woodland: '#84b85d' }[hab];
+    const layer = (y0, h, col) => {
+      const wall = new THREE.Mesh(new THREE.CylinderGeometry(SOIL_R, SOIL_R, h, 48, 1, true, CUT_START, CUT_LEN), toon(col, { side: THREE.DoubleSide }));
+      wall.position.y = y0 - h / 2; g.add(wall);
+      for (const th of [CUT_START, CUT_START + CUT_LEN]) {
+        const face = new THREE.Mesh(new THREE.PlaneGeometry(SOIL_R, h), toon(shadeHex(col, -0.12), { side: THREE.DoubleSide }));
+        face.position.set(Math.sin(th) * SOIL_R / 2, y0 - h / 2, Math.cos(th) * SOIL_R / 2); face.rotation.y = th - Math.PI / 2; g.add(face);
+      }
+    };
+    if (hab === 'arctic') { layer(0, TOP_SOIL, soil); layer(-TOP_SOIL, SOIL_DEPTH - TOP_SOIL, '#bcd6ee'); }
+    else layer(0, SOIL_DEPTH, soil);
+    const cap = new THREE.Mesh(new THREE.CircleGeometry(SOIL_R, 48, CUT_START - Math.PI / 2, CUT_LEN), toon(top));
+    cap.rotation.x = -Math.PI / 2; cap.position.y = 0.004; g.add(cap);
+    const bottom = new THREE.Mesh(new THREE.CircleGeometry(SOIL_R, 48), toon(shadeHex(soil, -0.3)));
+    bottom.rotation.x = -Math.PI / 2; bottom.position.y = -SOIL_DEPTH + 0.01; g.add(bottom);
+    // Rim of the cut, so the edge of the block reads clearly
+    const rim = new THREE.Mesh(new THREE.TorusGeometry(SOIL_R, 0.035, 6, 64, CUT_LEN), new THREE.MeshBasicMaterial({ color: 0x2a1d14 }));
+    rim.rotation.set(Math.PI / 2, 0, Math.PI / 2 - CUT_START - CUT_LEN); g.add(rim);
+    if (hab === 'arctic') {
+      const label = new THREE.Sprite(new THREE.SpriteMaterial({ map: textSprite('frozen ground'), depthTest: false }));
+      label.scale.set(1.5, 0.37, 1); label.position.set(Math.sin(0.52) * SOIL_R * 0.55, -1.15, Math.cos(0.52) * SOIL_R * 0.55); g.add(label);
+    }
+    return g;
+  }
+  function textSprite(text) {
+    const cv = document.createElement('canvas'); cv.width = 256; cv.height = 64;
+    const x = cv.getContext('2d'); x.font = '700 30px Fredoka, sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle';
+    x.fillStyle = 'rgba(255,255,255,.85)'; x.beginPath(); x.roundRect(4, 8, 248, 48, 22); x.fill();
+    x.fillStyle = '#3d5f80'; x.fillText(text, 128, 33);
+    return new THREE.CanvasTexture(cv);
+  }
+  // Build a plant from its features
+  buildPlant = function buildPlant(t, hab) {
+    if (creature) world.remove(creature);
+    creatureTraits = t; creatureKind = 'plant';
+    ground.position.y = props.position.y = -SOIL_DEPTH;   // the soil block sits on top of the ground
+    const g = new THREE.Group(); g.add(soilBlock(hab));
+    const leafCol = { waxy: '#2f8a3f', thin: '#7cc65a', hairy: '#8db878', driptip: '#3b9a47' }[t.surface];
+    const leafMat = t.surface === 'waxy' ? new THREE.MeshPhongMaterial({ color: leafCol, shininess: 140, specular: 0xffffff }) : toon(leafCol);
+    const stemGreen = t.surface === 'waxy' ? new THREE.MeshPhongMaterial({ color: '#4a9446', shininess: 110, specular: 0xdddddd }) : toon('#58a24f');
+    const bark = toon('#7a5130'), rootMat = toon('#9a6a3e'), spineMat = toon('#f6efc8');
+    const plant = new THREE.Group(); g.add(plant);
+    const rigExtra = {};
+    const leaves = [], H = { tall: 4.2, medium: 2.0, low: 0.3 }[t.height];
+    const big = t.leaves === 'big', spines = t.leaves === 'spines';
+
+    const leafGeo = big ? LEAF_WIDE : LEAF;
+    // Leaves are rolled along their length so their flat face shows, not just the edge
+    const addLeaf = (pos, yaw, tilt, size, roll = 0.8) => {
+      const L = new THREE.Group(); L.position.set(...pos); L.rotation.set(0, yaw, tilt, 'YXZ'); L.userData = { trait: 'leaves', tilt };
+      const blade = part(leafGeo, leafMat, { scale: [size, size, size], rot: [roll, 0, 0], outline: t.surface === 'hairy' ? 0 : 0.06 }); L.add(blade);
+      if (t.surface === 'hairy') { const h = new THREE.Mesh(leafGeo, new THREE.MeshBasicMaterial({ color: 0xf4f7ef, side: THREE.BackSide })); h.scale.set(1.06, 2.6, 1.16); blade.add(h); }
+      if (t.surface === 'driptip') {
+        L.add(part(new THREE.ConeGeometry(0.09 * size, 0.6 * size, 8), leafMat, { pos: [2.25 * size, 0, 0], rot: [0, 0, -Math.PI / 2], outline: 0.08 }));
+        L.add(part(SPH, toon('#8fd2ff'), { pos: [2.55 * size, -0.12 * size, 0], scale: [0.07 * size, 0.1 * size, 0.07 * size], outline: 0.1 }));
+      }
+      plant.add(L); leaves.push(L);
+    };
+    // Spines: little pale cones pointing outwards from a set of surface points
+    const addSpines = (pts) => { for (const [x, y, z] of pts) { const dir = new THREE.Vector3(x, 0, z).normalize(); plant.add(part(new THREE.ConeGeometry(0.03, 0.16, 6), spineMat, { pos: [x + dir.x * 0.06, y, z + dir.z * 0.06], quat: new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir), outline: 0, trait: 'leaves' })); } };
+    const ring = (r, y, n, off = 0) => Array.from({ length: n }, (_, i) => { const a = i / n * Math.PI * 2 + off; return [Math.cos(a) * r, y, Math.sin(a) * r]; });
+
+    if (t.stem === 'stores') {
+      if (t.height === 'tall') {
+        plant.add(part(COLUMN, stemGreen, { pos: [0, H / 2, 0], scale: [0.42, H, 0.42], trait: 'stem' }));
+        plant.add(part(SPH, stemGreen, { pos: [0, H, 0], scale: [0.43, 0.38, 0.43], trait: 'stem' }));
+        for (const [s, y, h] of [[1, H * 0.42, 1.0], [-1, H * 0.55, 0.8]]) {
+          plant.add(part(new THREE.CapsuleGeometry(0.26, 0.5, 6, 16), stemGreen, { pos: [s * 0.55, y, 0], rot: [0, 0, Math.PI / 2], trait: 'stem' }));
+          plant.add(part(COLUMN, stemGreen, { pos: [s * 0.85, y + h / 2, 0], scale: [0.27, h, 0.27], trait: 'stem' }));
+          plant.add(part(SPH, stemGreen, { pos: [s * 0.85, y + h, 0], scale: [0.28, 0.26, 0.28], trait: 'stem' }));
+          if (spines) addSpines([...ring(0.29, y + h * 0.4, 6), ...ring(0.29, y + h * 0.8, 6, 0.5)].map(([x, yy, z]) => [x + s * 0.85, yy, z]));
+        }
+        if (spines) for (let y = 0.3; y < H; y += 0.42) addSpines(ring(0.45, y, 10, y));
+        else for (let i = 0; i < 5; i++) addLeaf([0, H * (0.55 + i * 0.1), 0], i * 1.3, 0.5, big ? 0.35 : 0.15);
+      } else if (t.height === 'medium') {
+        plant.add(part(BARREL, stemGreen, { pos: [0, 0.95, 0], scale: [0.85, 1.0, 0.85], trait: 'stem' }));
+        if (spines) for (let y = 0.3; y < 1.8; y += 0.3) addSpines(ring(0.85 * Math.sqrt(Math.max(0.05, 1 - ((y - 0.95) / 1) ** 2)) + 0.02, y, 12, y));
+        else for (let i = 0; i < 4; i++) addLeaf([0, 1.8, 0], i * Math.PI / 2, 0.6, big ? 0.4 : 0.16);
+      } else {
+        for (const s of [1, -1]) plant.add(part(BARREL, stemGreen, { pos: [s * 0.35, 0.2, s * 0.1], scale: [0.42, 0.24, 0.38], trait: 'stem' }));
+        if (spines) addSpines([...ring(0.42, 0.22, 10).map(([x, y, z]) => [x + 0.35, y, z + 0.1]), ...ring(0.42, 0.22, 10).map(([x, y, z]) => [x - 0.35, y, z - 0.1])]);
+        else for (let i = 0; i < 4; i++) addLeaf([i < 2 ? 0.35 : -0.35, 0.42, 0], i * 1.6, 0.4, big ? 0.3 : 0.12);
+      }
+    } else if (t.height === 'tall') {
+      const trunkH = H * 0.78;
+      plant.add(part(new THREE.CylinderGeometry(0.2, 0.36, trunkH, 14), bark, { pos: [0, trunkH / 2, 0], trait: 'stem' }));
+      const flat = t.crown === 'flat';
+      for (let i = 0; i < 4; i++) {
+        const a = i * Math.PI / 2 + 0.4, dir = new THREE.Vector3(Math.cos(a) * (flat ? 1.4 : 0.8), 0.9, Math.sin(a) * (flat ? 1.4 : 0.8)).normalize();
+        const len = flat ? 1.6 : 1.1;
+        plant.add(part(new THREE.CapsuleGeometry(0.08, len, 4, 8), bark, { pos: [dir.x * len / 2, trunkH * 0.85 + dir.y * len / 2, dir.z * len / 2], quat: new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir), trait: 'stem' }));
+      }
+      if (spines) { for (let y = 0.4; y < trunkH; y += 0.35) addSpines(ring(0.3 - y * 0.03, y, 6, y)); }
+      else {
+        const cy = flat ? H * 0.98 : H * 0.92;
+        const clumpMat = toon(shadeHex(leafCol, -0.3)); rigExtra.clumpMat = clumpMat;
+        const clumps = flat
+          ? [[0, 0, 0, 1.0, 0.45], [1.2, -0.05, 0.4, 0.75, 0.4], [-1.2, -0.05, -0.3, 0.75, 0.4], [0.3, 0.05, -1.1, 0.7, 0.38], [-0.4, 0, 1.1, 0.7, 0.38]]
+          : [[0, 0.35, 0, 0.85, 0.75], [0.7, -0.1, 0.3, 0.7, 0.6], [-0.7, -0.1, -0.2, 0.7, 0.6], [0.1, -0.15, 0.75, 0.65, 0.55], [-0.1, -0.1, -0.75, 0.65, 0.55]];
+        const Yup = new THREE.Vector3(0, 1, 0);
+        clumps.forEach(([x, y, z, r, ry], ci) => {
+          plant.add(part(SPH, clumpMat, { pos: [x, cy + y, z], scale: [r, ry, r], outline: 0.03, trait: 'leaves' }));
+          const n = big ? 12 : 26, size = big ? 0.24 : 0.1;
+          for (let i = 0; i < n; i++) {
+            const v = 1 - (i + 0.5) / n * 1.6, rr = Math.sqrt(Math.max(0, 1 - v * v)), a = i * 2.39996 + ci;
+            const nrm = new THREE.Vector3(Math.cos(a) * rr / r, v / ry, Math.sin(a) * rr / r).normalize();
+            const L = new THREE.Group(); L.userData = { trait: 'leaves', tilt: 0, crown: true };
+            L.position.set(x + Math.cos(a) * rr * r, cy + y + v * ry, z + Math.sin(a) * rr * r);
+            L.quaternion.setFromUnitVectors(Yup, nrm); L.rotateY(a * 3);
+            L.add(part(leafGeo, leafMat, { scale: [size, size, size], pos: [-size, 0.02, 0], outline: 0.06 }));
+            plant.add(L); leaves.push(L);
+          }
+        });
+      }
+    } else if (t.height === 'medium') {
+      plant.add(part(new THREE.CapsuleGeometry(0.06, H, 4, 10), stemGreen, { pos: [0, H / 2, 0], trait: 'stem' }));
+      if (spines) for (let y = 0.25; y < H; y += 0.22) addSpines(ring(0.07, y, 3, y * 2));
+      else {
+        const n = big ? 5 : 14, size = big ? 0.5 : 0.17;
+        for (let i = 0; i < n; i++) addLeaf([0, H * (0.25 + 0.75 * (i + 1) / n), 0], i * 2.4 + 0.5, big ? -0.25 : 0.1, size, big ? 1.0 : 0.7);
+      }
+    } else {
+      for (let s = 0; s < 4; s++) {
+        const a = s * Math.PI / 2 + 0.3, len = 1.6;
+        plant.add(part(new THREE.CapsuleGeometry(0.04, len, 4, 8), toon('#6d5a2e'), { pos: [Math.cos(a) * len / 2, 0.06, Math.sin(a) * len / 2], rot: [0, -a, Math.PI / 2], trait: 'stem' }));
+        const n = big ? 2 : 5;
+        for (let i = 0; i < n; i++) {
+          const d = 0.35 + i * (1.2 / n), p = [Math.cos(a) * d, 0.1, Math.sin(a) * d];
+          if (spines) addSpines([[p[0], 0.12, p[2]]]); else addLeaf(p, -a + (i % 2 ? 0.9 : -0.9), 0.15, big ? 0.42 : 0.2, 0.3);
+        }
+      }
+    }
+
+    // Roots (inside the soil block)
+    const root = (from, dir, len, r) => { dir = new THREE.Vector3(...dir).normalize(); plant.add(part(new THREE.CapsuleGeometry(r, len, 4, 8), rootMat, { pos: [from[0] + dir.x * len / 2, from[1] + dir.y * len / 2, from[2] + dir.z * len / 2], quat: new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir), outline: 0.06, trait: 'roots' })); };
+    if (t.roots === 'deep') {
+      plant.add(part(new THREE.CylinderGeometry(0.12, 0.025, 1.5, 10), rootMat, { pos: [0, -0.75, 0], trait: 'roots' }));
+      root([0, -0.4, 0], [0.8, -0.6, 0.6], 0.6, 0.035); root([0, -0.75, 0], [-0.7, -0.6, 0.5], 0.55, 0.03); root([0, -1.05, 0], [0.6, -0.7, 0.2], 0.4, 0.025);
+    } else {
+      for (let i = 0; i < 9; i++) { const a = i / 9 * Math.PI * 2 + 0.2; root([0, -0.06, 0], [Math.cos(a), -0.12 - (i % 3) * 0.05, Math.sin(a)], 1.5 + (i % 2) * 0.3, 0.045); }
+    }
+    if (t.roots === 'buttress') {
+      const shape = new THREE.Shape(); shape.moveTo(0, 0); shape.lineTo(0.95, 0); shape.quadraticCurveTo(0.25, 0.25, 0, 1.3); shape.lineTo(0, 0);
+      const fin = new THREE.ExtrudeGeometry(shape, { depth: 0.08, bevelEnabled: false }).translate(0, 0, -0.04);
+      for (let i = 0; i < 5; i++) plant.add(part(fin, bark, { pos: [0, 0, 0], rot: [0, i / 5 * Math.PI * 2 + 0.3, 0], trait: 'roots' }));
+    }
+    if (t.fallen) for (let i = 0; i < 12; i++) { const a = i * 2.1, r = 0.7 + (i % 4) * 0.35; plant.add(part(SPH, toon(['#c97a24', '#a8541c', '#d9a62c'][i % 3]), { pos: [Math.cos(a) * r, 0.03, Math.sin(a) * r], scale: [0.13, 0.02, 0.08], rot: [0, a, 0], outline: 0, trait: 'leaves' })); }
+
+    creature = g; world.add(g);
+    rig = { kind: 'plant', plant, leaves, leafMat, leafCol, hab, sway: 0.015, ...rigExtra };
+    if (branch) branch.visible = false;   // the rainforest climbing branch is only for animals
+    placeCreature();
+  }
+  // Show how the plant is coping: drooping leaves when dry, pale when dark, swaying hard in bad weather
+  applyPlantMood = function applyPlantMood(gauges) {
+    if (!rig || rig.kind !== 'plant') return;
+    const dry = gauges.pwater.v < 0.36, dark = gauges.light.v < 0.36, rough = gauges.weather.v < 0.36;
+    rig.leaves.forEach(L => { if (!L.userData.crown) L.rotation.z = L.userData.tilt - (dry ? 0.7 : 0); });
+    const c = new THREE.Color(rig.leafCol);
+    if (dry) c.lerp(new THREE.Color('#b59a45'), 0.55);
+    if (dark) c.lerp(new THREE.Color('#d8e6a0'), 0.45);
+    rig.leafMat.color.copy(c);
+    if (rig.clumpMat) rig.clumpMat.color.copy(c).multiplyScalar(0.7);
+    rig.sway = rough ? 0.07 : 0.015;
+  }
+  window.__dbg = () => { _box.setFromObject(creature); return { cam: camera.position.toArray().map(v => +v.toFixed(2)), tgt: controls.target.toArray().map(v => +v.toFixed(2)), min: _box.min.toArray().map(v => +v.toFixed(2)), max: _box.max.toArray().map(v => +v.toFixed(2)), pos: creature.position.toArray() }; };
+}
+new ResizeObserver(() => { if (can3D) resize3D(); if (state.view === 'camo') drawCamo(); if (state.view === 'hunt' && !huntRun) drawHunt(state.hunt.preview || newHunt(state.hunt.set)); }).observe($('#stage'));
+
+// ================= State =================
+const DEFAULT_ANIMAL = { shape: 'fox', coat: 'thin', ears: 'medium', fat: 'little', colour: 'brown', feet: 'plain', water: 'drinks', active: 'day' };
+const DEFAULT_PLANT = { leaves: 'big', surface: 'thin', stem: 'normal', roots: 'deep', height: 'medium' };
+const state = {
+  view: 'habitats',
+  hab: 'desert', orgId: null, seen: new Set(),
+  design: { kind: 'animal', hab: 'desert', animal: { ...DEFAULT_ANIMAL }, plant: { ...DEFAULT_PLANT } },
+  move: { orgId: null, to: null, preds: {}, reason: '', chip: null, result: null, rating: null },
+  eyeAngle: 20, quiz: {}, ppLast: null,
+  fo: { id: 'lion', tag: null, seen: new Set() },
+  hunt: { set: { herd: 5, eyes: 'sides', camo: 'on', pride: 'one', speed: 'fast' }, batches: [], pred: null, msg: '', preview: null },
+  camo: { scene: 'woodland', colour: 'red', running: false, hunts: [], pred: null, msg: '' },
+  gauges: null, bubble: null,
+  mission: null, done: store.get('as2-done', []), designs: store.get('as2-designs', []),
+};
+
+// ================= Shared stage pieces =================
+function setStage({ mode, hab }) {
+  use3D = mode === '3d' && can3D;
+  $('#stage').style.background = { desert: '#ffe2b8', arctic: '#d6e9ff', rainforest: '#cfe8c9', woodland: '#d8ecd0' }[hab || state.hab] || '#d6e9ff';
+  glCanvas.style.display = use3D ? 'block' : 'none';
+  $('#no3d').hidden = mode !== '3d' || can3D;
+  $('#flat').classList.toggle('on', mode !== '3d');
+  if (use3D && hab && hab !== curHab) { curHab = hab; buildHabitat(hab); placeCreature(); }
+  if (use3D) { curHab = hab; resize3D(); }
+}
+function renderGauges(keys, values) {
+  state.gauges = values;
+  if (!keys) { $('#gauges').innerHTML = ''; $('#gauges').style.display = 'none'; return; }
+  $('#gauges').style.display = '';
+  $('#gauges').innerHTML = keys.map(k => {
+    const G = GAUGES[k], g = values[k], [em, label, cls] = gaugeState(k, g);
+    return `<button class="gauge ${cls}" data-act="gauge" data-k="${k}" aria-label="${G.name}: ${label}">
+      <span class="gt"><span class="gi">${G.icon}</span><span class="gn">${G.name}</span></span>
+      <span class="end">${G.top}</span>
+      <span class="tube ${G.tube}"><span class="marker" style="top:${((1 - g.v) * 100).toFixed(0)}%">${em}</span></span>
+      <span class="end">${G.bottom}</span>
+      <span class="gs">${label}</span></button>`;
+  }).join('');
+  updateViewOffset();
+}
+// The gauges cover the left of the 3D view, so shift the picture right to stay centred in the space that's left
+function updateViewOffset() {
+  const s = $('#stage'), w = s.clientWidth, h = s.clientHeight, gEl = $('#gauges');
+  if (!w || !h || !camera) return;
+  const gw = gEl.style.display === 'none' ? 0 : gEl.offsetWidth + 10;
+  if (gw) camera.setViewOffset(w, h, -gw / 2, 0, w, h); else camera.clearViewOffset();
+  camera.updateProjectionMatrix();
+}
+function habBar(title, act, current, disabled = []) {
+  return `<div class="title">${title}</div>` + (act ? HAB_ORDER.map(h => `<button class="btn small ${h === current ? 'active' : ''}" data-act="${act}" data-hab="${h}" ${disabled.includes(h) ? 'disabled' : ''}>${HABITATS[h].icon}<span class="long"> ${HABITATS[h].name}</span></button>`).join('') : '');
+}
+// Speech bubble: anchored to a 3D point, an element, or the top of the stage
+let bubbleAnchor = null;
+function showBubble(html, anchor) {
+  const b = $('#bubble');
+  b.innerHTML = `<button class="x" data-act="bubble-close" aria-label="Close">✕</button>${html}`;
+  b.hidden = false; bubbleAnchor = anchor || null;
+  positionBubble();
+}
+function hideBubble() { $('#bubble').hidden = true; bubbleAnchor = null; }
+function positionBubble() {
+  const b = $('#bubble'); if (b.hidden) return;
+  const st = $('#stage').getBoundingClientRect();
+  let x = st.width / 2, y = 70;
+  if (bubbleAnchor && bubbleAnchor.isVector3) { const v = bubbleAnchor.clone().project(camera); x = (v.x + 1) / 2 * st.width; y = (1 - v.y) / 2 * st.height; }
+  else if (bubbleAnchor instanceof Element) { const r = bubbleAnchor.getBoundingClientRect(); x = r.right - st.left + 10; y = r.top - st.top; }
+  const bw = b.offsetWidth, bh = b.offsetHeight;
+  let left = bubbleAnchor instanceof Element ? x : x + 20, top = bubbleAnchor instanceof Element ? y : y - bh - 10;
+  left = Math.max(8, Math.min(st.width - bw - 8, left)); top = Math.max(8, Math.min(st.height - bh - 90, top));
+  b.style.left = left + 'px'; b.style.top = top + 'px';
+}
+function gaugeBubble(k, el) {
+  const g = state.gauges[k], G = GAUGES[k], [, label] = gaugeState(k, g);
+  const kind = PLANT_GAUGES.includes(k) ? 'plant' : 'animal';
+  const extra = k === 'move' ? `<p class="muted">Getting about on ${MOVE_WHY[state.view === 'design' ? state.design.hab : curHab] || 'the ground'}.</p>` : k === 'hidden' && g.warning ? '<p class="muted">Warning colours are not for hiding – they tell predators to stay away.</p>' : '';
+  showBubble(`<h4>${G.icon} ${G.name}: ${label}</h4>${extra}<ul>${g.items.map(i => `<li>${STATUS[i.st].icon} <b>${traitDef(kind, i.k).name}</b> – ${esc(i.why)}</li>`).join('') || '<li>Nothing here affects this.</li>'}</ul>`, el);
+}
+
+// ================= Views =================
+let afterRender = null;
+function render() {
+  afterRender = null; hideBubble();
+  $$('[data-act=view]').forEach(b => b.classList.toggle('active', b.dataset.view === state.view || (b.dataset.view === 'pp' && PP_VIEWS.includes(state.view))));
+  $('#tray').innerHTML = ''; $('#habbar').innerHTML = ''; $('#habbar').style.left = ''; renderGauges(null);
+  $('#flat').classList.remove('full'); $('#flat').style.padding = '';
+  if (PP_VIEWS.includes(state.view)) state.ppLast = state.view;
+  ({ habitats: viewHabitats, design: viewDesign, move: viewMove, faceoff: viewFaceoff, hunt: viewHunt, eyes: viewEyes, camo: viewCamo })[state.view]();
+  if (afterRender) afterRender();
+}
+
+// ---------- 1. Habitat explorer (photos) ----------
+function viewHabitats() {
+  setStage({ mode: 'flat' });
+  const h = state.hab, org = state.orgId && orgById(state.orgId);
+  $('#habbar').innerHTML = habBar(org ? `${org.em} ${esc(org.name)}` : `${HABITATS[h].icon} ${HABITATS[h].name}: ${HABITATS[h].tag.toLowerCase()}`, org ? null : 'hab', h);
+  $('#flat').classList.add('full');
+  const flat = $('#flat');
+  if (!org) {
+    flat.style.padding = '64px 10px 10px';
+    flat.innerHTML = `<div class="thumbs">${ORGS.filter(o => o.home === h).map(o => {
+      const n = o.features.filter(f => state.seen.has(`${o.id}:${f.id}`)).length;
+      return `<button class="thumb" data-act="org" data-id="${o.id}"><img src="photos/${o.photo}" alt="" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'em',textContent:'${o.em}'}))"><span>${esc(o.name)}</span><small>${n ? `✓ ${n} of ${o.features.length}` : `${o.features.length} features`}</small></button>`;
+    }).join('')}</div>`;
+    $('#drawer').innerHTML = `<div class="card"><h2>${HABITATS[h].icon} ${HABITATS[h].name}</h2>${HABITATS[h].facts.map(f => `<p>${f}</p>`).join('')}</div>
+      <div class="card"><p>Tap a living thing. Each one is <span class="term">adapted</span> to ${HABITATS[h].the}.</p></div>`;
+    return;
+  }
+  flat.style.padding = '60px 10px 88px';   // clear of the title above and the feature chips below
+  flat.innerHTML = `<div class="photo-wrap" id="photoWrap"><img id="orgPhoto" src="photos/${org.photo}" alt="${esc(org.name)}"
+      onerror="document.getElementById('photoWrap').outerHTML='<div class=&quot;nophoto&quot;><div class=&quot;em&quot;>${org.em}</div><p><b>Photo coming soon</b></p><p class=&quot;muted&quot;>Tap the features below.</p></div>'">
+    ${org.features.map((f, i) => org.hs[f.id] ? `<button class="hs ${state.seen.has(`${org.id}:${f.id}`) ? 'seen' : ''}" style="left:${org.hs[f.id][0]}%;top:${org.hs[f.id][1]}%" data-act="feat" data-id="${f.id}" aria-label="${esc(f.label)}">${i + 1}<span class="lab">${esc(f.label)}</span></button>` : '').join('')}
+    ${org.credit ? `<span class="credit">${esc(org.credit)}</span>` : ''}</div>`;
+  $('#tray').innerHTML = `<button class="chip" data-act="org-back">◀ Back<small>${HABITATS[h].name}</small></button>` + org.features.map((f, i) => `<button class="chip ${state.seen.has(`${org.id}:${f.id}`) ? 'help' : ''}" data-act="feat" data-id="${f.id}">${i + 1}. ${esc(f.label)}<small>${state.seen.has(`${org.id}:${f.id}`) ? '✓ found' : 'tap to find out'}</small></button>`).join('');
+  const canMove = org.preset || org.plant;
+  $('#drawer').innerHTML = `<div class="card"><h2>${org.em} ${esc(org.name)}</h2><p>${esc(org.intro)}</p></div>
+    <div class="card"><p class="muted" style="margin-top:0">Found ${org.features.filter(f => state.seen.has(`${org.id}:${f.id}`)).length} of ${org.features.length} features</p>
+    ${canMove ? `<button class="btn primary" data-act="move-this" data-id="${org.id}" style="width:100%">🚚 Move it to another habitat</button>` : ''}</div>`;
+}
+function showFeature(org, f, el) {
+  const [st, why] = featStatus(org, f, org.home);
+  showBubble(`<h4>${esc(f.label)}</h4><p>${esc(f.what)}</p><p><b>${STATUS[st].icon} ${esc(why)}</b></p>`, el);
+}
+
+// Put an animal or plant into the 3D scene (rebuilding only if something changed), then show its gauges
+function showLiving(kind, t, hab) {
+  // Gauges first: the camera framing needs to know how much room they take up
+  if (kind === 'animal') renderGauges(HAB_GAUGES[hab], animalGauges(t, hab));
+  else renderGauges(PLANT_GAUGES, plantGauges(t, hab));
+  if (!can3D) return;
+  const same = creature && creatureKind === kind && JSON.stringify(creatureTraits) === JSON.stringify(t) && (kind === 'animal' || rig.hab === hab);
+  if (!same) { kind === 'animal' ? buildCreature({ ...t }) : buildPlant({ ...t }, hab); frameCamera(true); }
+  else placeCreature();
+  if (kind === 'plant') applyPlantMood(state.gauges);
+}
+
+// ---------- 2. Design a survivor ----------
+function viewDesign() {
+  const D = state.design, kind = D.kind, t = D[kind];
+  $('#habbar').innerHTML = habBar(kind === 'animal' ? '🛠️ Your creature' : '🛠️ Your plant', 'dhab', D.hab);
+  setStage({ mode: '3d', hab: D.hab });
+  showLiving(kind, t, D.hab);
+  const traits = TRAITS[kind];
+  $('#tray').innerHTML = traits.map(tr => { const [st] = traitStatus(kind, tr.key, t[tr.key], D.hab); return `<button class="chip ${st}" data-act="dchip" data-k="${tr.key}">${tr.icon} ${tr.options[t[tr.key]].label}<small>${STATUS[st].icon} ${tr.name}</small></button>`; }).join('');
+  $('#drawer').innerHTML = `<div class="card"><div class="opts"><button class="opt ${kind === 'animal' ? 'on' : ''}" data-act="dkind" data-kind="animal">🦊 Animal</button><button class="opt ${kind === 'plant' ? 'on' : ''}" data-act="dkind" data-kind="plant">🌱 Plant</button></div></div>
+    <div class="card">${traits.map(tr => `<div class="gname">${tr.icon} ${tr.name}</div><div class="opts">${Object.entries(tr.options).map(([k, o]) => `<button class="opt ${t[tr.key] === k ? 'on' : ''}" data-act="dopt" data-key="${tr.key}" data-val="${k}">${o.label}</button>`).join('')}</div>`).join('')}</div>
+    <div class="card"><p style="margin-top:0" class="muted">Watch the gauges change. Tap a gauge to see why.</p><button class="btn primary" data-act="dsave" style="width:100%">🚚 Move my design to a new habitat</button></div>`;
+  checkDesignMission();
+}
+let designHold = null;
+function checkDesignMission() {
+  const D = state.design;
+  if (D.kind !== 'animal') return;
+  const g = state.gauges, ok = HAB_GAUGES[D.hab].every(k => gaugeState(k, g[k])[2] === 'good');
+  const anyProblem = ANIMAL_TRAITS.some(tr => traitStatus('animal', tr.key, D.animal[tr.key], D.hab)[0] === 'problem');
+  clearTimeout(designHold);
+  if (ok && !anyProblem) designHold = setTimeout(() => emit('design-ok', { hab: D.hab }), 1200);
+}
+function saveDesign() {
+  const D = state.design;
+  const d = { id: 'd' + Date.now(), kind: D.kind, home: D.hab, traits: { ...D[D.kind] }, name: `Your ${D.kind} (${HABITATS[D.hab].name})` };
+  state.designs.push(d); if (state.designs.length > 6) state.designs.shift();
+  store.set('as2-designs', state.designs);
+  return d.id;
+}
+function designAsOrg(d) {
+  return { id: d.id, name: d.name, em: d.kind === 'animal' ? '🛠️' : '🌱', kind: d.kind, home: d.home, isDesign: true,
+    preset: d.kind === 'animal' ? d.traits : null, plant: d.kind === 'plant' ? d.traits : null,
+    features: TRAITS[d.kind].map(tr => ({ id: tr.key, label: tr.options[d.traits[tr.key]].label, trait: [tr.key, d.traits[tr.key]] })) };
+}
+const findOrg = id => orgById(id) || (state.designs.find(d => d.id === id) && designAsOrg(state.designs.find(d => d.id === id)));
+
+// ---------- 3. Move it ----------
+const REASONS = ['🌡️ Hotter or colder', '💧 More or less water', '🎨 It would stand out', '☀️ More or less light', '🦶 Different ground'];
+function setMoveOrg(id, to = null) { state.move = { orgId: id, to, preds: {}, reason: '', chips: [], result: null, rating: null }; }
+function viewMove() {
+  const M = state.move, org = M.orgId && findOrg(M.orgId);
+  const choices = ORGS.filter(o => o.preset || o.plant);
+  const chooser = `<div class="card"><h3>${org ? 'Choose another' : '1. Choose a living thing'}</h3><div class="opts">${choices.map(o => `<button class="opt ${M.orgId === o.id ? 'on' : ''}" data-act="morg" data-id="${o.id}">${o.em} ${esc(o.name)}</button>`).join('')}
+    ${state.designs.slice().reverse().map(d => `<button class="opt ${M.orgId === d.id ? 'on' : ''}" data-act="morg" data-id="${d.id}">${d.kind === 'animal' ? '🛠️' : '🌱'} ${esc(d.name)}</button>`).join('')}</div></div>`;
+  if (!org) {
+    setStage({ mode: 'flat' }); $('#flat').classList.add('full');
+    $('#flat').innerHTML = `<div class="nophoto"><div class="em">🚚</div><p><b>Move a living thing to a new habitat.</b></p><p class="muted">Choose one, predict what will happen, then move it!</p></div>`;
+    $('#drawer').innerHTML = chooser;
+    return;
+  }
+  const hab = M.result ? M.to : org.home;
+  $('#habbar').innerHTML = habBar(`${org.em} ${esc(org.name)} in ${HABITATS[hab].the} ${HABITATS[hab].icon}`);
+  setStage({ mode: '3d', hab });
+  showLiving(org.kind, org.kind === 'animal' ? org.preset : org.plant, hab);
+  // Tray: one chip per feature, showing the prediction and then what happened
+  $('#tray').innerHTML = org.features.map((f, i) => {
+    const r = M.result && M.result.find(x => x.f.id === f.id), p = M.preds[f.id];
+    const cls = r ? r.now[0] : '';
+    const sub = r ? `<span class="res">${r.correct ? '✔' : '✘'} ${r.now[0] === 'help' ? 'Still helps' : 'Stops helping'}</span>` : p ? (p === 'help' ? '👍 You: still helps' : '👎 You: stops helping') : 'Predict →';
+    return `<button class="chip ${cls}" data-act="mchipfeat" data-id="${f.id}">${esc(f.label)}<small>${sub}</small></button>`;
+  }).join('');
+  let side = '';
+  if (!M.to) side = `<div class="card"><h3>2. Where will it go?</h3><div class="opts">${HAB_ORDER.map(h => `<button class="opt" data-act="mto" data-hab="${h}" ${h === org.home ? 'disabled' : ''}>${HABITATS[h].icon} ${HABITATS[h].name}</button>`).join('')}</div></div>`;
+  else if (!M.result) {
+    const all = org.features.every(f => M.preds[f.id]), ready = all && (M.chips.length > 0 || M.reason.trim().length >= 3);
+    side = `<div class="card"><h3>3. Predict 🤔</h3><p class="muted" style="margin-top:0">Moving to ${HABITATS[M.to].icon} <b>${HABITATS[M.to].the}</b>. Will each feature still help?</p>
+      ${org.features.map(f => `<div class="gname">${esc(f.label)}</div><div class="opts"><button class="opt yes ${M.preds[f.id] === 'help' ? 'on' : ''}" data-act="mpred" data-id="${f.id}" data-val="help">👍 Still helps</button><button class="opt no ${M.preds[f.id] === 'stop' ? 'on' : ''}" data-act="mpred" data-id="${f.id}" data-val="stop">👎 Stops helping</button></div>`).join('')}</div>
+      <div class="card"><h3>Why? <span class="muted">Choose all that apply</span></h3><div class="opts">${REASONS.map((c, i) => `<button class="opt ${M.chips.includes(i) ? 'on' : ''}" data-act="mreason" data-i="${i}" aria-pressed="${M.chips.includes(i)}">${c}</button>`).join('')}</div>
+      <textarea id="moveReason" placeholder="Or type your own reason…" style="margin-top:6px">${esc(M.reason)}</textarea>
+      <button class="btn go" id="moveGo" data-act="mgo" ${ready ? '' : 'disabled'} style="margin-top:6px">🚚 Move it!</button>
+      <p class="muted" id="moveHint">${ready ? '' : !all ? 'Predict every feature first.' : 'Pick or type a reason.'}</p></div>`;
+  } else {
+    const right = M.result.filter(r => r.correct).length;
+    side = `<div class="card"><h3>Results ${HABITATS[M.to].icon}</h3><p class="score">${right} of ${M.result.length} predictions right</p>
+      ${M.chips.length || M.reason ? `<p class="note"><b>Your reasons:</b> ${esc([...M.chips.map(i => REASONS[i]), M.reason].filter(Boolean).join(' · '))}</p>` : ''}
+      <p class="muted">Tap a feature below, or a gauge, to see why.</p></div>
+      <div class="card"><h3>How close was your prediction?</h3><div class="opts">${['🎯 Spot on', '👌 Quite close', '🤏 Not very close'].map((t, i) => `<button class="opt ${M.rating === i ? 'on' : ''}" data-act="mrate" data-i="${i}">${t}</button>`).join('')}</div>
+      ${M.rating !== null ? `<p>${['Brilliant – you used what you know about habitats!', 'Good thinking! Check the ones marked ✘.', 'That\'s fine – scientists often get surprises. Check the ones marked ✘.'][M.rating]}</p>` : ''}</div>
+      <div class="note">🧠 The ${esc(org.name.toLowerCase())}'s body does <b>not</b> change. It is adapted to ${HABITATS[org.home].the}.</div>
+      <button class="btn" data-act="mreset">🔁 Try another habitat</button>`;
+  }
+  $('#drawer').innerHTML = side + chooser;
+}
+function runMove() {
+  const M = state.move, org = findOrg(M.orgId);
+  M.result = org.features.map(f => { const now = featStatus(org, f, M.to), pred = M.preds[f.id]; return { f, now, pred, correct: (pred === 'help') === (now[0] === 'help') }; });
+  render();
+  emit('move', { org: org.id, isDesign: !!org.isDesign, to: M.to, result: M.result, name: org.name });
+}
+
+// ---------- 4. Eyes ----------
+const EYE_HALF = 85;
+const eyeStats = a => ({ total: Math.min(360, 2 * EYE_HALF + 2 * a), both: Math.max(0, 2 * EYE_HALF - 2 * a) });
+function eyesSVG(a) {
+  const C = 200, R = 170, pt = (deg, r) => [C + r * Math.sin(deg * Math.PI / 180), C - r * Math.cos(deg * Math.PI / 180)];
+  const wedge = dir => { const p1 = pt(dir - EYE_HALF, R), p2 = pt(dir + EYE_HALF, R); return `<path d="M${C},${C} L${p1} A${R},${R} 0 0 1 ${p2} Z" fill="#ffd23f" fill-opacity=".4" stroke="#e0a800" stroke-width="1.5"/>`; };
+  const diff = (x, y) => Math.abs(((x - y) % 360 + 540) % 360 - 180);
+  const sees = deg => diff(deg, -a) <= EYE_HALF || diff(deg, a) <= EYE_HALF;
+  const st = eyeStats(a);
+  let s = `<circle cx="${C}" cy="${C}" r="${R + 22}" fill="#8cc56b"/><circle cx="${C}" cy="${C}" r="${R}" fill="#9fd07c"/>` + wedge(-a) + wedge(a);
+  if (st.both > 0) { const [x, y] = pt(0, 118); s += `<text x="${x}" y="${y}" text-anchor="middle" font-size="15" font-weight="700" fill="#5a3d00" font-family="Fredoka">both eyes</text>`; }
+  if (360 - st.total > 4) { const [x, y] = pt(180, 120); s += `<text x="${x}" y="${y}" text-anchor="middle" font-size="15" font-weight="700" fill="#2d4a1e" font-family="Fredoka">can't see</text>`; }
+  s += `<ellipse cx="${C}" cy="${C + 44}" rx="30" ry="46" fill="#a0714a" stroke="#5e3b22" stroke-width="2.5"/><circle cx="${C}" cy="${C}" r="30" fill="#b9875a" stroke="#5e3b22" stroke-width="2.5"/><ellipse cx="${C}" cy="${C - 30}" rx="13" ry="16" fill="#c99a6d" stroke="#5e3b22" stroke-width="2.5"/><circle cx="${C}" cy="${C - 44}" r="4" fill="#222"/>`;
+  for (const side of [-1, 1]) { const [ex, ey] = pt(side * a, 26), [px, py] = pt(side * a, 29); s += `<circle cx="${ex}" cy="${ey}" r="8" fill="#fff" stroke="#222" stroke-width="2"/><circle cx="${px}" cy="${py}" r="4" fill="#222"/>`; }
+  const [mx, my] = pt(0, 150); s += `<text x="${mx}" y="${my + 8}" text-anchor="middle" font-size="24">🐭</text>`;
+  let spotted = 0;
+  for (let k = 0; k < 8; k++) { const deg = 22.5 + k * 45, [x, y] = pt(deg, 150), seen = sees(deg); if (seen) spotted++; s += `<circle cx="${x}" cy="${y}" r="17" fill="${seen ? '#fff' : '#6d8a5c'}" stroke="${seen ? '#22b07d' : '#3c5530'}" stroke-width="3"/><text x="${x}" y="${y + 7}" text-anchor="middle" font-size="19" opacity="${seen ? 1 : .35}">🦊</text>`; }
+  return { svg: `<svg id="eyeSvg" viewBox="0 0 400 400" role="img" aria-label="What the animal can see, from above">${s}</svg>`, spotted, st };
+}
+function eyeReadout(a) {
+  const { spotted, st } = eyesSVG(a);
+  return `<p>👀 Sees <b>${st.total}°</b> of 360° all around</p><p>🦊 Spots <b>${spotted} of 8</b> sneaky foxes</p><p>🐭 Judging distance to the mouse: <b>${st.both >= 60 ? 'easy – both eyes' : st.both > 0 ? 'quite hard' : 'hard – one eye only'}</b></p>`;
+}
+function viewEyes() {
+  ppBar();
+  setStage({ mode: 'flat' }); $('#flat').classList.add('full'); $('#flat').style.padding = '62px 10px 10px';
+  $('#flat').innerHTML = eyesSVG(state.eyeAngle).svg;
+  const Q = state.quiz;
+  const q = (id, text, ans) => `<div class="gname">${text}</div><div class="opts">${[['front', 'At the front'], ['sides', 'On the sides']].map(([v, t]) => `<button class="opt ${Q[id] === v ? 'on' : ''}" data-act="quiz" data-id="${id}" data-val="${v}">${t}</button>`).join('')}</div>${Q[id] ? `<p>${Q[id] === ans ? '✅ Yes!' : '❌ Not quite.'}</p>` : ''}`;
+  $('#drawer').innerHTML = `<div class="card"><h3>👀 Move the eyes</h3><input type="range" id="eyeSlider" min="10" max="90" step="1" value="${state.eyeAngle}" aria-label="Where are the eyes?">
+    <div class="range-ends"><span>◀ At the front</span><span>On the sides ▶</span></div>
+    <div class="opts" style="margin-top:10px"><button class="opt" data-act="eyepreset" data-val="15">🦉 Owl</button><button class="opt" data-act="eyepreset" data-val="80">🐇 Rabbit</button></div></div>
+    <div class="card" id="eyeReadout">${eyeReadout(state.eyeAngle)}</div>
+    <div class="card"><p style="margin-top:0"><b>Prey</b> need a <b>wide view</b> to spot danger.</p><p><b>Predators</b> use <b>both eyes</b> to judge distance before they pounce.</p></div>
+    <div class="card"><h3>✏️ Check</h3>${q('rabbit', 'Rabbits are prey. Where are their eyes?', 'sides')}${q('owl', 'Owls are predators. Where are their eyes?', 'front')}</div>`;
+  afterRender = () => $('#eyeSlider').addEventListener('input', e => {
+    state.eyeAngle = +e.target.value; $('#eyeSvg').outerHTML = eyesSVG(state.eyeAngle).svg; $('#eyeReadout').innerHTML = eyeReadout(state.eyeAngle);
+  });
+}
+
+// ---------- 5. Camouflage hunt ----------
+const SCENES = {
+  woodland: { name: 'Woodland floor', icon: '🍂', base: '#6b4424', pal: ['#7a4a26', '#a0622d', '#c58b3c', '#5d7a2e', '#3f2a18', '#b5762f', '#8c5a2e'], shape: 'leaf', match: 'brown' },
+  desert: { name: 'Desert sand', icon: '🏜️', base: '#e0b46a', pal: ['#e3b66c', '#d29d52', '#f0cf8f', '#c48a45', '#e8c27e', '#d9a95c'], shape: 'pebble', match: 'sandy' },
+  snow: { name: 'Arctic snow', icon: '❄️', base: '#eef3fa', pal: ['#ffffff', '#e6eef8', '#dbe5f1', '#f5f8fc', '#f2f6fb', '#e9eff7'], shape: 'pebble', match: 'white' },
+  rainforest: { name: 'Rainforest leaves', icon: '🌿', base: '#245c2b', pal: ['#2f7d32', '#3f9a45', '#1f5e2a', '#5cb35a', '#3a8c3e', '#2a6b30'], shape: 'leaf', match: 'green' },
+};
+const PREY_COLOURS = { red: ['Bright red', '#e53b2f'], yellow: ['Yellow', '#ffd23f'], white: ['White', '#f2f6fb'], sandy: ['Sandy', '#d9a95c'], brown: ['Brown', '#8c5a2e'], green: ['Green', '#3a8c3e'] };
+const HUNT_TIME = 40, PREY_N = 6;
+let camoRun = null, camoScene = null;
+function viewCamo() {
+  const C = state.camo, last = C.hunts[C.hunts.length - 1], needPred = C.hunts.length > 0 && !C.pred;
+  ppBar();
+  setStage({ mode: 'flat' }); $('#flat').classList.add('full'); $('#flat').style.padding = '62px 10px 10px';
+  $('#flat').innerHTML = `<div class="camo-wrap"><canvas id="camoCanvas" aria-label="Camouflage hunt"></canvas>
+    <div class="camo-hud"><span id="camoFound">Found: 0 / ${PREY_N}</span><span id="camoTime">⏱️ ${HUNT_TIME} s</span></div>
+    ${C.running ? '' : `<div class="camo-cover">Find the ${PREY_N} hidden bugs!<br>Press Start when ready.</div>`}</div>`;
+  const fmt = v => ({ harder: 'Harder', easier: 'Easier', same: 'About the same' })[v];
+  $('#drawer').innerHTML = `<div class="card"><h3>1. Place</h3><div class="opts">${Object.entries(SCENES).map(([k, s]) => `<button class="opt ${C.scene === k ? 'on' : ''}" data-act="cscene" data-val="${k}">${s.icon} ${s.name}</button>`).join('')}</div></div>
+    <div class="card"><h3>2. Bug colour: ${PREY_COLOURS[C.colour][0]}</h3><div class="opts">${Object.entries(PREY_COLOURS).map(([k, [n, hex]]) => `<button class="swatch ${C.colour === k ? 'on' : ''}" style="background:${hex}" data-act="ccolour" data-val="${k}" aria-label="${n}"></button>`).join('')}</div></div>
+    ${C.hunts.length ? `<div class="card"><h3>3. Predict 🤔</h3><p class="muted" style="margin-top:0">Compared with last time (${PREY_COLOURS[last.colour][0].toLowerCase()} on ${SCENES[last.scene].name.toLowerCase()}):</p><div class="opts">${['easier', 'harder', 'same'].map(v => `<button class="opt ${C.pred === v ? 'on' : ''}" data-act="cpred" data-val="${v}">${fmt(v)}</button>`).join('')}</div></div>` : ''}
+    <button class="btn go" data-act="cstart" ${C.running || needPred ? 'disabled' : ''}>🔍 Start the hunt</button>
+    ${C.msg ? `<div class="card"><p style="margin:0">${C.msg}</p></div>` : ''}
+    ${C.hunts.length ? `<div class="card"><table class="results"><tr><th>#</th><th>Colour</th><th>Found</th><th>Time</th></tr>${C.hunts.map((h, i) => `<tr><td>${i + 1} ${SCENES[h.scene].icon}</td><td>${PREY_COLOURS[h.colour][0]}</td><td>${h.found}/${PREY_N}</td><td>${h.time} s</td></tr>`).join('')}</table></div>` : ''}
+    <div class="card"><p style="margin:0">🦎 <span class="term">Camouflage</span>: colours that match the surroundings, so predators can't see you.</p></div>`;
+  afterRender = setupCamoCanvas;
+}
+function makeCamoScene(key) {
+  const sc = SCENES[key], blobs = [];
+  for (let i = 0; i < 520; i++) blobs.push({ x: Math.random(), y: Math.random(), r: 0.6 + Math.random() * 0.9, a: Math.random() * Math.PI, c: sc.pal[Math.floor(Math.random() * sc.pal.length)] });
+  const prey = [];
+  while (prey.length < PREY_N) { const p = { x: 0.06 + Math.random() * 0.88, y: 0.12 + Math.random() * 0.8, a: Math.random() * Math.PI * 2, found: false }; if (prey.every(q => Math.hypot(q.x - p.x, (q.y - p.y) * 0.62) > 0.14)) prey.push(p); }
+  return { key, blobs, prey };
+}
+function drawCamo() {
+  const cv = $('#camoCanvas'); if (!cv) return;
+  const C = state.camo, sc = SCENES[C.scene], W = cv.clientWidth, H = cv.clientHeight;
+  if (!W || !H) return;
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  if (cv.width !== Math.round(W * dpr) || cv.height !== Math.round(H * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
+  const ctx = cv.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  if (!camoScene || camoScene.key !== C.scene) camoScene = makeCamoScene(C.scene);
+  const u = Math.min(W, H * 1.6) / 40;
+  ctx.fillStyle = sc.base; ctx.fillRect(0, 0, W, H);
+  for (const b of camoScene.blobs) {
+    ctx.save(); ctx.translate(b.x * W, b.y * H); ctx.rotate(b.a); ctx.fillStyle = b.c; ctx.beginPath();
+    if (sc.shape === 'leaf') ctx.ellipse(0, 0, u * b.r * 1.15, u * b.r * 0.55, 0, 0, Math.PI * 2); else ctx.ellipse(0, 0, u * b.r * 0.75, u * b.r * 0.6, 0, 0, Math.PI * 2);
+    ctx.fill();
+    if (sc.shape === 'leaf') { ctx.strokeStyle = 'rgba(0,0,0,.18)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(-u * b.r, 0); ctx.lineTo(u * b.r, 0); ctx.stroke(); }
+    ctx.restore();
+  }
+  const run = camoRun, showAll = !run && C.hunts.length && C.lastScene === C.scene && camoScene.lastPrey;
+  if (run || showAll) {
+    const col = PREY_COLOURS[run ? run.colour : C.hunts[C.hunts.length - 1].colour][1];
+    for (const p of (run ? run.prey : camoScene.lastPrey)) {
+      ctx.save(); ctx.translate(p.x * W, p.y * H); ctx.rotate(p.a);
+      ctx.fillStyle = col; ctx.strokeStyle = shadeHex(col, -0.35); ctx.lineWidth = 1;
+      for (const s of [-1, 1]) for (const k of [-0.35, 0, 0.35]) { ctx.beginPath(); ctx.moveTo(k * u, 0); ctx.lineTo(k * u + 0.25 * u, s * 0.62 * u); ctx.stroke(); }
+      ctx.beginPath(); ctx.ellipse(0, 0, 0.62 * u, 0.42 * u, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.arc(0.66 * u, 0, 0.2 * u, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.restore();
+      if (p.found || showAll) { ctx.strokeStyle = p.found ? '#ffd23f' : '#ff5f6d'; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(p.x * W, p.y * H, u * 1.25, 0, Math.PI * 2); ctx.stroke(); }
+    }
+  }
+}
+function setupCamoCanvas() {
+  drawCamo();
+  const cv = $('#camoCanvas');
+  cv.addEventListener('pointerdown', e => {
+    if (!camoRun) return;
+    const r = cv.getBoundingClientRect(), x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height, u = Math.min(r.width, r.height * 1.6) / 40;
+    const hit = camoRun.prey.find(p => !p.found && Math.hypot((p.x - x) * r.width, (p.y - y) * r.height) < u * 1.5);
+    if (hit) { hit.found = true; drawCamo(); const n = camoRun.prey.filter(p => p.found).length; $('#camoFound').textContent = `Found: ${n} / ${PREY_N}`; if (n === PREY_N) endHunt(); }
+  });
+  if (camoRun) tickHunt();
+  $('#banner').style.visibility = camoRun ? 'hidden' : '';
+}
+function startHunt() {
+  const C = state.camo;
+  camoScene = makeCamoScene(C.scene);
+  camoRun = { prey: camoScene.prey, colour: C.colour, scene: C.scene, t0: performance.now(), pred: C.pred };
+  C.running = true; C.msg = ''; render();
+}
+function tickHunt() {
+  if (!camoRun) return;
+  const left = Math.max(0, HUNT_TIME - (performance.now() - camoRun.t0) / 1000);
+  const el = $('#camoTime'); if (el) el.textContent = `⏱️ ${Math.ceil(left)} s`;
+  if (left <= 0) { endHunt(); return; }
+  requestAnimationFrame(tickHunt);
+}
+function cancelHunt() { if (!camoRun) return; camoRun = null; state.camo.running = false; $('#banner').style.visibility = ''; }
+function endHunt() {
+  const C = state.camo, run = camoRun; if (!run) return;
+  camoRun = null; C.running = false;
+  const found = run.prey.filter(p => p.found).length;
+  const time = found === PREY_N ? Math.round((performance.now() - run.t0) / 100) / 10 : HUNT_TIME;
+  const camo = SCENES[run.scene].match === run.colour, prev = C.hunts[C.hunts.length - 1];
+  C.hunts.push({ scene: run.scene, colour: run.colour, found, time, camo }); C.lastScene = run.scene; camoScene.lastPrey = run.prey;
+  let msg = found === PREY_N ? `All ${PREY_N} found in <b>${time} s</b>.` : `Time's up! <b>${found} of ${PREY_N}</b> found. Missed bugs are circled in red.`;
+  if (prev) {
+    const out = found < prev.found || (found === prev.found && time > prev.time * 1.15) ? 'harder' : found > prev.found || (found === prev.found && time < prev.time * 0.85) ? 'easier' : 'same';
+    const word = { harder: 'harder', easier: 'easier', same: 'about the same' };
+    msg += ` That was <b>${word[out]}</b> than last time.`;
+    if (run.pred) msg += run.pred === out ? ' 🎯 Your prediction was right!' : ` You predicted ${word[run.pred]}.`;
+  }
+  if (camo) msg += ' 🦎 Those bugs were <b>camouflaged</b>.';
+  C.msg = msg; C.pred = null; render();
+  emit('hunt', { camo, hadNonCamo: C.hunts.slice(0, -1).some(h => !h.camo) });
+}
+
+// ---------- Predator & prey: the umbrella for face-offs, the hunt simulator, eyes and camouflage ----------
+const PP_TABS = [['faceoff', '⚔️ Face-offs'], ['hunt', '🦓 Hunt simulator'], ['eyes', '👀 Eyes'], ['camo', '🦎 Camouflage']];
+const PP_VIEWS = PP_TABS.map(t => t[0]);
+function ppBar() {
+  $('#habbar').style.left = '10px';
+  $('#habbar').innerHTML = PP_TABS.map(([v, t]) => `<button class="btn small ${state.view === v ? 'active' : ''}" data-act="pptab" data-v="${v}">${t}</button>`).join('');
+}
+
+// ---------- Face-offs: one predator and its prey, each adaptation shown beside the one that answers it ----------
+const FO_TAGS = {
+  groups: 'Living in groups', pack: 'Hunting as a team', camouflage: 'Camouflage', speed: 'Speed', eyes: 'Eye position',
+  senses: 'Super senses', weapons: 'Teeth, claws and talons', ambush: 'Lying in wait', armour: 'Spines', warning: 'Warning colours and poison',
+  hiding: 'Hiding places', stealth: 'Moving silently', fight: 'Fighting back',
+};
+const T_ = (i, t, w, tag) => ({ i, t, w, tag });
+const FACEOFFS = [
+  { id: 'lion', hab: '🌾 African savanna', pred: ['🦁', 'Lion'], prey: ['🦓', 'Zebra'],
+    intro: 'Lions hunt zebras on the open grassland.',
+    rows: [
+      [T_('👥', 'Hunts as a team', 'Lionesses often hunt together, creeping up from different sides.', 'pack'), T_('🦓', 'Lives in a big herd', 'Lots of eyes and ears spot danger sooner, and it\'s hard for a lion to pick out just one zebra.', 'groups')],
+      [T_('🟫', 'Sandy-coloured coat', 'It blends in with the dry grass, so it can creep up close.', 'camouflage'), T_('👀', 'Eyes on the sides', 'It can see nearly all the way round, even while it eats.', 'eyes')],
+      [T_('🎯', 'Eyes facing forwards', 'Both eyes judge exactly how far away the zebra is before it pounces.', 'eyes'), T_('💨', 'Runs fast for a long time', 'Lions can only sprint a short way. A zebra that spots the lion early can outrun it.', 'speed')],
+      [T_('🦷', 'Sharp teeth and claws', 'For catching and holding on to its prey.', 'weapons'), T_('🦵', 'Powerful kick', 'A zebra\'s kick can badly hurt a lion.', 'fight')],
+    ] },
+  { id: 'cheetah', hab: '🌾 African savanna', pred: ['🐆', 'Cheetah'], prey: ['🦌', 'Gazelle'],
+    intro: 'The fastest land animal against one of the best dodgers.',
+    rows: [
+      [T_('💨', 'Fastest animal on land', 'It can sprint at about 100 km/h – but only for a short distance before it tires.', 'speed'), T_('↯', 'Zigzags as it runs', 'Sudden turns make the cheetah slow down. If the gazelle keeps going, the cheetah gives up.', 'speed')],
+      [T_('🐆', 'Spotty coat', 'Spots blend in with the light and shade in long grass, so it gets close before it sprints.', 'camouflage'), T_('🟫', 'Sandy colour', 'Its colour blends in with the dry grass and soil.', 'camouflage')],
+      [T_('👟', 'Claws that grip like running spikes', 'Its claws stay out, gripping the ground as it sprints and turns.', 'weapons'), T_('👀', 'Eyes on the sides', 'It can watch for danger all around while it grazes.', 'eyes')],
+      [T_('🎯', 'Eyes facing forwards', 'Both eyes judge how far away the gazelle is.', 'eyes'), T_('🦌', 'Lives in a herd', 'More eyes watching means danger is spotted sooner.', 'groups')],
+    ] },
+  { id: 'owl', hab: '🌲 European woodland', pred: ['🦉', 'Tawny owl'], prey: ['🐭', 'Wood mouse'],
+    intro: 'A night-time hunt on the woodland floor.',
+    rows: [
+      [T_('🤫', 'Silent flight', 'Soft, fringed edges on its feathers make almost no sound.', 'stealth'), T_('👂', 'Big ears', 'It listens for danger all the time.', 'senses')],
+      [T_('🌙', 'Sees and hears well at night', 'Huge eyes let in lots of light, and it can find a mouse just from its rustling.', 'senses'), T_('👁️', 'Big eyes, out at night', 'It feeds in the dark, when it is harder to see.', 'senses')],
+      [T_('🦅', 'Sharp talons', 'Long, curved claws grab the prey.', 'weapons'), T_('🕳️', 'Hides in burrows and under leaves', 'It is never far from a hiding place.', 'hiding')],
+      [T_('🍂', 'Brown, speckled feathers', 'By day it rests unseen against the tree bark.', 'camouflage'), T_('🟫', 'Brown fur', 'It blends in with the soil and dead leaves.', 'camouflage')],
+    ] },
+  { id: 'polarbear', hab: '🧊 Arctic sea ice', pred: ['🐻‍❄️', 'Polar bear'], prey: ['🦭', 'Ringed seal'],
+    intro: 'Polar bears hunt seals on the sea ice.',
+    rows: [
+      [T_('⬜', 'White fur', 'It blends in with the snow and ice.', 'camouflage'), T_('👀', 'Always watchful', 'It lifts its head often to look around, and rests right next to the water.', 'eyes')],
+      [T_('👃', 'Amazing sense of smell', 'It can smell a seal from far away – even under the snow.', 'senses'), T_('🏔️', 'Snow dens', 'Mother seals hide their pups in dens dug into the snow on the ice.', 'hiding')],
+      [T_('⏳', 'Waits very still at a breathing hole', 'When the seal comes up for air, the bear is ready.', 'ambush'), T_('🌊', 'Escapes into the water', 'It is a fast swimmer, and the bear can\'t follow it under the ice.', 'speed')],
+    ] },
+  { id: 'eagle', hab: '🏜️ Kalahari Desert', pred: ['🦅', 'Martial eagle'], prey: ['🐿️', 'Meerkats'],
+    intro: 'Meerkats are always on the lookout for eagles.',
+    rows: [
+      [T_('🔭', 'Super-sharp eyesight', 'From high in the sky it can spot a meerkat far below.', 'senses'), T_('🧍', 'A lookout on guard', 'One meerkat stands on watch while the others look for food.', 'groups')],
+      [T_('🪂', 'Swoops down fast', 'It dives from the sky at great speed.', 'speed'), T_('📣', 'Alarm calls', 'The lookout gives a warning call, and everyone runs.', 'groups')],
+      [T_('🦅', 'Huge, sharp talons', 'For grabbing prey from the ground.', 'weapons'), T_('🕳️', 'Dives into burrows', 'Burrows are everywhere, so safety is never far away.', 'hiding')],
+      [null, T_('👨‍👩‍👧', 'Lives in a big group', 'A group of meerkats is called a mob. More eyes means more safety.', 'groups')],
+    ] },
+  { id: 'badger', hab: '🌲 European woodland', pred: ['🦡', 'Badger'], prey: ['🦔', 'Hedgehog'],
+    intro: 'Badgers are one of the few animals that can get past a hedgehog\'s spines.',
+    rows: [
+      [T_('💪', 'Very strong claws', 'They are strong enough to unroll a hedgehog.', 'weapons'), T_('🦔', 'Spines', 'About 5,000 to 7,000 sharp spines.', 'armour')],
+      [T_('👃', 'Excellent sense of smell', 'It sniffs out food in the dark.', 'senses'), T_('⚪', 'Rolls into a ball', 'It tucks in its face and soft belly, so only spines show.', 'armour')],
+      [T_('🌙', 'Hunts at night', 'It comes out at dusk to look for food.', 'senses'), T_('🌿', 'Hides in hedges by day', 'It rests in a nest of leaves, out of sight.', 'hiding')],
+    ] },
+  { id: 'croc', hab: '🌊 African river', pred: ['🐊', 'Crocodile'], prey: ['🐃', 'Wildebeest'],
+    intro: 'Every year, huge herds of wildebeest must cross rivers full of crocodiles.',
+    rows: [
+      [T_('👁️', 'Eyes and nostrils on top of its head', 'It can watch and breathe while almost all of its body is hidden underwater.', 'ambush'), T_('🐃', 'Huge herds', 'Thousands cross together, so each one is less likely to be caught.', 'groups')],
+      [T_('⏳', 'Waits very still', 'It can lie in wait for a long time without moving.', 'ambush'), T_('👀', 'Drinks carefully', 'With eyes on the sides of its head, it watches the water as it drinks.', 'eyes')],
+      [T_('🐊', 'Very strong jaws', 'One of the strongest bites of any animal.', 'weapons'), T_('💨', 'Crosses in a rush', 'The herd crosses fast, all together.', 'speed')],
+    ] },
+  { id: 'frog', hab: '🌴 Rainforest', pred: ['🐍', 'Snake'], prey: ['🐸', 'Poison dart frog'],
+    intro: 'Most predators leave poison dart frogs alone – only a few snakes can eat them.',
+    rows: [
+      [T_('👅', 'Flicks its tongue to smell the air', 'It tracks prey by smell.', 'senses'), T_('🎨', 'Bright warning colours', 'They tell predators: "I\'m poisonous – don\'t eat me!"', 'warning')],
+      [T_('⚡', 'Strikes very fast', 'It lunges quicker than its prey can react.', 'speed'), T_('☠️', 'Poison in its skin', 'Predators that try to eat it get very ill, and learn to stay away.', 'warning')],
+      [T_('🍃', 'Green or brown camouflage', 'It blends in with leaves and branches.', 'camouflage'), T_('☀️', 'Out in the daytime', 'Few predators dare to eat it, so it can look for food in daylight.', 'warning')],
+    ] },
+];
+const bothCamo = f => f.rows.some(r => r[0] && r[0].tag === 'camouflage') && f.rows.some(r => r[1] && r[1].tag === 'camouflage');
+function viewFaceoff() {
+  ppBar();
+  const F = FACEOFFS.find(f => f.id === state.fo.id), tag = state.fo.tag;
+  state.fo.seen.add(F.id);
+  setStage({ mode: 'flat' }); $('#flat').classList.add('full'); $('#flat').style.padding = '62px 10px 10px';
+  const tool = (x, side, r) => x ? `<button class="fo-tool ${side} ${tag && x.tag === tag ? 'hit' : ''}" data-act="fotool" data-r="${r}" data-s="${side}"><span class="fi">${x.i}</span>${esc(x.t)}</button>` : '<span></span>';
+  $('#flat').innerHTML = `<div class="faceoff">
+    <div class="fo-head"><div class="fo-animal pred"><span class="fo-em">${F.pred[0]}</span><span class="fo-name">${F.pred[1]}</span><span class="fo-role">Predator</span></div>
+      <div class="fo-vs">VS</div><div class="fo-animal prey"><span class="fo-em">${F.prey[0]}</span><span class="fo-name">${F.prey[1]}</span><span class="fo-role">Prey</span></div></div>
+    <div class="fo-hab">${F.hab} · ${esc(F.intro)}</div>
+    <div class="fo-rows"><div class="fo-col-h">Helps it hunt</div><span></span><div class="fo-col-h">Helps it stay safe</div>
+      ${F.rows.map((r, k) => `${tool(r[0], 'pred', k)}<span class="fo-link">⇄</span>${tool(r[1], 'prey', k)}`).join('')}</div></div>`;
+  $('#drawer').innerHTML = `<div class="card"><h3>⚔️ Choose a face-off</h3><div class="fo-pick">${FACEOFFS.map(f => `<button class="opt ${f.id === F.id ? 'on' : ''}" data-act="fopick" data-id="${f.id}">${f.pred[0]} vs ${f.prey[0]}${state.fo.seen.has(f.id) ? ' ✓' : ''}</button>`).join('')}</div>
+      <p class="muted" style="margin-bottom:0">${state.fo.seen.size} of ${FACEOFFS.length} explored. Tap any adaptation to find out more.</p></div>
+    <div class="card"><h3>🔎 Find an adaptation</h3><div class="opts">${Object.entries(FO_TAGS).map(([k, t]) => `<button class="opt ${tag === k ? 'on' : ''}" data-act="fotag" data-v="${k}">${t}</button>`).join('')}</div>
+      ${tag ? `<p class="muted" style="margin-bottom:0">Found in: ${FACEOFFS.filter(f => f.rows.some(r => r.some(x => x && x.tag === tag))).map(f => `${f.pred[0]} vs ${f.prey[0]}`).join(' · ')}</p>` : ''}</div>
+    <div class="card"><p style="margin:0">Each <b>predator</b> adaptation on the left is answered by a <b>prey</b> adaptation on the right ⇄. Some adaptations, like camouflage, help <b>both</b> sides!</p></div>`;
+  emit('faceoff', { id: F.id });
+}
+
+// ---------- Hunt simulator: a lion creeps up on a herd of zebras, seen from above ----------
+// Distances are in "steps" across a 1000 × 600 field. The rules are simple on purpose: a zebra can only
+// spot the lion while its head is up and the lion is inside its view; camouflage shortens how far away it can be spotted.
+const HS = {
+  W: 1000, H: 600, creep: 32, sprint: 118, sprintTime: 5, pounce: 24,
+  zebraSpeed: { fast: 92, slow: 70 }, spotRange: { on: 160, off: 360 }, view: { sides: 160, front: 70 },
+};
+const HUNT_SETTINGS = [
+  ['herd', 'Herd size', [[1, '1 zebra'], [5, '5 zebras'], [20, '20 zebras']]],
+  ['eyes', 'Zebras\' eyes', [['sides', 'On the sides'], ['front', 'At the front']]],
+  ['camo', 'Lion\'s camouflage', [['on', 'Blends in'], ['off', 'Stands out']]],
+  ['pride', 'Hunters', [['one', '1 lion'], ['pride', 'Team of 3']]],
+  ['speed', 'Zebras\' speed', [['fast', 'Fast'], ['slow', 'Slow']]],
+];
+function newHunt(set, rnd = Math.random) {
+  const n = set.herd, R = 22 + Math.sqrt(n) * 18, zebras = [];
+  for (let k = 0; k < n; k++) {
+    const a = rnd() * Math.PI * 2, r = R * Math.sqrt(rnd());
+    zebras.push({ x: 640 + Math.cos(a) * r, y: 300 + Math.sin(a) * r * 0.8, head: rnd() * Math.PI * 2, look: rnd() < 0.4, swap: rnd() * 1.6, out: false });
+  }
+  // A team spreads out: one creeps in from behind while two wait in hiding ahead of the herd
+  const lions = set.pride === 'pride'
+    ? [{ x: 40, y: 300, wait: false }, { x: 930, y: 150, wait: true }, { x: 930, y: 450, wait: true }]
+    : [{ x: 40, y: 100 + rnd() * 400, wait: false }];
+  return { set, zebras, lions, t: 0, alarm: false, sprintT: 0, outcome: null, spotAt: null, rnd };
+}
+function stepHunt(h, dt) {
+  const s = h.set, half = HS.view[s.eyes] * Math.PI / 180, range = HS.spotRange[s.camo];
+  const live = h.zebras.filter(z => !z.out);
+  h.t += dt;
+  const near = (p, list) => list.reduce((b, q) => { const d = Math.hypot(q.x - p.x, q.y - p.y); return d < b.d ? { q, d } : b; }, { q: null, d: Infinity });
+  if (!h.alarm) {
+    // Grazing zebras keep lifting their heads to look around
+    for (const z of live) { z.swap -= dt; if (z.swap <= 0) { z.look = h.rnd() < 0.4; z.swap = 0.8 + h.rnd() * 1.6; z.head += (h.rnd() - 0.5) * 2; } }
+    for (const z of live) {
+      if (!z.look) continue;
+      for (const L of h.lions) {
+        const d = Math.hypot(L.x - z.x, L.y - z.y); if (d > range) continue;
+        const ang = Math.atan2(L.y - z.y, L.x - z.x), diff = Math.abs(((ang - z.head) % (2 * Math.PI) + 3 * Math.PI) % (2 * Math.PI) - Math.PI);
+        if (diff <= half) { h.alarm = true; h.spotAt = Math.round(near(L, live).d); z.spotter = true; }
+      }
+    }
+    // Lions creep towards the herd; when one gets close enough it charges
+    for (const L of h.lions) {
+      const { q, d } = near(L, live);
+      if (!q) continue;
+      if (!L.wait) { L.x += (q.x - L.x) / d * HS.creep * dt; L.y += (q.y - L.y) / d * HS.creep * dt; }
+      if (d < 70) h.alarm = true;
+    }
+  } else {
+    h.sprintT += dt;
+    for (const L of h.lions) {
+      const { q, d } = near(L, live); if (!q) continue;
+      // A crowd of running stripes makes it hard for the lion to keep its eye on one zebra
+      const crowd = live.filter(z => Math.hypot(z.x - q.x, z.y - q.y) < 70).length - 1;
+      const sp = (h.sprintT < HS.sprintTime ? HS.sprint : HS.creep) * (crowd >= 2 ? 0.86 : 1);
+      if (d > 0.5) { L.x += (q.x - L.x) / d * sp * dt; L.y += (q.y - L.y) / d * sp * dt; }
+      if (d < HS.pounce) { h.outcome = 'pounce'; return; }
+    }
+    // Zebras run away from every lion that is near them
+    for (const z of live) {
+      let fx = 0, fy = 0;
+      for (const L of h.lions) { const d = Math.max(1, Math.hypot(z.x - L.x, z.y - L.y)); fx += (z.x - L.x) / d / d * 1e4; fy += (z.y - L.y) / d / d * 1e4; }
+      const m = Math.hypot(fx, fy) || 1, sp = HS.zebraSpeed[s.speed];
+      z.x += fx / m * sp * dt; z.y += fy / m * sp * dt; z.head = Math.atan2(fy, fx);
+      if (z.x < -20 || z.x > HS.W + 20 || z.y < -20 || z.y > HS.H + 20) z.out = true;
+    }
+    if (!h.zebras.some(z => !z.out) || h.sprintT > HS.sprintTime + 1.5) h.outcome = 'escaped';
+  }
+  if (h.t > 60) h.outcome = 'escaped';
+}
+function runHuntBatch(set, n = 10) {
+  let escaped = 0;
+  for (let k = 0; k < n; k++) { const h = newHunt(set); while (!h.outcome) stepHunt(h, 0.05); if (h.outcome === 'escaped') escaped++; }
+  return escaped;
+}
+let huntRun = null;
+function viewHunt() {
+  ppBar();
+  const H = state.hunt, last = H.batches[H.batches.length - 1], needPred = H.batches.length > 0 && !H.pred;
+  setStage({ mode: 'flat' }); $('#flat').classList.add('full'); $('#flat').style.padding = '62px 10px 10px';
+  $('#flat').innerHTML = `<div class="camo-wrap"><canvas id="huntCanvas" aria-label="A lion creeping up on zebras, seen from above"></canvas>
+    <div class="camo-hud"><span id="huntMsg">${huntRun ? 'The lion is creeping closer…' : 'Press ▶ Watch a hunt'}</span></div></div>`;
+  const fmt = { more: 'More escapes', fewer: 'Fewer escapes', same: 'About the same' };
+  $('#drawer').innerHTML = `<div class="card"><h3>🦓 Set up the hunt</h3>${HUNT_SETTINGS.map(([k, name, opts]) => `<div class="gname">${name}</div><div class="opts">${opts.map(([v, t]) => `<button class="opt ${H.set[k] === v ? 'on' : ''}" data-act="hset" data-k="${k}" data-v="${v}">${t}</button>`).join('')}</div>`).join('')}</div>
+    <div class="card"><button class="btn primary" data-act="hwatch" style="width:100%">▶ Watch a hunt</button>
+      ${H.batches.length ? `<h3 style="margin-top:10px">Predict 🤔</h3><p class="muted" style="margin-top:0">Compared with your last 10 hunts, will these settings give…</p><div class="opts">${Object.entries(fmt).map(([v, t]) => `<button class="opt ${H.pred === v ? 'on' : ''}" data-act="hpred" data-v="${v}">${t}</button>`).join('')}</div>` : ''}
+      <button class="btn go" data-act="hbatch" style="margin-top:8px" ${needPred ? 'disabled' : ''}>⏩ Run 10 hunts</button>
+      ${needPred ? '<p class="muted" style="margin-bottom:0">Make your prediction first!</p>' : ''}</div>
+    ${H.msg ? `<div class="card"><p style="margin:0">${H.msg}</p></div>` : ''}
+    ${H.batches.length ? `<div class="card"><h3>📊 Results: zebras that escaped</h3><table class="results">${H.batches.map((b, i) => `<tr><td>${i + 1}</td><td>${huntSummary(b.set)}</td><td><b>${b.escaped}/10</b></td></tr><tr><td></td><td colspan="2"><div class="bar" style="width:${Math.max(3, b.escaped * 10)}%"></div></td></tr>`).join('')}</table></div>` : ''}
+    <div class="card"><p style="margin:0">A lion has to get very close before it pounces – it can only sprint a short way. If a zebra <b>spots</b> it in time, the herd runs and gets away.</p></div>`;
+  afterRender = () => { drawHunt(huntRun || state.hunt.preview || (state.hunt.preview = newHunt(state.hunt.set))); if (huntRun) tickHuntSim(); };
+}
+const huntSummary = s => `${s.herd}🦓 · eyes ${s.eyes === 'sides' ? '↔' : '↑'} · lion ${s.camo === 'on' ? 'hidden' : 'seen'} · ${s.pride === 'pride' ? '3🦁' : '1🦁'} · ${s.speed}`;
+function drawHunt(h) {
+  const cv = $('#huntCanvas'); if (!cv) return;
+  const W = cv.clientWidth, Hh = cv.clientHeight; if (!W || !Hh) return;
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  if (cv.width !== Math.round(W * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(Hh * dpr); }
+  const c = cv.getContext('2d'); c.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const k = Math.min(W / HS.W, Hh / HS.H), ox = (W - HS.W * k) / 2, oy = (Hh - HS.H * k) / 2;
+  c.fillStyle = '#c9b06a'; c.fillRect(0, 0, W, Hh);
+  c.save(); c.translate(ox, oy); c.scale(k, k);
+  c.fillStyle = '#d6bf7c'; c.fillRect(0, 0, HS.W, HS.H);
+  // Grass tufts and a couple of trees (always in the same places)
+  let seed = 3; const r = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  c.strokeStyle = '#b39a55'; c.lineWidth = 2;
+  for (let i = 0; i < 260; i++) { const x = r() * HS.W, y = r() * HS.H; c.beginPath(); c.moveTo(x, y); c.lineTo(x - 4, y - 9); c.moveTo(x, y); c.lineTo(x + 4, y - 9); c.stroke(); }
+  for (const [x, y] of [[180, 90], [820, 520], [430, 520]]) { c.fillStyle = 'rgba(70,110,40,.85)'; c.beginPath(); c.arc(x, y, 34, 0, Math.PI * 2); c.fill(); }
+  const s = h.set, half = HS.view[s.eyes] * Math.PI / 180, range = HS.spotRange[s.camo];
+  // What each zebra can see (only while its head is up)
+  if (!h.alarm) for (const z of h.zebras) {
+    if (!z.look || z.out) continue;
+    c.fillStyle = 'rgba(255,240,120,.16)'; c.beginPath(); c.moveTo(z.x, z.y); c.arc(z.x, z.y, range, z.head - half, z.head + half); c.closePath(); c.fill();
+  }
+  for (const z of h.zebras) {
+    if (z.out) continue;
+    c.save(); c.translate(z.x, z.y); c.rotate(z.head);
+    c.fillStyle = '#fafafa'; c.strokeStyle = '#222'; c.lineWidth = 2;
+    c.beginPath(); c.ellipse(0, 0, 16, 8, 0, 0, Math.PI * 2); c.fill(); c.stroke();
+    c.lineWidth = 2.4; for (const sx of [-9, -4, 1, 6]) { c.beginPath(); c.moveTo(sx, -7); c.lineTo(sx + 2, 7); c.stroke(); }
+    c.fillStyle = z.look ? '#fafafa' : '#ddd'; c.beginPath(); c.ellipse(z.look ? 19 : 15, 0, 6, 4.5, 0, 0, Math.PI * 2); c.fill(); c.stroke();
+    c.restore();
+    if (h.alarm) { c.fillStyle = '#d93025'; c.font = '700 22px Fredoka'; c.textAlign = 'center'; c.fillText('!', z.x, z.y - 14); }
+  }
+  for (const L of h.lions) {
+    c.save(); c.translate(L.x, L.y);
+    const col = s.camo === 'on' ? '#c5a35c' : '#6b3a12';
+    c.fillStyle = col; c.strokeStyle = s.camo === 'on' ? 'rgba(90,70,30,.5)' : '#2a1405'; c.lineWidth = 2;
+    c.beginPath(); c.ellipse(0, 0, 18, 10, 0, 0, Math.PI * 2); c.fill(); c.stroke();
+    c.beginPath(); c.arc(16, 0, 8, 0, Math.PI * 2); c.fill(); c.stroke();
+    c.restore();
+  }
+  c.restore();
+}
+function startHuntWatch() {
+  huntRun = newHunt(state.hunt.set); huntRun.last = performance.now(); state.hunt.msg = '';
+  render();
+}
+function tickHuntSim() {
+  const h = huntRun; if (!h || state.view !== 'hunt') { huntRun = null; return; }
+  const now = performance.now(), dt = Math.min(0.05, (now - h.last) / 1000) * 2;   // played at double speed
+  h.last = now;
+  for (let k = 0; k < 2 && !h.outcome; k++) stepHunt(h, dt / 2);
+  drawHunt(h);
+  const msg = $('#huntMsg');
+  if (msg && !h.outcome) msg.textContent = h.alarm ? (h.spotAt != null ? `Spotted! The lion was ${h.spotAt} steps away. Run!` : 'The lion charges!') : 'The lion is creeping closer…';
+  if (h.outcome) {
+    huntRun = null;
+    state.hunt.msg = h.outcome === 'escaped'
+      ? `🦓 The zebras escaped! ${h.spotAt != null ? `They spotted the lion when it was <b>${h.spotAt} steps</b> away.` : ''}`
+      : `🦁 The lion got close enough to pounce. ${h.spotAt != null ? `It was only spotted <b>${h.spotAt} steps</b> away – too late.` : 'Nobody spotted it in time.'}`;
+    state.hunt.preview = h; render(); return;
+  }
+  requestAnimationFrame(tickHuntSim);
+}
+function huntBatch() {
+  const H = state.hunt, prev = H.batches[H.batches.length - 1];
+  const escaped = runHuntBatch(H.set);
+  H.batches.push({ set: { ...H.set }, escaped });
+  let msg = `In 10 hunts, the zebras escaped <b>${escaped}</b> times.`;
+  if (prev) {
+    const out = escaped > prev.escaped + 1 ? 'more' : escaped < prev.escaped - 1 ? 'fewer' : 'same';
+    const w = { more: 'more escapes', fewer: 'fewer escapes', same: 'about the same' };
+    msg += ` That's <b>${w[out]}</b> than last time.` + (H.pred ? (H.pred === out ? ' 🎯 Your prediction was right!' : ` You predicted ${w[H.pred]}.`) : '');
+  }
+  H.msg = msg; H.pred = null; render();
+  emit('hunt-batch', { batches: H.batches });
+}
+
+// ================= Missions =================
+const MISSIONS = [
+  { id: 'detective', icon: '🔍', title: 'Desert detective', task: 'Find <b>4 features</b> of desert animals or plants.', hint: 'Tap a living thing, then tap its features.',
+    setup() { state.view = 'habitats'; state.hab = 'desert'; state.orgId = null; },
+    on: ev => ev === 'feat' && [...state.seen].filter(k => orgById(k.split(':')[0]).home === 'desert').length >= 4,
+    win: () => 'Desert living things have features that help them <b>keep cool</b> and <b>save water</b>. They are <b>adapted</b> to the desert.' },
+  { id: 'camel', icon: '🐫', title: 'Can a camel survive in the Arctic?', task: 'Predict, then move the <b>camel</b> to the <b>Arctic</b>.', hint: 'Think: freezing cold, icy wind, deep snow.',
+    setup() { state.view = 'move'; setMoveOrg('camel', 'arctic'); },
+    on: (ev, d) => ev === 'move' && d.org === 'camel' && d.to === 'arctic',
+    win: d => moveSummary(d) + 'A camel is adapted to the hot, dry desert – not the Arctic. Look at the body heat gauge!' },
+  { id: 'cactus', icon: '🌵', title: 'A cactus in the rainforest', task: 'Predict, then move the <b>cactus</b> to the <b>rainforest</b>.', hint: 'It rains nearly every day, and the forest floor is dark.',
+    setup() { state.view = 'move'; setMoveOrg('saguaro', 'rainforest'); },
+    on: (ev, d) => ev === 'move' && d.org === 'saguaro' && d.to === 'rainforest',
+    win: d => moveSummary(d) + 'The cactus saves water – but in the rainforest the problem is getting enough <b>light</b>.' },
+  { id: 'arcticfox', icon: '🦊', title: 'An Arctic fox in the desert', task: 'Predict, then move the <b>Arctic fox</b> to the <b>desert</b>.', hint: 'Its features keep heat IN. What does a desert animal need?',
+    setup() { state.view = 'move'; setMoveOrg('arcticfox', 'desert'); },
+    on: (ev, d) => ev === 'move' && d.org === 'arcticfox' && d.to === 'desert',
+    win: d => moveSummary(d) + 'Compare it with the fennec fox – each fox is adapted to its own habitat.' },
+  { id: 'design', icon: '🛠️', title: 'Design a desert survivor', task: 'Design an <b>animal</b> for the <b>desert</b>. Get all three gauges happy, with no ⚠️ features.', hint: 'Keep cool, save water, and don\'t sink in the sand!',
+    setup() { state.view = 'design'; state.design.kind = 'animal'; state.design.hab = 'desert'; },
+    on: (ev, d) => ev === 'design-ok' && d.hab === 'desert',
+    win: () => 'Your creature is <b>adapted</b> to the desert: it keeps cool, saves water and walks on soft sand.' },
+  { id: 'design-move', icon: '🌧️', title: 'Now move it to the rainforest', task: 'Move your <b>desert design</b> to the <b>rainforest</b>.', hint: 'The rainforest is hot too – but wet, shady and full of trees to climb.',
+    setup() {
+      if (!state.designs.some(d => d.kind === 'animal')) { state.design.kind = 'animal'; state.design.hab = 'desert'; saveDesign(); }
+      const last = state.designs.slice().reverse().find(d => d.kind === 'animal');
+      state.view = 'move'; setMoveOrg(last.id, last.home === 'rainforest' ? null : 'rainforest');
+    },
+    on: (ev, d) => ev === 'move' && d.isDesign && d.to === 'rainforest',
+    win: d => moveSummary(d) + 'Both places are hot, but the rainforest is <b>wet</b> and full of trees.' },
+  { id: 'camo', icon: '🦎', title: 'Make the prey harder to find', task: 'Hunt the <b>red</b> bugs. Then change their colour to make them <b>harder to find</b>, and hunt again.', hint: 'Which colour matches the background?',
+    setup() { state.view = 'camo'; Object.assign(state.camo, { scene: 'woodland', colour: 'red', hunts: [], pred: null, msg: '' }); },
+    on: (ev, d) => ev === 'hunt' && d.camo && d.hadNonCamo,
+    win: () => 'When the colour matched the background, the bugs were much harder to spot. That is <b>camouflage</b>.' },
+  { id: 'eyes', icon: '👀', title: 'Predator or prey? Look at the eyes', task: 'Move the eyes to the front and the sides, then answer the two questions.', hint: 'Count the foxes it can spot.',
+    setup() { state.view = 'eyes'; state.quiz = {}; },
+    on: ev => ev === 'quiz' && state.quiz.rabbit === 'sides' && state.quiz.owl === 'front',
+    win: () => '<b>Prey</b> often have eyes on the sides to spot danger. <b>Predators</b> often have eyes at the front to judge distance.' },
+  { id: 'herd', icon: '🦓', title: 'Safety in numbers', task: 'In the <b>Hunt simulator</b>, run 10 hunts with <b>1 zebra</b>, then 10 hunts with <b>20 zebras</b>. Which is safer?', hint: 'Only change the herd size. Keep everything else the same so it is a fair test.',
+    setup() { state.view = 'hunt'; Object.assign(state.hunt, { set: { herd: 1, eyes: 'sides', camo: 'on', pride: 'one', speed: 'fast' }, batches: [], pred: null, msg: '', preview: null }); },
+    on: (ev, d) => ev === 'hunt-batch' && d.batches.some(a => a.set.herd === 1 && d.batches.some(b => b.set.herd === 20 && ['eyes', 'camo', 'pride', 'speed'].every(k => a.set[k] === b.set[k]) && b.escaped > a.escaped)),
+    win: () => 'A big herd has lots of eyes. Someone is nearly always looking up, so the lion is spotted sooner. When they run, a crowd of stripes makes it hard for the lion to pick just one zebra. That is why many prey animals <b>live in groups</b>.' },
+  { id: 'bothcamo', icon: '🍂', title: 'Camouflage on both sides', task: 'In the <b>Face-offs</b>, find <b>two</b> pairs where the predator <b>and</b> the prey both use camouflage.', hint: 'Use "Find an adaptation" and choose Camouflage.',
+    setup() { state.view = 'faceoff'; state.fo.seen = new Set(); state.fo.tag = null; state.fo.id = 'lion'; },
+    on: () => [...state.fo.seen].filter(id => bothCamo(FACEOFFS.find(f => f.id === id))).length >= 2,
+    win: () => 'The cheetah and the gazelle both blend in with the grass, and the owl and the mouse are both brown like the woodland. Camouflage helps predators <b>sneak up</b> and helps prey <b>hide</b>.' },
+  { id: 'allfaceoffs', icon: '⚔️', title: 'Meet all eight face-offs', task: 'Explore all <b>8 face-offs</b>. Notice how each predator adaptation is answered by a prey adaptation.', hint: 'Choose each pair from the list on the right.',
+    setup() { state.view = 'faceoff'; },
+    on: () => state.fo.seen.size >= FACEOFFS.length,
+    win: () => 'You have seen teeth and talons, speed and zigzags, camouflage, lookouts, burrows, spines and warning colours. Predators are adapted to <b>catch</b> food; prey are adapted to <b>stay safe</b>.' },
+];
+function moveSummary(d) {
+  const pick = st => d.result.filter(r => r.now[0] === st).map(r => esc(r.f.label.toLowerCase()));
+  const parts = [`<b>${esc(d.name)} in ${HABITATS[d.to].the}</b>`];
+  if (pick('problem').length) parts.push(`⚠️ A problem: ${pick('problem').join(', ')}`);
+  if (pick('little').length) parts.push(`➖ Little difference: ${pick('little').join(', ')}`);
+  if (pick('help').length) parts.push(`✅ Still helps: ${pick('help').join(', ')}`);
+  return parts.join('<br>') + '<br><br>';
+}
+function emit(ev, data = {}) {
+  if (state.mission == null) return;
+  const i = state.mission, m = MISSIONS[i];
+  if (!m.on(ev, data)) return;
+  state.mission = null; $('#banner').classList.add('hidden');
+  if (!state.done.includes(m.id)) { state.done.push(m.id); store.set('as2-done', state.done); }
+  updateStars();
+  setTimeout(() => {
+    $('#winTitle').textContent = `${m.icon} Mission complete!`;
+    $('#winText').innerHTML = m.win(data);
+    $('#winNext').style.display = i < MISSIONS.length - 1 ? '' : 'none';
+    $('#winPractise').style.display = i < MISSIONS.length - 1 ? 'none' : '';
+    $('#winNext').onclick = () => { closeModals(); startMission(i + 1); };
+    openModal('#winModal'); confetti();
+  }, ev === 'move' ? 1800 : 300);
+}
+function startMission(i) {
+  cancelHunt();
+  state.mission = i; MISSIONS[i].setup(); render();
+  const m = MISSIONS[i];
+  $('#bannerKicker').textContent = `Mission ${i + 1} of ${MISSIONS.length}: ${m.title}`;
+  $('#bannerText').innerHTML = m.task; $('#bannerHint').innerHTML = m.hint;
+  $('#bannerHint').classList.add('hidden'); $('#hintBtn').textContent = '💡 Show a hint';
+  $('#banner').classList.remove('hidden');
+}
+function updateStars() { $('#starCount').textContent = `${state.done.length}/${MISSIONS.length} ⭐`; }
+function confetti() {
+  const em = ['⭐', '🌟', '🦊', '🌵', '✨', '🎉'];
+  for (let i = 0; i < 36; i++) {
+    const s = document.createElement('span'); s.className = 'confetti'; s.textContent = em[i % em.length];
+    s.style.left = `${Math.random() * 100}vw`; s.style.animationDuration = `${2 + Math.random() * 2}s`; s.style.animationDelay = `${Math.random() * 0.6}s`;
+    document.body.appendChild(s); setTimeout(() => s.remove(), 5000);
+  }
+}
+function openModal(sel) { $(sel).classList.remove('hidden'); }
+function closeModals() { $$('.modal').forEach(m => m.classList.add('hidden')); store.set('as2-help-seen', true); }
+
+// ================= Taps on the creature and plants =================
+function onCreatureTap(key, point) {
+  const t = creatureTraits, hab = curHab;
+  if (creatureKind === 'plant') {
+    // A leaf tells you about leaves and their surface; the stem about the stem and the plant's height
+    const keys = { leaves: ['leaves', 'surface'], stem: ['stem', 'height'], roots: ['roots'] }[key] || [key];
+    showBubble(keys.map(k => { const tr = traitDef('plant', k), [st, why] = traitStatus('plant', k, t[k], hab); return `<h4>${tr.icon} ${tr.options[t[k]].label}</h4><p>${stLabel(st)} ${esc(why)}</p>`; }).join(''), point);
+    return;
+  }
+  if (state.view === 'move') {
+    const org = findOrg(state.move.orgId), f = org && org.features.find(x => x.trait && x.trait[0] === key);
+    if (f) { moveFeatureBubble(org, f, point); return; }
+  }
+  const tr = traitDef('animal', key), [st, why] = traitStatus('animal', key, t[key], hab);
+  showBubble(`<h4>${tr.icon} ${tr.options[t[key]].label}</h4><p>${stLabel(st)}</p><p>${esc(why)}</p>`, point);
+}
+function moveFeatureBubble(org, f, anchor) {
+  const M = state.move, hab = M.result ? M.to : org.home, [st, why] = featStatus(org, f, hab);
+  showBubble(`<h4>${esc(f.label)}</h4><p>${stLabel(st)}</p><p>${esc(why)}</p>`, anchor);
+}
+
+// ================= Actions =================
+const ACTIONS = {
+  view: el => { cancelHunt(); huntRun = null; state.view = el.dataset.view === 'pp' ? (state.ppLast || 'faceoff') : el.dataset.view; render(); },
+  pptab: el => { cancelHunt(); huntRun = null; state.view = el.dataset.v; render(); },
+  fopick: el => { state.fo.id = el.dataset.id; render(); },
+  fotag: el => { state.fo.tag = state.fo.tag === el.dataset.v ? null : el.dataset.v; render(); },
+  fotool: el => {
+    const F = FACEOFFS.find(f => f.id === state.fo.id), x = F.rows[+el.dataset.r][el.dataset.s === 'pred' ? 0 : 1];
+    showBubble(`<h4>${x.i} ${esc(x.t)}</h4><p>${esc(x.why || x.w)}</p><p class="muted">${FO_TAGS[x.tag]}</p>`, el);
+  },
+  hset: el => { if (huntRun) return; const k = el.dataset.k, v = el.dataset.v; state.hunt.set[k] = k === 'herd' ? +v : v; state.hunt.preview = null; render(); },
+  hwatch: () => startHuntWatch(),
+  hpred: el => { state.hunt.pred = el.dataset.v; render(); },
+  hbatch: () => huntBatch(),
+  help: () => openModal('#helpModal'), model: () => openModal('#modelModal'),
+  missions: () => { $('#missionList').innerHTML = MISSIONS.map((m, i) => `<button class="mission-item ${state.done.includes(m.id) ? 'done' : ''}" data-act="start-mission" data-i="${i}"><span class="em">${m.icon}</span><span class="t">${i + 1}. ${m.title}</span><span class="star">⭐</span></button>`).join(''); openModal('#missionsModal'); },
+  'close-modal': closeModals,
+  'reset-stars': () => { state.done = []; store.set('as2-done', []); updateStars(); ACTIONS.missions(); },
+  'start-mission': el => { closeModals(); startMission(+el.dataset.i); },
+  'bubble-close': hideBubble,
+  gauge: el => gaugeBubble(el.dataset.k, el),
+  // Habitats
+  hab: el => { state.hab = el.dataset.hab; state.orgId = null; render(); },
+  org: el => { state.orgId = el.dataset.id; render(); },
+  'org-back': () => { state.orgId = null; render(); },
+  feat: el => {
+    const org = orgById(state.orgId), f = org.features.find(x => x.id === el.dataset.id);
+    state.seen.add(`${org.id}:${f.id}`);
+    render();
+    const target = $(`.hs[data-id="${f.id}"]`) || $(`.chip[data-id="${f.id}"]`);
+    showFeature(org, f, target && target.classList.contains('hs') ? target : null);
+    emit('feat');
+  },
+  'move-this': el => { setMoveOrg(el.dataset.id); state.view = 'move'; render(); },
+  // Design
+  dkind: el => { state.design.kind = el.dataset.kind; render(); },
+  dhab: el => { state.design.hab = el.dataset.hab; render(); },
+  dopt: el => { state.design[state.design.kind][el.dataset.key] = el.dataset.val; render(); },
+  dchip: el => {
+    const D = state.design, kind = D.kind, k = el.dataset.k, tr = traitDef(kind, k), [st, why] = traitStatus(kind, k, D[kind][k], D.hab);
+    showBubble(`<h4>${tr.icon} ${tr.options[D[kind][k]].label}</h4><p>${stLabel(st)}</p><p>${esc(why)}</p>`, null);
+  },
+  dsave: () => { const id = saveDesign(); setMoveOrg(id); state.view = 'move'; render(); toast('🛠️ Design saved – now choose a habitat'); },
+  // Move it
+  morg: el => { setMoveOrg(el.dataset.id); render(); },
+  mto: el => { setMoveOrg(state.move.orgId, el.dataset.hab); render(); },
+  mpred: el => { state.move.preds[el.dataset.id] = el.dataset.val; render(); },
+  mreason: el => { const i = +el.dataset.i, c = state.move.chips; c.includes(i) ? c.splice(c.indexOf(i), 1) : c.push(i); render(); },
+  mchipfeat: el => {
+    const M = state.move, org = findOrg(M.orgId), f = org.features.find(x => x.id === el.dataset.id);
+    if (M.result || !M.to) { moveFeatureBubble(org, f, null); return; }
+    // Before moving, tapping a chip cycles the prediction
+    M.preds[f.id] = M.preds[f.id] === 'help' ? 'stop' : 'help'; render();
+  },
+  mgo: runMove,
+  mrate: el => { state.move.rating = +el.dataset.i; render(); },
+  mreset: () => { setMoveOrg(state.move.orgId); render(); },
+  // Eyes
+  eyepreset: el => { state.eyeAngle = +el.dataset.val; render(); },
+  quiz: el => { state.quiz[el.dataset.id] = el.dataset.val; render(); emit('quiz'); },
+  // Camouflage
+  cscene: el => { if (!camoRun) { state.camo.scene = el.dataset.val; render(); } },
+  ccolour: el => { if (!camoRun) { state.camo.colour = el.dataset.val; render(); } },
+  cpred: el => { state.camo.pred = el.dataset.val; render(); },
+  cstart: startHunt,
+};
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-act]'); if (!el || el.disabled) return;
+  const fn = ACTIONS[el.dataset.act]; if (fn) fn(el, e);
+});
+document.addEventListener('input', e => {
+  if (e.target.id !== 'moveReason') return;
+  const M = state.move; M.reason = e.target.value;
+  const ready = findOrg(M.orgId).features.every(f => M.preds[f.id]) && (M.chips.length > 0 || M.reason.trim().length >= 3);
+  $('#moveGo').disabled = !ready; $('#moveHint').textContent = ready ? '' : 'Predict every feature, and give a reason.';
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeModals(); hideBubble(); } });
+$$('.modal').forEach(m => m.addEventListener('click', e => { if (e.target === m) closeModals(); }));
+$('#hintBtn').onclick = () => { const h = $('#bannerHint'); h.classList.toggle('hidden'); $('#hintBtn').textContent = h.classList.contains('hidden') ? '💡 Show a hint' : '💡 Hide the hint'; };
+$('#bannerClose').onclick = () => { state.mission = null; $('#banner').classList.add('hidden'); };
+
+// ================= Start =================
+updateStars();
+render();
+if (can3D) loop();
+if (!store.get('as2-help-seen', false)) openModal('#helpModal');
+// Test hook: #view=design etc. opens straight on a view (used for checking screenshots)
+const hv = new URLSearchParams(location.hash.slice(1));
+if (hv.get('view')) {
+  closeModals();
+  if (hv.get('mission')) startMission(+hv.get('mission'));
+  else {
+    state.view = hv.get('view');
+    if (hv.get('hab')) { state.design.hab = hv.get('hab'); state.hab = hv.get('hab'); }
+    if (hv.get('kind')) state.design.kind = hv.get('kind');
+    if (hv.get('fo')) state.fo.id = hv.get('fo');
+    if (hv.get('org')) { state.orgId = hv.get('org'); setMoveOrg(hv.get('org'), hv.get('to')); }
+    render();
+  }
+  if (hv.get('predict')) { const M = state.move, org = findOrg(M.orgId); org.features.forEach((f, i) => M.preds[f.id] = i % 2 ? 'help' : 'stop'); M.chips = [0, 2]; runMove(); }
+}
+// Test hook: #huntstats runs 200 hunts for each setting and lists how often the zebras escaped (used to tune the simulator)
+if (location.hash === '#huntstats') {
+  const base = { herd: 5, eyes: 'sides', camo: 'on', pride: 'one', speed: 'fast' };
+  const rows = [base, { ...base, herd: 1 }, { ...base, herd: 20 }, { ...base, camo: 'off' }, { ...base, herd: 1, camo: 'off' }, { ...base, eyes: 'front' }, { ...base, herd: 1, eyes: 'front' }, { ...base, pride: 'pride' }, { ...base, herd: 20, pride: 'pride' }, { ...base, speed: 'slow' }, { ...base, camo: 'off', speed: 'slow' }];
+  document.body.innerHTML = '<pre id="hs">' + rows.map(r => JSON.stringify(r) + '  ->  ' + runHuntBatch(r, 200) / 2 + '%').join('<br>') + '</pre>';
+}
+window.__state = state; window.__render = render; window.__ACTIONS = ACTIONS; window.__start = startMission; window.__runMove = runMove;
+</script>
+</body>
+</html>

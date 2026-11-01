@@ -1,0 +1,1510 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Forces Playground</title>
+<meta name="description" content="Draw force arrows, drop parachutes and test friction – an interactive tool for Year 5.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ================= Shared look (matches Digestion Journey) ================= */
+  :root {
+    --ink: #1d2340; --muted: #5b6386; --soft: #eef2ff;
+    --yellow: #ffc83d; --blue: #3d7bff; --coral: #ff5f6d; --green: #22b07d; --orange: #f0892e; --grey: #8a93ad;
+    --space: #070d24; --drawerW: 360px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: var(--space); color: var(--ink); font-family: 'Fredoka', system-ui, sans-serif; font-size: 17px; line-height: 1.35; -webkit-tap-highlight-color: transparent; }
+  body { display: flex; flex-direction: column; }
+  button { font: inherit; color: inherit; }
+  b { font-weight: 700; }
+  .btn { border: 0; border-radius: 14px; padding: 9px 14px; min-height: 44px; cursor: pointer; background: #fff; color: var(--ink); font-weight: 600; font-size: 16px; box-shadow: 0 3px 0 rgba(0,0,0,.18); }
+  .btn:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,.18); }
+  .btn.active { background: var(--yellow); }
+  .btn:focus-visible { outline: 3px solid var(--yellow); outline-offset: 2px; }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .btn.go { background: var(--green); color: #fff; font-size: 19px; flex: 1; }
+  .btn.primary { background: var(--green); color: #fff; }
+  a.btn { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
+  #drawer a.btn { color: #fff; }
+
+  /* ---------- Top bar ---------- */
+  .topbar { flex: none; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 8px 10px; background: rgba(7,13,36,.95); z-index: 15; }
+  .brand { color: #fff; font-size: 21px; font-weight: 700; margin-right: auto; white-space: nowrap; }
+  .hub-link { flex: none; display: grid; place-items: center; width: 38px; height: 38px; border-radius: 12px; text-decoration: none; font-size: 20px; background: rgba(255,255,255,.14); box-shadow: 0 3px 0 rgba(0,0,0,.25); transition: background .15s, transform .08s; }
+  .hub-link:hover { background: rgba(255,255,255,.26); }
+  .hub-link:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,.25); }
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+  .btn.missions { background: var(--blue); color: #fff; }
+  .tabs .btn { padding: 9px 11px; }
+  @media (max-width: 1399px) {
+    .topbar .long { display: none; }
+    .brand { font-size: 18px; }
+    .topbar, .tabs { gap: 4px; }
+    .tabs .btn { padding: 9px 8px; font-size: 14.5px; }
+  }
+
+  /* ---------- Main area: stage on the left, drawer on the right ---------- */
+  main { position: relative; flex: 1; min-height: 0; }
+  #stage { position: absolute; top: 0; bottom: 0; left: 0; right: var(--drawerW); overflow: hidden; background: #bfdcff; display: flex; align-items: center; justify-content: center; }
+  #stage svg { width: 100%; height: 100%; display: block; }
+  #drawer { position: absolute; top: 0; right: 0; bottom: 0; width: var(--drawerW); background: #dfe6ff; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+  .card { background: #fff; border-radius: 16px; padding: 12px 14px; }
+  .card h2 { margin: 0 0 4px; font-size: 21px; line-height: 1.2; }
+  .card h3 { margin: 0 0 6px; font-size: 17px; }
+  .card p { margin: 4px 0; }
+  .muted { color: var(--muted); font-size: 14.5px; }
+  .term { background: #fff3c4; border-radius: 6px; padding: 0 4px; font-weight: 600; }
+  .navrow { display: flex; gap: 8px; }
+  .opt { border: 2px solid #d3dbf7; background: #fff; border-radius: 12px; padding: 6px 10px; min-height: 44px; font-weight: 600; font-size: 15px; cursor: pointer; }
+  .opt.on { background: var(--yellow); border-color: #e0a800; }
+  .stops { display: flex; flex-wrap: wrap; gap: 6px; }
+
+  /* ---------- Force arrows ---------- */
+  svg.arrowmode { touch-action: none; }
+  .scene-name { font-family: 'Fredoka', system-ui, sans-serif; font-size: 30px; font-weight: 700; fill: var(--ink); }
+  .force { cursor: grab; }
+  .force.dragging { cursor: grabbing; }
+  .force text { font-family: 'Fredoka', system-ui, sans-serif; font-size: 25px; font-weight: 700; paint-order: stroke; stroke: #fff; stroke-width: 6px; stroke-linejoin: round; pointer-events: none; }
+  .force .knob { fill: #fff; stroke-width: 4; }
+  .force.bad { animation: oops .9s; }
+  .force.good { animation: yay 1.2s; }
+  @keyframes oops { 0%, 100% { transform: none; } 20%, 60% { transform: translateX(-7px); } 40%, 80% { transform: translateX(7px); } }
+  @keyframes yay { 30%, 70% { filter: drop-shadow(0 0 5px var(--green)) drop-shadow(0 0 5px var(--green)); } }
+  .chips { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .chip { display: flex; align-items: center; gap: 6px; border: 2px solid #d3dbf7; border-left: 8px solid var(--c); background: #fff; border-radius: 12px; padding: 6px 8px; min-height: 44px; font-weight: 600; font-size: 15px; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; text-align: left; line-height: 1.15; }
+  .chip:disabled { opacity: .35; cursor: default; }
+  .chip-ghost { position: fixed; z-index: 30; pointer-events: none; transform: translate(-50%, -50%) rotate(-3deg); box-shadow: 0 8px 18px rgba(0,0,0,.3); }
+  .alist { list-style: none; padding: 0; margin: 4px 0 0; display: grid; gap: 4px; }
+  .alist li { display: flex; align-items: center; gap: 8px; padding: 2px 0 2px 10px; border-left: 6px solid var(--c); border-radius: 4px; }
+  .alist .n { flex: 1; font-weight: 600; }
+  .alist .dots { letter-spacing: 1px; color: var(--c); font-size: 13px; white-space: nowrap; }
+  .xbtn { border: 0; background: var(--soft); border-radius: 12px; width: 44px; height: 44px; cursor: pointer; flex: none; }
+  .fb { list-style: none; padding: 0; margin: 6px 0 0; display: grid; gap: 6px; }
+  .fb li { display: flex; gap: 8px; line-height: 1.3; }
+  .fb .em { flex: none; }
+  .card.win { border: 3px solid var(--green); background: #effbf5; }
+  .card.tryagain { border: 3px solid var(--yellow); }
+  .scenes { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+  .scenes .opt { position: relative; font-size: 15px; padding: 4px 6px; white-space: nowrap; }
+  .scenes .tick { position: absolute; top: 1px; right: 4px; font-size: 12px; }
+  .moments { margin-bottom: 6px; }
+  .speedtag { position: absolute; bottom: 12px; right: 12px; z-index: 3; display: flex; gap: 8px; align-items: center; max-width: 290px; background: #fff; border-radius: 14px; padding: 6px 10px; box-shadow: 0 4px 12px rgba(0,0,0,.18); }
+  .speedtag b { display: block; font-size: 18px; }
+  .speedtag small { display: block; font-size: 13px; line-height: 1.25; color: var(--muted); }
+  @media (max-width: 760px) { .speedtag { bottom: 8px; right: 8px; max-width: 200px; } .speedtag small { display: none; } .speedtag svg { width: 40px; height: 25px; } .speedtag b { font-size: 15px; white-space: nowrap; } }
+  /* Check stays in reach at the bottom of the drawer, even on short screens */
+  .checkbar { position: sticky; bottom: -10px; z-index: 2; display: flex; margin: 0 -10px; padding: 6px 10px 10px; background: #dfe6ff; }
+  .moments .opt { flex: 1; }
+  .tick { color: var(--green); }
+  .fbbox { position: absolute; left: 12px; top: 12px; width: min(360px, calc(100% - 24px)); max-height: calc(100% - 24px); overflow-y: auto; z-index: 4; padding-right: 48px; box-shadow: 0 6px 18px rgba(0,0,0,.22); }
+  .fbbox.hidden { display: none; }
+  .fbbox .close { position: absolute; top: 6px; right: 6px; border: 0; background: var(--soft); border-radius: 50%; width: 40px; height: 40px; cursor: pointer; }
+
+  /* ---------- Parachute drop ---------- */
+  .chutemode .ruler { font-family: 'Fredoka', system-ui, sans-serif; font-size: 20px; font-weight: 600; fill: var(--ink); }
+  .pforce text { font-family: 'Fredoka', system-ui, sans-serif; font-size: 24px; font-weight: 700; paint-order: stroke; stroke: #fff; stroke-width: 6px; stroke-linejoin: round; }
+  .stopwatch { position: absolute; top: 12px; right: 12px; z-index: 3; background: #1d2340; color: #fff; border-radius: 16px; padding: 6px 16px; font-size: 32px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .slider { display: block; margin: 8px 0 4px; }
+  .slider input { width: 100%; height: 44px; accent-color: var(--blue); cursor: pointer; }
+  .results { width: 100%; border-collapse: collapse; font-size: 15px; margin-bottom: 6px; }
+  .results th { text-align: left; color: var(--muted); font-weight: 600; border-bottom: 2px solid #d3dbf7; padding: 2px 4px; }
+  .results td { padding: 2px 4px; border-bottom: 1px solid #eef2ff; }
+  .results tr.crossed td { text-decoration: line-through; color: var(--grey); }
+  .graph { width: 100%; display: block; }
+  .graph text { font-family: 'Fredoka', system-ui, sans-serif; font-size: 13px; fill: var(--muted); }
+  .graph .axis { font-size: 14px; font-weight: 600; fill: var(--ink); }
+  .gpt { cursor: pointer; }
+  .gpt .dot { fill: var(--blue); stroke: #fff; stroke-width: 2; }
+  .gpt.crossed .dot { fill: var(--grey); }
+  .spot { background: #fff3c4; border-radius: 12px; padding: 8px 10px; margin-top: 6px !important; }
+  .job { font-size: 16px; background: #c9f2df; border-radius: 12px; padding: 8px 10px; }
+  .opt.done { background: #c9f2df; border-color: var(--green); }
+  .opt.wrong { background: #ffe0e3; border-color: var(--coral); }
+
+  /* ---------- Upthrust tank ---------- */
+  .tankmode text { font-family: 'Fredoka', system-ui, sans-serif; }
+  .tnum { font-size: 15px; font-weight: 600; fill: var(--ink); }
+  .tunit { font-size: 10px; font-weight: 600; fill: var(--muted); }
+  .tlabel { font-size: 13px; font-weight: 700; fill: #5b6386; }
+  .tmag { font-size: 18px; font-weight: 600; fill: var(--muted); }
+  .tup { font-size: 22px; font-weight: 700; paint-order: stroke; stroke: #fff; stroke-width: 6px; stroke-linejoin: round; }
+  .stepper { display: flex; align-items: center; gap: 6px; margin-top: 6px; }
+  .stepper .xbtn { font-size: 22px; font-weight: 700; }
+  .stepper .sval { min-width: 52px; text-align: center; font-size: 19px; }
+  .stepper .btn.go { flex: 1; font-size: 17px; }
+
+  /* ---------- Friction ramp ---------- */
+  .rampmode text { font-family: 'Fredoka', system-ui, sans-serif; }
+  .rnum { font-size: 15px; font-weight: 600; fill: var(--ink); }
+  .rzoom { font-size: 17px; font-weight: 600; fill: var(--muted); }
+  .rflag { font-size: 18px; font-weight: 700; fill: #fff; }
+  .rfric { font-size: 20px; font-weight: 700; paint-order: stroke; stroke: #fff; stroke-width: 6px; stroke-linejoin: round; }
+  .graph .bval { font-size: 13px; font-weight: 700; fill: var(--ink); }
+  .readcard { position: absolute; z-index: 4; width: 236px; background: #fff; border: 3px solid var(--yellow); border-radius: 16px; padding: 10px 12px; box-shadow: 0 6px 18px rgba(0,0,0,.22); font-size: 15px; line-height: 1.3; }
+  .readcard p { margin: 4px 0; }
+  .readcard .red { color: #e8414f; font-weight: 700; }
+  .readrow { display: flex; align-items: center; gap: 6px; font-weight: 600; }
+  .readrow input { width: 76px; height: 44px; font: inherit; font-size: 20px; text-align: center; border: 2px solid #d3dbf7; border-radius: 10px; }
+  .readrow .btn { flex: 1; font-size: 16px; }
+  .readmsg { background: #fff3c4; border-radius: 10px; padding: 6px 8px; }
+  .readmsg:empty { display: none; }
+  .predict { border: 3px solid var(--yellow); border-radius: 14px; padding: 10px; margin-top: 8px; }
+  .why { display: block; margin: 8px 0; font-weight: 600; }
+  .why textarea { display: block; width: 100%; font: inherit; font-weight: 400; font-size: 16px; border: 2px solid #d3dbf7; border-radius: 12px; padding: 8px; resize: vertical; margin-top: 4px; }
+  .mine { background: var(--soft); border-radius: 10px; padding: 6px 10px; }
+  @media (max-width: 760px) { .readcard { left: 8px; right: 8px; bottom: 8px; width: auto; } }
+
+  /* ---------- Missions and pop-ups ---------- */
+  .modal-box ul.icons { list-style: none; padding: 0; margin: 0 0 14px; }
+  .icons li { display: flex; gap: 10px; padding: 6px 0; line-height: 1.35; }
+  .icons .em { font-size: 24px; width: 32px; flex: none; text-align: center; }
+  .modal { position: fixed; inset: 0; background: rgba(5,10,30,.6); display: flex; align-items: center; justify-content: center; z-index: 20; padding: 16px; }
+  .modal.hidden { display: none; }
+  .modal-box { background: #fff; border-radius: 24px; padding: 20px; width: min(580px, 100%); max-height: calc(100vh - 32px); overflow-y: auto; }
+  .modal-box h2 { margin: 0 0 8px; font-size: 25px; }
+  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+  .banner { position: absolute; top: 10px; right: 10px; width: calc(var(--drawerW) - 20px); z-index: 6; background: #fff; border: 3px solid var(--yellow); border-radius: 16px; padding: 9px 44px 9px 14px; box-shadow: 0 6px 16px rgba(0,0,0,.18); }
+  .banner.hidden { display: none; }
+  .banner .kicker { font-size: 12.5px; font-weight: 700; color: var(--blue); text-transform: uppercase; letter-spacing: .04em; }
+  .banner .close { position: absolute; top: 6px; right: 6px; border: 0; background: var(--soft); border-radius: 50%; width: 32px; height: 32px; cursor: pointer; }
+  .banner .hint { margin-top: 4px; color: var(--muted); font-size: 15px; }
+  .banner .hint.hidden { display: none; }
+  .linkbtn { border: 0; background: none; color: var(--blue); font-weight: 600; cursor: pointer; padding: 4px 0; font-size: 15px; min-height: 32px; }
+  .mission-list { display: grid; gap: 8px; margin-bottom: 14px; }
+  .mission-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; min-height: 52px; border-radius: 16px; background: var(--soft); border: 0; text-align: left; cursor: pointer; font-size: 16px; }
+  .mission-item .em { font-size: 25px; } .mission-item .t { flex: 1; font-weight: 600; }
+  .mission-item .star { font-size: 21px; filter: grayscale(1); opacity: .35; }
+  .mission-item.done .star { filter: none; opacity: 1; }
+  .win-emoji { font-size: 56px; text-align: center; }
+  .win-text { font-size: 17.5px; line-height: 1.5; margin-bottom: 14px; }
+  .confetti { position: fixed; top: -40px; font-size: 26px; z-index: 40; pointer-events: none; animation: fall linear forwards; }
+  @keyframes fall { to { transform: translateY(110vh) rotate(540deg); } }
+
+  /* ---------- Narrow screens: stage on top, drawer below ---------- */
+  @media (max-width: 760px) {
+    :root { --drawerW: 0px; }
+    #stage { bottom: 42%; right: 0; }
+    #drawer { top: 58%; width: 100%; }
+    .banner { top: calc(58% + 8px); left: 8px; right: 8px; width: auto; }
+    .brand { font-size: 18px; }
+    .tl { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a class="hub-link" href="../index.html" title="Back to the Science Hub" aria-label="Back to the Science Hub">🏠</a>
+  <div class="brand">🛝 Forces Playground</div>
+  <div class="tabs" id="tabs"></div>
+  <button class="btn missions" data-act="missions" title="Missions">🚀 <span class="long">Missions </span><span id="starCount"></span></button>
+  <button class="btn" data-act="model" title="How is this model different from real life?">🤔<span class="long"> Real life?</span></button>
+  <button class="btn" id="helpBtn" data-act="view" data-view="help" aria-label="How to use">❓</button>
+</div>
+<main>
+  <div id="stage"></div>
+  <div id="drawer"></div>
+  <div id="banner" class="banner hidden" role="status">
+    <div class="kicker" id="bannerKicker"></div>
+    <div id="bannerText"></div>
+    <button class="linkbtn" data-act="hint" id="hintBtn">💡 Show a hint</button>
+    <div class="hint hidden" id="bannerHint"></div>
+    <button class="close" data-act="stopMission" aria-label="Stop this mission">✖</button>
+  </div>
+</main>
+<div id="missionsModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="missionsTitle">
+  <div class="modal-box">
+    <h2 id="missionsTitle">🚀 Missions</h2>
+    <div class="mission-list" id="missionList"></div>
+    <div class="modal-actions"><button class="btn" data-act="resetStars">Reset stars</button><button class="btn primary" data-act="closeModals">Close</button></div>
+  </div>
+</div>
+<div id="winModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="winTitle">
+  <div class="modal-box">
+    <div class="win-emoji">⭐</div>
+    <h2 id="winTitle" style="text-align:center">Mission complete!</h2>
+    <div class="win-text" id="winText"></div>
+    <div class="modal-actions"><button class="btn" data-act="closeModals">Keep exploring</button><a class="btn primary" id="winPractise" href="../practice/index.html#forces">✏️ Practise this</a><button class="btn primary" id="winNext" data-act="nextMission">Next mission ▶</button></div>
+  </div>
+</div>
+<div id="modelModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modelTitle">
+  <div class="modal-box">
+    <h2 id="modelTitle">🤔 How is this model different from real life?</h2>
+    <p style="margin-top:0">A <span class="term">model</span> shows some important features of something real – but not everything.</p>
+    <ul class="icons">
+      <li><span class="em">👻</span><span>Forces are <b>invisible</b>. The arrows are a way of showing them.</span></li>
+      <li><span class="em">📍</span><span>Real forces act on the <b>whole object</b>. Gravity pulls on every part of the book, and the table pushes on its whole bottom. We draw each force as <b>one arrow</b> starting on the object.</span></li>
+      <li><span class="em">📏</span><span>A longer arrow means a bigger force, but the lengths only <b>compare</b> forces. To find the real size of a force, you measure it in <b>newtons</b> with a force meter.</span></li>
+      <li><span class="em">🤏</span><span>Some forces are left out because they are <b>tiny</b>, like the air resistance on a trolley at walking speed.</span></li>
+      <li><span class="em">📸</span><span>Moving things don't really leave faded copies behind! The faded pictures are like <b>photos taken one after another</b>, all put into one picture.</span></li>
+      <li><span class="em">🪂</span><span>The parachute drop is a <b>simulation</b>. In a real test, you would drop each parachute <b>more than once</b> and work out an average.</span></li>
+      <li><span class="em">⏱️</span><span>A stopwatch shows <b>hundredths</b> of a second, but people take about a tenth of a second to press the button. So repeat drops give slightly different times, and the last digit is not very reliable.</span></li>
+      <li><span class="em">🛁</span><span>In the upthrust tank, only the <b>upthrust</b> arrow is drawn. Gravity and the pull of the force meter act on the object too.</span></li>
+      <li><span class="em">🚗</span><span>In the friction ramp, only <b>friction</b> from the surface is shown. A real toy car is also slowed a little by air resistance and by friction in its wheels.</span></li>
+      <li><span class="em">🖼️</span><span>The pictures are simple drawings and are <b>not to scale</b>.</span></li>
+    </ul>
+    <div class="modal-actions"><button class="btn primary" data-act="closeModals">Got it!</button></div>
+  </div>
+</div>
+
+<script>
+// ================= Utilities =================
+const $ = (s, r = document) => r.querySelector(s);
+const SVGNS = 'http://www.w3.org/2000/svg';
+// Saved progress; private windows can block storage, so failures are ignored
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+};
+
+// ================= Forces =================
+// Only the seven forces named in 5Pf.01
+const FORCES = {
+  gravity:  { name: 'Gravity',          c: '#e8414f' },
+  normal:   { name: 'Normal force',     c: '#3d7bff' },
+  upthrust: { name: 'Upthrust',         c: '#16a06f' },
+  applied:  { name: 'Applied force',    c: '#e07b16' },
+  friction: { name: 'Friction',         c: '#8b4fd8' },
+  air:      { name: 'Air resistance',   c: '#0a9fbf' },
+  water:    { name: 'Water resistance', c: '#1c4f9c' }
+};
+const DIRS = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
+const UNIT = 40, MAXLEN = 5;   // arrow lengths go up in steps of 40, from 1 to 5 steps
+
+// ================= Scenes =================
+// need: the right forces and directions. rules: ['=', a, b, why] the same length (balanced), or ['>', a, b, why] a longer than b.
+// hint: a nudge for a missing force. extra: why a force doesn't belong. dir: a nudge for a force pointing the wrong way.
+// optional: a force that is really there but too small to matter: [direction, why it can be left out, nudge if it points the wrong way].
+// moments: the same picture at different times (just jumped / steady speed); each moment has its own intro, rules and win.
+const SCENES = [
+  { id: 'book', icon: '📕', label: 'Book', at: [500, 352],
+    speed: { label: '⏸️ Still', now: 0, was: [], note: 'The book is not moving.' },
+    intro: 'A book is lying <b>still</b> on a table. What forces are acting on the book?',
+    need: { gravity: 'down', normal: 'up' },
+    rules: [['=', 'gravity', 'normal', 'The book is not moving, so the up and down forces are <b>balanced</b>. Make the two arrows the <b>same length</b>.']],
+    hint: {
+      gravity: 'Something is pulling the book down towards the Earth. What is it?',
+      normal: 'Why doesn\'t the book fall through the table? The table pushes back up on it.'
+    },
+    extra: {
+      friction: 'Friction acts when surfaces slide, or try to slide, over each other. Nothing is pushing the book sideways, so there is <b>no friction</b> here.',
+      upthrust: 'Upthrust is the push up from a liquid or gas that an object is in. The table is solid, so its push is a <b>normal force</b>.',
+      air: 'Air resistance acts on things <b>moving</b> through the air. The book is still.',
+      water: 'Water resistance acts on things moving through water. There is no water here!',
+      applied: 'An applied force is a push or pull from someone or something. Nobody is pushing or pulling the book.'
+    },
+    dir: { gravity: 'Gravity always pulls <b>down</b>, towards the Earth.', normal: 'The table pushes the book <b>up</b>.' },
+    win: 'The book is still, but there are still <b>two forces</b> on it! Gravity pulls it down, and the table pushes it up with a <b>normal force</b>. They are the <b>same size</b>, so they are <b>balanced</b>.',
+    draw: () => `
+      <rect x="-700" y="-300" width="2400" height="900" fill="#fff4e0"/>
+      <rect x="-700" y="600" width="2400" height="400" fill="#d9b48a"/>
+      <rect x="-700" y="596" width="2400" height="8" fill="#c49a6c"/>
+      <rect x="760" y="110" width="150" height="120" rx="8" fill="#bfe3ff" stroke="#c49a6c" stroke-width="8"/>
+      <line x1="835" y1="110" x2="835" y2="230" stroke="#c49a6c" stroke-width="5"/>
+      <rect x="320" y="402" width="24" height="198" rx="4" fill="#9a6838"/>
+      <rect x="656" y="402" width="24" height="198" rx="4" fill="#9a6838"/>
+      <rect x="290" y="380" width="420" height="26" rx="7" fill="#b07a47"/>
+      <rect x="418" y="370" width="166" height="10" rx="3" fill="#2b5fd9"/>
+      <rect x="424" y="336" width="156" height="36" fill="#fffbe8" stroke="#e6dcb8" stroke-width="2"/>
+      <path d="M430 345 H574 M430 354 H574 M430 363 H574" stroke="#e6dcb8" stroke-width="2"/>
+      <rect x="418" y="326" width="166" height="12" rx="3" fill="#3d7bff"/>
+      <rect x="410" y="326" width="16" height="54" rx="7" fill="#2b5fd9"/>` },
+  { id: 'boat', icon: '⛵', label: 'Boat', at: [500, 384],
+    speed: { label: '⏸️ Still', now: 0, was: [], note: 'The boat is not moving.' },
+    intro: 'A toy boat is floating <b>still</b> on calm water. What forces are acting on the boat?',
+    need: { gravity: 'down', upthrust: 'up' },
+    rules: [['=', 'gravity', 'upthrust', 'The boat is not moving, so the up and down forces are <b>balanced</b>. Make the two arrows the <b>same length</b>.']],
+    hint: {
+      gravity: 'Something is pulling the boat down towards the Earth. What is it?',
+      upthrust: 'Why doesn\'t the boat sink? The water pushes up on it.'
+    },
+    extra: {
+      normal: 'A normal force is the push from a <b>solid</b> surface, like a table or the floor. The push up from water has its own name.',
+      friction: 'Friction acts when surfaces slide, or try to slide, over each other. The boat is still, so there is <b>no friction</b> here.',
+      water: 'Water resistance slows things <b>moving</b> through water. The boat is floating still, so there is none.',
+      air: 'Air resistance acts on things <b>moving</b> through the air. The boat is still.',
+      applied: 'An applied force is a push or pull from someone or something. Nobody is pushing or pulling the boat.'
+    },
+    dir: { gravity: 'Gravity always pulls <b>down</b>, towards the Earth.', upthrust: 'The water pushes the boat <b>up</b>.' },
+    win: 'The boat is still, but there are still <b>two forces</b> on it! Gravity pulls it down, and the water pushes it up with <b>upthrust</b>. They are the <b>same size</b>, so they are <b>balanced</b>.',
+    draw: () => `
+      <rect x="-700" y="-300" width="2400" height="700" fill="#cfe8ff"/>
+      <circle cx="850" cy="120" r="46" fill="#ffd54a"/>
+      <path d="M140 150 q20 -30 50 -10 q25 -25 55 0 q30 0 25 25 h-140 q-10 -15 10 -15z" fill="#fff"/>
+      <rect x="-700" y="400" width="2400" height="600" fill="#7cc4ee"/>
+      <path d="M560 268 L560 340 L506 340 Z" fill="#fff" stroke="#c9d3ea" stroke-width="3" stroke-linejoin="round"/>
+      <line x1="560" y1="262" x2="560" y2="372" stroke="#7a5230" stroke-width="7" stroke-linecap="round"/>
+      <rect x="440" y="336" width="86" height="34" rx="6" fill="#fff" stroke="#c9d3ea" stroke-width="3"/>
+      <circle cx="463" cy="353" r="7" fill="#9ccfff"/><circle cx="502" cy="353" r="7" fill="#9ccfff"/>
+      <path d="M392 368 H612 L582 428 H422 Z" fill="#ff8a3d" stroke="#c45f1c" stroke-width="4" stroke-linejoin="round"/>
+      <path d="M399 382 H605" stroke="#fff" stroke-width="6"/>
+      <rect x="-700" y="400" width="2400" height="600" fill="#4aa3df" fill-opacity=".55"/>
+      <path d="M-700 400 q25 -8 50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0" fill="none" stroke="#2f86c4" stroke-width="4"/>` },
+  { id: 'skydiver', icon: '🪂', label: 'Skydiver', at: [580, 330],
+    need: { gravity: 'down', air: 'up' },
+    moments: [
+      { key: 'jump', label: 'Just jumped',
+        intro: 'A skydiver has <b>just jumped</b> out of a plane. They are falling and <b>speeding up</b>. What forces are acting on the skydiver?',
+        speed: { label: '⏩ Speeding up', now: .4, was: [.1, .2, .3] },
+        draw: () => skyBack(true) + plane() + diver(300, 128, .8, -40, .22) + diver(352, 166, .8, -32, .3) + diver(445, 232, .8, -24, .4) + diver(580, 330, .8, -16),
+        rules: [['>', 'gravity', 'air', 'The skydiver is <b>speeding up</b>, so the pull down is <b>bigger</b> than the push up. Make the gravity arrow <b>longer</b> than the air resistance arrow.']],
+        win: 'Gravity is <b>bigger</b> than air resistance. The forces are <b>unbalanced</b>, so the skydiver speeds up. The faster they fall, the bigger the air resistance gets…' },
+      { key: 'steady', label: 'Steady speed',
+        intro: 'A little later, the skydiver is falling at a <b>steady speed</b>: no faster and no slower. What forces are acting on the skydiver now?',
+        speed: { label: '▶️ Steady speed', now: .75, was: [.75, .75, .75] },
+        draw: () => skyBack(false) + diver(385, 90, .8, 0, .22) + diver(450, 170, .8, 0, .3) + diver(515, 250, .8, 0, .4) + diver(580, 330, .8, 0),
+        rules: [['=', 'gravity', 'air', 'The skydiver is falling at a <b>steady speed</b>, so the forces are <b>balanced</b>. Make the two arrows the <b>same length</b>.']],
+        win: 'Air resistance has grown until it is the <b>same size</b> as gravity. The forces are <b>balanced</b>, so the skydiver falls at a steady speed. Balanced forces don\'t always mean <b>still</b>!' }
+    ],
+    hint: {
+      gravity: 'Something is pulling the skydiver down towards the Earth. What is it?',
+      air: 'The skydiver is rushing down through the air. What pushes against them?'
+    },
+    extra: {
+      normal: 'A normal force is the push from a <b>solid</b> surface. The skydiver isn\'t touching anything solid.',
+      friction: 'Air resistance is a kind of friction with the air, but it has its own name. Use <b>air resistance</b> instead.',
+      water: 'Water resistance acts on things moving through water. There is no water here!',
+      applied: 'An applied force is a push or pull from someone or something. Nobody is pushing or pulling the skydiver.'
+    },
+    optional: { upthrust: ['up', 'That\'s true: the air gives a very small upthrust! But it is tiny, so you can leave it out.', 'Upthrust pushes <b>up</b>.'] },
+    dir: { gravity: 'Gravity always pulls <b>down</b>, towards the Earth.', air: 'Air resistance works <b>against</b> the movement. The skydiver falls down, so air resistance points <b>up</b>.' } },
+  { id: 'box', icon: '📦', label: 'Box', at: [500, 410],
+    speed: { label: '🐢 Slowing down', now: .2, was: [.65, .5, .35] },
+    draw: () => BOX_BACK + trail(BOX_PIC, [-360, -190, -70]),
+    intro: 'A box was given a push and let go. Now it is <b>sliding</b> to the right across the carpet and <b>slowing down</b>. What forces are acting on the box?',
+    need: { gravity: 'down', normal: 'up', friction: 'left' },
+    rules: [['=', 'gravity', 'normal', 'The box isn\'t moving up or down, so gravity and the normal force are <b>balanced</b>. Make those two arrows the <b>same length</b>.']],
+    hint: {
+      gravity: 'Something is pulling the box down towards the Earth. What is it?',
+      normal: 'Why doesn\'t the box sink into the floor? The floor pushes back up on it.',
+      friction: 'What is slowing the box down? Think about the box rubbing on the carpet.'
+    },
+    extra: {
+      applied: 'Nobody is touching the box any more. The push stopped when it was let go. The box keeps sliding for a while, but something slows it down.',
+      upthrust: 'Upthrust is the push up from a liquid or gas that an object is in. The floor is solid, so its push up is a <b>normal force</b>.',
+      water: 'Water resistance acts on things moving through water. There is no water here!'
+    },
+    optional: { air: ['left', 'That\'s true, there is a little! But it is tiny for a slow box, so you can leave it out.', 'Air resistance works against the movement, so it would point to the <b>left</b>.'] },
+    dir: { gravity: 'Gravity always pulls <b>down</b>, towards the Earth.', normal: 'The floor pushes the box <b>up</b>.',
+      friction: 'Friction works <b>against</b> the movement. The box slides to the right, so friction points to the <b>left</b>.' },
+    win: 'Friction points <b>backwards</b>, against the movement, so the box slows down. Nothing pushes it forwards any more. Gravity and the normal force are <b>balanced</b>, so it doesn\'t move up or down.' },
+  { id: 'trolley', icon: '🛒', label: 'Trolley', at: [600, 395],
+    need: { gravity: 'down', normal: 'up', applied: 'right', friction: 'left' },
+    moments: [
+      { key: 'steady', label: 'Steady speed',
+        speed: { label: '▶️ Steady speed', now: .5, was: [.5, .5, .5] },
+        draw: () => TROLLEY_BACK + trail(trolleyPic(false), [-330, -220, -110]),
+        intro: 'Someone is pushing a trolley to the right at a <b>steady speed</b>. What forces are acting on the trolley?',
+        rules: [['=', 'gravity', 'normal', 'The trolley isn\'t moving up or down, so gravity and the normal force are <b>balanced</b>. Make those two arrows the <b>same length</b>.'],
+          ['=', 'applied', 'friction', 'The trolley moves at a <b>steady speed</b>, so the forwards and backwards forces are <b>balanced</b>. Make those two arrows the <b>same length</b>.']],
+        win: 'At a steady speed, the push forwards and friction backwards are the <b>same size</b>, so they are <b>balanced</b>. The trolley keeps moving, but it doesn\'t get faster or slower.' },
+      { key: 'faster', label: 'Speeding up',
+        speed: { label: '⏩ Speeding up', now: .6, was: [.15, .25, .4] },
+        draw: () => TROLLEY_BACK + trail(trolleyPic(true), [-310, -250, -150]),
+        intro: 'Now the person pushes <b>harder</b>, and the trolley <b>speeds up</b> to the right. What forces are acting on the trolley?',
+        rules: [['=', 'gravity', 'normal', 'The trolley isn\'t moving up or down, so gravity and the normal force are <b>balanced</b>. Make those two arrows the <b>same length</b>.'],
+          ['>', 'applied', 'friction', 'The trolley is <b>speeding up</b>, so the push forwards is <b>bigger</b> than friction. Make the applied force arrow <b>longer</b>.']],
+        win: 'The push forwards is <b>bigger</b> than friction. The forces are <b>unbalanced</b>, so the trolley speeds up.' }
+    ],
+    hint: {
+      gravity: 'Something is pulling the trolley down towards the Earth. What is it?',
+      normal: 'Why doesn\'t the trolley sink into the floor? The floor pushes back up on it.',
+      applied: 'Someone is pushing the trolley. What do we call a push or pull from someone?',
+      friction: 'What makes the trolley harder to push? Think about the wheels on the floor.'
+    },
+    extra: {
+      upthrust: 'Upthrust is the push up from a liquid or gas that an object is in. The floor is solid, so its push up is a <b>normal force</b>.',
+      water: 'Water resistance acts on things moving through water. There is no water here!'
+    },
+    optional: { air: ['left', 'That\'s true, there is a little! But it is tiny at walking speed, so you can leave it out.', 'Air resistance works against the movement, so it would point to the <b>left</b>.'] },
+    dir: { gravity: 'Gravity always pulls <b>down</b>, towards the Earth.', normal: 'The floor pushes the trolley <b>up</b>.',
+      applied: 'The person pushes the trolley forwards, to the <b>right</b>.',
+      friction: 'Friction works <b>against</b> the movement. The trolley moves to the right, so friction points to the <b>left</b>.' } },
+  { id: 'fish', icon: '🐟', label: 'Fish', at: [500, 340],
+    speed: { label: '🐢 Slowing down', now: .2, was: [.65, .5, .35] },
+    draw: () => FISH_BACK + trail(FISH_PIC, [-420, -230, -90]),
+    intro: 'A fish gave one flick of its tail. Now it is <b>gliding</b> to the right and <b>slowing down</b>. It isn\'t rising or sinking. What forces are acting on the fish?',
+    need: { gravity: 'down', upthrust: 'up', water: 'left' },
+    rules: [['=', 'gravity', 'upthrust', 'The fish isn\'t rising or sinking, so gravity and upthrust are <b>balanced</b>. Make those two arrows the <b>same length</b>.']],
+    hint: {
+      gravity: 'Something is pulling the fish down towards the Earth. What is it?',
+      upthrust: 'Why doesn\'t the fish sink to the bottom? The water pushes up on it.',
+      water: 'What slows the fish down as it glides? It is pushing its way through the water.'
+    },
+    extra: {
+      normal: 'A normal force is the push from a <b>solid</b> surface. The fish isn\'t touching anything solid. The push up from water has its own name.',
+      friction: 'Water resistance is a kind of friction with the water, but it has its own name. Use <b>water resistance</b> instead.',
+      air: 'The fish is under the water, not in the air!',
+      applied: 'The tail flick is over, so nothing is pushing the fish forwards now. It keeps gliding for a while, but something slows it down.'
+    },
+    dir: { gravity: 'Gravity always pulls <b>down</b>, towards the Earth.', upthrust: 'The water pushes the fish <b>up</b>.',
+      water: 'Water resistance works <b>against</b> the movement. The fish moves to the right, so water resistance points to the <b>left</b>.' },
+    win: 'Gravity and upthrust are <b>balanced</b>, so the fish doesn\'t rise or sink. <b>Water resistance</b> points backwards, against the movement, and slows the fish down.' }
+];
+
+// ================= Skydiver pictures =================
+// The skydiver is drawn around (500, 350); diver() moves, turns and shrinks a copy. A faded copy is an earlier "photo".
+function diver(x, y, k, turn, fade = 1) {
+  return `<g transform="translate(${x} ${y}) rotate(${turn}) scale(${k}) translate(-500 -350)"${fade < 1 ? ` opacity="${fade}"` : ''}>
+    <polyline points="455,356 405,342 378,306" fill="none" stroke="#e8662a" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="374" cy="300" r="12" fill="#2b2f45"/>
+    <line x1="455" y1="354" x2="548" y2="350" stroke="#ff7a33" stroke-width="46" stroke-linecap="round"/>
+    <rect x="462" y="318" width="70" height="20" rx="8" fill="#3d4a8a"/>
+    <line x1="510" y1="330" x2="500" y2="374" stroke="#2b2f45" stroke-width="5"/>
+    <polyline points="538,342 586,322 604,290" fill="none" stroke="#ff7a33" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="606" cy="285" r="10" fill="#2b2f45"/>
+    <circle cx="596" cy="352" r="24" fill="#f2c19b"/>
+    <path d="M572 352 a24 24 0 0 1 48 -4 l-6 2 a20 20 0 0 0 -38 2 z" fill="#3d7bff"/>
+    <rect x="600" y="347" width="20" height="11" rx="5" fill="#2b2f45"/></g>`;
+}
+const cloud = (x, y, k, o = 1) => `<path transform="translate(${x} ${y}) scale(${k})" d="M0 0 q20 -30 50 -10 q25 -25 55 0 q30 0 25 25 h-140 q-10 -15 10 -15z" fill="#fff" opacity="${o}"/>`;
+// High up: the ground is a thin, hazy patchwork of fields far below
+function skyBack(high) {
+  const fields = Array.from({ length: 24 }, (_, i) => `<rect x="${-700 + i * 100}" y="652" width="${60 + (i * 37) % 50}" height="${10 + (i * 13) % 12}" fill="${['#9fd39a', '#c7dc8e', '#8cc58a', '#d9cf8f'][i % 4]}"/>`).join('');
+  return `<defs><linearGradient id="skyG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4f97f2"/><stop offset=".85" stop-color="#cfe6ff"/></linearGradient></defs>
+    <rect x="-700" y="-300" width="2400" height="1300" fill="url(#skyG)"/>
+    <rect x="-700" y="648" width="2400" height="400" fill="#a9d6a0"/>${fields}
+    <rect x="-700" y="630" width="2400" height="400" fill="#e4f1ff" opacity=".55"/>
+    ${high ? cloud(80, 560, 1.4, .9) + cloud(760, 600, 1.8, .9) + cloud(420, 610, 1, .8)
+           : cloud(-60, 380, 1.6) + cloud(800, 250, 1.3, .9) + cloud(760, 520, 2, .95) + cloud(150, 600, 1.4, .85)}`;
+}
+// The underside of the plane, in the top corner, with the open door the skydiver just jumped from
+function plane() {
+  return `<g>
+    <path d="M-120 92 Q-20 140 120 128 L190 118 Q130 100 60 96 Z" fill="#cfd6e6" stroke="#9aa3c0" stroke-width="3"/>
+    <rect x="-500" y="-60" width="850" height="160" rx="70" fill="#eef1f7" stroke="#9aa3c0" stroke-width="4"/>
+    <rect x="-500" y="58" width="800" height="10" fill="#3d7bff"/>
+    <g fill="#9ccfff" stroke="#9aa3c0" stroke-width="2"><circle cx="-60" cy="30" r="12"/><circle cx="-10" cy="30" r="12"/><circle cx="40" cy="30" r="12"/><circle cx="90" cy="30" r="12"/><circle cx="140" cy="30" r="12"/></g>
+    <rect x="210" y="6" width="62" height="86" rx="8" fill="#2b2f45" stroke="#9aa3c0" stroke-width="3"/></g>`;
+}
+
+// ================= Moving pictures =================
+// Faded copies behind a moving object are earlier "photos", the same time apart: growing gaps mean speeding up,
+// equal gaps a steady speed, shrinking gaps slowing down. offs are how far back each earlier photo was.
+const trail = (pic, offs) => offs.map((dx, i) => `<g transform="translate(${dx} 0)" opacity="${[.22, .3, .4][i]}">${pic}</g>`).join('') + pic;
+const BOX_BACK = `
+      <defs><pattern id="carpetP" width="24" height="24" patternUnits="userSpaceOnUse"><rect width="24" height="24" fill="#c75b52"/><circle cx="6" cy="6" r="2.5" fill="#b04a42"/><circle cx="18" cy="18" r="2.5" fill="#b04a42"/></pattern></defs>
+      <rect x="-700" y="-300" width="2400" height="770" fill="#eaf0ff"/>
+      <rect x="-700" y="456" width="2400" height="14" fill="#fff"/>
+      <rect x="-700" y="470" width="2400" height="600" fill="url(#carpetP)"/>
+      <rect x="770" y="110" width="140" height="170" rx="6" fill="#ffe3a3" stroke="#c9a25c" stroke-width="8"/>
+      <path d="M790 250 l40 -60 l25 35 l15 -20 l25 45 z" fill="#8fd18a"/>`;
+const BOX_PIC = `      <rect x="430" y="350" width="140" height="120" rx="4" fill="#d6a464" stroke="#a8763a" stroke-width="4"/>
+      <rect x="486" y="350" width="28" height="120" fill="#e8c58c"/>
+      <line x1="430" y1="378" x2="570" y2="378" stroke="#a8763a" stroke-width="3"/>`;
+const FISH_BACK = `
+      <defs><linearGradient id="seaG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7fd0f2"/><stop offset="1" stop-color="#2a86c6"/></linearGradient></defs>
+      <rect x="-700" y="-300" width="2400" height="1300" fill="url(#seaG)"/>
+      <path d="M-700 600 Q-200 580 300 600 T1300 596 T1700 600 V1000 H-700 Z" fill="#f1d9a0"/>
+      <g fill="none" stroke="#2f9e5a" stroke-width="12" stroke-linecap="round">
+        <path d="M150 600 q-25 -50 0 -100 t0 -100 t0 -90"/><path d="M185 600 q25 -45 0 -90 t0 -90"/>
+        <path d="M850 600 q-25 -50 0 -100 t0 -100"/><path d="M885 600 q25 -40 0 -80 t0 -80 t0 -70"/></g>
+      <g fill="#fff" fill-opacity=".55"><circle cx="300" cy="300" r="7"/><circle cx="270" cy="270" r="5"/><circle cx="290" cy="235" r="9"/><circle cx="700" cy="180" r="6"/><circle cx="720" cy="140" r="9"/></g>`;
+const FISH_PIC = `      <path d="M420 340 L358 296 L372 340 L358 384 Z" fill="#ff9f1c" stroke="#d67b00" stroke-width="4" stroke-linejoin="round"/>
+      <path d="M470 292 q35 -40 70 -6" fill="#ff9f1c" stroke="#d67b00" stroke-width="4"/>
+      <ellipse cx="500" cy="340" rx="94" ry="54" fill="#ffb341" stroke="#d67b00" stroke-width="4"/>
+      <path d="M462 292 q-18 48 0 96" fill="none" stroke="#fff" stroke-width="10"/>
+      <circle cx="560" cy="326" r="11" fill="#fff"/><circle cx="563" cy="326" r="5.5" fill="#1d2340"/>
+      <path d="M580 356 q8 4 12 -2" fill="none" stroke="#d67b00" stroke-width="4" stroke-linecap="round"/>`;
+const TROLLEY_BACK = `
+      <rect x="-700" y="-300" width="2400" height="800" fill="#f4f7ff"/>
+      <rect x="-700" y="500" width="2400" height="500" fill="#dfe4ee"/>
+      <g stroke="#c9d0de" stroke-width="3">${Array.from({ length: 31 }, (_, i) => `<line x1="${-700 + i * 80}" y1="500" x2="${-700 + i * 80 - 40}" y2="1000"/>`).join('')}</g>
+      <rect x="770" y="90" width="230" height="250" fill="#e7ebf5" stroke="#b9c1d6" stroke-width="5"/>
+      <line x1="770" y1="170" x2="1000" y2="170" stroke="#b9c1d6" stroke-width="5"/><line x1="770" y1="255" x2="1000" y2="255" stroke="#b9c1d6" stroke-width="5"/>
+      <g><rect x="790" y="120" width="34" height="48" rx="4" fill="#ff5f6d"/><rect x="832" y="132" width="34" height="36" rx="4" fill="#ffc83d"/><rect x="874" y="114" width="26" height="54" rx="8" fill="#22b07d"/><rect x="910" y="128" width="40" height="40" rx="4" fill="#3d7bff"/>
+        <rect x="790" y="210" width="40" height="43" rx="4" fill="#f0892e"/><rect x="838" y="200" width="28" height="53" rx="8" fill="#8b4fd8"/><rect x="874" y="215" width="44" height="38" rx="4" fill="#ff5f6d"/><rect x="926" y="205" width="30" height="48" rx="4" fill="#22b07d"/></g>`;
+// Pushing harder, the person leans further forward with a longer stride
+function trolleyPic(lean) {
+  const person = lean ? `
+      <line x1="392" y1="402" x2="345" y2="494" stroke="#3557b7" stroke-width="20" stroke-linecap="round"/>
+      <line x1="392" y1="402" x2="428" y2="496" stroke="#3557b7" stroke-width="20" stroke-linecap="round"/>
+      <ellipse cx="340" cy="500" rx="20" ry="9" fill="#2b2f45"/><ellipse cx="436" cy="500" rx="20" ry="9" fill="#2b2f45"/>
+      <line x1="392" y1="402" x2="434" y2="320" stroke="#22b07d" stroke-width="36" stroke-linecap="round"/>
+      <circle cx="452" cy="286" r="26" fill="#f2c19b"/>
+      <path d="M427 284 a26 26 0 0 1 50 -6 q-22 -6 -34 8 q-8 4 -16 -2z" fill="#6b3f22"/>
+      <circle cx="464" cy="282" r="3.5" fill="#1d2340"/>` : `
+      <line x1="395" y1="400" x2="372" y2="496" stroke="#3557b7" stroke-width="20" stroke-linecap="round"/>
+      <line x1="395" y1="400" x2="424" y2="496" stroke="#3557b7" stroke-width="20" stroke-linecap="round"/>
+      <ellipse cx="368" cy="500" rx="20" ry="9" fill="#2b2f45"/><ellipse cx="432" cy="500" rx="20" ry="9" fill="#2b2f45"/>
+      <line x1="395" y1="400" x2="418" y2="312" stroke="#22b07d" stroke-width="36" stroke-linecap="round"/>
+      <circle cx="432" cy="272" r="26" fill="#f2c19b"/>
+      <path d="M407 270 a26 26 0 0 1 50 -6 q-22 -6 -34 8 q-8 4 -16 -2z" fill="#6b3f22"/>
+      <circle cx="444" cy="268" r="3.5" fill="#1d2340"/>`;
+  const arm = lean ? '432,330 452,336 464,317' : '418,322 446,334 464,317';
+  return `${person}
+      <g><rect x="545" y="302" width="34" height="40" rx="4" fill="#ffc83d"/><rect x="586" y="292" width="22" height="50" rx="8" fill="#22b07d"/><circle cx="636" cy="320" r="20" fill="#ff5f6d"/></g>
+      <path d="M500 330 L700 330 L680 440 L520 440 Z" fill="#fff" fill-opacity=".45" stroke="#8a93ad" stroke-width="6" stroke-linejoin="round"/>
+      <g stroke="#b3bad0" stroke-width="3"><line x1="540" y1="332" x2="550" y2="438"/><line x1="580" y1="332" x2="584" y2="438"/><line x1="620" y1="332" x2="618" y2="438"/><line x1="660" y1="332" x2="652" y2="438"/><line x1="505" y1="368" x2="693" y2="368"/><line x1="512" y1="404" x2="687" y2="404"/></g>
+      <path d="M528 440 L512 476 M672 440 L684 476 M506 476 H690" fill="none" stroke="#8a93ad" stroke-width="6" stroke-linecap="round"/>
+      <circle cx="522" cy="488" r="12" fill="#1d2340"/><circle cx="676" cy="488" r="12" fill="#1d2340"/>
+      <line x1="500" y1="330" x2="466" y2="316" stroke="#8a93ad" stroke-width="6" stroke-linecap="round"/>
+      <polyline points="${arm}" fill="none" stroke="#22b07d" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="466" cy="316" r="9" fill="#f2c19b"/>`;
+}
+
+// ================= State =================
+// arrows and tries are kept for each scene (and each moment), so switching back keeps a child's work
+const state = { view: 'arrows', scene: 0, moment: {}, arrows: {}, checked: null, tries: {}, solved: store.get('fp-solved', []),
+  mission: null, mseen: new Set(), done: store.get('fp-done', []) };
+
+// ================= Force arrow builder =================
+const A = {
+  // The current scene, with the current moment's intro, rules and win mixed in
+  scene() {
+    const b = SCENES[state.scene], m = b.moments && b.moments[state.moment[b.id] || 0];
+    return m ? { ...b, ...m, id: `${b.id}-${m.key}` } : b;
+  },
+  list() { const id = A.scene().id; return state.arrows[id] || (state.arrows[id] = []); },
+  solved: b => (b.moments ? b.moments.map(m => `${b.id}-${m.key}`) : [b.id]).every(id => state.solved.includes(id)),
+  // Arrows pointing the same way are spread out a little so neither hides the other
+  offset(a) {
+    const same = A.list().filter(b => b.dir === a.dir), i = same.indexOf(a);
+    return (i - (same.length - 1) / 2) * 22;
+  },
+  draw(a, cls = '') {
+    const [x0, y0] = A.scene().at, [dx, dy] = DIRS[a.dir], f = FORCES[a.f], o = A.offset(a);
+    const sx = x0 + (dy ? o : 0), sy = y0 + (dx ? o : 0);
+    const L = a.len * UNIT, tx = sx + dx * L, ty = sy + dy * L;
+    const hx = tx - dx * 22, hy = ty - dy * 22, px = -dy * 15, py = dx * 15;
+    // The name sits just past the arrow's point
+    const lx = tx + dx * 14, ly = ty + dy * 14 + (dy > 0 ? 18 : dy < 0 ? -4 : 9);
+    const anchor = dx > 0 ? 'start' : dx < 0 ? 'end' : 'middle';
+    return `<g class="force ${cls}" data-f="${a.f}">
+      <line x1="${sx}" y1="${sy}" x2="${tx}" y2="${ty}" stroke="transparent" stroke-width="44"/>
+      <line x1="${sx}" y1="${sy}" x2="${hx}" y2="${hy}" stroke="${f.c}" stroke-width="10" stroke-linecap="round"/>
+      <polygon points="${tx},${ty} ${hx + px},${hy + py} ${hx - px},${hy - py}" fill="${f.c}" stroke="${f.c}" stroke-width="3" stroke-linejoin="round"/>
+      <circle class="knob" cx="${tx - dx * 8}" cy="${ty - dy * 8}" r="9" stroke="${f.c}"/>
+      <circle cx="${tx}" cy="${ty}" r="26" fill="transparent"/>
+      <text x="${lx}" y="${ly}" text-anchor="${anchor}" fill="${f.c}">${f.name}</text></g>`;
+  },
+  stage() {
+    const s = A.scene(), [x, y] = s.at;
+    return `<svg class="arrowmode" viewBox="0 0 1000 680" preserveAspectRatio="xMidYMid meet" role="img" aria-label="${s.label} with force arrows">
+      ${s.draw()}<g id="arrows"></g>
+      <circle cx="${x}" cy="${y}" r="8" fill="#1d2340" stroke="#fff" stroke-width="3"/></svg>
+      <div id="fbBox" class="fbbox hidden" role="status"></div>${s.speed ? A.speedTag(s.speed) : ''}`;
+  },
+  // A small speedometer: faded needles show the earlier speeds, like the faded pictures
+  speedTag(sp) {
+    const needle = (v, o) => { const a = Math.PI * (1 - v); return `<line x1="32" y1="34" x2="${32 + 22 * Math.cos(a)}" y2="${34 - 22 * Math.sin(a)}" stroke="#1d2340" stroke-width="4" stroke-linecap="round" opacity="${o}"/>`; };
+    return `<div class="speedtag" role="note"><svg viewBox="0 0 64 40" width="64" height="40" aria-hidden="true">
+        <path d="M6 34 A26 26 0 0 1 58 34" fill="none" stroke="#d3dbf7" stroke-width="7" stroke-linecap="round"/>
+        ${sp.was.map((v, i) => needle(v, .15 + i * .1)).join('')}${needle(sp.now, 1)}<circle cx="32" cy="34" r="4" fill="#1d2340"/></svg>
+      <div><b>${sp.label}</b><small>${sp.note || '📸 The faded pictures show where it was before, with the same time between each one.'}</small></div></div>`;
+  },
+  redraw(marks = {}) {
+    const g = $('#arrows'); if (!g) return;
+    g.innerHTML = A.list().map(a => A.draw(a, marks[a.f] || '')).join('');
+  },
+  mount() {
+    A.redraw(); A.fit();
+    const svg = $('#stage svg');
+    // Dragging an arrow moves its point: the direction snaps to up, down, left or right, and the length to whole steps
+    svg.addEventListener('pointerdown', e => {
+      const g = e.target.closest('.force'); if (!g) return;
+      const a = A.list().find(b => b.f === g.dataset.f);
+      e.preventDefault(); svg.setPointerCapture(e.pointerId);
+      A.drag = { a, id: e.pointerId };
+      g.classList.add('dragging');
+    });
+    svg.addEventListener('pointermove', e => {
+      if (!A.drag || A.drag.id !== e.pointerId) return;
+      A.aim(A.drag.a, A.toSvg(e));
+      A.redraw(); A.changed();
+    });
+    const end = e => { if (A.drag && A.drag.id === e.pointerId) { A.drag = null; A.redraw(); } };
+    svg.addEventListener('pointerup', end); svg.addEventListener('pointercancel', end);
+  },
+  toSvg(e) {
+    const svg = $('#stage svg'), p = svg.createSVGPoint(); p.x = e.clientX; p.y = e.clientY;
+    return p.matrixTransform(svg.getScreenCTM().inverse());
+  },
+  aim(a, p) {
+    const [x0, y0] = A.scene().at, dx = p.x - x0, dy = p.y - y0;
+    a.dir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
+    a.len = Math.max(1, Math.min(MAXLEN, Math.round(Math.max(Math.abs(dx), Math.abs(dy)) / UNIT)));
+  },
+  add(f, p) {
+    if (A.list().some(a => a.f === f)) return;
+    // Tapping a force (instead of dragging it) points it at the first free direction
+    const free = ['up', 'down', 'right', 'left'].find(d => !A.list().some(a => a.dir === d)) || 'up';
+    const a = { f, dir: free, len: 3 };
+    if (p) { A.aim(a, p); a.len = 3; }
+    A.list().push(a); A.redraw(); A.changed();
+  },
+  remove(f) { state.arrows[A.scene().id] = A.list().filter(a => a.f !== f); A.redraw(); A.changed(); },
+  // Any change clears the last check, so old feedback never sits next to a different diagram
+  changed() { state.checked = null; A.showFb(); $('#drawer').innerHTML = VIEWS.arrows.drawer(); },
+  // The feedback sits on the picture, so it is never scrolled out of sight
+  showFb() {
+    const box = $('#fbBox'), c = state.checked, s = A.scene(); if (!box) return;
+    box.classList.toggle('hidden', !c); if (!c) return;
+    box.className = `fbbox card ${c.ok ? 'win' : 'tryagain'}`;
+    box.innerHTML = `<button class="close" data-act="closeFb" aria-label="Close">✖</button>
+      <h3>${c.ok ? '🎉 Brilliant!' : '🤔 Not quite yet'}</h3>
+      ${c.ok ? `<p>${s.win}</p>` : `<ul class="fb">${c.fb.map(([em, t]) => `<li><span class="em">${em}</span><span>${t}</span></li>`).join('')}</ul>`}
+      ${!c.ok && state.tries[s.id] >= 2 ? '<button class="opt" data-act="answer" style="margin-top:8px">👀 Show me the answer</button>' : ''}`;
+    A.fit();
+  },
+  // While the feedback is open, slide the picture right so the box doesn't cover the arrows,
+  // but never so far that a right-pointing arrow's name goes off the edge
+  fit() {
+    const svg = $('#stage svg'), box = $('#fbBox'); if (!svg || !box) return;
+    const W = svg.clientWidth, H = svg.clientHeight;
+    // On a tall, narrow stage (a phone), zoom in around the object, keeping room for the longest arrows and their names
+    if (W / H < 1.2) { const [ox, oy] = A.scene().at; svg.setAttribute('viewBox', `${ox - 450} ${oy - 330} 900 660`); return; }
+    let x = 0;
+    if (!box.classList.contains('hidden')) {
+      const k = Math.min(W / 1000, H / 680), pad = (W - 1000 * k) / 2;
+      const want = (box.offsetLeft + box.offsetWidth + W) / 2;
+      const most = (W - 8 - pad) / k - (A.scene().at[0] + MAXLEN * UNIT + 200);
+      x = -Math.max(0, Math.min((want - pad) / k - A.scene().at[0], most));
+    }
+    svg.setAttribute('viewBox', `${x} 0 1000 680`);
+  },
+  check() {
+    const s = A.scene(), list = A.list(), fb = [], marks = {};
+    let ok = true;
+    list.forEach(a => {
+      const want = s.need[a.f], name = FORCES[a.f].name, opt = s.optional && s.optional[a.f];
+      if (!want && opt) {
+        if (a.dir === opt[0]) fb.push(['💡', `<b>${name}</b>: ${opt[1]}`]);
+        else { ok = false; marks[a.f] = 'bad'; fb.push(['❌', `<b>${name}</b> is pointing the wrong way. ${opt[2]}`]); }
+      }
+      else if (!want) { ok = false; marks[a.f] = 'bad'; fb.push(['❌', `<b>${name}</b>: ${s.extra[a.f]}`]); }
+      else if (a.dir !== want) { ok = false; marks[a.f] = 'bad'; fb.push(['❌', `<b>${name}</b> is pointing the wrong way. ${s.dir[a.f]}`]); }
+      else { marks[a.f] = 'good'; fb.push(['✅', `<b>${name}</b> is right, and it points the right way.`]); }
+    });
+    Object.keys(s.need).filter(f => !list.some(a => a.f === f)).forEach(f => { ok = false; fb.push(['🔍', `A force is missing. ${s.hint[f]}`]); });
+    // Lengths only matter once the right forces point the right way
+    if (ok) s.rules.forEach(([op, p, q, why]) => {
+      const a = list.find(b => b.f === p).len, b = list.find(c => c.f === q).len;
+      if (op === '=' ? a !== b : a <= b) { ok = false; marks[p] = marks[q] = 'bad'; fb.push(['📏', why]); }
+    });
+    if (!ok) state.tries[s.id] = (state.tries[s.id] || 0) + 1;
+    else if (!state.solved.includes(s.id)) { state.solved.push(s.id); store.set('fp-solved', state.solved); }
+    if (ok) emit('solved', { id: s.id });
+    state.checked = { ok, fb };
+    A.redraw(marks);
+    $('#drawer').innerHTML = VIEWS.arrows.drawer(); A.showFb();
+    if (ok) confetti();
+  },
+  answer() {
+    const s = A.scene();
+    // Equal pairs get the same length; in a 'bigger than' pair the first is longer
+    const big = s.rules.filter(r => r[0] === '>');
+    state.arrows[s.id] = Object.entries(s.need).map(([f, dir]) =>
+      ({ f, dir, len: big.some(r => r[1] === f) ? 4 : big.some(r => r[2] === f) ? 2 : 3 }));
+    A.redraw(); state.checked = null; A.check();
+  }
+};
+
+// Dragging a force from the drawer onto the picture; a quick tap adds it too
+const Chips = {
+  start(e, btn) {
+    if (btn.disabled) return;
+    e.preventDefault();
+    const d = { f: btn.dataset.f, x: e.clientX, y: e.clientY, id: e.pointerId, ghost: null, btn };
+    Chips.d = d; btn.setPointerCapture(e.pointerId);
+  },
+  move(e) {
+    const d = Chips.d; if (!d || d.id !== e.pointerId) return;
+    if (!d.ghost && Math.hypot(e.clientX - d.x, e.clientY - d.y) > 8) {
+      d.ghost = d.btn.cloneNode(true); d.ghost.classList.add('chip-ghost'); d.ghost.style.width = d.btn.offsetWidth + 'px';
+      document.body.appendChild(d.ghost);
+    }
+    if (d.ghost) { d.ghost.style.left = e.clientX + 'px'; d.ghost.style.top = e.clientY + 'px'; }
+  },
+  end(e) {
+    const d = Chips.d; if (!d || d.id !== e.pointerId) return;
+    Chips.d = null;
+    if (!d.ghost) { A.add(d.f); return; }
+    d.ghost.remove();
+    const r = $('#stage').getBoundingClientRect();
+    if (e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom) A.add(d.f, A.toSvg(e));
+  }
+};
+document.addEventListener('pointerdown', e => { const b = e.target.closest('.chip'); if (b) Chips.start(e, b); });
+document.addEventListener('pointermove', e => Chips.move(e));
+document.addEventListener('pointerup', e => Chips.end(e));
+document.addEventListener('pointercancel', e => { if (Chips.d) { Chips.d.ghost?.remove(); Chips.d = null; } });
+
+// ================= Parachute drop =================
+// A toy on a paper parachute is dropped 2.5 m. Air resistance grows with speed and with canopy size (k × size² × speed²),
+// so a bigger canopy soon balances gravity at a low speed and takes longer to land.
+// Fall times run from about 0.8 s (10 cm) to 2.6 s (50 cm). One drop goes wrong on purpose, so children can spot it.
+const P = {
+  H: 2.5, PX: 180, TOP: 150, FLOOR: 620, X: 520, G: 9.8, K: .0039, ARROW: 110, LATE: .6,
+  // Step through the fall: where the toy is, and how fast, every 1/500 of a second
+  path(size) {
+    const k = P.K * size * size, pts = [];
+    let v = 0, y = 0, t = 0;
+    while (y < P.H) { pts.push([t, y, v]); v += (P.G - k * v * v) / 500; y += v / 500; t += 1 / 500; }
+    pts.push([t, P.H, v]);
+    return { pts, T: t, vt: Math.sqrt(P.G / k) };
+  },
+  // Someone above holds the top of the canopy, then lets go
+  holder(size) {
+    const top = P.TOP - 75 - Math.min(60, size * 4 * .32) * 1.3;
+    return `<g id="holder"><rect x="${P.X - 13}" y="-400" width="26" height="${top - 4 + 400}" fill="#22b07d"/>
+      <circle cx="${P.X}" cy="${top - 4}" r="14" fill="#f2c19b"/></g>`;
+  },
+  chute(size) {
+    const w = size * 4, h = Math.min(60, w * .32);
+    return `<g id="chute">
+      <path d="M${-w / 2} -75 Q${-w / 2} ${-75 - h * 1.3} 0 ${-75 - h * 1.3} Q${w / 2} ${-75 - h * 1.3} ${w / 2} -75 Q${w / 4} -66 0 -75 Q${-w / 4} -66 ${-w / 2} -75 Z" fill="#ffc83d" stroke="#d9a400" stroke-width="3"/>
+      <path d="M${-w / 2} -75 L-4 -12 M${-w / 6} -72 L-2 -12 M${w / 6} -72 L2 -12 M${w / 2} -75 L4 -12" stroke="#5b6386" stroke-width="2" fill="none"/>
+      <circle cx="0" cy="-6" r="9" fill="#f2c19b"/><rect x="-9" y="2" width="18" height="16" rx="5" fill="#3d7bff"/></g>`;
+  },
+  arrow(len, up, f, lx = 16) {
+    if (len < 8) return '';
+    const d = up ? -1 : 1, F = FORCES[f], ty = d * len, hy = ty - d * 20;
+    return `<g class="pforce"><line x1="0" y1="0" x2="0" y2="${hy}" stroke="${F.c}" stroke-width="9" stroke-linecap="round"/>
+      <polygon points="0,${ty} 13,${hy} -13,${hy}" fill="${F.c}"/>
+      <text x="${lx}" y="${ty + (up ? 18 : -4)}" fill="${F.c}">${F.name}</text></g>`;
+  },
+  stage() {
+    const c = state.chute, marks = [0, .5, 1, 1.5, 2, 2.5].map(m => {
+      const y = P.FLOOR - m * P.PX;
+      return `<line x1="760" y1="${y}" x2="${m % 1 ? 780 : 790}" y2="${y}" stroke="#1d2340" stroke-width="3"/><text x="800" y="${y + 7}" class="ruler">${String(m).replace('.', '·')} m</text>`;
+    }).join('');
+    return `<svg class="chutemode" viewBox="0 0 1000 680" preserveAspectRatio="xMidYMid meet" role="img" aria-label="A toy parachute dropped from a balcony">
+      <rect x="-700" y="-300" width="2400" height="${P.FLOOR + 300}" fill="#eef3ff"/>
+      <rect x="-700" y="${P.FLOOR}" width="2400" height="400" fill="#c9a77c"/>
+      <rect x="-700" y="${P.FLOOR - 4}" width="2400" height="8" fill="#a8865d"/>
+      ${P.holder(c.size)}
+      <rect x="745" y="${P.FLOOR - P.H * P.PX - 6}" width="20" height="${P.H * P.PX + 6}" fill="#ffe08a" stroke="#d9a400" stroke-width="2"/>${marks}
+      <g id="chuteMove" transform="translate(${P.X} ${P.TOP})">${P.chute(c.size)}<g id="chuteArrows"></g></g></svg>
+      <div class="stopwatch" id="stopwatch">⏱️ <span id="swTime">${c.shown}</span> s</div>`;
+  },
+  mount() { P.place(0, 0, 1); },
+  place(y, v, vt) {
+    const g = $('#chuteMove'); if (!g) return;
+    g.setAttribute('transform', `translate(${P.X} ${P.TOP + y * P.PX})`);
+    // Arrows only while it falls: gravity stays the same; air resistance grows as it speeds up, until it balances gravity
+    $('#chuteArrows').innerHTML = state.chute.falling ? P.arrow(P.ARROW, false, 'gravity') + P.arrow(P.ARROW * Math.min(1, (v / vt) ** 2), true, 'air', state.chute.size * 2 + 12) : '';
+  },
+  sizes: () => new Set(state.chute.drops.map(d => d.size)).size,
+  drop() {
+    const c = state.chute; if (c.falling) return;
+    const { pts, T, vt } = P.path(c.size);
+    // The third different size tried is the anomaly: the stopwatch is started late, so the time is too short
+    const odd = !c.oddUsed && !c.drops.some(d => d.size === c.size) && P.sizes() === 2;
+    if (odd) c.oddUsed = true;
+    const [start, stop] = P.wobble(), late = (odd ? P.LATE : 0) + start;
+    c.falling = true; c.shown = '0.00';
+    $('#drawer').innerHTML = VIEWS.parachute.drawer();
+    const t0 = performance.now();
+    // The stopwatch keeps running for a moment after landing, until the timer's finger presses stop
+    const step = now => {
+      const t = Math.max(0, Math.min(T + stop, (now - t0) / 1000)), i = Math.min(pts.length - 1, Math.round(t * 500));
+      if (t <= T) P.place(pts[i][1], pts[i][2], vt);
+      else if (c.falling) { c.falling = false; P.place(P.H, 0, vt); }
+      c.shown = Math.max(0, t - late).toFixed(2); $('#swTime').textContent = c.shown;
+      if (t < T + stop) { P.raf = requestAnimationFrame(step); return; }
+      c.falling = false; P.place(P.H, 0, vt);
+      P.record(c.size, T + stop - late, odd);
+    };
+    P.raf = requestAnimationFrame(step);
+  },
+  // People are a little slow to press a stopwatch: up to 0.1 s late starting it, and up to 0.12 s late stopping it.
+  // So repeat drops of the same parachute give slightly different times, as in a real test.
+  wobble: () => [Math.random() * .1, Math.random() * .12],
+  record(size, time, odd) {
+    const c = state.chute;
+    time = Math.round(time * 100) / 100;
+    c.drops.push({ size, time, odd, crossed: false });
+    c.shown = time.toFixed(2); c.msg = null;
+    const sw = $('#swTime'); if (sw) sw.textContent = c.shown;
+    if ($('#drawer') && state.view === 'parachute') $('#drawer').innerHTML = VIEWS.parachute.drawer();
+  },
+  stop() { cancelAnimationFrame(P.raf); state.chute.falling = false; },
+  // The line joins the average of the good results for each size
+  line() {
+    const by = {};
+    state.chute.drops.forEach(d => { if (!d.crossed) (by[d.size] = by[d.size] || []).push(d.time); });
+    return Object.entries(by).map(([size, ts]) => ({ size: +size, time: ts.reduce((a, b) => a + b) / ts.length })).sort((a, b) => a.size - b.size);
+  },
+  graph() {
+    const c = state.chute, gx = sz => 62 + (sz - 10) * 6, gy = t => 190 - t * 56;
+    const grid = [0, .5, 1, 1.5, 2, 2.5, 3].map(t => `<line x1="44" y1="${gy(t)}" x2="305" y2="${gy(t)}" stroke="#e3e8f7"/>${t % 1 ? '' : `<text x="38" y="${gy(t) + 4}" text-anchor="end">${t}</text>`}`).join('');
+    const xs = [10, 20, 30, 40, 50].map(sz => `<text x="${gx(sz)}" y="207" text-anchor="middle">${sz}</text>`).join('');
+    const line = P.line();
+    const pts = c.drops.map((d, i) => `<g class="gpt${d.crossed ? ' crossed' : ''}" data-act="pspot" data-i="${i}">
+      <circle cx="${gx(d.size)}" cy="${gy(d.time)}" r="18" fill="transparent"/>
+      <circle cx="${gx(d.size)}" cy="${gy(d.time)}" r="6.5" class="dot"/>
+      ${d.crossed ? `<path d="M${gx(d.size) - 8} ${gy(d.time) - 8} l16 16 m0 -16 l-16 16" stroke="#ff5f6d" stroke-width="3.5"/>` : ''}</g>`).join('');
+    return `<svg class="graph" viewBox="0 0 320 232" role="img" aria-label="Line graph of fall time against canopy size">
+      ${grid}${xs}
+      <line x1="44" y1="190" x2="305" y2="190" stroke="#1d2340" stroke-width="2"/><line x1="44" y1="22" x2="44" y2="190" stroke="#1d2340" stroke-width="2"/>
+      <text x="175" y="228" text-anchor="middle" class="axis">Canopy size (cm)</text>
+      <text transform="translate(12 106) rotate(-90)" text-anchor="middle" class="axis">Fall time (s)</text>
+      ${line.length > 1 ? `<polyline points="${line.map(d => `${gx(d.size)},${gy(d.time)}`).join(' ')}" fill="none" stroke="#3d7bff" stroke-width="3" stroke-linejoin="round"/>` : ''}
+      ${pts}</svg>`;
+  },
+  spot(i) {
+    const c = state.chute, d = c.drops[i];
+    if (!d || d.crossed) return;
+    if (d.odd) {
+      d.crossed = true; emit('pspot');
+      c.msg = ['✅', `Well spotted! The <b>${d.size} cm</b> result is <b>anomalous</b>: it doesn't fit the pattern. The stopwatch was started <b>late</b> on that drop, so the time is too short. Drop the ${d.size} cm parachute <b>again</b> to get a better result.`];
+    } else c.msg = ['🤔', c.drops.some(x => x.odd && !x.crossed)
+      ? 'That result fits the pattern. Look for a point that is far away from the line made by the others.'
+      : 'All of your results fit the pattern so far.'];
+    $('#drawer').innerHTML = VIEWS.parachute.drawer();
+  }
+};
+state.chute = { size: 30, drops: [], falling: false, oddUsed: false, shown: '0.00', msg: null, answer: null };
+// The size slider redraws the parachute as it moves, without rebuilding the drawer (that would drop the slider mid-drag)
+document.addEventListener('input', e => {
+  if (e.target.id !== 'pSize' || state.chute.falling) return;
+  state.chute.size = +e.target.value;
+  $('#pSizeLabel').textContent = `${state.chute.size} cm`;
+  $('#chute').outerHTML = P.chute(state.chute.size);
+  $('#holder').outerHTML = P.holder(state.chute.size);
+  P.place(0, 0, 1);   // a new parachute starts back at the top
+});
+
+// ================= Upthrust tank =================
+// An object hangs from a force meter. Raising the tank of water around it makes the reading fall: the difference is the upthrust.
+// Readings in air and fully in water are whole newtons. The apple floats: once upthrust matches its weight, the meter reads 0 N.
+const T = {
+  OBJS: {
+    stone: { name: 'stone', label: 'Stone', icon: '🪨', W: 5, U: 2,
+      done: 'The water pushes up on the stone with <b>2 N</b> of upthrust, so the force meter only has to hold up <b>3 N</b>.' },
+    steel: { name: 'metal weight', label: 'Metal weight', icon: '⚙️', W: 8, U: 1,
+      done: 'The metal weight sinks, but it still has <b>1 N</b> of upthrust. Water pushes up on everything in it, even things that sink.' },
+    apple: { name: 'apple', label: 'Apple', icon: '🍎', W: 2, U: 2 / .85, floats: .85,
+      done: 'The apple <b>floats</b>! Its upthrust (<b>2 N</b>) is the same size as its weight, so the force meter reads <b>0 N</b> and the string goes slack.' }
+  },
+  // The object hangs from y 400 to 470; the water surface starts at y 485 and the tank can rise 105,
+  // which still keeps the tank's rim clear of the force meter
+  TOP: 400, H: 70, SURF0: 485, RISE: 105, ZERO: 60, PERN: 22, MX: 500, HOOK: 318,
+  calc() {
+    const o = T.OBJS[state.tank.obj], ys = T.SURF0 - T.RISE * state.tank.level;
+    let f = Math.max(0, Math.min(1, (T.TOP + T.H - ys) / T.H)), lift = 0;
+    // A floating object rises with the water once it has sunk in as far as it can
+    if (o.floats) { lift = Math.max(0, T.TOP + (1 - o.floats) * T.H - ys); if (lift > 0) f = o.floats; }
+    return { ys, f, lift, reading: Math.max(0, o.W - o.U * f), up: Math.min(o.W, o.U * f) };
+  },
+  objSvg(id) {
+    if (id === 'stone') return `<path d="M-38 -8 C-40 -30 -14 -36 6 -34 C28 -33 42 -18 40 4 C38 26 18 36 -4 35 C-26 34 -36 18 -38 -8 Z" fill="#9aa1b3" stroke="#6b7389" stroke-width="3"/>
+      <path d="M-14 -16 q8 -6 18 -2 M10 12 q8 2 12 -6" stroke="#7d8598" stroke-width="3" fill="none" stroke-linecap="round"/>`;
+    if (id === 'steel') return `<rect x="-26" y="-22" width="52" height="57" rx="8" fill="#b9c4d6" stroke="#6b7389" stroke-width="3"/>
+      <rect x="-8" y="-35" width="16" height="15" rx="4" fill="#b9c4d6" stroke="#6b7389" stroke-width="3"/>
+      <rect x="-18" y="-14" width="10" height="42" rx="5" fill="#e3e9f3"/>`;
+    return `<circle cx="0" cy="2" r="33" fill="#e8414f" stroke="#b5303b" stroke-width="3"/>
+      <path d="M0 -30 q2 -8 6 -10" stroke="#6b3f22" stroke-width="4" fill="none" stroke-linecap="round"/>
+      <path d="M6 -36 q14 -8 20 2 q-12 6 -20 -2z" fill="#22b07d"/><ellipse cx="-12" cy="-10" rx="7" ry="10" fill="#fff" opacity=".35"/>`;
+  },
+  // The meter's face: a mark every half newton, a number every newton, and the red pointer
+  dial() {
+    const ticks = Array.from({ length: 21 }, (_, i) => {
+      const y = T.ZERO + i * T.PERN / 2, big = i % 2 === 0;
+      return `<line x1="474" y1="${y}" x2="${big ? 498 : 488}" y2="${y}" stroke="#1d2340" stroke-width="${big ? 2.5 : 1.5}"/>${big ? `<text x="503" y="${y + 5.5}" class="tnum">${i / 2}</text>` : ''}`;
+    }).join('');
+    return `<g id="dial"><rect x="468" y="40" width="64" height="262" rx="10" fill="#fffdf2"/>
+      <text x="500" y="298" text-anchor="middle" class="tunit">newtons</text>${ticks}
+      <g id="pointer"><path d="M452 -9 L470 0 L452 9 Z" fill="#e8414f"/><line x1="466" y1="0" x2="498" y2="0" stroke="#e8414f" stroke-width="3.5" stroke-linecap="round"/></g></g>`;
+  },
+  stage() {
+    const t = state.tank;
+    return `<svg class="tankmode" viewBox="0 0 1000 680" preserveAspectRatio="xMidYMid meet" role="img" aria-label="An object hanging from a force meter above a tank of water">
+      <defs><clipPath id="magClip"><circle cx="790" cy="190" r="108"/></clipPath></defs>
+      <rect x="-700" y="-300" width="2400" height="940" fill="#eef3ff"/>
+      <rect x="-700" y="660" width="2400" height="400" fill="#c9a77c"/><rect x="-700" y="656" width="2400" height="8" fill="#a8865d"/>
+      <rect x="120" y="644" width="160" height="16" rx="5" fill="#5b6386"/>
+      <rect x="192" y="6" width="16" height="640" rx="6" fill="#8a93ad"/>
+      <rect x="192" y="6" width="320" height="14" rx="6" fill="#8a93ad"/>
+      <line x1="500" y1="20" x2="500" y2="40" stroke="#5b6386" stroke-width="4"/>
+      <rect x="462" y="34" width="76" height="274" rx="14" fill="#c9d0e4" stroke="#8a93ad" stroke-width="3"/>
+      ${T.dial()}
+      <path d="M500 302 V312 M500 312 q-10 0 -10 7 q0 8 10 8 q8 0 8 -6" fill="none" stroke="#5b6386" stroke-width="4" stroke-linecap="round"/>
+      <path id="tString" fill="none" stroke="#5b6386" stroke-width="2.5"/>
+      <g id="jack"></g>
+      <g id="tankG">
+        <rect x="370" y="460" width="260" height="180" rx="8" fill="#e9f6ff" opacity=".7"/>
+        <rect x="374" y="485" width="252" height="151" fill="#4aa3df" opacity=".35"/></g>
+      <g id="tObj"></g>
+      <g id="tankFront">
+        <rect x="374" y="485" width="252" height="151" fill="#4aa3df" opacity=".38"/>
+        <line x1="374" y1="485" x2="626" y2="485" stroke="#2f86c4" stroke-width="4"/>
+        <rect x="370" y="460" width="260" height="180" rx="8" fill="none" stroke="#7fa6c9" stroke-width="5"/></g>
+      <g id="tArrow"></g>
+      <circle cx="790" cy="190" r="108" fill="#fffdf2"/>
+      <g clip-path="url(#magClip)"><g id="magView"><use href="#dial"/></g></g>
+      <circle cx="790" cy="190" r="108" fill="none" stroke="#1d2340" stroke-width="10"/>
+      <line x1="866" y1="266" x2="930" y2="330" stroke="#1d2340" stroke-width="18" stroke-linecap="round"/>
+      <text x="790" y="66" text-anchor="middle" class="tmag">🔍 Close-up of the force meter</text></svg>`;
+  },
+  mount() { T.update(); },
+  update() {
+    const t = state.tank, c = T.calc(), rise = T.RISE * t.level, py = T.ZERO + c.reading * T.PERN;
+    $('#pointer').setAttribute('transform', `translate(0 ${py})`);
+    $('#magView').setAttribute('transform', `translate(790 190) scale(2.6) translate(-490 ${-py})`);
+    $('#tankG').setAttribute('transform', `translate(0 ${-rise})`);
+    $('#tankFront').setAttribute('transform', `translate(0 ${-rise})`);
+    // The lab jack under the tank opens out as it rises
+    const top = 640 - rise, mid = (top + 656) / 2;
+    $('#jack').innerHTML = `<rect x="410" y="${top}" width="180" height="8" rx="3" fill="#5b6386"/>
+      <path d="M430 ${top + 8} L570 656 M570 ${top + 8} L430 656" stroke="#8a93ad" stroke-width="7" stroke-linecap="round"/><circle cx="500" cy="${mid + 4}" r="6" fill="#5b6386"/>`;
+    const objTop = T.TOP - c.lift;
+    // A floating apple lets the string go slack
+    $('#tString').setAttribute('d', c.lift > 1 ? `M500 327 Q${500 + Math.min(30, c.lift)} ${(327 + objTop) / 2} 500 ${objTop}` : `M500 327 V${objTop}`);
+    const arrow = c.up > .3 ? (() => {
+      const L = c.up * 32, F = FORCES.upthrust;
+      return `<line x1="0" y1="0" x2="0" y2="${-L + 16}" stroke="${F.c}" stroke-width="8" stroke-linecap="round"/><polygon points="0,${-L} 11,${-L + 16} -11,${-L + 16}" fill="${F.c}"/>
+        <text x="46" y="${-L + 26}" class="tup" fill="${F.c}">Upthrust</text>`;
+    })() : '';
+    $('#tObj').innerHTML = `<g transform="translate(${T.MX} ${objTop + 35})">${T.objSvg(t.obj)}</g>`;
+    $('#tArrow').innerHTML = `<g transform="translate(${T.MX} ${objTop + 35})">${arrow}</g>`;
+  },
+  check() {
+    const t = state.tank, o = T.OBJS[t.obj], c = T.calc(), v = t.val;
+    const read = want => v === want ? null : Math.abs(v - want) === 1
+      ? 'Nearly! Look carefully at where the red pointer is. The close-up helps.'
+      : 'Not quite. Find the red pointer on the force meter and read the number next to it.';
+    if (t.step === 'air') {
+      if (c.f > 0) return T.say('🤔', `Lower the tank first, so the ${o.name} is hanging in the <b>air</b>.`);
+      const bad = read(o.W); if (bad) return T.say('🤔', bad);
+      t.air = v; t.step = 'water'; t.val = 0; return T.say('✅', `Yes, <b>${v} N</b>. That is how much the ${o.name} weighs in air.`);
+    }
+    if (t.step === 'water') {
+      const under = o.floats ? c.lift > 0 : c.f >= 1;
+      if (!under) return T.say('🤔', o.floats ? 'Keep raising the tank until the apple is in the water.' : `Keep raising the tank until the ${o.name} is <b>completely</b> under the water.`);
+      const bad = read(Math.round(c.reading)); if (bad) return T.say('🤔', bad);
+      t.water = v; t.step = 'up'; t.val = 0; return T.say('✅', `Yes, <b>${v} N</b>. The reading went <b>down</b> in water.`);
+    }
+    if (t.step === 'up') {
+      if (v !== t.air - t.water) return T.say('🤔', `Upthrust = reading in air − reading in water. That is ${t.air} N − ${t.water} N.`);
+      t.results[t.obj] = { air: t.air, water: t.water, up: v }; t.step = 'done';
+      T.say('🎉', o.done); return emit('tdone', { obj: t.obj });
+    }
+  },
+  say(em, text) { state.tank.msg = [em, text]; $('#drawer').innerHTML = VIEWS.tank.drawer(); },
+  pick(id) { Object.assign(state.tank, { obj: id, level: 0, step: state.tank.results[id] ? 'done' : 'air', val: 0, msg: null }); render(); }
+};
+state.tank = { obj: 'stone', level: 0, step: 'air', val: 0, air: 0, water: 0, msg: null, results: {} };
+document.addEventListener('input', e => {
+  if (e.target.id !== 'tLevel') return;
+  state.tank.level = +e.target.value / 100; T.update();
+});
+
+// ================= Friction ramp =================
+// The same car rolls down the same ramp onto a different surface each time. It reaches the bottom at the same speed,
+// then friction slows it to a stop: the rougher the surface, the bigger the friction and the shorter the distance.
+const R = {
+  SURF: {
+    ice:       { label: 'Ice',       icon: '🧊', cm: 180, fric: 34,  bar: '#8fd0f0' },
+    wood:      { label: 'Wood',      icon: '🪵', cm: 115, fric: 72,  bar: '#c08a52' },
+    carpet:    { label: 'Carpet',    icon: '🧶', cm: 55,  fric: 110,  bar: '#c75b52' },
+    sandpaper: { label: 'Sandpaper', icon: '📜', cm: 30,  fric: 150, bar: '#d6b26f' }
+  },
+  // The ramp runs from A down to B; the flat surface and the tape start at B. 3.4 px for every centimetre.
+  A: [40, 300], B: [330, 560], PX: 3.4, START: 70, TRAMP: .85,
+  get L() { return Math.hypot(R.B[0] - R.A[0], R.B[1] - R.A[1]); },
+  get ANG() { return Math.atan2(R.B[1] - R.A[1], R.B[0] - R.A[0]) * 180 / Math.PI; },
+  // Where the front of the car is, s pixels along the track
+  pos(s) {
+    if (s <= R.L) { const k = s / R.L; return [R.A[0] + (R.B[0] - R.A[0]) * k, R.A[1] + (R.B[1] - R.A[1]) * k, R.ANG]; }
+    return [R.B[0] + s - R.L, R.B[1], 0];
+  },
+  car: () => `<path d="M-64 -10 V-22 Q-62 -28 -54 -28 L-44 -28 L-36 -40 H-18 L-8 -28 Q0 -27 0 -18 V-10 Z" fill="#e8414f" stroke="#b5303b" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M-40 -28 L-34 -37 H-21 L-14 -28 Z" fill="#bfe3ff"/>
+    <circle cx="-50" cy="-8" r="8" fill="#2b2f45"/><circle cx="-14" cy="-8" r="8" fill="#2b2f45"/>
+    <circle cx="-50" cy="-8" r="3" fill="#c9d0e4"/><circle cx="-14" cy="-8" r="3" fill="#c9d0e4"/>`,
+  // How each surface looks from the side, magnified: smooth ice, gentle bumps of wood, carpet loops, jagged sandpaper
+  profile(id) {
+    const xs = Array.from({ length: 41 }, (_, i) => -100 + i * 5);
+    if (id === 'ice') return `<rect x="-110" y="22" width="220" height="90" fill="#bfe6fa"/><line x1="-110" y1="22" x2="110" y2="22" stroke="#7cc4ee" stroke-width="3"/><path d="M-60 34 h40 M20 46 h50" stroke="#fff" stroke-width="4" stroke-linecap="round"/>`;
+    if (id === 'wood') return `<path d="M-110 112 V24 ${xs.map((x, i) => `L${x} ${22 + (i % 4 === 0 ? 3 : i % 2 ? 1 : 0)}`).join(' ')} L110 24 V112 Z" fill="#d7a46c" stroke="#a8763a" stroke-width="3"/><path d="M-100 50 q50 -8 100 0 t100 0 M-100 80 q50 8 100 0 t100 0" stroke="#b5814a" stroke-width="3" fill="none"/>`;
+    if (id === 'carpet') return `<rect x="-110" y="34" width="220" height="80" fill="#a8463f"/>${xs.map(x => `<path d="M${x} 36 q4 -26 8 0" fill="none" stroke="#c75b52" stroke-width="4"/>`).join('')}`;
+    return `<path d="M-110 112 V30 ${xs.map((x, i) => `L${x + 2.5} ${i % 2 ? 14 + (i * 7) % 9 : 32}`).join(' ')} L110 30 V112 Z" fill="#d6b26f" stroke="#a88442" stroke-width="3" stroke-linejoin="round"/>`;
+  },
+  surfFill(id) {
+    return { ice: '#bfe6fa', wood: 'url(#woodP)', carpet: 'url(#carpetR)', sandpaper: 'url(#sandP)' }[id];
+  },
+  stage() {
+    // A mark every centimetre, a longer one every 5 cm, and a number every 10 cm
+    const r = state.ramp, ticks = Array.from({ length: 201 }, (_, i) => {
+      const x = R.B[0] + i * R.PX, h = i % 10 === 0 ? 20 : i % 5 === 0 ? 13 : 7;
+      return `<line x1="${x}" y1="597" x2="${x}" y2="${597 + h}" stroke="#1d2340" stroke-width="${i % 10 ? 1 : 2}"/>${i % 10 ? '' : `<text x="${x}" y="634" text-anchor="middle" class="rnum">${i}</text>`}`;
+    }).join('');
+    return `<svg class="rampmode" viewBox="0 0 1000 680" preserveAspectRatio="xMidYMid meet" role="img" aria-label="A toy car rolling down a ramp onto a ${R.SURF[r.surf].label.toLowerCase()} surface">
+      <defs>
+        <pattern id="woodP" width="120" height="30" patternUnits="userSpaceOnUse"><rect width="120" height="30" fill="#d7a46c"/><path d="M0 10 q30 -4 60 0 t60 0 M0 22 q30 4 60 0 t60 0" stroke="#b5814a" stroke-width="2" fill="none"/><line x1="118" y1="0" x2="118" y2="30" stroke="#a8763a" stroke-width="2"/></pattern>
+        <pattern id="carpetR" width="16" height="16" patternUnits="userSpaceOnUse"><rect width="16" height="16" fill="#c75b52"/><circle cx="4" cy="4" r="2" fill="#a8463f"/><circle cx="12" cy="12" r="2" fill="#a8463f"/></pattern>
+        <pattern id="sandP" width="14" height="14" patternUnits="userSpaceOnUse"><rect width="14" height="14" fill="#d6b26f"/><circle cx="3" cy="4" r="1.5" fill="#a88442"/><circle cx="10" cy="9" r="1.8" fill="#8f6f33"/><circle cx="6" cy="12" r="1.2" fill="#fff4d6"/></pattern>
+        <clipPath id="zoomClip"><circle cx="0" cy="0" r="95"/></clipPath></defs>
+      <rect x="-700" y="-300" width="2400" height="1300" fill="#eef3ff"/>
+      <rect x="-700" y="590" width="2400" height="400" fill="#9aa3c0"/>
+      <path d="M-700 ${R.A[1]} H${R.A[0]} L${R.B[0]} ${R.B[1]} V590 H-700 Z" fill="#c08a52" stroke="#8a5a2b" stroke-width="4" stroke-linejoin="round"/>
+      <path d="M-700 ${R.A[1] + 26} H${R.A[0] - 10} L${R.B[0] - 30} 590" fill="none" stroke="#a8763a" stroke-width="3"/>
+      <rect x="${R.B[0]}" y="${R.B[1]}" width="1400" height="30" fill="${R.surfFill(r.surf)}" stroke="#5b6386" stroke-width="2"/>
+      <g id="tape"><rect x="${R.B[0]}" y="596" width="1400" height="46" fill="#ffe08a" stroke="#d9a400" stroke-width="2"/>${ticks}</g>
+      <text x="${R.B[0] + 6}" y="662" class="rnum">cm</text>
+      <g id="stopMark"></g><g id="rCar"></g><g id="rArrow"></g><g id="rZoom"></g>
+      <g id="surfZoom" transform="translate(830 170)"><circle r="95" fill="#fff"/>
+        <g clip-path="url(#zoomClip)">${R.profile(r.surf)}<circle cx="0" cy="-48" r="66" fill="#2b2f45"/><circle cx="0" cy="-48" r="42" fill="#c9d0e4"/><circle cx="0" cy="-48" r="13" fill="#8a93ad"/></g>
+        <circle r="95" fill="none" stroke="#1d2340" stroke-width="9"/>
+        <text y="-108" text-anchor="middle" class="rzoom">🔍 Close-up of the ${R.SURF[r.surf].label.toLowerCase()}</text></g></svg>`;
+  },
+  // After a run the car stays where it stopped, with the distance flag
+  mount() {
+    const r = state.ramp, cm = r.pending ? r.pending.cm : r.shown;
+    R.draw(cm == null ? R.START : R.L + cm * R.PX, 0);
+    R.mark(cm, !r.pending); if (r.pending) R.zoom(cm);
+  },
+  draw(sp, fric) {
+    const [x, y, a] = R.pos(sp), g = $('#rCar'); if (!g) return;
+    g.innerHTML = `<g transform="translate(${x} ${y}) rotate(${a})">${R.car()}</g>`;
+    // Friction only while the car is moving on the flat surface, pointing backwards
+    const F = FORCES.friction;
+    $('#rArrow').innerHTML = fric ? `<g transform="translate(${x - 32} ${y - 20})"><line x1="0" y1="0" x2="${-fric + 16}" y2="0" stroke="${F.c}" stroke-width="8" stroke-linecap="round"/>
+      <polygon points="${-fric},0 ${-fric + 16},-11 ${-fric + 16},11" fill="${F.c}"/><text x="${-fric / 2}" y="-18" text-anchor="middle" class="rfric" fill="${F.c}">Friction</text></g>` : '';
+  },
+  // The dashed line at the front of the car; the distance flag only appears once the child has read the tape
+  mark(cm, label = true) {
+    const m = $('#stopMark'); if (!m) return;
+    if (cm == null) { m.innerHTML = ''; return; }
+    const x = R.B[0] + cm * R.PX;
+    m.innerHTML = `<line x1="${x}" y1="${R.B[1] - 70}" x2="${x}" y2="606" stroke="#e8414f" stroke-width="2.5" stroke-dasharray="6 5"/>
+      ${label ? `<g transform="translate(${x} ${R.B[1] - 84})"><rect x="-46" y="-22" width="92" height="34" rx="10" fill="#1d2340"/><text y="2" text-anchor="middle" class="rflag">${cm} cm</text></g>` : ''}`;
+  },
+  // A close-up of the tape pops up above the car, with a box beside it to type the reading into
+  zoom(cm) {
+    const g = $('#rZoom'); if (!g) return;
+    $('#readCard')?.remove();
+    // The surface close-up steps aside while the tape is being read
+    $('#surfZoom').style.display = cm == null ? '' : 'none';
+    if (cm == null) { g.innerHTML = ''; return; }
+    const sx = R.B[0] + cm * R.PX, bx = Math.max(130, Math.min(870, sx)), by = 395;
+    g.innerHTML = `<clipPath id="tapeClip"><circle cx="${bx}" cy="${by}" r="95"/></clipPath>
+      <line x1="${sx}" y1="${R.B[1] - 40}" x2="${bx}" y2="${by + 95}" stroke="#1d2340" stroke-width="3"/>
+      <circle cx="${bx}" cy="${by}" r="95" fill="#eef3ff"/>
+      <g clip-path="url(#tapeClip)"><g transform="translate(${bx} ${by}) scale(2.4) translate(${-sx} -614)"><use href="#tape"/>
+        <line x1="${sx}" y1="570" x2="${sx}" y2="645" stroke="#e8414f" stroke-width="1.3" stroke-dasharray="3 2"/></g></g>
+      <circle cx="${bx}" cy="${by}" r="95" fill="none" stroke="#1d2340" stroke-width="8"/>`;
+    const st = $('#stage'), svg = $('#stage svg'), m = svg.getScreenCTM(), box = st.getBoundingClientRect();
+    const px = (x, y) => [m.a * x + m.e - box.left, m.d * y + m.f - box.top];
+    const card = document.createElement('div');
+    card.className = 'readcard'; card.id = 'readCard';
+    card.innerHTML = `<b>📏 How far did the car roll?</b>
+      <p>Read the tape at the <span class="red">red line</span>: that is where the front of the car stopped.</p>
+      <div class="readrow"><input id="rRead" type="number" inputmode="numeric" min="0" max="200" aria-label="Distance in centimetres"> cm
+        <button class="btn go" data-act="rread">✔ Check</button></div>
+      <p class="readmsg" id="readMsg">${state.ramp.pending?.msg || ''}</p>`;
+    st.appendChild(card);
+    // Beside the close-up: on its right if there is room, otherwise on its left. On a phone it sits along the bottom.
+    if (box.width >= 600) {
+      const [right, top] = px(bx + 105, by - 95), [left] = px(bx - 105, by);
+      card.style.left = `${right + 236 < box.width - 8 ? right : Math.max(8, left - 236)}px`;
+      card.style.top = `${Math.max(8, top)}px`;
+    }
+    if (matchMedia('(pointer: fine)').matches) setTimeout(() => $('#rRead')?.focus({ preventScroll: true }), 50);
+  },
+  read() {
+    const r = state.ramp, p = r.pending; if (!p) return;
+    const v = parseInt($('#rRead').value, 10);
+    if (isNaN(v)) return R.readMsg('Type the number of centimetres first.');
+    if (Math.abs(v - p.cm) <= 1) {
+      const first = p.tries === 0;
+      R.finish(v === p.cm ? `✅ Yes! The car rolled <b>${p.cm} cm</b>.` : `✅ Close enough! It was exactly <b>${p.cm} cm</b>.`);
+      return emit('rread', { surf: r.surf, first });
+    }
+    if (++p.tries >= 3) return R.finish(`📏 The car rolled <b>${p.cm} cm</b>. Next time, find the last number before the red line, then count on the small marks.`);
+    R.readMsg(Math.abs(v - p.cm) >= 8 ? 'Check the numbers: they go up in 10s. Which number comes just before the red line?'
+      : 'Nearly! Count the small marks after the last number. Each small mark is 1 cm.');
+  },
+  readMsg(t) { state.ramp.pending.msg = t; $('#readMsg').innerHTML = t; },
+  finish(msg) {
+    const r = state.ramp, cm = r.pending.cm;
+    r.runs.push({ surf: r.surf, cm }); r.pending = null; r.shown = cm; r.msg = msg;
+    R.zoom(null); R.mark(cm);
+    $('#drawer').innerHTML = VIEWS.ramp.drawer();
+  },
+  go() {
+    const r = state.ramp; if (r.running || r.pending || !r.pred.saved) return;
+    const S = R.SURF[r.surf], cm = Math.round(S.cm * (1 + (Math.random() - .5) * .06)), d = cm * R.PX;
+    const run = R.L - R.START, v = 2 * run / R.TRAMP, tf = 2 * d / v, a = v * v / (2 * d);
+    r.running = true; r.shown = null; r.msg = null; R.mark(null);
+    $('#drawer').innerHTML = VIEWS.ramp.drawer();
+    const t0 = performance.now();
+    const step = now => {
+      const t = Math.max(0, (now - t0) / 1000);
+      if (t < R.TRAMP) R.draw(R.START + run * (t / R.TRAMP) ** 2, 0);
+      else if (t < R.TRAMP + tf) { const u = t - R.TRAMP; R.draw(R.L + v * u - a * u * u / 2, S.fric); }
+      else {
+        r.running = false; R.draw(R.L + d, 0);
+        r.pending = { cm, tries: 0, msg: '' }; R.mark(cm, false); R.zoom(cm);
+        if (state.view === 'ramp') $('#drawer').innerHTML = VIEWS.ramp.drawer();
+        return;
+      }
+      R.raf = requestAnimationFrame(step);
+    };
+    R.raf = requestAnimationFrame(step);
+  },
+  stop() { cancelAnimationFrame(R.raf); state.ramp.running = false; },
+  // Repeat runs on the same surface are averaged
+  avg(id) { const v = state.ramp.runs.filter(x => x.surf === id).map(x => x.cm); return v.length ? Math.round(v.reduce((a, b) => a + b) / v.length) : null; },
+  chart() {
+    const ids = Object.keys(R.SURF), gy = cm => 170 - cm * .75;
+    const grid = [0, 50, 100, 150, 200].map(cm => `<line x1="44" y1="${gy(cm)}" x2="312" y2="${gy(cm)}" stroke="#e3e8f7"/><text x="38" y="${gy(cm) + 4}" text-anchor="end">${cm}</text>`).join('');
+    const bars = ids.map((id, i) => {
+      const x = 58 + i * 64, a = R.avg(id);
+      return `${a == null ? '' : `<rect x="${x}" y="${gy(a)}" width="44" height="${170 - gy(a)}" rx="4" fill="${R.SURF[id].bar}"/><text x="${x + 22}" y="${gy(a) - 5}" text-anchor="middle" class="bval">${a}</text>`}
+        <text x="${x + 22}" y="188" text-anchor="middle">${R.SURF[id].label}</text>`;
+    }).join('');
+    return `<svg class="graph" viewBox="0 0 320 222" role="img" aria-label="Bar chart of how far the car rolled on each surface">
+      ${grid}${bars}<line x1="44" y1="170" x2="312" y2="170" stroke="#1d2340" stroke-width="2"/><line x1="44" y1="14" x2="44" y2="170" stroke="#1d2340" stroke-width="2"/>
+      <text x="178" y="214" text-anchor="middle" class="axis">Surface</text>
+      <text transform="translate(12 92) rotate(-90)" text-anchor="middle" class="axis">Distance (cm)</text></svg>`;
+  }
+};
+state.ramp = { surf: 'wood', running: false, runs: [], shown: null, answer: null, pending: null, msg: null,
+  pred: { surf: null, why: '', saved: false, msg: null } };
+const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+document.addEventListener('input', e => { if (e.target.id === 'rWhy') state.ramp.pred.why = e.target.value; });
+document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.id === 'rRead') R.read(); });
+addEventListener('resize', () => { if (state.view === 'ramp' && state.ramp.pending) R.zoom(state.ramp.pending.cm); });
+
+// ================= Missions =================
+// Each mission sets up a view; activities call emit() when something happens, and on() says whether that completes it.
+// got() collects things done during this mission (scenes solved, objects tested…) and says whether the whole list is done.
+const got = (id, all) => { state.mseen.add(id); return all.every(x => state.mseen.has(x)); };
+const SURFS = ['ice', 'wood', 'carpet', 'sandpaper'];
+const MISSIONS = [
+  { id: 'still', icon: '📕', title: 'Still, but not empty', task: 'In <b>Force arrows</b>, draw the right forces on the <b>book</b> and on the <b>boat</b>.',
+    hint: 'Something pulls everything down. What pushes back up: the table, or the water?',
+    setup() { state.view = 'arrows'; state.scene = 0; state.checked = null; },
+    on: (ev, d) => ev === 'solved' && got(d.id, ['book', 'boat']),
+    win: () => 'Still objects have forces on them too! The forces are <b>balanced</b>: the same size, pushing in opposite directions.' },
+  { id: 'skydiver', icon: '🪂', title: 'Falling fast, falling steady', task: 'Draw the forces on the <b>skydiver</b> for <b>both</b> moments: just jumped, and steady speed.',
+    hint: 'Just jumped: gravity is bigger. Steady speed: the two arrows are the same length.',
+    setup() { state.view = 'arrows'; state.scene = 2; state.moment.skydiver = 0; state.checked = null; },
+    on: (ev, d) => ev === 'solved' && got(d.id, ['skydiver-jump', 'skydiver-steady']),
+    win: () => 'Speeding up: the forces are <b>unbalanced</b>. Steady speed: the forces are <b>balanced</b>, even though the skydiver is still moving!' },
+  { id: 'trolley', icon: '🛒', title: 'Push harder!', task: 'Draw the forces on the <b>trolley</b> for <b>both</b> moments: steady speed, and speeding up.',
+    hint: 'Steady speed: the push and friction are the same size. Speeding up: the push is bigger.',
+    setup() { state.view = 'arrows'; state.scene = 4; state.moment.trolley = 0; state.checked = null; },
+    on: (ev, d) => ev === 'solved' && got(d.id, ['trolley-steady', 'trolley-faster']),
+    win: () => 'When the push forwards is <b>bigger</b> than friction, the trolley speeds up. When they are the <b>same size</b>, it keeps going at a steady speed.' },
+  { id: 'slowing', icon: '🐟', title: 'Slowing down', task: 'Draw the forces on the sliding <b>box</b> and on the gliding <b>fish</b>.',
+    hint: 'Nothing pushes them forwards any more. Which force slows each one down? It points <b>backwards</b>.',
+    setup() { state.view = 'arrows'; state.scene = 3; state.checked = null; },
+    on: (ev, d) => ev === 'solved' && got(d.id, ['box', 'fish']),
+    win: () => '<b>Friction</b> slows the box and <b>water resistance</b> slows the fish. Both point <b>against</b> the movement.' },
+  { id: 'chute', icon: '📈', title: 'Parachute scientist', task: 'In <b>Parachute drop</b>, test at least <b>4 sizes</b>, spot the result that doesn\'t fit, and say what you found out.',
+    hint: 'The odd result is far from the line made by the others. Tap it, then drop that size again.',
+    setup() { state.view = 'parachute'; Object.assign(state.chute, { drops: [], oddUsed: false, shown: '0.00', msg: null, answer: null }); },
+    on: (ev, d) => ev === 'pconclude' && d.a === 'longer',
+    win: () => 'A bigger canopy has more air resistance at the same speed, so it falls more slowly. And you spotted an <b>anomalous</b> result, just like a real scientist!' },
+  { id: 'tank', icon: '🛁', title: 'Upthrust detective', task: 'In the <b>Upthrust tank</b>, find the upthrust on all <b>3 objects</b>.',
+    hint: 'Upthrust = the reading in air − the reading in water.',
+    setup() { state.view = 'tank'; Object.assign(state.tank, { obj: 'stone', level: 0, step: 'air', val: 0, msg: null, results: {} }); },
+    on: (ev, d) => ev === 'tdone' && got(d.obj, ['stone', 'steel', 'apple']),
+    win: () => 'Water pushes up on everything in it. When the upthrust is as big as the object\'s weight, it <b>floats</b>, like the apple.' },
+  { id: 'friction', icon: '🚗', title: 'Friction finder', task: 'In the <b>Friction ramp</b>, make a prediction, test all <b>4 surfaces</b>, and find which one has the most friction.',
+    hint: 'The surface with the most friction stops the car soonest.',
+    setup() { state.view = 'ramp'; Object.assign(state.ramp, { runs: [], shown: null, answer: null, pending: null, msg: null }); },
+    on: (ev, d) => ev === 'ranswer' && d.a === 'sandpaper',
+    win: () => 'Rough surfaces have <b>more friction</b>, so the car stops sooner. On smooth ice it rolls the furthest.' },
+  { id: 'tape', icon: '📏', title: 'Sharp eyes', task: 'In the <b>Friction ramp</b>, read the tape measure right <b>first time</b> on all <b>4 surfaces</b>.',
+    hint: 'Find the last number before the red line, then count on the small marks. Each one is 1 cm.',
+    setup() { state.view = 'ramp'; Object.assign(state.ramp, { shown: null, pending: null, msg: null }); },
+    on: (ev, d) => ev === 'rread' && d.first && got(d.surf, SURFS),
+    win: () => 'Reading a scale carefully gives <b>accurate measurements</b>. Brilliant measuring!' }
+];
+function emit(ev, data = {}) {
+  if (state.mission == null) return;
+  const i = state.mission, m = MISSIONS[i];
+  if (!m.on(ev, data)) return;
+  stopMission();
+  if (!state.done.includes(m.id)) { state.done.push(m.id); store.set('fp-done', state.done); }
+  updateStars();
+  // Let the feedback show before the pop-up covers it
+  setTimeout(() => {
+    $('#winTitle').textContent = `${m.icon} Mission complete!`;
+    $('#winText').innerHTML = m.win(data);
+    $('#winNext').style.display = i < MISSIONS.length - 1 ? '' : 'none';
+    $('#winPractise').style.display = i < MISSIONS.length - 1 ? 'none' : '';
+    $('#winNext').dataset.i = i + 1;
+    $('#winModal').classList.remove('hidden'); confetti();
+  }, 1200);
+}
+function startMission(i) {
+  closeModals();
+  state.mission = i; state.mseen = new Set(); MISSIONS[i].setup();
+  location.hash = 'view=' + state.view;
+  const m = MISSIONS[i];
+  $('#bannerKicker').textContent = `Mission ${i + 1} of ${MISSIONS.length}: ${m.title}`;
+  $('#bannerText').innerHTML = m.task; $('#bannerHint').innerHTML = m.hint;
+  $('#bannerHint').classList.add('hidden'); $('#hintBtn').textContent = '💡 Show a hint';
+  $('#banner').classList.remove('hidden');
+  render();
+}
+function stopMission() { state.mission = null; $('#banner').classList.add('hidden'); fitBanner(); }
+// The banner sits over the top of the drawer, so the drawer's cards start below it
+function fitBanner() { $('#drawer').style.paddingTop = state.mission == null ? '' : `${$('#banner').offsetHeight + 18}px`; }
+function updateStars() { $('#starCount').textContent = `${state.done.length}/${MISSIONS.length} ⭐`; }
+function closeModals() { document.querySelectorAll('.modal').forEach(m => m.classList.add('hidden')); }
+function confetti() {
+  const em = ['⭐', '🌟', '➡️', '✨', '🎉'];
+  for (let i = 0; i < 30; i++) {
+    const s = document.createElement('span'); s.className = 'confetti'; s.textContent = em[i % em.length];
+    s.style.left = `${Math.random() * 100}vw`; s.style.animationDuration = `${2 + Math.random() * 2}s`; s.style.animationDelay = `${Math.random() * .6}s`;
+    document.body.appendChild(s); setTimeout(() => s.remove(), 5000);
+  }
+}
+
+// ================= Views =================
+const VIEWS = {
+  arrows: {
+    label: '➡️ <span class="tl">Force arrows</span>',
+    stage: () => A.stage(),
+    after: () => A.mount(),
+    drawer() {
+      const list = A.list(), s = A.scene();
+      const scenes = SCENES.map((x, i) => `<button class="opt${i === state.scene ? ' on' : ''}" data-act="scene" data-i="${i}">${x.icon} ${x.label}${A.solved(x) ? ' <span class="tick">✔</span>' : ''}</button>`).join('');
+      const b = SCENES[state.scene], moments = b.moments ? `<div class="stops moments">${b.moments.map((m, i) =>
+        `<button class="opt${i === (state.moment[b.id] || 0) ? ' on' : ''}" data-act="moment" data-i="${i}">${m.label}${state.solved.includes(`${b.id}-${m.key}`) ? ' <span class="tick">✔</span>' : ''}</button>`).join('')}</div>` : '';
+      const chips = Object.entries(FORCES).map(([id, f]) =>
+        `<button class="chip" style="--c:${f.c}" data-f="${id}"${list.some(a => a.f === id) ? ' disabled' : ''}>${f.name}</button>`).join('');
+      const rows = list.map(a => `<li style="--c:${FORCES[a.f].c}"><span class="n">${FORCES[a.f].name}</span>
+        <span class="dots" aria-label="size ${a.len} of ${MAXLEN}">${'●'.repeat(a.len)}${'○'.repeat(MAXLEN - a.len)}</span>
+        <button class="xbtn" data-act="remove" data-f="${a.f}" aria-label="Remove ${FORCES[a.f].name}">✖</button></li>`).join('');
+      return `
+        <div class="card"><h2>Force arrows</h2><div class="scenes">${scenes}</div></div>
+        <div class="card">${moments}<p>${s.intro}</p>
+          <p class="muted">Drag a force onto the picture. Then drag the end of its arrow to point it the right way. A <b>longer</b> arrow means a <b>bigger</b> force.</p>
+          <div class="chips">${chips}</div></div>
+        <div class="checkbar"><button class="btn go" data-act="check"${list.length ? '' : ' disabled'}>✔ Check</button></div>
+        <div class="card"><h3>Your arrows</h3>
+          ${list.length ? `<ul class="alist">${rows}</ul>` : '<p class="muted">No arrows yet.</p>'}</div>`;
+    }
+  },
+  parachute: {
+    label: '🪂 <span class="tl">Parachute drop</span>',
+    stage: () => P.stage(),
+    after: () => P.mount(),
+    drawer() {
+      const c = state.chute, n = P.sizes(), odd = c.drops.find(d => d.odd && !d.crossed);
+      const rows = c.drops.map((d, i) => `<tr class="${d.crossed ? 'crossed' : ''}"><td>${i + 1}</td><td>${d.size} cm</td><td>${d.time.toFixed(2)} s</td></tr>`).join('');
+      const fixed = c.drops.some(d => d.crossed), ready = n >= 4 && fixed && c.drops.some(d => !d.odd && d.size === c.drops.find(x => x.crossed).size);
+      const q = [['longer', 'gets longer'], ['shorter', 'gets shorter'], ['same', 'stays the same']];
+      return `
+        <div class="card"><h2>Parachute drop</h2>
+          <p>Does a bigger parachute fall more slowly? Choose the canopy size, drop it and time the fall.</p>
+          <p class="muted">To keep the test fair, the toy is dropped from the <b>same height</b> (2.5 m) every time. Only the canopy size changes.</p>
+          <label class="slider"><span>Canopy size: <b id="pSizeLabel">${c.size} cm</b></span>
+            <input type="range" id="pSize" min="10" max="50" step="10" value="${c.size}"${c.falling ? ' disabled' : ''}></label>
+          <div class="navrow"><button class="btn go" data-act="pdrop"${c.falling ? ' disabled' : ''}>🪂 Drop!</button></div>
+          <p class="muted">Watch the arrows as it falls. Air resistance <b>grows</b> as the parachute speeds up.</p></div>
+        <div class="card"><h3>📋 Results</h3>
+          ${c.drops.length ? P.graph() : '<p class="muted">No drops yet. Try at least <b>4 different sizes</b>.</p>'}
+          ${odd && n >= 4 && !c.msg ? '<p class="spot">🔍 One result doesn\'t fit the pattern. <b>Tap it on the graph.</b></p>' : ''}
+          ${c.msg ? `<p class="spot"><span>${c.msg[0]}</span> ${c.msg[1]}</p>` : ''}
+          ${c.drops.length ? `<table class="results"><tr><th>Drop</th><th>Canopy</th><th>Fall time</th></tr>${rows}</table>` : ''}</div>
+        ${ready ? `<div class="card"><h3>💭 What did you find out?</h3><p>As the canopy gets bigger, the fall time…</p>
+          <div class="stops">${q.map(([k, t]) => `<button class="opt${c.answer === k ? (k === 'longer' ? ' done' : ' wrong') : ''}" data-act="pconclude" data-a="${k}">${t}</button>`).join('')}</div>
+          ${c.answer === 'longer' ? '<p class="job">Yes! A bigger canopy pushes against more air, so it has <b>more air resistance</b> at the same speed. Air resistance balances gravity while the parachute is still falling slowly, so it takes <b>longer</b> to land.</p>'
+            : c.answer ? '<p>Look at your graph again. Which way does the line go as the canopy gets bigger?</p>' : ''}</div>` : ''}`;
+    }
+  },
+  tank: {
+    label: '🛁 <span class="tl">Upthrust tank</span>',
+    stage: () => T.stage(),
+    after: () => T.mount(),
+    drawer() {
+      const t = state.tank, o = T.OBJS[t.obj];
+      const objs = Object.entries(T.OBJS).map(([id, x]) => `<button class="opt${id === t.obj ? ' on' : ''}" data-act="tpick" data-o="${id}">${x.icon} ${x.label}${t.results[id] ? ' <span class="tick">✔</span>' : ''}</button>`).join('');
+      const stepper = `<div class="stepper"><button class="xbtn" data-act="tstep" data-d="-1" aria-label="Less">−</button>
+        <span class="sval"><b>${t.val}</b> N</span><button class="xbtn" data-act="tstep" data-d="1" aria-label="More">+</button>
+        <button class="btn go" data-act="tcheck">✔ Check</button></div>`;
+      const task = {
+        air: `<p><b>1.</b> The ${o.name} is hanging in the air. Read the force meter to the <b>nearest newton</b> (N).</p>${stepper}`,
+        water: `<p><b>2.</b> Raise the tank until the ${o.name} is ${o.floats ? 'in' : '<b>completely</b> under'} the water. Then read the force meter again.</p>${stepper}`,
+        up: `<p><b>3.</b> The reading went from <b>${t.air} N</b> in air to <b>${t.water} N</b> in water. How big is the <b>upthrust</b>?</p>${stepper}`,
+        done: `<p class="job">${o.done}</p>`
+      }[t.step];
+      const done = Object.keys(t.results), rows = Object.keys(T.OBJS).filter(id => t.results[id]).map(id => {
+        const r = t.results[id]; return `<tr><td>${T.OBJS[id].icon} ${T.OBJS[id].label}</td><td>${r.air} N</td><td>${r.water} N</td><td>${r.up} N</td></tr>`;
+      }).join('');
+      return `
+        <div class="card"><h2>Upthrust tank</h2>
+          <p>Hang an object on the force meter, then raise the tank of water around it. What happens to the reading?</p>
+          <div class="stops">${objs}</div>
+          <label class="slider"><span>⬆️ Raise the tank</span><input type="range" id="tLevel" min="0" max="100" value="${Math.round(t.level * 100)}"></label></div>
+        <div class="card">${task}
+          ${t.msg && t.step !== 'done' ? `<p class="spot"><span>${t.msg[0]}</span> ${t.msg[1]}</p>` : ''}</div>
+        ${done.length ? `<div class="card"><h3>📋 Results</h3><table class="results"><tr><th>Object</th><th>In air</th><th>In water</th><th>Upthrust</th></tr>${rows}</table>
+          ${done.length === 3 ? '<p class="job">Every object seemed <b>lighter</b> in water, because the water pushes up on it with <b>upthrust</b>. Things that sink have less upthrust than their weight. Things that float have upthrust as big as their weight.</p>' : '<p class="muted">Try all three objects.</p>'}</div>` : ''}`;
+    }
+  },
+  ramp: {
+    label: '🚗 <span class="tl">Friction ramp</span>',
+    stage: () => R.stage(),
+    after: () => R.mount(),
+    drawer() {
+      const r = state.ramp, ids = Object.keys(R.SURF), tried = ids.filter(id => R.avg(id) != null);
+      const busy = r.running || r.pending, pr = r.pred;
+      const surfs = ids.map(id => `<button class="opt${id === r.surf ? ' on' : ''}" data-act="rsurf" data-s="${id}"${busy ? ' disabled' : ''}>${R.SURF[id].icon} ${R.SURF[id].label}${R.avg(id) != null ? ' <span class="tick">✔</span>' : ''}</button>`).join('');
+      const rows = r.runs.map((x, i) => `<tr><td>${i + 1}</td><td>${R.SURF[x.surf].icon} ${R.SURF[x.surf].label}</td><td>${x.cm} cm</td></tr>`).join('');
+      return `
+        <div class="card"><h2>Friction ramp</h2>
+          <p>On which surface does the toy car roll the furthest? Choose a surface, then let the car go.</p>
+          <p class="muted">To keep the test fair, it is the <b>same car</b>, on the <b>same ramp</b>, let go from the <b>same place</b> every time. Only the surface changes.</p>
+          ${pr.saved ? `<p class="mine">🤔 You predicted <b>${R.SURF[pr.surf].icon} ${R.SURF[pr.surf].label}</b>, because “${esc(pr.why.trim())}”</p>
+          <div class="stops">${surfs}</div>
+          <div class="navrow" style="margin-top:8px"><button class="btn go" data-act="rgo"${busy ? ' disabled' : ''}>🚗 Let go!</button></div>
+          ${r.pending ? '<p class="spot">📏 Read the tape first, then you can go again.</p>' : '<p class="muted">Watch the <b>friction</b> arrow as the car slows down. Look at the close-up: how rough is the surface?</p>'}`
+          : `<div class="predict"><h3>🤔 Predict first</h3><p>On which surface do you think the car will roll the <b>furthest</b>?</p>
+            <div class="stops">${ids.map(id => `<button class="opt${pr.surf === id ? ' on' : ''}" data-act="rpred" data-s="${id}">${R.SURF[id].icon} ${R.SURF[id].label}</button>`).join('')}</div>
+            <label class="why"><span>Why do you think that?</span><textarea id="rWhy" rows="2" placeholder="I think so because…">${esc(pr.why)}</textarea></label>
+            <div class="navrow"><button class="btn go" data-act="rsave">💾 Save my prediction</button></div>
+            ${pr.msg ? `<p class="spot">${pr.msg}</p>` : ''}</div>`}</div>
+        <div class="card"><h3>📋 Results</h3>
+          ${r.msg ? `<p class="spot">${r.msg}</p>` : ''}
+          ${r.runs.length ? R.chart() + `<table class="results"><tr><th>Run</th><th>Surface</th><th>Distance</th></tr>${rows}</table>` : '<p class="muted">No runs yet. Try all <b>4 surfaces</b>.</p>'}</div>
+        ${tried.length === 4 ? `<div class="card"><h3>💭 What did you find out?</h3>
+          ${pr.saved ? (() => { const best = ids.reduce((a, b) => R.avg(b) > R.avg(a) ? b : a), S = R.SURF;
+            return `<p>You predicted <b>${S[pr.surf].icon} ${S[pr.surf].label}</b>. The car rolled furthest on <b>${S[best].icon} ${S[best].label}</b>.
+              ${pr.surf === best ? 'Your prediction was <b>right</b>! 🎉' : 'Your prediction was different from the result. That\'s fine: scientists test their predictions to find out!'}</p>`; })() : ''}
+          <p>Which surface has the <b>most friction</b>?</p>
+          <div class="stops">${ids.map(id => `<button class="opt${r.answer === id ? (id === 'sandpaper' ? ' done' : ' wrong') : ''}" data-act="ranswer" data-s="${id}">${R.SURF[id].icon} ${R.SURF[id].label}</button>`).join('')}</div>
+          ${r.answer === 'sandpaper' ? '<p class="job">Yes! Sandpaper is the <b>roughest</b> surface, so it has the <b>most friction</b> and the car stopped soonest. Ice is the smoothest, with the least friction, so the car rolled furthest.</p>'
+            : r.answer ? '<p>Look at your bar chart. On which surface did the car stop soonest?</p>' : ''}</div>` : ''}`;
+    }
+  },
+  help: {
+    label: 'Help',
+    stage: () => A.stage(),
+    drawer() {
+      return `<div class="card"><h2>Help</h2>
+        <p><b>➡️ Force arrows</b>: choose a picture, then show the forces acting on the object. Drag a force onto the picture, then drag the end of the arrow to set its <b>direction</b> and <b>size</b>. Press <b>Check</b> when you are ready.</p>
+        <p><b>🪂 Parachute drop</b>: change the size of the parachute, drop it and time how long it takes to land. Your results make a line graph. Can you spot the result that doesn't fit?</p>
+        <p><b>🛁 Upthrust tank</b>: hang an object on a force meter and raise a tank of water around it. Read the force meter to the nearest newton, in air and in water, and work out the upthrust.</p>
+        <p><b>🚗 Friction ramp</b>: let a toy car roll down a ramp onto ice, wood, carpet or sandpaper. How far does it go on each surface?</p>
+        <p><b>🚀 Missions</b>: challenges that use all the tabs. Win a star for each one!</p>
+        <p>The label in the corner of the picture says if the object is <b>still</b>, <b>speeding up</b>, moving at a <b>steady speed</b> or <b>slowing down</b>. Faded pictures show where it was before.</p>
+        <p><b>🤔 Real life?</b>: how this model is different from real forces.</p></div>
+        <div class="card"><h3>🎯 What you are learning</h3>
+          <p><b>5Pf.01</b> Identify a range of forces (limited to gravity, applied forces, normal forces, upthrust, friction, air resistance and water resistance).</p>
+          <p><b>5Pf.02</b> Know that an object may have multiple forces acting upon it, even when at rest.</p>
+          <p><b>5Pf.03</b> Use force diagrams to show the name and direction of forces acting on an object.</p>
+          <p class="muted"><b>Also:</b> <b>5TWSc.05</b> Take appropriately accurate measurements.
+            <b>5TWSm.01</b> Know that a model presents an object, process or idea in a way that shows some of the important features.</p></div>
+        <div class="navrow"><a class="btn go" href="../practice/index.html#forces">✏️ Practise this</a></div>`;
+    }
+  }
+};
+
+function render() {
+  const v = VIEWS[state.view];
+  P.stop(); R.stop();
+  // Help is the ❓ button at the end of the top bar, like the other tools, so it isn't one of the tabs
+  $('#helpBtn').classList.toggle('active', state.view === 'help');
+  $('#tabs').innerHTML = Object.entries(VIEWS).filter(([id]) => id !== 'help').map(([id, x]) =>
+    `<button class="btn${id === state.view ? ' active' : ''}" data-act="view" data-view="${id}" aria-label="${x.label.replace(/<[^>]+>/g, '').replace(/^\S+ /, '')}">${x.label}</button>`).join('');
+  $('#stage').innerHTML = v.stage();
+  $('#drawer').innerHTML = v.drawer();
+  if (v.after) v.after(); else A.redraw();
+  fitBanner();
+}
+
+// ================= Actions =================
+const ACTIONS = {
+  view(el) { state.view = el.dataset.view; location.hash = 'view=' + state.view; render(); },
+  scene(el) { state.scene = +el.dataset.i; state.checked = null; render(); },
+  moment(el) { state.moment[SCENES[state.scene].id] = +el.dataset.i; state.checked = null; render(); },
+  remove(el) { A.remove(el.dataset.f); },
+  check() { A.check(); },
+  answer() { A.answer(); },
+  closeFb() { state.checked = null; A.showFb(); },
+  missions() {
+    $('#missionList').innerHTML = MISSIONS.map((m, i) => `<button class="mission-item${state.done.includes(m.id) ? ' done' : ''}" data-act="startMission" data-i="${i}">
+      <span class="em">${m.icon}</span><span class="t">${i + 1}. ${m.title}</span><span class="star">⭐</span></button>`).join('');
+    $('#missionsModal').classList.remove('hidden');
+  },
+  startMission(el) { startMission(+el.dataset.i); },
+  nextMission(el) { startMission(+el.dataset.i); },
+  stopMission() { stopMission(); },
+  hint() {
+    const h = $('#bannerHint');
+    h.classList.toggle('hidden');
+    $('#hintBtn').textContent = h.classList.contains('hidden') ? '💡 Show a hint' : '💡 Hide the hint';
+    fitBanner();
+  },
+  resetStars() { state.done = []; store.set('fp-done', []); updateStars(); ACTIONS.missions(); },
+  closeModals() { closeModals(); },
+  model() { $('#modelModal').classList.remove('hidden'); },
+  pdrop() { P.drop(); },
+  tpick(el) { T.pick(el.dataset.o); },
+  tstep(el) { const t = state.tank; t.val = Math.max(0, Math.min(10, t.val + +el.dataset.d)); $('#drawer').innerHTML = VIEWS.tank.drawer(); },
+  tcheck() { T.check(); },
+  rsurf(el) { if (state.ramp.pending) return; state.ramp.surf = el.dataset.s; state.ramp.shown = null; render(); },
+  rgo() { R.go(); },
+  rread() { R.read(); },
+  rpred(el) { state.ramp.pred.surf = el.dataset.s; state.ramp.pred.msg = null; $('#drawer').innerHTML = VIEWS.ramp.drawer(); },
+  rsave() {
+    const pr = state.ramp.pred;
+    pr.msg = !pr.surf ? 'Choose a surface first.' : pr.why.trim().length < 3 ? 'Write a reason for your prediction. There is no wrong answer!' : null;
+    if (!pr.msg) pr.saved = true;
+    $('#drawer').innerHTML = VIEWS.ramp.drawer();
+  },
+  ranswer(el) { state.ramp.answer = el.dataset.s; $('#drawer').innerHTML = VIEWS.ramp.drawer(); emit('ranswer', { a: el.dataset.s }); },
+  pspot(el) { P.spot(+el.dataset.i); },
+  pconclude(el) { state.chute.answer = el.dataset.a; $('#drawer').innerHTML = VIEWS.parachute.drawer(); emit('pconclude', { a: el.dataset.a }); }
+};
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-act]');
+  if (el && ACTIONS[el.dataset.act]) ACTIONS[el.dataset.act](el);
+});
+// Tapping the dark background or pressing Escape closes a pop-up
+document.querySelectorAll('.modal').forEach(m => m.addEventListener('click', e => { if (e.target === m) closeModals(); }));
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModals(); });
+addEventListener('resize', () => { A.fit(); fitBanner(); });
+
+// ================= Start =================
+// Test hooks: #view=arrows&scene=boat opens a scene (&moment=1 picks the second moment); &arrows=gravity:down:3,normal:up:2 draws arrows; &check=1 presses Check
+const hp = new URLSearchParams(location.hash.slice(1));
+if (VIEWS[hp.get('view')]) state.view = hp.get('view');
+if (hp.has('scene')) state.scene = Math.max(0, SCENES.findIndex(s => s.id === hp.get('scene')));
+if (hp.has('moment')) state.moment[SCENES[state.scene].id] = +hp.get('moment') || 0;
+if (hp.has('arrows')) state.arrows[A.scene().id] = hp.get('arrows').split(',').map(t => { const [f, dir, len] = t.split(':'); return { f, dir, len: +len || 3 }; });
+if (hp.has('size')) state.chute.size = +hp.get('size') || 30;
+updateStars();
+// #mission=3 starts a mission straight away
+if (MISSIONS[hp.get('mission')]) startMission(+hp.get('mission'));
+else render();
+if (hp.has('check')) A.check();
+// #view=ramp&surf=ice picks a surface; &runs=ice,wood records runs straight away; &read=1 stops the car, ready to read the tape
+if (state.view === 'ramp' && (hp.has('surf') || hp.has('runs'))) {
+  if (R.SURF[hp.get('surf')]) state.ramp.surf = hp.get('surf');
+  // Runs need a prediction first, so the hook makes one
+  if (hp.has('runs') || hp.has('read')) Object.assign(state.ramp.pred, { surf: 'ice', why: 'Ice is very slippery.', saved: true });
+  if (hp.has('runs')) hp.get('runs').split(',').filter(id => R.SURF[id]).forEach(id => {
+    const cm = Math.round(R.SURF[id].cm * (1 + (Math.random() - .5) * .06));
+    state.ramp.runs.push({ surf: id, cm }); state.ramp.surf = id; state.ramp.shown = cm;
+  });
+  if (hp.has('read')) { state.ramp.shown = null; state.ramp.pending = { cm: Math.round(R.SURF[state.ramp.surf].cm * (1 + (Math.random() - .5) * .06)), tries: 0, msg: '' }; }
+  render();
+}
+// #view=tank&obj=apple&level=1 picks an object and raises the tank
+if (state.view === 'tank' && (hp.has('obj') || hp.has('level'))) {
+  if (T.OBJS[hp.get('obj')]) state.tank.obj = hp.get('obj');
+  state.tank.level = Math.max(0, Math.min(1, +hp.get('level') || 0)); render();
+}
+// #view=parachute&drops=10,20,30,40 records drops straight away, without the animation
+if (hp.has('drops')) hp.get('drops').split(',').forEach(sz => {
+  const size = +sz, odd = !state.chute.oddUsed && !state.chute.drops.some(d => d.size === size) && P.sizes() === 2;
+  if (odd) state.chute.oddUsed = true;
+  const [start, stop] = P.wobble();
+  P.record(size, P.path(size).T + stop - start - (odd ? P.LATE : 0), odd);
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,1461 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Seasons Explorer</title>
+<meta name="description" content="Explore how the Earth's tilt causes the seasons – an interactive 3D model for primary school pupils.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --panelW: 380px;
+    --ink: #1d2340;
+    --muted: #5b6386;
+    --card: #ffffff;
+    --soft: #eef2ff;
+    --yellow: #ffc83d;
+    --blue: #3d7bff;
+    --coral: #ff5f6d;
+    --green: #22b07d;
+    --space: #070d24;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; height: 100%; overflow: hidden;
+    background: var(--space); color: var(--ink);
+    font-family: 'Fredoka', system-ui, sans-serif;
+    -webkit-tap-highlight-color: transparent;
+  }
+  button, select, input { font: inherit; }
+
+  /* ---------- 3D stage ---------- */
+  #stage { position: fixed; left: 0; top: 0; bottom: 0; right: var(--panelW); }
+  #scene { width: 100%; height: 100%; display: block; touch-action: none; }
+  #scene.grab { cursor: grab; }
+  #scene.grabbing { cursor: grabbing; }
+  #scene.picking { cursor: crosshair; }
+  #labels { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+  .label {
+    position: absolute; left: 0; top: 0; white-space: nowrap;
+    font-size: 13px; font-weight: 600; color: #fff;
+    background: rgba(10, 20, 60, .7); padding: 3px 9px; border-radius: 999px;
+    will-change: transform;
+  }
+  .label.sun { background: rgba(255, 170, 0, .85); color: #3a2400; }
+  .label.grab { background: var(--yellow); color: #3a2400; font-size: 15px; animation: bob 1.2s ease-in-out infinite; }
+  .label.pin { background: var(--coral); }
+  .label.north { background: #ff5a5f; padding: 2px 7px; }
+  .label.star { background: rgba(255, 243, 160, .9); color: #3a2400; }
+  @keyframes bob { 50% { margin-top: -6px; } }
+
+  /* ---------- Buttons ---------- */
+  .btn {
+    border: 0; border-radius: 14px; padding: 9px 14px; cursor: pointer;
+    background: #fff; color: var(--ink); font-weight: 600; font-size: 15px;
+    box-shadow: 0 3px 0 rgba(0, 0, 0, .18); transition: transform .08s, background .15s;
+    white-space: nowrap;
+  }
+  .btn:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0, 0, 0, .18); }
+  a.btn { display: inline-block; text-decoration: none; }
+  .btn.active { background: var(--yellow); }
+  .btn.primary { background: var(--blue); color: #fff; }
+  .btn.small { font-size: 14px; padding: 7px 11px; border-radius: 12px; }
+  .btn:focus-visible, select:focus-visible, input:focus-visible { outline: 3px solid var(--yellow); outline-offset: 2px; }
+
+  /* ---------- Top bar ---------- */
+  .topbar {
+    position: absolute; top: 10px; left: 10px; right: 10px;
+    display: flex; gap: 8px; align-items: center; flex-wrap: wrap; pointer-events: none;
+  }
+  .topbar > * { pointer-events: auto; }
+  .brand { color: #fff; font-size: 22px; font-weight: 700; margin-right: auto; text-shadow: 0 2px 6px rgba(0,0,0,.4); }
+  .hub-link { flex: none; display: grid; place-items: center; width: 38px; height: 38px; border-radius: 12px; text-decoration: none; font-size: 20px; background: rgba(255,255,255,.14); box-shadow: 0 3px 0 rgba(0,0,0,.25); transition: background .15s, transform .08s; }
+  .hub-link:hover { background: rgba(255,255,255,.26); }
+  .hub-link:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,.25); }
+  .views { display: flex; gap: 6px; flex-wrap: wrap; }
+  #panelToggle { display: none; }
+  @media (max-width: 1399px) { #modelBtn .long { display: none; } }
+
+  /* ---------- Banner (missions, picking) ---------- */
+  .banner {
+    position: absolute; top: 64px; left: 50%; transform: translateX(-50%);
+    width: min(560px, calc(100% - 20px)); background: #fff; border-radius: 18px;
+    padding: 12px 44px 12px 16px; box-shadow: 0 8px 24px rgba(0,0,0,.35); font-size: 16px; line-height: 1.35;
+  }
+  .banner.hidden { display: none; }
+  .banner .kicker { font-size: 13px; font-weight: 700; color: var(--blue); text-transform: uppercase; letter-spacing: .04em; }
+  .banner .close { position: absolute; top: 8px; right: 8px; border: 0; background: var(--soft); border-radius: 50%; width: 30px; height: 30px; cursor: pointer; font-size: 16px; }
+  .banner .hint { margin-top: 6px; color: var(--muted); font-size: 14px; }
+  .banner .hint.hidden { display: none; }
+  .linkbtn { border: 0; background: none; color: var(--blue); font-weight: 600; cursor: pointer; padding: 0; margin-top: 4px; }
+
+  /* ---------- Dock ---------- */
+  .dock {
+    position: absolute; left: 10px; right: 10px; bottom: 10px;
+    background: rgba(255, 255, 255, .96); border-radius: 20px; padding: 10px 14px;
+    box-shadow: 0 8px 24px rgba(0,0,0,.35); display: flex; flex-direction: column; gap: 8px;
+  }
+  .dock .row { display: flex; gap: 12px; align-items: center; }
+  .slider-wrap { flex: 1; min-width: 0; }
+  .slider-wrap label { display: flex; gap: 6px; align-items: baseline; font-size: 15px; flex-wrap: wrap; }
+  .slider-wrap label b { font-size: 18px; }
+  .note-inline { color: var(--muted); font-size: 14px; }
+  .months { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); padding: 0 6px; }
+  .tilt-track { position: relative; }
+  .tilt-mark { position: absolute; top: -2px; width: 3px; height: 10px; background: var(--green); border-radius: 2px; transform: translateX(-50%); pointer-events: none; }
+  #playBtn { min-width: 116px; font-size: 17px; padding: 12px 14px; }
+
+  input[type=range] { width: 100%; -webkit-appearance: none; appearance: none; background: transparent; height: 32px; margin: 0; cursor: pointer; }
+  input[type=range]::-webkit-slider-runnable-track { height: 10px; border-radius: 6px; background: linear-gradient(90deg, #c9d6ff, #ffe39a, #c9d6ff); }
+  input[type=range]::-moz-range-track { height: 10px; border-radius: 6px; background: linear-gradient(90deg, #c9d6ff, #ffe39a, #c9d6ff); }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 28px; height: 28px; border-radius: 50%; background: var(--blue); border: 4px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,.35); margin-top: -9px; }
+  input[type=range]::-moz-range-thumb { width: 22px; height: 22px; border-radius: 50%; background: var(--blue); border: 4px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,.35); }
+  #tiltSlider::-webkit-slider-runnable-track { background: linear-gradient(90deg, #d8e0ff, #ffb3a7); }
+  #tiltSlider::-moz-range-track { background: linear-gradient(90deg, #d8e0ff, #ffb3a7); }
+  #tiltSlider::-webkit-slider-thumb { background: var(--coral); }
+  #tiltSlider::-moz-range-thumb { background: var(--coral); }
+
+  .zoom-btns { position: absolute; right: 12px; top: 50%; transform: translateY(-60%); display: flex; flex-direction: column; gap: 8px; }
+  .zoom-btns .btn { width: 50px; height: 50px; padding: 0; font-size: 26px; line-height: 1; border-radius: 16px; touch-action: none; user-select: none; }
+  .zoom-btns #zoomReset { font-size: 22px; }
+  .scale-note { position: absolute; left: 14px; color: rgba(255,255,255,.55); font-size: 12px; pointer-events: none; }
+
+  /* ---------- Info panel ---------- */
+  #panel {
+    position: fixed; top: 0; right: 0; bottom: 0; width: var(--panelW);
+    background: #dfe6ff; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 10px;
+  }
+  .card { background: var(--card); border-radius: 18px; padding: 12px 14px; box-shadow: 0 2px 0 rgba(30,40,90,.08); }
+  .card-title { font-weight: 700; font-size: 15px; margin-bottom: 6px; }
+  .muted { color: var(--muted); font-size: 14px; }
+  select { width: 100%; font-size: 16px; padding: 8px 10px; border-radius: 12px; border: 2px solid #d3dbf7; background: #fff; color: var(--ink); margin-bottom: 8px; }
+  .season-big { display: flex; align-items: center; gap: 12px; }
+  #seasonIcon { font-size: 44px; line-height: 1; }
+  #seasonName { font-size: 28px; font-weight: 700; line-height: 1.1; }
+  .hemis { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+  .chip { background: var(--soft); border-radius: 999px; padding: 3px 10px; font-size: 13px; }
+  .big-num { font-size: 24px; font-weight: 700; }
+  .dlbar { position: relative; height: 24px; border-radius: 8px; background: #26306b; overflow: hidden; margin: 6px 0 2px; }
+  #dlFill { position: absolute; top: 0; bottom: 0; background: linear-gradient(90deg, #ffd25e, #ffe9a6, #ffd25e); }
+  .dlticks { position: relative; height: 16px; font-size: 11px; color: var(--muted); }
+  .dlticks span { position: absolute; transform: translateX(-50%); }
+  canvas.mini { width: 100%; display: block; border-radius: 12px; }
+  #chart { height: 110px; margin-top: 6px; }
+  #sky { height: 175px; }
+  .tabs { display: flex; gap: 6px; margin-bottom: 8px; }
+  .tabs .btn { flex: 1; box-shadow: none; background: var(--soft); }
+  .tabs .btn.active { background: var(--yellow); }
+  #skyText { margin-top: 6px; }
+  .distbar { position: relative; height: 10px; border-radius: 6px; background: linear-gradient(90deg, #ff9f6b, #9fc0ff); margin: 8px 4px 2px; }
+  #distMark { position: absolute; top: -5px; width: 20px; height: 20px; border-radius: 50%; background: var(--blue); border: 3px solid #fff; transform: translateX(-50%); box-shadow: 0 1px 4px rgba(0,0,0,.3); }
+  .distlabels { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); }
+  .nowline { font-size: 18px; font-weight: 600; }
+  .row-btns { display: flex; gap: 6px; margin-top: 4px; }
+
+  /* ---------- Modals ---------- */
+  .modal { position: fixed; inset: 0; background: rgba(5, 10, 30, .6); display: flex; align-items: center; justify-content: center; z-index: 20; padding: 16px; }
+  .modal.hidden { display: none; }
+  .modal-box { background: #fff; border-radius: 24px; padding: 22px; width: min(560px, 100%); max-height: calc(100vh - 32px); overflow-y: auto; box-shadow: 0 16px 40px rgba(0,0,0,.4); }
+  .modal-box h2 { margin: 0 0 10px; font-size: 26px; }
+  .objectives { background: #f3f5ff; border-radius: 14px; padding: 10px 14px; margin: 0 0 14px; font-size: 15px; line-height: 1.4; }
+  .objectives h3 { margin: 0 0 4px; font-size: 17px; }
+  .objectives p { margin: 4px 0; }
+  .modal-box ul { padding-left: 0; list-style: none; margin: 0 0 16px; }
+  .modal-box li { display: flex; gap: 10px; padding: 7px 0; font-size: 16px; line-height: 1.35; }
+  .modal-box li .em { font-size: 24px; width: 32px; flex: none; text-align: center; }
+  .mission-list { display: grid; gap: 8px; margin-bottom: 14px; }
+  .mission-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 16px; background: var(--soft); border: 0; text-align: left; cursor: pointer; font-size: 16px; color: var(--ink); }
+  .mission-item:hover { background: #e2e8ff; }
+  .mission-item .em { font-size: 26px; }
+  .mission-item .t { flex: 1; font-weight: 600; }
+  .mission-item .star { font-size: 22px; filter: grayscale(1); opacity: .35; }
+  .mission-item.done .star { filter: none; opacity: 1; }
+  .win-emoji { font-size: 60px; text-align: center; }
+  .win-text { font-size: 18px; line-height: 1.45; margin-bottom: 16px; }
+  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+
+  #toast { position: fixed; left: 50%; bottom: 150px; transform: translateX(-50%); background: rgba(10,20,60,.9); color: #fff; padding: 10px 16px; border-radius: 14px; font-size: 15px; opacity: 0; transition: opacity .3s; pointer-events: none; z-index: 15; text-align: center; max-width: 90vw; }
+  #toast.show { opacity: 1; }
+  .confetti { position: fixed; top: -40px; font-size: 26px; z-index: 30; pointer-events: none; animation: fall linear forwards; }
+  @keyframes fall { to { transform: translateY(110vh) rotate(540deg); } }
+
+  #loading { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 20px; z-index: 40; background: var(--space); }
+  #loading.hidden { display: none; }
+
+  /* ---------- Small screens ---------- */
+  @media (max-width: 860px) {
+    :root { --panelW: 0px; }
+    #panel {
+      width: 100%; top: auto; height: 72vh; border-radius: 22px 22px 0 0; z-index: 10;
+      transform: translateY(105%); transition: transform .3s ease; box-shadow: 0 -8px 30px rgba(0,0,0,.4);
+    }
+    #panel.open { transform: translateY(0); }
+    #panelToggle { display: inline-block; }
+    .brand { font-size: 18px; width: 100%; }
+    .views .btn { font-size: 14px; padding: 7px 10px; }
+    .dock { padding: 8px 10px; }
+    .dock .row { gap: 8px; }
+    #playBtn { min-width: 0; }
+    #speedBtn .txt, #realTilt .txt { display: none; }
+    .banner { top: 100px; }
+  }
+  @media (max-width: 640px) {
+    .brand { display: none; }
+    .long { display: none; }
+    .topbar { gap: 5px; top: 6px; left: 6px; right: 6px; }
+    .topbar .btn { font-size: 14px; padding: 7px 9px; }
+    .dock { left: 6px; right: 6px; bottom: 6px; gap: 2px; border-radius: 16px; }
+    .slider-wrap label { font-size: 13px; }
+    .slider-wrap label b { font-size: 15px; }
+    .note-inline { font-size: 12px; }
+    .months span:nth-child(even) { visibility: hidden; }
+    #playBtn { font-size: 15px; padding: 9px 10px; }
+    .scale-note { display: none; }
+    .banner { top: 52px; font-size: 14px; }
+  }
+  .panel-close { display: none; }
+  @media (max-width: 860px) { .panel-close { display: block; align-self: flex-end; } }
+</style>
+<script type="importmap">
+{ "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<div id="loading">Loading the Solar System… 🌍</div>
+
+<div id="stage">
+  <canvas id="scene" aria-label="3D model of the Earth going around the Sun"></canvas>
+  <div id="labels"></div>
+
+  <div class="topbar">
+    <a class="hub-link" href="../index.html" title="Back to the Science Hub" aria-label="Back to the Science Hub">🏠</a>
+    <div class="brand">🌍 Seasons Explorer</div>
+    <div class="views" role="group" aria-label="Camera views">
+      <button class="btn active" data-view="space">🌌 Space</button>
+      <button class="btn" data-view="side">👀 Side</button>
+      <button class="btn" data-view="earth">🔍 <span class="long">Zoom to </span>Earth</button>
+    </div>
+    <button class="btn" id="missionsBtn">🚀 <span class="long">Missions </span><span id="starCount"></span></button>
+    <button class="btn" id="panelToggle">ℹ️ Info</button>
+    <button class="btn" id="modelBtn" title="How is this model different from real life?">🤔<span class="long"> Real life?</span></button>
+    <button class="btn" id="helpBtn" aria-label="How to use">❓</button>
+  </div>
+
+  <div id="banner" class="banner hidden" role="status">
+    <div class="kicker" id="bannerKicker"></div>
+    <div id="bannerText"></div>
+    <button class="linkbtn" id="hintBtn">💡 Show a hint</button>
+    <div class="hint hidden" id="bannerHint"></div>
+    <button class="close" id="bannerClose" aria-label="Close">✖</button>
+  </div>
+
+  <div class="dock">
+    <div class="row">
+      <button class="btn primary" id="playBtn">⏸ Pause</button>
+      <div class="slider-wrap">
+        <label for="dateSlider">📅 <b id="dateLabel">–</b> <span class="note-inline" id="dateNote"></span></label>
+        <input type="range" id="dateSlider" min="0" max="364" step="1" aria-label="Date">
+        <div class="months"><span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span><span>Jul</span><span>Aug</span><span>Sep</span><span>Oct</span><span>Nov</span><span>Dec</span></div>
+      </div>
+      <button class="btn small" id="speedBtn" title="Change speed">🐇 <span class="txt">Normal</span></button>
+    </div>
+    <div class="row">
+      <div class="slider-wrap">
+        <label for="tiltSlider">📐 Tilt: <b id="tiltLabel">23.5°</b> <span class="note-inline" id="tiltNote"></span></label>
+        <div class="tilt-track">
+          <input type="range" id="tiltSlider" min="0" max="90" step="0.5" value="23.5" aria-label="Tilt of the Earth">
+          <div class="tilt-mark" id="tiltMark"></div>
+        </div>
+      </div>
+      <button class="btn small" id="realTilt" title="Set the real tilt">🌍 <span class="txt">Real Earth</span></button>
+    </div>
+  </div>
+  <div class="zoom-btns" role="group" aria-label="Zoom">
+    <button class="btn" id="zoomIn" aria-label="Zoom in" title="Zoom in">＋</button>
+    <button class="btn" id="zoomOut" aria-label="Zoom out" title="Zoom out">－</button>
+    <button class="btn" id="zoomReset" aria-label="Reset the view" title="Reset the view">🎯</button>
+  </div>
+  <div class="scale-note" id="scaleNote">⚠️ Not to scale! The real Sun is much bigger and much further away.</div>
+</div>
+
+<aside id="panel" aria-label="Information">
+  <button class="btn small panel-close" id="panelClose">✖ Close</button>
+  <div class="card">
+    <div class="card-title">📍 Your pin</div>
+    <select id="placeSelect" aria-label="Choose a place"></select>
+    <button class="btn small" id="pickBtn">👆 Tap the Earth to choose a spot</button>
+    <div class="muted" id="pinWhere" style="margin-top:6px"></div>
+  </div>
+
+  <div class="card">
+    <div class="season-big">
+      <span id="seasonIcon">☀️</span>
+      <div><div id="seasonName">–</div><div class="muted" id="seasonWhere"></div></div>
+    </div>
+    <div class="hemis"><span class="chip" id="hemiN"></span><span class="chip" id="hemiS"></span></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">🌗 Daylight on this day</div>
+    <div class="big-num" id="dlText">–</div>
+    <div class="dlbar"><div id="dlFill"></div></div>
+    <div class="dlticks"><span style="left:0%;transform:none">midnight</span><span style="left:25%">6:00</span><span style="left:50%">midday</span><span style="left:75%">18:00</span><span style="left:100%;transform:translateX(-100%)">midnight</span></div>
+    <canvas class="mini" id="chart" aria-label="Graph of daylight hours through the year"></canvas>
+  </div>
+
+  <div class="card">
+    <div class="card-title">🌤️ The Sun in the sky at midday</div>
+    <div class="tabs">
+      <button class="btn small active" data-sky="shadow">🧍 Shadow</button>
+      <button class="btn small" data-sky="beam">🔦 Sunbeam</button>
+    </div>
+    <canvas class="mini" id="sky" aria-label="Picture of the Sun's height in the sky"></canvas>
+    <div class="muted" id="skyText"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">🕐 Right now at your pin</div>
+    <div class="nowline" id="nowText">–</div>
+    <input type="range" id="timeSlider" min="0" max="24" step="0.05" aria-label="Time of day at your pin">
+    <div class="row-btns">
+      <button class="btn small" id="spinBtn">⏸ Stop the Earth spinning</button>
+    </div>
+    <div class="muted" style="margin-top:6px">The Earth spins once every day. Zoom to Earth to watch your pin go from day into night.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📏 Distance from the Sun</div>
+    <div class="big-num" id="distText">–</div>
+    <div class="distbar"><div id="distMark"></div></div>
+    <div class="distlabels"><span>closest</span><span>furthest</span></div>
+    <div class="muted" id="distNote" style="margin-top:4px"></div>
+  </div>
+</aside>
+
+<div id="helpModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+  <div class="modal-box">
+    <h2 id="helpTitle">🌍 Welcome to Seasons Explorer!</h2>
+    <ul>
+      <li><span class="em">☀️</span><span>The Earth travels all the way around the Sun once every <b>year</b>.</span></li>
+      <li><span class="em">👆</span><span><b>Grab the Earth</b> to stop it, then drag it around the Sun to change the date.</span></li>
+      <li><span class="em">📐</span><span>The Earth is <b>tilted</b>. Watch the red stick (the axis) – it always points the same way!</span></li>
+      <li><span class="em">📍</span><span>Your <b>pin</b> shows a place on Earth. Choose a place in the info panel, or tap the Earth.</span></li>
+      <li><span class="em">🔍</span><span><b>Zoom to Earth</b> to see day and night. Pinch or scroll to zoom, drag to look around.</span></li>
+      <li><span class="em">🚀</span><span>Try the <b>Missions</b> to become a seasons expert!</span></li>
+    </ul>
+    <div class="objectives"><h3>🎯 What you are learning</h3>
+      <p><b>5ESs.01</b> Describe the orbit of the Earth around the Sun (limited to slight ellipse, anticlockwise direction and the duration).</p>
+      <p><b>5ESs.02</b> Describe how the tilt of the Earth can create different seasons in different places.</p>
+      <p class="muted"><b>Also:</b> <b>5TWSm.01</b> Know that a model presents an object, process or idea in a way that shows some of the important features.</p></div>
+    <div class="modal-actions"><a class="btn" href="../practice/index.html#earth-space">✏️ Practise this</a><button class="btn primary" id="helpClose">Let's explore! 🚀</button></div>
+  </div>
+</div>
+
+<div id="modelModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modelTitle">
+  <div class="modal-box">
+    <h2 id="modelTitle">🤔 How is this model different from real life?</h2>
+    <p style="margin-top:0">A <b>model</b> shows some important features of something real – but not everything.</p>
+    <ul>
+      <li><span class="em">📏</span><span>The Sun and the Earth are <b>not to scale</b>. In real life, the Earth would be a tiny dot, very far away from the Sun.</span></li>
+      <li><span class="em">⭕</span><span>The orbit is drawn more stretched than it really is. The real orbit is very nearly a <b>circle</b>.</span></li>
+      <li><span class="em">🌙</span><span>The Moon and the other planets are left out.</span></li>
+      <li><span class="em">☁️</span><span>Real sunlight and temperatures also depend on the weather, clouds, and the land and sea.</span></li>
+    </ul>
+    <div class="modal-actions"><button class="btn primary" id="modelClose">Got it!</button></div>
+  </div>
+</div>
+
+<div id="missionsModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="missionsTitle">
+  <div class="modal-box">
+    <h2 id="missionsTitle">🚀 Missions</h2>
+    <p class="muted" style="margin-top:0">Complete each mission to earn a star ⭐</p>
+    <div class="mission-list" id="missionList"></div>
+    <div class="modal-actions">
+      <button class="btn small" id="resetStars">Reset stars</button>
+      <button class="btn primary" id="missionsClose">Close</button>
+    </div>
+  </div>
+</div>
+
+<div id="winModal" class="modal hidden" role="dialog" aria-modal="true">
+  <div class="modal-box">
+    <div class="win-emoji">⭐</div>
+    <h2 id="winTitle" style="text-align:center">Mission complete!</h2>
+    <div class="win-text" id="winText"></div>
+    <div class="modal-actions">
+      <button class="btn" id="winExplore">Keep exploring</button>
+      <a class="btn primary" id="winPractise" href="../practice/index.html#earth-space">✏️ Practise this</a>
+      <button class="btn primary" id="winNext">Next mission ▶</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+// ================= Constants =================
+const DEG = Math.PI / 180;
+const YEAR = 365;
+const SOLSTICE = 171;            // day index of 21 June (0 = 1 January)
+const ORBIT_R = 60, EARTH_R = 3, SUN_R = 9;
+const REAL_TILT = 23.5;
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const MDAYS = [31,28,31,30,31,30,31,31,30,31,30,31];
+const SPEEDS = [{ icon: '🐢', label: 'Slow', secs: 120 }, { icon: '🐇', label: 'Normal', secs: 50 }, { icon: '🚀', label: 'Fast', secs: 16 }];
+const SPIN_SECS = 6;             // one Earth spin (a "day") every 6 seconds – not to scale!
+const Y = new THREE.Vector3(0, 1, 0);
+
+const PLACES = [
+  { group: 'Europe', id: 'bratislava', name: 'Bratislava', country: 'Slovakia', lat: 48.15, lon: 17.11 },
+  { group: 'Europe', id: 'london', name: 'London', country: 'United Kingdom', lat: 51.51, lon: -0.13 },
+  { group: 'Europe', id: 'tromso', name: 'Tromsø', country: 'Norway', lat: 69.65, lon: 18.96 },
+  { group: 'Northern half of the Earth', id: 'cairo', name: 'Cairo', country: 'Egypt', lat: 30.04, lon: 31.24 },
+  { group: 'Northern half of the Earth', id: 'newyork', name: 'New York', country: 'United States of America', lat: 40.71, lon: -74.01 },
+  { group: 'Northern half of the Earth', id: 'tokyo', name: 'Tokyo', country: 'Japan', lat: 35.68, lon: 139.69 },
+  { group: 'Near the Equator', id: 'quito', name: 'Quito', country: 'Ecuador', lat: -0.18, lon: -78.47 },
+  { group: 'Near the Equator', id: 'nairobi', name: 'Nairobi', country: 'Kenya', lat: -1.29, lon: 36.82 },
+  { group: 'Southern half of the Earth', id: 'sydney', name: 'Sydney', country: 'Australia', lat: -33.87, lon: 151.21 },
+  { group: 'Southern half of the Earth', id: 'capetown', name: 'Cape Town', country: 'South Africa', lat: -33.92, lon: 18.42 },
+  { group: 'Southern half of the Earth', id: 'buenosaires', name: 'Buenos Aires', country: 'Argentina', lat: -34.6, lon: -58.38 },
+  { group: 'The Poles', id: 'northpole', name: 'North Pole', country: null, lat: 90, lon: 0 },
+  { group: 'The Poles', id: 'southpole', name: 'South Pole', country: 'Antarctica', lat: -90, lon: 0 },
+];
+const COUNTRY_SHORT = { 'United States of America': 'USA' };
+
+const $ = s => document.querySelector(s);
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} },
+};
+
+function todayIndex() {
+  const now = new Date();
+  let i = 0;
+  for (let m = 0; m < now.getMonth(); m++) i += MDAYS[m];
+  return Math.min(364, i + now.getDate() - 1);
+}
+
+// ================= State =================
+const state = {
+  day: todayIndex() + 0.5,
+  tilt: REAL_TILT,
+  playing: true,
+  speedIdx: 1,
+  spinning: true,
+  spin: 0,
+  view: 'space',
+  pin: { ...PLACES[0] },
+  picking: false,
+  skyMode: 'shadow',
+  mission: null,
+  missionHold: 0,
+  done: store.get('se-done', []),
+  grabbed: store.get('se-grabbed', false),
+};
+
+// ================= Maths helpers =================
+const theta = d => 2 * Math.PI * (d - SOLSTICE) / YEAR;
+function earthPos(d, out = new THREE.Vector3()) {
+  const t = theta(d);
+  return out.set(ORBIT_R * Math.cos(t), 0, -ORBIT_R * Math.sin(t));
+}
+function declination(d, tilt = state.tilt) {          // radians: latitude where the Sun is overhead
+  return Math.asin(Math.sin(tilt * DEG) * Math.cos(theta(d)));
+}
+function dayLength(lat, decl) {                        // hours of daylight
+  const phi = lat * DEG;
+  const x = -Math.sin(phi) * Math.sin(decl), y = Math.cos(phi) * Math.cos(decl);
+  if (y < 1e-9) return x < -1e-9 ? 24 : x > 1e-9 ? 0 : 12;
+  const c = x / y;
+  if (c <= -1) return 24;
+  if (c >= 1) return 0;
+  return 2 * Math.acos(c) / DEG / 15;
+}
+const noonAltitude = (lat, decl) => 90 - Math.abs(lat - decl / DEG);
+function distanceMkm(d) {
+  const e = 0.0167;
+  return 149.6 * (1 - e * e) / (1 + e * Math.cos(2 * Math.PI * (d - 3) / YEAR));
+}
+function dateOf(d) {
+  let n = Math.floor(d) % YEAR;
+  for (let m = 0; m < 12; m++) { if (n < MDAYS[m]) return { m, dd: n + 1 }; n -= MDAYS[m]; }
+  return { m: 11, dd: 31 };
+}
+function latLonToVec(lat, lon) {
+  const p = lat * DEG, l = lon * DEG;
+  return new THREE.Vector3(Math.cos(p) * Math.cos(l), Math.sin(p), -Math.cos(p) * Math.sin(l));
+}
+const dayGap = (a, b) => { const g = Math.abs(a - b) % YEAR; return Math.min(g, YEAR - g); };
+function fmtHours(h) {
+  const hh = Math.floor(h + 1e-6), mm = Math.round((h - hh) * 60);
+  if (mm === 60) return `${hh + 1} hours`;
+  return mm ? `${hh} h ${mm} min` : `${hh} hours`;
+}
+const fmtClock = t => { const h = Math.floor(t) % 24, m = Math.floor((t - Math.floor(t)) * 60); return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`; };
+const fmtLat = lat => Math.abs(lat) < 0.5 ? 'on the Equator' : `${Math.round(Math.abs(lat))}° ${lat > 0 ? 'North' : 'South'} of the Equator`;
+const countryName = c => COUNTRY_SHORT[c] || c;
+function placeTitle(p = state.pin) {
+  if (p.id === 'custom') return p.country ? `Your spot in ${countryName(p.country)}` : 'Your spot in the ocean 🌊';
+  return p.country && p.country !== 'Antarctica' ? `${p.name}, ${countryName(p.country)}` : p.name;
+}
+const shortPlace = (p = state.pin) => p.id === 'custom' ? (p.country ? countryName(p.country) : 'your spot') : p.name;
+
+// Year-long arrays for the current pin & tilt
+let yearDL = [], yearAlt = [];
+function recomputeYear() {
+  yearDL = []; yearAlt = [];
+  for (let i = 0; i < YEAR; i++) {
+    const dc = declination(i + 0.5);
+    yearDL.push(dayLength(state.pin.lat, dc));
+    yearAlt.push(noonAltitude(state.pin.lat, dc));
+  }
+}
+
+// ================= Three.js setup =================
+const canvas = $('#scene');
+const stage = $('#stage');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 3000);
+camera.position.set(0, 72, 108);
+
+// Stars
+{
+  const n = 1800, pos = new Float32Array(n * 3), col = new Float32Array(n * 3);
+  for (let i = 0; i < n; i++) {
+    const v = new THREE.Vector3().randomDirection().multiplyScalar(900 + Math.random() * 300);
+    pos.set([v.x, v.y, v.z], i * 3);
+    const b = 0.55 + Math.random() * 0.45;
+    col.set([b, b, b * (0.9 + Math.random() * 0.2)], i * 3);
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  scene.add(new THREE.Points(g, new THREE.PointsMaterial({ size: 1.8, sizeAttenuation: false, vertexColors: true })));
+}
+
+// Sun
+const sun = new THREE.Mesh(new THREE.SphereGeometry(SUN_R, 48, 48), new THREE.MeshBasicMaterial({ color: 0xffd23f }));
+scene.add(sun);
+{
+  const c = document.createElement('canvas'); c.width = c.height = 256;
+  const ctx = c.getContext('2d');
+  const g = ctx.createRadialGradient(128, 128, 20, 128, 128, 128);
+  g.addColorStop(0, 'rgba(255,220,90,1)'); g.addColorStop(0.35, 'rgba(255,170,40,.45)'); g.addColorStop(1, 'rgba(255,140,0,0)');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, 256, 256);
+  const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), blending: THREE.AdditiveBlending, depthWrite: false, transparent: true }));
+  glow.scale.set(SUN_R * 5, SUN_R * 5, 1);
+  scene.add(glow);
+}
+scene.add(new THREE.PointLight(0xffffff, 3.2, 0, 0));
+scene.add(new THREE.AmbientLight(0x8899cc, 0.22));
+
+// Orbit path
+{
+  const pts = [];
+  for (let i = 0; i <= 256; i++) { const a = i / 256 * Math.PI * 2; pts.push(new THREE.Vector3(ORBIT_R * Math.cos(a), 0, ORBIT_R * Math.sin(a))); }
+  scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: 0x9fb8ff, transparent: true, opacity: 0.45 })));
+}
+
+// Earth: earthGroup (position) > tiltGroup (tilt) > spinGroup (daily spin)
+const earthGroup = new THREE.Group(); scene.add(earthGroup);
+const tiltGroup = new THREE.Group(); earthGroup.add(tiltGroup);
+const spinGroup = new THREE.Group(); tiltGroup.add(spinGroup);
+
+const texCanvas = document.createElement('canvas'); texCanvas.width = 2048; texCanvas.height = 1024;
+const earthTex = new THREE.CanvasTexture(texCanvas);
+earthTex.colorSpace = THREE.SRGBColorSpace;
+earthTex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+const earthMesh = new THREE.Mesh(new THREE.SphereGeometry(EARTH_R, 96, 64), new THREE.MeshLambertMaterial({ map: earthTex }));
+spinGroup.add(earthMesh);
+earthGroup.add(new THREE.Mesh(new THREE.SphereGeometry(EARTH_R * 1.07, 48, 32),
+  new THREE.MeshBasicMaterial({ color: 0x7fc4ff, transparent: true, opacity: 0.13, side: THREE.BackSide })));
+const hitSphere = new THREE.Mesh(new THREE.SphereGeometry(EARTH_R * 2.6, 16, 12),
+  new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false }));
+earthGroup.add(hitSphere);
+
+// Axis + North Star pointer
+const AXIS_HALF = EARTH_R * 1.5;
+const axisMat = new THREE.MeshBasicMaterial({ color: 0xff5a5f });
+tiltGroup.add(new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, AXIS_HALF * 2, 12), axisMat));
+const northCap = new THREE.Mesh(new THREE.SphereGeometry(0.22, 16, 12), axisMat);
+northCap.position.y = AXIS_HALF; tiltGroup.add(northCap);
+const southCap = new THREE.Mesh(new THREE.SphereGeometry(0.18, 16, 12), new THREE.MeshBasicMaterial({ color: 0x5aa0ff }));
+southCap.position.y = -AXIS_HALF; tiltGroup.add(southCap);
+const STAR_LEN = 16;
+{
+  const g = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, AXIS_HALF, 0), new THREE.Vector3(0, AXIS_HALF + STAR_LEN, 0)]);
+  const l = new THREE.Line(g, new THREE.LineDashedMaterial({ color: 0xfff3a0, dashSize: 0.6, gapSize: 0.5, transparent: true, opacity: 0.75 }));
+  l.computeLineDistances(); tiltGroup.add(l);
+}
+function circlePoints(n = 128) {
+  const pts = [];
+  for (let i = 0; i < n; i++) { const a = i / n * Math.PI * 2; pts.push(new THREE.Vector3(Math.cos(a), 0, Math.sin(a))); }
+  return pts;
+}
+const equator = new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(circlePoints()), new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.55 }));
+equator.scale.setScalar(EARTH_R * 1.006); tiltGroup.add(equator);
+const pinRing = new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(circlePoints()), new THREE.LineBasicMaterial({ color: 0xffa23a }));
+tiltGroup.add(pinRing);
+
+// Pin
+const pinGroup = new THREE.Group(); spinGroup.add(pinGroup);
+{
+  const stick = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.8, 8), new THREE.MeshBasicMaterial({ color: 0xffffff }));
+  stick.position.y = 0.4; pinGroup.add(stick);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.3, 16, 12), new THREE.MeshBasicMaterial({ color: 0xff3b3b }));
+  head.position.y = 0.85; pinGroup.add(head);
+}
+
+// Season "ghost" Earths at the solstices and equinoxes
+const KEY_DAYS = [{ d: 79, text: '20 March' }, { d: 171, text: '21 June' }, { d: 264, text: '22 September' }, { d: 354, text: '21 December' }];
+const ghosts = KEY_DAYS.map(k => {
+  const g = new THREE.Group();
+  earthPos(k.d + 0.5, g.position);
+  g.add(new THREE.Mesh(new THREE.SphereGeometry(1.9, 24, 16), new THREE.MeshLambertMaterial({ color: 0x5b8fe0, transparent: true, opacity: 0.55 })));
+  const tg = new THREE.Group(); g.add(tg);
+  tg.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, -3.3, 0), new THREE.Vector3(0, 3.3, 0)]),
+    new THREE.LineBasicMaterial({ color: 0xff8a8f, transparent: true, opacity: 0.8 })));
+  scene.add(g);
+  return { ...k, group: g, tiltG: tg };
+});
+
+// Sunbeams (shown when zoomed in on the Earth)
+const beamGroup = new THREE.Group(); scene.add(beamGroup);
+const beams = [];
+for (let i = 0; i < 7; i++) {
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array(6), 3));
+  const line = new THREE.Line(g, new THREE.LineBasicMaterial({ color: 0xffe066, transparent: true, opacity: 0.9 }));
+  const cone = new THREE.Mesh(new THREE.ConeGeometry(0.13, 0.45, 10), new THREE.MeshBasicMaterial({ color: 0xffe066 }));
+  beamGroup.add(line, cone); beams.push({ line, cone });
+}
+
+// ================= Earth texture (cartoon map) =================
+let worldFeatures = null;
+function hashHue(s) { let h = 0; for (const ch of s) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return h; }
+function traceRing(ctx, ring, W, H) {
+  const pts = []; let prev = null, shift = 0;
+  for (const [lon, lat] of ring) {
+    let L = lon + shift;
+    if (prev !== null) { if (L - prev > 180) { shift -= 360; L -= 360; } else if (L - prev < -180) { shift += 360; L += 360; } }
+    pts.push([L, lat]); prev = L;
+  }
+  for (const off of [-360, 0, 360]) {
+    pts.forEach(([L, lat], i) => {
+      const x = (L + off + 180) / 360 * W, y = (90 - lat) / 180 * H;
+      i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+    });
+    ctx.closePath();
+  }
+}
+const polygonsOf = geom => geom.type === 'Polygon' ? [geom.coordinates] : geom.type === 'MultiPolygon' ? geom.coordinates : [];
+function drawEarthTexture() {
+  const W = texCanvas.width, H = texCanvas.height, ctx = texCanvas.getContext('2d');
+  const sea = ctx.createLinearGradient(0, 0, 0, H);
+  sea.addColorStop(0, '#4b95ea'); sea.addColorStop(0.5, '#2a72d4'); sea.addColorStop(1, '#4b95ea');
+  ctx.fillStyle = sea; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = 'rgba(240,248,255,.92)'; ctx.fillRect(0, 0, W, H * 8 / 180);          // Arctic sea ice
+  if (worldFeatures) {
+    ctx.lineJoin = 'round';
+    for (const f of worldFeatures) {
+      const name = f.properties.name || '';
+      const icy = name === 'Antarctica' || name === 'Greenland';
+      const hl = state.pin.country === name;
+      const h = hashHue(name);
+      ctx.fillStyle = hl ? '#ffb547' : icy ? '#f3f8ff' : `hsl(${95 + h % 30}, ${48 + h % 12}%, ${50 + h % 9}%)`;
+      ctx.strokeStyle = hl ? '#c46a12' : icy ? '#c9d8ee' : 'rgba(40,100,40,.75)';
+      ctx.lineWidth = hl ? 3 : 1.3;
+      ctx.beginPath();
+      for (const poly of polygonsOf(f.geometry)) for (const ring of poly) traceRing(ctx, ring, W, H);
+      ctx.fill('evenodd'); ctx.stroke();
+    }
+  }
+  earthTex.needsUpdate = true;
+}
+function inRing(x, y, ring) {
+  let c = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const [xi, yi] = ring[i], [xj, yj] = ring[j];
+    if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) c = !c;
+  }
+  return c;
+}
+function countryAt(lat, lon) {
+  if (!worldFeatures) return null;
+  if (lat < -70) return 'Antarctica';
+  for (const f of worldFeatures) {
+    for (const poly of polygonsOf(f.geometry)) {
+      if (inRing(lon, lat, poly[0]) && !poly.slice(1).some(h => inRing(lon, lat, h))) return f.properties.name;
+    }
+  }
+  return null;
+}
+async function loadWorld() {
+  try {
+    const [topo, world] = await Promise.all([
+      import('https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/+esm'),
+      fetch('https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-110m.json').then(r => r.json()),
+    ]);
+    worldFeatures = topo.feature(world, world.objects.countries).features;
+  } catch (e) {
+    console.warn('Could not load the world map', e);
+  }
+  drawEarthTexture();
+}
+
+// ================= Camera & controls =================
+// Our own pointer handler must be registered before OrbitControls so it can claim Earth drags.
+canvas.addEventListener('pointerdown', onPointerDown);
+// Same for the wheel: OrbitControls zooms very slowly with trackpads, so we handle it ourselves.
+// A trackpad pinch arrives as a wheel event with ctrlKey set and small deltas, so it gets a bigger multiplier.
+canvas.addEventListener('wheel', e => {
+  e.preventDefault();
+  e.stopImmediatePropagation();
+  const unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? 400 : 1;
+  const dy = THREE.MathUtils.clamp(e.deltaY * unit, -250, 250);
+  zoomBy(dy * (e.ctrlKey ? 0.012 : 0.0028));
+}, { passive: false });
+const controls = new OrbitControls(camera, canvas);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.enablePan = false;
+controls.rotateSpeed = 0.7;
+controls.zoomSpeed = 1.6;                 // touch-screen pinch (handled by OrbitControls)
+
+// Smooth zoom: zoomBy() adds to a pending amount (log scale, + = further away) that the loop eases in
+let pendingZoom = 0;
+function zoomBy(amount) { if (!tween) pendingZoom = THREE.MathUtils.clamp(pendingZoom + amount, -3, 3); }
+function applyZoom(dt) {
+  if (tween || Math.abs(pendingZoom) < 1e-4) { pendingZoom = tween ? 0 : pendingZoom; return; }
+  const step = pendingZoom * Math.min(1, dt * 12);
+  pendingZoom -= step;
+  const off = camera.position.clone().sub(controls.target);
+  const dist = THREE.MathUtils.clamp(off.length() * Math.exp(step), controls.minDistance, controls.maxDistance);
+  camera.position.copy(controls.target).add(off.setLength(dist));
+}
+const VIEW_LIMITS = { space: [35, 400], side: [35, 400], earth: [4.8, 50] };
+
+function earthOffset(f) {
+  const s = earthGroup.position.clone().negate().normalize();
+  const o = s.applyAxisAngle(Y, 1.2).multiplyScalar(12.5);
+  o.y = 3.5;
+  return o.multiplyScalar(f);
+}
+// The top bar and dock cover part of the canvas, so we shift the picture into the free area
+// (setViewOffset) and back the camera off far enough for the whole orbit to fit.
+let freeFrac = 1;
+function fitCamera() {
+  const w = stage.clientWidth, h = stage.clientHeight;
+  const top = $('.topbar').getBoundingClientRect().bottom + 6;
+  const bottom = $('.dock').getBoundingClientRect().top - 6;
+  freeFrac = Math.max(0.3, (bottom - top) / h);
+  camera.setViewOffset(w, h, 0, -((top + bottom) / 2 - h / 2), w, h);
+}
+function viewDest(v) {
+  const fh = 0.8 / freeFrac, fw = camera.aspect < 1.5 ? 1.5 / camera.aspect : 1;
+  const f = Math.min(3.2, Math.max(1, fh, fw));
+  if (v === 'space') return { pos: new THREE.Vector3(0, 82 * f, 104 * f), tgt: new THREE.Vector3(0, 0, 4) };
+  if (v === 'side') return { pos: new THREE.Vector3(0, 10 * f, 140 * f), tgt: new THREE.Vector3(0, 0, 0) };
+  const E = earthGroup.position.clone();
+  return { pos: E.clone().add(earthOffset(f)), tgt: E };
+}
+let tween = null;
+function goView(v) {
+  state.view = v;
+  tween = { t: 0, v, fromPos: camera.position.clone(), fromTgt: controls.target.clone(), fromScale: earthGroup.scale.x };
+  controls.enabled = false;
+  controls.minDistance = 0; controls.maxDistance = Infinity;
+  document.querySelectorAll('[data-view]').forEach(b => b.classList.toggle('active', b.dataset.view === v));
+  beamGroup.visible = v === 'earth';
+}
+
+// ================= Pointer: drag the Earth, pick a spot =================
+const raycaster = new THREE.Raycaster(), ndc = new THREE.Vector2();
+const orbitPlane = new THREE.Plane(Y, 0);
+let dragging = false;
+function setRay(e) {
+  const r = canvas.getBoundingClientRect();
+  ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+  raycaster.setFromCamera(ndc, camera);
+}
+function onPointerDown(e) {
+  setRay(e);
+  if (state.picking) {
+    const hit = raycaster.intersectObject(earthMesh, false)[0];
+    if (hit) { placePinAt(hit.point); e.stopImmediatePropagation(); }
+    return;
+  }
+  if (state.view === 'earth' || tween) return;
+  if (raycaster.intersectObject(hitSphere, false).length) {
+    dragging = true;
+    setPlaying(false);
+    canvas.setPointerCapture(e.pointerId);
+    canvas.classList.add('grabbing');
+    if (!state.grabbed) { state.grabbed = true; store.set('se-grabbed', true); }
+    e.stopImmediatePropagation();
+  }
+}
+canvas.addEventListener('pointermove', e => {
+  setRay(e);
+  if (dragging) {
+    const p = raycaster.ray.intersectPlane(orbitPlane, new THREE.Vector3());
+    if (p) {
+      const t = Math.atan2(-p.z, p.x);
+      setDay(((SOLSTICE + t / (2 * Math.PI) * YEAR) % YEAR + YEAR) % YEAR);
+    }
+    return;
+  }
+  if (e.pointerType === 'mouse' && !state.picking) {
+    const over = state.view !== 'earth' && raycaster.intersectObject(hitSphere, false).length > 0;
+    canvas.classList.toggle('grab', over);
+  }
+});
+function endDrag() { if (dragging) { dragging = false; canvas.classList.remove('grabbing'); } }
+canvas.addEventListener('pointerup', endDrag);
+canvas.addEventListener('pointercancel', endDrag);
+canvas.addEventListener('dblclick', e => {
+  setRay(e);
+  if (state.view !== 'earth' && raycaster.intersectObject(hitSphere, false).length) goView('earth');
+});
+
+function placePinAt(worldPoint) {
+  const local = spinGroup.worldToLocal(worldPoint.clone()).normalize();
+  const lat = Math.asin(THREE.MathUtils.clamp(local.y, -1, 1)) / DEG;
+  const lon = Math.atan2(-local.z, local.x) / DEG;
+  setPin({ id: 'custom', name: 'Your spot', country: countryAt(lat, lon), lat, lon });
+  setPicking(false);
+  toast(`📍 Pin moved to ${shortPlace()}`);
+}
+
+// ================= State setters =================
+function setDay(d) { state.day = ((d % YEAR) + YEAR) % YEAR; refreshUI(true); }
+function setTilt(t) {
+  state.tilt = t;
+  $('#tiltSlider').value = t;
+  recomputeYear(); refreshUI(true);
+}
+function setPlaying(p) {
+  state.playing = p;
+  $('#playBtn').textContent = p ? '⏸ Pause' : '▶ Play';
+}
+function setSpinning(s) {
+  state.spinning = s;
+  $('#spinBtn').textContent = s ? '⏸ Stop the Earth spinning' : '⟳ Spin the Earth';
+}
+function setPin(p) {
+  state.pin = { ...p };
+  const n = latLonToVec(p.lat, p.lon);
+  pinGroup.position.copy(n).multiplyScalar(EARTH_R);
+  pinGroup.quaternion.setFromUnitVectors(Y, n);
+  const r = EARTH_R * 1.008;
+  pinRing.scale.set(r * Math.cos(p.lat * DEG), 1, r * Math.cos(p.lat * DEG));
+  pinRing.position.y = r * Math.sin(p.lat * DEG);
+  pinRing.visible = Math.abs(p.lat) < 89;
+  const sel = $('#placeSelect');
+  if (p.id === 'custom') {
+    let opt = sel.querySelector('option[value=custom]');
+    if (!opt) { opt = document.createElement('option'); opt.value = 'custom'; sel.prepend(opt); }
+    opt.textContent = `📍 ${placeTitle(p)}`;
+  }
+  sel.value = p.id;
+  recomputeYear();
+  drawEarthTexture();
+  refreshUI(true);
+}
+const setPinById = id => setPin(PLACES.find(p => p.id === id));
+function setPicking(on) {
+  state.picking = on;
+  canvas.classList.toggle('picking', on);
+  if (on) {
+    setSpinning(false);                 // a still Earth is much easier to tap
+    if (state.view !== 'earth') goView('earth');
+    closePanelMobile();
+    showBanner('Choose a spot', 'Tap anywhere on the Earth to put your pin there. (Drag the space around the Earth to turn it.)', null);
+  } else if (!state.mission) hideBanner();
+  else showMissionBanner();
+}
+
+// Sun-time at the pin and whether it is day or night there
+const _q = new THREE.Quaternion();
+function pinNow() {
+  spinGroup.getWorldQuaternion(_q);
+  const n = latLonToVec(state.pin.lat, state.pin.lon).applyQuaternion(_q);
+  const s = earthGroup.position.clone().negate().normalize();
+  const sinAlt = n.dot(s);
+  const sl = s.clone().applyQuaternion(_q.clone().invert());
+  const sunLon = Math.atan2(-sl.z, sl.x) / DEG;
+  const H = ((state.pin.lon - sunLon) % 360 + 540) % 360 - 180;
+  return { isDay: sinAlt > 0, alt: Math.asin(THREE.MathUtils.clamp(sinAlt, -1, 1)) / DEG, time: (12 + H / 15 + 24) % 24 };
+}
+function setPinTime(T) {
+  const { time } = pinNow();
+  let dH = T - time;
+  if (Math.abs(state.pin.lat) > 89.5) dH = T - time;      // near the poles "time" is not very meaningful
+  state.spin += dH * 15 * DEG;
+}
+
+// ================= Seasons =================
+const SEASONS = [{ name: 'Winter', icon: '❄️' }, { name: 'Spring', icon: '🌷' }, { name: 'Summer', icon: '☀️' }, { name: 'Autumn', icon: '🍂' }];
+function seasonFor(lat, month) {
+  if (state.tilt < 2) return { name: 'No seasons', icon: '😐' };
+  if (Math.abs(lat) < 12 && state.tilt < 35) return { name: 'Warm all year', icon: '🌴', tropic: true };
+  const idx = Math.floor(((month + 1) % 12) / 3);
+  return SEASONS[lat >= 0 ? idx : (idx + 2) % 4];
+}
+
+// ================= UI =================
+const ui = {
+  dateLabel: $('#dateLabel'), dateNote: $('#dateNote'), dateSlider: $('#dateSlider'),
+  tiltLabel: $('#tiltLabel'), tiltNote: $('#tiltNote'),
+  seasonIcon: $('#seasonIcon'), seasonName: $('#seasonName'), seasonWhere: $('#seasonWhere'),
+  hemiN: $('#hemiN'), hemiS: $('#hemiS'), pinWhere: $('#pinWhere'),
+  dlText: $('#dlText'), dlFill: $('#dlFill'), skyText: $('#skyText'),
+  nowText: $('#nowText'), timeSlider: $('#timeSlider'),
+  distText: $('#distText'), distMark: $('#distMark'), distNote: $('#distNote'),
+};
+let lastUI = 0, timeDragging = false;
+function refreshUI(force) {
+  const now = performance.now();
+  if (!force && now - lastUI < 120) return;
+  lastUI = now;
+  const d = state.day, { m, dd } = dateOf(d);
+  const decl = declination(d);
+  const lat = state.pin.lat;
+  const dl = dayLength(lat, decl), alt = noonAltitude(lat, decl);
+
+  ui.dateLabel.textContent = `${dd} ${MONTHS[m]}`;
+  const idx = Math.floor(d);
+  const special = { 79: 'Spring equinox 🌷', 171: 'Summer solstice ☀️ (longest day in the North)', 264: 'Autumn equinox 🍂', 354: 'Winter solstice ❄️ (shortest day in the North)' };
+  ui.dateNote.textContent = special[idx] || (idx === 358 ? 'Christmas Day 🎄' : idx === todayIndex() ? '(today)' : '');
+  if (document.activeElement !== ui.dateSlider) ui.dateSlider.value = idx;
+
+  const t = state.tilt;
+  ui.tiltLabel.textContent = `${t % 1 ? t.toFixed(1) : t}°`;
+  ui.tiltNote.textContent = t === REAL_TILT ? '(the real Earth)' : t < 1 ? '(standing up straight – no tilt!)' : t < 15 ? '(a small tilt)' : t < 35 ? '(close to the real Earth)' : t < 70 ? '(a BIG tilt!)' : '(super-tilt! Uranus is tilted 98°)';
+
+  const season = seasonFor(lat, m);
+  ui.seasonIcon.textContent = season.icon;
+  ui.seasonName.textContent = season.name;
+  ui.seasonWhere.textContent = season.tropic ? `in ${shortPlace()} – near the Equator it is warm all year round` : t < 2 ? 'Every day is the same all year round' : `in ${shortPlace()}`;
+  const sn = seasonFor(45, m), ss = seasonFor(-45, m);
+  ui.hemiN.textContent = `Northern half: ${sn.icon} ${sn.name}`;
+  ui.hemiS.textContent = `Southern half: ${ss.icon} ${ss.name}`;
+  ui.pinWhere.textContent = `${placeTitle()} · ${fmtLat(lat)}`;
+
+  ui.dlText.textContent = dl >= 23.99 ? '24 hours – the Sun never sets! 🌞' : dl <= 0.01 ? '0 hours – the Sun never rises! 🌑' : `${fmtHours(dl)} of daylight`;
+  ui.dlFill.style.left = `${(12 - dl / 2) / 24 * 100}%`;
+  ui.dlFill.style.width = `${dl / 24 * 100}%`;
+
+  const skyBits = [];
+  if (alt > 0) {
+    skyBits.push(`The Sun is <b>${Math.round(alt)}°</b> high at midday.`);
+    if (state.skyMode === 'shadow') {
+      const ratio = 1 / Math.tan(Math.min(alt, 89.9) * DEG);
+      skyBits.push(ratio < 0.15 ? 'Your shadow is tiny – the Sun is nearly overhead!' : ratio < 0.8 ? 'Your shadow is <b>short</b>.' : ratio < 1.6 ? 'Your shadow is about as long as you are tall.' : `Your shadow is <b>${ratio < 10 ? Math.round(ratio) : 'more than 10'} times</b> as long as you!`);
+    } else {
+      const s = Math.sin(alt * DEG), stars = Math.max(1, Math.round(s * 5));
+      skyBits.push(`Sunlight strength: ${'☀️'.repeat(stars)}${'▫️'.repeat(5 - stars)}`);
+      skyBits.push(s > 0.8 ? 'The sunbeam lands on a small patch, so it feels <b>hot</b>.' : s > 0.5 ? 'The sunbeam is spread out a bit.' : 'The same sunbeam is spread over a <b>big patch</b>, so it is weak and cool.');
+    }
+  } else skyBits.push('The Sun does not rise above the horizon today.');
+  ui.skyText.innerHTML = skyBits.join(' ');
+
+  const pn = pinNow();
+  ui.nowText.textContent = `${pn.isDay ? '☀️ Daytime' : '🌙 Night-time'} · Sun time ${fmtClock(pn.time)}`;
+  if (!timeDragging) ui.timeSlider.value = pn.time.toFixed(2);
+
+  const dist = distanceMkm(d);
+  ui.distText.textContent = `${dist.toFixed(1)} million km`;
+  ui.distMark.style.left = `${(dist - 147.1) / (152.1 - 147.1) * 100}%`;
+  ui.distNote.textContent = dist < 147.4 ? 'The Earth is at its closest to the Sun! (early January)' : dist > 151.8 ? 'The Earth is at its furthest from the Sun! (early July)' : 'The distance only changes a tiny bit during the year.';
+
+  drawSky(alt);
+  drawChart();
+}
+
+// ---------- Mini canvases ----------
+function prepCanvas(c, defW, defH) {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const W = c.clientWidth || defW, H = c.clientHeight || defH;
+  if (c.width !== Math.round(W * dpr) || c.height !== Math.round(H * dpr)) { c.width = Math.round(W * dpr); c.height = Math.round(H * dpr); }
+  const ctx = c.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, W, H);
+  return { ctx, W, H };
+}
+function mixHex(a, b, t) {
+  const pa = parseInt(a.slice(1), 16), pb = parseInt(b.slice(1), 16);
+  const ch = s => Math.round(((pa >> s) & 255) * (1 - t) + ((pb >> s) & 255) * t);
+  return `rgb(${ch(16)},${ch(8)},${ch(0)})`;
+}
+function drawSun(ctx, x, y, r) {
+  ctx.save();
+  ctx.strokeStyle = '#ffcc33'; ctx.lineWidth = 2.5; ctx.lineCap = 'round';
+  for (let i = 0; i < 10; i++) {
+    const a = i / 10 * Math.PI * 2;
+    ctx.beginPath(); ctx.moveTo(x + Math.cos(a) * (r + 3), y + Math.sin(a) * (r + 3)); ctx.lineTo(x + Math.cos(a) * (r + 8), y + Math.sin(a) * (r + 8)); ctx.stroke();
+  }
+  ctx.fillStyle = '#ffd23f'; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
+}
+function drawChild(ctx, x, gy, h) {
+  ctx.save();
+  ctx.strokeStyle = '#2d2a4a'; ctx.lineWidth = 3.5; ctx.lineCap = 'round';
+  const head = h * 0.13;
+  ctx.beginPath();
+  ctx.moveTo(x, gy - h * 0.45); ctx.lineTo(x - h * 0.13, gy);      // legs
+  ctx.moveTo(x, gy - h * 0.45); ctx.lineTo(x + h * 0.13, gy);
+  ctx.moveTo(x, gy - h * 0.45); ctx.lineTo(x, gy - h + head * 2);   // body
+  ctx.moveTo(x - h * 0.2, gy - h * 0.62); ctx.lineTo(x + h * 0.2, gy - h * 0.62); // arms
+  ctx.stroke();
+  ctx.fillStyle = '#ffcf9e'; ctx.beginPath(); ctx.arc(x, gy - h + head, head, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  ctx.restore();
+}
+function drawSky(alt) {
+  const { ctx, W, H } = prepCanvas($('#sky'), 330, 175);
+  const gy = H - 30, up = alt > 0;
+  const sky = ctx.createLinearGradient(0, 0, 0, gy);
+  if (up) {
+    const warm = Math.max(0, 1 - alt / 35);
+    sky.addColorStop(0, mixHex('#3b8cff', '#5a64c8', warm)); sky.addColorStop(1, mixHex('#c4e8ff', '#ffc28a', warm));
+  } else { sky.addColorStop(0, '#0b1236'); sky.addColorStop(1, '#2a3475'); }
+  ctx.fillStyle = sky; ctx.fillRect(0, 0, W, gy);
+  ctx.fillStyle = up ? '#5cbf4a' : '#24502b'; ctx.fillRect(0, gy, W, H - gy);
+  ctx.fillStyle = up ? '#4aa63a' : '#1c4022'; ctx.fillRect(0, gy, W, 4);
+
+  if (!up) {
+    ctx.fillStyle = '#fff';
+    for (let i = 0; i < 40; i++) { const x = (i * 97) % W, y = (i * 53) % (gy - 10); ctx.fillRect(x, y, 2, 2); }
+    ctx.font = '600 16px Fredoka, sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = '#fff';
+    ctx.fillText('🌙 The Sun does not come up today!', W / 2, gy / 2 + 6);
+    drawChild(ctx, W * 0.5, gy, 44);
+    return;
+  }
+  const a = Math.min(alt, 90) * DEG;
+  if (state.skyMode === 'shadow') {
+    const cx = W * 0.58, R = Math.min(W * 0.5, gy - 22), ph = 46;
+    ctx.save();
+    ctx.setLineDash([4, 5]); ctx.strokeStyle = 'rgba(255,255,255,.75)'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(cx, gy, R, Math.PI, 1.5 * Math.PI); ctx.stroke();
+    ctx.restore();
+    // angle wedge
+    ctx.fillStyle = 'rgba(255,210,63,.45)';
+    ctx.beginPath(); ctx.moveTo(cx, gy); ctx.arc(cx, gy, 34, Math.PI, Math.PI + a); ctx.closePath(); ctx.fill();
+    ctx.font = '700 14px Fredoka, sans-serif'; ctx.fillStyle = '#1d2340'; ctx.textAlign = 'right';
+    ctx.fillText(`${Math.round(alt)}°`, cx - 38, gy - 6);
+    // shadow
+    const sl = ph / Math.tan(Math.max(a, 0.01));
+    const end = Math.min(cx + sl, W + 30);
+    ctx.save(); ctx.strokeStyle = 'rgba(20,45,25,.55)'; ctx.lineWidth = 8; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(cx, gy + 2); ctx.lineTo(Math.max(end, cx + 1), gy + 2); ctx.stroke(); ctx.restore();
+    // ray from the sun over the child's head
+    const sx = cx - R * Math.cos(a), sy = gy - R * Math.sin(a);
+    ctx.save(); ctx.setLineDash([6, 4]); ctx.strokeStyle = 'rgba(255,190,0,.95)'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(cx + sl * 1, gy); ctx.stroke(); ctx.restore();
+    drawChild(ctx, cx, gy, ph);
+    drawSun(ctx, sx, sy, 13);
+    if (cx + sl > W) {
+      ctx.font = '600 12px Fredoka, sans-serif'; ctx.textAlign = 'right'; ctx.fillStyle = '#123';
+      ctx.fillText('long shadow →', W - 6, gy + 20);
+    }
+  } else {
+    const cx = W * 0.6, bw = 40, L = (bw / 2) / Math.sin(a);
+    const dx = Math.cos(a), dy = Math.sin(a), len = 700;
+    const x1 = cx - L, x2 = cx + L;
+    ctx.fillStyle = 'rgba(255,232,100,.5)';
+    ctx.beginPath(); ctx.moveTo(x1, gy); ctx.lineTo(x1 - dx * len, gy - dy * len); ctx.lineTo(x2 - dx * len, gy - dy * len); ctx.lineTo(x2, gy); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = 'rgba(255,200,0,.9)'; ctx.lineWidth = 1.5;
+    for (let k = -1; k <= 1; k++) {
+      const ox = cx + k * L * 0.6;
+      ctx.beginPath(); ctx.moveTo(ox - dx * len, gy - dy * len); ctx.lineTo(ox, gy); ctx.stroke();
+    }
+    const s = Math.sin(a);
+    ctx.fillStyle = `rgba(255,${Math.round(90 + 130 * (1 - s))},30,${0.45 + 0.55 * s})`;
+    ctx.fillRect(Math.max(0, x1), gy - 2, Math.min(W, x2) - Math.max(0, x1), 9);
+    const R = Math.min(W * 0.55, gy - 20);
+    drawSun(ctx, cx - dx * R, gy - dy * R, 13);
+    ctx.font = '600 12px Fredoka, sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = '#123';
+    ctx.fillText(`sunny patch: ${(2 * L / bw).toFixed(1)}× as wide as the beam`, W / 2, gy + 21);
+  }
+}
+function drawChart() {
+  const { ctx, W, H } = prepCanvas($('#chart'), 330, 110);
+  const l = 30, r = 6, t = 8, b = 18;
+  const x = i => l + i / (YEAR - 1) * (W - l - r), y = h => t + (1 - h / 24) * (H - t - b);
+  ctx.fillStyle = '#26306b'; ctx.fillRect(l, t, W - l - r, H - t - b);
+  ctx.beginPath(); ctx.moveTo(x(0), y(0));
+  for (let i = 0; i < YEAR; i += 2) ctx.lineTo(x(i), y(yearDL[i]));
+  ctx.lineTo(x(YEAR - 1), y(yearDL[YEAR - 1])); ctx.lineTo(x(YEAR - 1), y(0)); ctx.closePath();
+  ctx.fillStyle = '#ffd25e'; ctx.fill();
+  ctx.setLineDash([3, 3]); ctx.strokeStyle = 'rgba(255,255,255,.6)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(l, y(12)); ctx.lineTo(W - r, y(12)); ctx.stroke(); ctx.setLineDash([]);
+  ctx.font = '500 11px Fredoka, sans-serif'; ctx.fillStyle = '#5b6386'; ctx.textAlign = 'right';
+  ctx.fillText('24h', l - 4, y(24) + 8); ctx.fillText('12h', l - 4, y(12) + 4); ctx.fillText('0h', l - 4, y(0));
+  ctx.textAlign = 'center';
+  let acc = 0;
+  MONTHS.forEach((mn, i) => { ctx.fillText(mn[0], x(acc + MDAYS[i] / 2), H - 4); acc += MDAYS[i]; });
+  const cur = Math.floor(state.day);
+  ctx.strokeStyle = '#ff5f6d'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(x(cur), t); ctx.lineTo(x(cur), H - b); ctx.stroke();
+  ctx.fillStyle = '#ff5f6d'; ctx.beginPath(); ctx.arc(x(cur), y(yearDL[cur]), 4.5, 0, Math.PI * 2); ctx.fill();
+}
+
+// ---------- Labels ----------
+const labelsEl = $('#labels');
+function makeLabel(html, cls, pos, show) {
+  const el = document.createElement('div');
+  el.className = `label ${cls || ''}`; el.innerHTML = html;
+  labelsEl.appendChild(el);
+  return { el, pos, show };
+}
+const _v = new THREE.Vector3();
+// Is a point hidden behind the Earth, as seen from the camera?
+function behindEarth(p) {
+  const E = earthGroup.position, C = camera.position;
+  const d = p.clone().sub(C), len = d.length(); d.divideScalar(len);
+  const t = E.clone().sub(C).dot(d);
+  if (t < 0 || t > len) return false;
+  return C.clone().addScaledVector(d, t).distanceTo(E) < EARTH_R * earthGroup.scale.x * 0.98;
+}
+const pinLabel = makeLabel('📍', 'pin', () => pinGroup.localToWorld(_v.set(0, 1.25, 0)),
+  () => state.view === 'earth' && !tween && !behindEarth(pinGroup.localToWorld(new THREE.Vector3(0, 0.3, 0))));
+const labels = [
+  makeLabel('☀️ Sun', 'sun', () => _v.set(0, SUN_R + 4, 0), () => state.view !== 'earth'),
+  makeLabel('👆 Grab me!', 'grab', () => earthGroup.localToWorld(_v.set(0, 7, 0)), () => !state.grabbed && state.view !== 'earth'),
+  makeLabel('N', 'north', () => tiltGroup.localToWorld(_v.set(0, AXIS_HALF + 0.7, 0)),
+    () => state.view === 'earth' && !tween && !behindEarth(tiltGroup.localToWorld(new THREE.Vector3(0, AXIS_HALF, 0)))),
+  makeLabel('⭐ to the North Star', 'star', () => tiltGroup.localToWorld(_v.set(0, AXIS_HALF + STAR_LEN * 0.55, 0)), () => state.view === 'earth' && !tween),
+  pinLabel,
+  ...ghosts.map(g => makeLabel(g.text, '', () => _v.copy(g.group.position).add(new THREE.Vector3(0, 3.4, 0)), () => state.view !== 'earth' && dayGap(state.day, g.d) > 12 && !(state.view === 'side' && (g.d === 79 || g.d === 264)))),
+];
+function updateLabels() {
+  const w = stage.clientWidth, h = stage.clientHeight;
+  const dockTop = $('.dock').offsetTop;
+  for (const L of labels) {
+    if (!L.show()) { L.el.style.display = 'none'; continue; }
+    const v = L.pos().project(camera);
+    if (v.z > 1 || Math.abs(v.x) > 1.2 || (1 - v.y) / 2 * h > dockTop - 4) { L.el.style.display = 'none'; continue; }
+    L.el.style.display = '';
+    L.el.style.transform = `translate(${(v.x + 1) / 2 * w}px, ${(1 - v.y) / 2 * h}px) translate(-50%, -100%)`;
+  }
+}
+
+// ---------- Toast & banner ----------
+let toastTimer;
+function toast(msg) {
+  const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2600);
+}
+function showBanner(kicker, html, hint) {
+  $('#bannerKicker').textContent = kicker;
+  $('#bannerText').innerHTML = html;
+  $('#hintBtn').style.display = hint ? '' : 'none';
+  $('#bannerHint').innerHTML = hint || '';
+  $('#bannerHint').classList.add('hidden');
+  $('#hintBtn').textContent = '💡 Show a hint';
+  $('#banner').classList.remove('hidden');
+}
+function hideBanner() { $('#banner').classList.add('hidden'); }
+$('#hintBtn').onclick = () => { $('#bannerHint').classList.toggle('hidden'); };
+$('#bannerClose').onclick = () => {
+  if (state.picking) { setPicking(false); return; }
+  state.mission = null; hideBanner();
+};
+
+// ================= Missions =================
+const atPin = () => { const dc = declination(state.day); return { dl: dayLength(state.pin.lat, dc), alt: noonAltitude(state.pin.lat, dc) }; };
+function startSetup({ pin = 'bratislava', tilt = REAL_TILT, day, view } = {}) {
+  setPlaying(false);
+  if (pin) setPinById(pin);
+  setTilt(tilt);
+  if (day != null) setDay(day + 0.5);
+  if (view && state.view !== view) goView(view);
+}
+const MISSIONS = [
+  { id: 'summer', icon: '☀️', title: 'Summer in Slovakia',
+    task: 'Grab the Earth and drag it around the Sun until it is <b>summer in Slovakia</b>.',
+    hint: 'Watch the red stick (the North Pole). Summer comes when the top half of the Earth leans <b>towards</b> the Sun.',
+    setup: () => startSetup({ day: 14, view: 'space' }),
+    check: () => [5, 6, 7].includes(dateOf(state.day).m),
+    win: () => 'In June, July and August the top (northern) half of the Earth – where Slovakia is – leans <b>towards</b> the Sun. The days are long and the Sun climbs high in the sky. 🌞' },
+  { id: 'longest', icon: '⏳', title: 'The longest day',
+    task: 'Find the day of the year with the <b>most hours of daylight</b> in Slovakia.',
+    hint: 'Look at the yellow daylight graph in the info panel. Where is the top of the hill? Use the date slider.',
+    setup: () => startSetup({ day: 59 }),
+    check: () => { const mx = Math.max(...yearDL); return yearDL[Math.floor(state.day)] >= mx - 0.004; },
+    win: () => `That's around <b>21 June</b> – the <b>summer solstice</b>. Slovakia gets about <b>${fmtHours(Math.max(...yearDL))}</b> of daylight!` },
+  { id: 'shadow', icon: '🕵️', title: 'Shadow detective',
+    task: 'Look at <b>The Sun in the sky</b> picture. Find the day when the midday shadow in Slovakia is the <b>longest</b>.',
+    hint: 'Long shadows happen when the Sun is low in the sky. When is the Sun at its lowest?',
+    setup: () => { startSetup({ day: 150 }); setSkyMode('shadow'); openPanelMobile(); },
+    check: () => { const mn = Math.min(...yearAlt); return yearAlt[Math.floor(state.day)] <= mn + 0.03; },
+    win: () => `Around <b>21 December</b> the midday Sun is only about <b>${Math.round(Math.min(...yearAlt))}°</b> high, so shadows are super long. That's the <b>winter solstice</b>! ❄️` },
+  { id: 'closest', icon: '🤔', title: 'Closer = hotter?',
+    task: 'Lots of people think summer happens because the Earth is <b>closer</b> to the Sun. Find the day when the Earth is <b>closest</b> to the Sun!',
+    hint: 'Watch the <b>Distance from the Sun</b> box in the info panel. The number gets smaller as the Earth gets closer.',
+    setup: () => { startSetup({ day: 171 }); openPanelMobile(); },
+    check: () => dayGap(state.day, 3.5) <= 3,
+    win: () => 'Surprise! The Earth is closest to the Sun in <b>early January</b> – that\'s <b>winter</b> in Slovakia! So being closer does <b>not</b> make summer. It\'s the <b>tilt</b> that causes the seasons. 🎉' },
+  { id: 'christmas', icon: '🎄', title: 'Christmas in Australia',
+    task: 'Move your pin to <b>Sydney, Australia</b>, then set the date to <b>Christmas Day (25 December)</b>. What season is it there?',
+    hint: 'Choose Sydney from the place menu in the info panel. Then use the date slider.',
+    setup: () => startSetup({ day: 280 }),
+    check: () => state.pin.lat < -15 && dayGap(state.day, 358.5) <= 2,
+    win: () => 'It\'s <b>SUMMER</b> in Australia at Christmas! 🏖️ When the northern half of the Earth leans away from the Sun, the southern half leans <b>towards</b> it.' },
+  { id: 'midnight', icon: '🌞', title: 'The Midnight Sun',
+    task: 'Find a place and a day where the Sun <b>never sets</b> – 24 hours of daylight!',
+    hint: 'Try <b>Tromsø</b> in Norway or the <b>North Pole</b>, in the summer.',
+    setup: () => startSetup({ day: 30 }),
+    check: () => atPin().dl >= 23.99,
+    win: () => 'Near the poles in summer, the Sun goes round and round the sky without setting. This is called the <b>Midnight Sun</b>. But in winter they get weeks of darkness! 🌑' },
+  { id: 'notilt', icon: '🧍', title: 'A world with no seasons',
+    task: 'What if the Earth stood up straight? Change the <b>tilt to 0°</b> and press play to watch what happens.',
+    hint: 'Use the <b>Tilt</b> slider at the bottom of the screen.',
+    setup: () => startSetup({ view: 'side' }),
+    check: () => state.tilt <= 0.5,
+    win: () => 'With no tilt, every place gets <b>12 hours of daylight every day</b> of the year. No summer and no winter – <b>no seasons</b> at all!' },
+  { id: 'supertilt', icon: '🤸', title: 'Super-tilt!',
+    task: 'Change the <b>tilt</b> and the <b>date</b> so that <b>Bratislava</b> gets 24 hours of daylight!',
+    hint: 'You need a BIG tilt – more than 40°. Then find summer.',
+    setup: () => startSetup({ day: 171 }),
+    check: () => state.pin.id === 'bratislava' && atPin().dl >= 23.99,
+    win: () => 'Wow! With a huge tilt, even Slovakia would get the Midnight Sun in summer – and very dark, freezing winters. The planet <b>Uranus</b> is tilted almost all the way over (98°)! 🪐' },
+];
+function updateStars() { $('#starCount').textContent = `${state.done.length}/${MISSIONS.length} ⭐`; }
+function renderMissionList() {
+  const list = $('#missionList'); list.innerHTML = '';
+  MISSIONS.forEach((ms, i) => {
+    const b = document.createElement('button');
+    b.className = `mission-item${state.done.includes(ms.id) ? ' done' : ''}`;
+    b.innerHTML = `<span class="em">${ms.icon}</span><span class="t">${i + 1}. ${ms.title}</span><span class="star">⭐</span>`;
+    b.onclick = () => { $('#missionsModal').classList.add('hidden'); startMission(i); };
+    list.appendChild(b);
+  });
+}
+function startMission(i) {
+  if (state.picking) setPicking(false);
+  state.mission = i; state.missionHold = 0;
+  MISSIONS[i].setup();
+  showMissionBanner();
+}
+function showMissionBanner() {
+  const ms = MISSIONS[state.mission];
+  showBanner(`Mission ${state.mission + 1} of ${MISSIONS.length}: ${ms.title}`, ms.task, ms.hint);
+}
+function checkMission(dt) {
+  if (state.mission == null || state.picking) return;
+  const ms = MISSIONS[state.mission];
+  // The answer has to stay right for a moment, so whizzing past it doesn't count
+  if (!ms.check()) { state.missionHold = 0; return; }
+  if (!state.missionHold) state.missionHold = performance.now();
+  if (performance.now() - state.missionHold > 900) {
+    const i = state.mission; state.mission = null; hideBanner();
+    if (!state.done.includes(ms.id)) { state.done.push(ms.id); store.set('se-done', state.done); }
+    updateStars();
+    $('#winTitle').textContent = `${ms.icon} Mission complete!`;
+    $('#winText').innerHTML = ms.win();
+    $('#winNext').style.display = i < MISSIONS.length - 1 ? '' : 'none';
+    $('#winPractise').style.display = i < MISSIONS.length - 1 ? 'none' : '';
+    $('#winNext').onclick = () => { $('#winModal').classList.add('hidden'); startMission(i + 1); };
+    $('#winModal').classList.remove('hidden');
+    confetti();
+  }
+}
+function confetti() {
+  const em = ['⭐', '🌟', '☀️', '🌍', '✨', '🎉'];
+  for (let i = 0; i < 36; i++) {
+    const s = document.createElement('span');
+    s.className = 'confetti'; s.textContent = em[i % em.length];
+    s.style.left = `${Math.random() * 100}vw`;
+    s.style.animationDuration = `${2 + Math.random() * 2}s`;
+    s.style.animationDelay = `${Math.random() * 0.6}s`;
+    document.body.appendChild(s);
+    setTimeout(() => s.remove(), 5000);
+  }
+}
+
+// ================= Wiring up controls =================
+document.querySelectorAll('[data-view]').forEach(b => b.onclick = () => goView(b.dataset.view));
+$('#playBtn').onclick = () => setPlaying(!state.playing);
+$('#speedBtn').onclick = () => {
+  state.speedIdx = (state.speedIdx + 1) % SPEEDS.length;
+  const s = SPEEDS[state.speedIdx];
+  $('#speedBtn').innerHTML = `${s.icon} <span class="txt">${s.label}</span>`;
+  if (!state.playing) setPlaying(true);
+};
+$('#dateSlider').addEventListener('input', e => { setPlaying(false); setDay(+e.target.value + 0.5); });
+$('#tiltSlider').addEventListener('input', e => setTilt(+e.target.value));
+$('#tiltMark').style.left = `calc(${REAL_TILT / 90 * 100}% + ${(0.5 - REAL_TILT / 90) * 28}px)`;
+$('#realTilt').onclick = () => { setTilt(REAL_TILT); toast('🌍 Back to the real Earth: tilted 23.5°'); };
+$('#spinBtn').onclick = () => setSpinning(!state.spinning);
+// Zoom buttons: one tap zooms a step, holding keeps zooming
+for (const [id, amount] of [['#zoomIn', -0.3], ['#zoomOut', 0.3]]) {
+  const b = $(id);
+  let timer = null;
+  const stop = () => { clearInterval(timer); timer = null; };
+  b.addEventListener('pointerdown', e => {
+    e.preventDefault();
+    zoomBy(amount);
+    stop(); timer = setInterval(() => zoomBy(amount * 0.5), 110);
+  });
+  ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => b.addEventListener(ev, stop));
+  b.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); zoomBy(amount); } });
+}
+$('#zoomReset').onclick = () => goView(state.view);
+const ts = $('#timeSlider');
+ts.addEventListener('input', () => { timeDragging = true; setSpinning(false); setPinTime(+ts.value); });
+ts.addEventListener('change', () => { timeDragging = false; });
+$('#pickBtn').onclick = () => setPicking(!state.picking);
+document.querySelectorAll('[data-sky]').forEach(b => b.onclick = () => setSkyMode(b.dataset.sky));
+function setSkyMode(m) {
+  state.skyMode = m;
+  document.querySelectorAll('[data-sky]').forEach(b => b.classList.toggle('active', b.dataset.sky === m));
+  refreshUI(true);
+}
+{
+  const sel = $('#placeSelect');
+  const groups = {};
+  for (const p of PLACES) {
+    if (!groups[p.group]) { groups[p.group] = document.createElement('optgroup'); groups[p.group].label = p.group; sel.appendChild(groups[p.group]); }
+    const o = document.createElement('option'); o.value = p.id; o.textContent = placeTitle(p);
+    groups[p.group].appendChild(o);
+  }
+  sel.addEventListener('change', () => { if (sel.value !== 'custom') { setPinById(sel.value); toast(`📍 Pin moved to ${placeTitle()}`); } });
+}
+const panel = $('#panel');
+function openPanelMobile() { panel.classList.add('open'); refreshUI(true); }
+function closePanelMobile() { panel.classList.remove('open'); }
+$('#panelToggle').onclick = () => panel.classList.contains('open') ? closePanelMobile() : openPanelMobile();
+$('#panelClose').onclick = closePanelMobile;
+$('#helpBtn').onclick = () => $('#helpModal').classList.remove('hidden');
+$('#helpClose').onclick = () => { $('#helpModal').classList.add('hidden'); store.set('se-help-seen', true); };
+$('#modelBtn').onclick = () => $('#modelModal').classList.remove('hidden');
+$('#modelClose').onclick = () => $('#modelModal').classList.add('hidden');
+$('#missionsBtn').onclick = () => { renderMissionList(); $('#missionsModal').classList.remove('hidden'); };
+$('#missionsClose').onclick = () => $('#missionsModal').classList.add('hidden');
+$('#resetStars').onclick = () => { state.done = []; store.set('se-done', []); updateStars(); renderMissionList(); };
+$('#winExplore').onclick = () => $('#winModal').classList.add('hidden');
+document.querySelectorAll('.modal').forEach(m => m.addEventListener('click', e => { if (e.target === m) m.classList.add('hidden'); }));
+window.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { document.querySelectorAll('.modal').forEach(m => m.classList.add('hidden')); if (state.picking) setPicking(false); }
+  if (e.key === ' ' && e.target === document.body) { e.preventDefault(); setPlaying(!state.playing); }
+  if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT') {
+    if (e.key === '+' || e.key === '=') zoomBy(-0.3);
+    if (e.key === '-' || e.key === '_') zoomBy(0.3);
+  }
+});
+
+// ================= Resize =================
+function resize() {
+  const w = stage.clientWidth, h = stage.clientHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h;
+  fitCamera();
+  camera.updateProjectionMatrix();
+  $('#scaleNote').style.bottom = `${$('.dock').offsetHeight + 16}px`;
+  refreshUI(true);
+  // Re-frame the view after a real size change (e.g. rotating a tablet)
+  if (lastSize && (Math.abs(w - lastSize[0]) > 40 || Math.abs(h - lastSize[1]) > 40)) goView(state.view);
+  lastSize = [w, h];
+}
+let lastSize = null;
+new ResizeObserver(resize).observe(stage);
+
+// ================= Animation loop =================
+const clock = new THREE.Clock();
+let prevTheta = theta(state.day);
+function updateBeams() {
+  const s = earthGroup.position.clone().negate().normalize();
+  const a = new THREE.Vector3(-Math.sin(state.tilt * DEG), Math.cos(state.tilt * DEG), 0);
+  const u = a.clone().sub(s.clone().multiplyScalar(a.dot(s)));
+  if (u.lengthSq() < 1e-4) u.set(0, 0, 1).cross(s);
+  u.normalize();
+  const E = earthGroup.position;
+  const down = s.clone().negate();
+  beams.forEach((b, i) => {
+    const k = (i - 3) * 0.85, depth = Math.sqrt(EARTH_R * EARTH_R - k * k);
+    const start = E.clone().addScaledVector(s, 14).addScaledVector(u, k);
+    const end = E.clone().addScaledVector(u, k).addScaledVector(s, depth + 0.45);
+    const p = b.line.geometry.attributes.position;
+    p.setXYZ(0, start.x, start.y, start.z); p.setXYZ(1, end.x, end.y, end.z); p.needsUpdate = true;
+    b.cone.position.copy(end).addScaledVector(down, 0.2);
+    b.cone.quaternion.setFromUnitVectors(Y, down);
+  });
+}
+function animate() {
+  requestAnimationFrame(animate);
+  const dt = Math.min(clock.getDelta(), 0.1);
+  if (state.playing && !dragging) state.day = (state.day + dt * YEAR / SPEEDS[state.speedIdx].secs) % YEAR;
+  if (state.spinning) state.spin += dt * Math.PI * 2 / SPIN_SECS;
+
+  earthPos(state.day, earthGroup.position);
+  // Show the Earth bigger when looking at the whole orbit, true size when zoomed in
+  const wantScale = state.view === 'earth' ? 1 : 1.8;
+  earthGroup.scale.setScalar(tween ? THREE.MathUtils.lerp(tween.fromScale, wantScale, Math.min(1, tween.t * 1.3)) : wantScale);
+  ghosts.forEach(g => g.group.visible = state.view !== 'earth' && dayGap(state.day, g.d) > 12);
+  tiltGroup.rotation.z = state.tilt * DEG;
+  spinGroup.rotation.y = state.spin;
+  ghosts.forEach(g => g.tiltG.rotation.z = state.tilt * DEG);
+  earthGroup.updateMatrixWorld(true);
+
+  // Keep the camera riding along with the Earth when zoomed in
+  const th = theta(state.day);
+  const dTh = Math.atan2(Math.sin(th - prevTheta), Math.cos(th - prevTheta));
+  prevTheta = th;
+  if (tween) {
+    tween.t = Math.min(1, tween.t + dt / 1.1);
+    const e = tween.t < 0.5 ? 2 * tween.t * tween.t : 1 - Math.pow(-2 * tween.t + 2, 2) / 2;
+    const dest = viewDest(tween.v);
+    camera.position.lerpVectors(tween.fromPos, dest.pos, e);
+    controls.target.lerpVectors(tween.fromTgt, dest.tgt, e);
+    camera.lookAt(controls.target);
+    if (tween.t >= 1) {
+      [controls.minDistance, controls.maxDistance] = VIEW_LIMITS[tween.v];
+      tween = null; controls.enabled = true;
+    }
+  } else {
+    if (state.view === 'earth') {
+      const off = camera.position.clone().sub(controls.target).applyAxisAngle(Y, dTh);
+      controls.target.copy(earthGroup.position);
+      camera.position.copy(earthGroup.position).add(off);
+    }
+    applyZoom(dt);
+    controls.update();
+  }
+  if (state.view === 'earth') updateBeams();
+
+  refreshUI(false);
+  checkMission(dt);
+  updateLabels();
+  pinLabel.el.textContent = `📍 ${shortPlace()}`;
+  renderer.render(scene, camera);
+}
+
+// ================= Start =================
+setPin(PLACES[0]);
+setTilt(REAL_TILT);
+setSpinning(true);
+setPlaying(true);
+updateStars();
+beamGroup.visible = false;
+controls.target.copy(viewDest('space').tgt);
+[controls.minDistance, controls.maxDistance] = VIEW_LIMITS.space;
+resize();
+const d0 = viewDest('space'); camera.position.copy(d0.pos);
+drawEarthTexture();
+loadWorld();
+$('#loading').classList.add('hidden');
+if (!store.get('se-help-seen', false)) $('#helpModal').classList.remove('hidden');
+animate();
+</script>
+</body>
+</html>

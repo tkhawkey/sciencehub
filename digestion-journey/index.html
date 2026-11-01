@@ -1,0 +1,1704 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Digestion Journey</title>
+<meta name="description" content="Follow food through the digestive system – an interactive tool for Year 5.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ================= Shared look (matches Adaptation Studio) ================= */
+  :root {
+    --ink: #1d2340; --muted: #5b6386; --soft: #eef2ff;
+    --yellow: #ffc83d; --blue: #3d7bff; --coral: #ff5f6d; --green: #22b07d; --orange: #f0892e; --grey: #8a93ad;
+    --space: #070d24; --drawerW: 360px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: var(--space); color: var(--ink); font-family: 'Fredoka', system-ui, sans-serif; font-size: 17px; line-height: 1.35; -webkit-tap-highlight-color: transparent; }
+  body { display: flex; flex-direction: column; }
+  button { font: inherit; color: inherit; }
+  b { font-weight: 700; }
+  .btn { border: 0; border-radius: 14px; padding: 9px 14px; min-height: 44px; cursor: pointer; background: #fff; color: var(--ink); font-weight: 600; font-size: 16px; box-shadow: 0 3px 0 rgba(0,0,0,.18); }
+  .btn:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,.18); }
+  .btn.active { background: var(--yellow); }
+  .btn:focus-visible { outline: 3px solid var(--yellow); outline-offset: 2px; }
+
+  /* ---------- Top bar ---------- */
+  .topbar { flex: none; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 8px 10px; background: rgba(7,13,36,.95); z-index: 15; }
+  .brand { color: #fff; font-size: 21px; font-weight: 700; margin-right: auto; white-space: nowrap; }
+  .hub-link { flex: none; display: grid; place-items: center; width: 38px; height: 38px; border-radius: 12px; text-decoration: none; font-size: 20px; background: rgba(255,255,255,.14); box-shadow: 0 3px 0 rgba(0,0,0,.25); transition: background .15s, transform .08s; }
+  .hub-link:hover { background: rgba(255,255,255,.26); }
+  .hub-link:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,.25); }
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+
+  /* ---------- Main area: stage on the left, drawer on the right ---------- */
+  main { position: relative; flex: 1; min-height: 0; }
+  #stage { position: absolute; top: 0; bottom: 0; left: 0; right: var(--drawerW); overflow: hidden; background: #bfdcff; display: flex; align-items: center; justify-content: center; padding: 8px; }
+  #stage svg { width: 100%; height: 100%; display: block; }
+  #drawer { position: absolute; top: 0; right: 0; bottom: 0; width: var(--drawerW); background: #dfe6ff; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+  .card { background: #fff; border-radius: 16px; padding: 12px 14px; }
+  .card h2 { margin: 0 0 4px; font-size: 21px; line-height: 1.2; }
+  .card h3 { margin: 0 0 6px; font-size: 17px; }
+  .card p { margin: 4px 0; }
+  .muted { color: var(--muted); font-size: 14.5px; }
+  .key { list-style: none; padding: 0; margin: 6px 0 0; display: grid; gap: 4px; }
+  .key li { display: flex; align-items: center; gap: 8px; }
+  .sw { width: 18px; height: 18px; border-radius: 6px; flex: none; border: 2px solid rgba(0,0,0,.18); }
+
+  /* ---------- Diagram ---------- */
+  .lab text { font-family: 'Fredoka', system-ui, sans-serif; font-size: 21px; font-weight: 600; fill: var(--ink); paint-order: stroke; stroke: #bfdcff; stroke-width: 5px; stroke-linejoin: round; }
+  .lab line, .lab polyline { stroke: var(--ink); stroke-width: 1.8; fill: none; }
+  .lab circle { fill: var(--ink); stroke: #fff; stroke-width: 1.5; }
+  .inset .frame { fill: #fff; stroke: #9fb2e8; stroke-width: 2.5; }
+  .inset .title { font-family: 'Fredoka', system-ui, sans-serif; font-size: 18px; font-weight: 600; fill: var(--muted); }
+  .inset .lab text { stroke: #fff; font-size: 19px; }
+  .callout { stroke: #6b7bb5; stroke-width: 2; stroke-dasharray: 6 6; fill: none; }
+  #teethArch g g > * { fill: #fff; stroke: #7b84a3; stroke-width: 1.4; }
+  #teethArch .canine > g > * { fill: #fffbe8; }
+  #teethArch path[fill="none"] { fill: none; stroke: #c3c9dc; stroke-width: 1.2; stroke-linecap: round; }
+
+  /* ---------- Diagram pop-ups ---------- */
+  svg.tipmode [data-tip] { cursor: pointer; }
+  svg.tipmode .organ { transition: opacity .25s; }
+  svg.tipmode.hovering .organ:not(.hl) { opacity: .35; }
+  svg.tipmode .hl:not(.lab) { filter: drop-shadow(0 0 3px var(--yellow)) drop-shadow(0 0 3px var(--yellow)); }
+  svg.tipmode .lab.hl text { fill: var(--blue); }
+  .tipbox { position: absolute; z-index: 5; max-width: 270px; background: #fff; border: 3px solid var(--yellow); border-radius: 14px; padding: 8px 12px; box-shadow: 0 6px 18px rgba(0,0,0,.25); pointer-events: none; font-size: 16px; line-height: 1.3; }
+  .tipbox b { display: block; font-size: 19px; margin-bottom: 2px; }
+  .tipbox[hidden] { display: none; }
+  /* ---------- Journey ---------- */
+  svg.journey .organ { opacity: .28; transition: opacity .4s; }
+  svg.journey .organ.on { opacity: 1; }
+  svg.journey .inset, svg.journey .callout { opacity: .3; transition: opacity .4s; }
+  svg.journey.at-mouth .inset, svg.journey.at-mouth .callout { opacity: 1; }
+  #stomach.churn { transform-box: fill-box; transform-origin: center; animation: churn .5s ease-in-out 4; }
+  @keyframes churn { 0%, 100% { transform: rotate(0) scale(1); } 25% { transform: rotate(-3deg) scale(1.04, .96); } 75% { transform: rotate(3deg) scale(.96, 1.04); } }
+  #food .chew { transform-box: fill-box; transform-origin: center; animation: chew .6s ease-in-out infinite; }
+  @keyframes chew { 50% { transform: scale(1.12, .84); } }
+  #jKey { opacity: 0; transition: opacity .9s; }
+  #jKey.show { opacity: 1; }
+  #jKey text { font-family: 'Fredoka', system-ui, sans-serif; font-size: 19px; font-weight: 600; fill: var(--ink); }
+  .term { background: #fff3c4; border-radius: 6px; padding: 0 4px; font-weight: 600; }
+  .btn.go { background: var(--green); color: #fff; font-size: 19px; flex: 1; }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .navrow { display: flex; gap: 8px; }
+  .time { display: inline-block; background: var(--soft); border-radius: 10px; padding: 4px 10px; font-weight: 600; }
+  .stops { display: flex; flex-wrap: wrap; gap: 6px; }
+  .opt { border: 2px solid #d3dbf7; background: #fff; border-radius: 12px; padding: 6px 10px; min-height: 44px; font-weight: 600; font-size: 15px; cursor: pointer; }
+  .opt.on { background: var(--yellow); border-color: #e0a800; }
+  .opt.done { background: #c9f2df; border-color: var(--green); }
+
+  /* ---------- Drag the organs ---------- */
+  svg.dragmode { touch-action: none; }
+  svg.dragmode .inset, svg.dragmode .callout { display: none; }
+  svg.dragmode > .lab { opacity: 0; transition: opacity .6s; }
+  svg.dragmode > .lab.show { opacity: 1; }
+  .piece { cursor: grab; transition: transform .45s cubic-bezier(.34, 1.4, .5, 1); }
+  .piece.dragging { transition: none; cursor: grabbing; filter: drop-shadow(0 6px 6px rgba(0,0,0,.25)); }
+  .piece.placed { cursor: default; pointer-events: none; }
+  /* Where each organ goes: a pale silhouette with a soft outline */
+  .ghost { opacity: .7; filter: drop-shadow(0 0 1px #6b7bb5) drop-shadow(0 0 1px #6b7bb5); }
+  .ghost * { fill: #fff !important; stroke: #fff !important; opacity: 1 !important; fill-opacity: 1 !important; stroke-opacity: 1 !important; }
+  .ghost [fill="none"] { fill: none !important; }
+  .ghost.filled, svg.nohints .ghost { display: none; }
+  .slot { fill: #fff; fill-opacity: .55; stroke: #9fb2e8; stroke-width: 2; stroke-dasharray: 6 5; }
+  .progress { height: 14px; background: var(--soft); border-radius: 8px; overflow: hidden; margin-top: 8px; }
+  .progress > div { height: 100%; background: var(--green); transition: width .4s; }
+
+  /* ---------- Journey order ---------- */
+  svg.ordermode .organ { opacity: .28; transition: opacity .5s; }
+  svg.ordermode .organ.on { opacity: 1; }
+  svg.ordermode .inset, svg.ordermode .callout { display: none; }
+  svg.ordermode > .lab { opacity: 0; transition: opacity .6s; }
+  svg.ordermode > .lab.show { opacity: 1; }
+  .badge circle { fill: var(--green); stroke: #fff; stroke-width: 3; }
+  .badge text { font-family: 'Fredoka', system-ui, sans-serif; font-size: 20px; font-weight: 700; fill: #fff; text-anchor: middle; }
+  .oTrail path { fill: none; stroke: var(--blue); stroke-width: 4; stroke-linecap: round; stroke-dasharray: .1 10; opacity: 0; transition: opacity .8s; }
+  .oTrail path.show { opacity: .85; }
+  .seq { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
+  .seq span { min-width: 34px; height: 34px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; padding: 0 8px; background: var(--soft); color: var(--muted); font-weight: 700; font-size: 15px; }
+  .seq span.done { background: #c9f2df; color: var(--ink); }
+  .choices { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .choices .opt { font-size: 17px; min-height: 52px; }
+  .opt.used { display: none; }
+  .opt.wrong { animation: shake .4s; background: #ffe0e3; border-color: var(--coral); }
+  @keyframes shake { 20%, 60% { transform: translateX(-6px); } 40%, 80% { transform: translateX(6px); } }
+
+  /* ---------- What happens here? ---------- */
+  svg.quizmode .inset, svg.quizmode .callout { display: none; }
+  svg.quizmode > .lab { opacity: 0; transition: opacity .6s; pointer-events: none; }
+  svg.quizmode > .lab.show { opacity: 1; }
+  svg.quizmode .organ { cursor: pointer; }
+  .organ.oops { animation: oops .6s; }
+  .organ.yay { animation: yay 1s; }
+  @keyframes oops { 30%, 70% { filter: drop-shadow(0 0 3px var(--coral)) drop-shadow(0 0 3px var(--coral)); } }
+  @keyframes yay { 30%, 70% { filter: drop-shadow(0 0 4px var(--green)) drop-shadow(0 0 4px var(--green)); } }
+  /* ---------- Journey prediction ---------- */
+  .card.predict { border: 3px solid var(--yellow); }
+  .trow { display: flex; justify-content: space-between; gap: 8px; padding: 4px 8px; border-radius: 8px; }
+  .trow > span:last-child { white-space: nowrap; }
+  .trow.best { background: #c9f2df; font-weight: 700; }
+  .mine { color: var(--blue); }
+  /* ---------- Other animals ---------- */
+  .vname { font-family: 'Fredoka', system-ui, sans-serif; font-size: 27px; font-weight: 700; fill: var(--ink); }
+  .vnote { font-size: 16px; line-height: 1.3; color: var(--muted); }
+  svg.vmode .vpart { cursor: pointer; transition: opacity .25s; }
+  svg.vmode.picking .vpart:not(.hl) { opacity: .3; }
+  svg.vmode .vpart.hl { filter: drop-shadow(0 0 3px var(--yellow)) drop-shadow(0 0 3px var(--yellow)); }
+  .job { font-size: 19px; font-weight: 600; background: #fff3c4; border-radius: 12px; padding: 10px 12px; margin: 8px 0; }
+
+  /* ---------- Lion vs zebra ---------- */
+  .frame { fill: #fff; stroke: #9fb2e8; stroke-width: 2.5; }
+  .tname { font-family: 'Fredoka', system-ui, sans-serif; font-size: 32px; font-weight: 700; fill: var(--ink); }
+  .trole { font-family: 'Fredoka', system-ui, sans-serif; font-size: 19px; font-weight: 500; fill: var(--muted); }
+  .tl text { stroke: #fff; }
+  .incisor, .canine, .molar { transition: fill .3s; }
+  svg.show-incisor .incisor, svg.show-incisor .incisor rect,
+  svg.show-canine .canine, svg.show-molar .molar, svg.show-molar .molar rect { fill: var(--yellow); }
+  svg.show-incisor .tl:not([data-type="incisor"]), svg.show-canine .tl:not([data-type="canine"]), svg.show-molar .tl:not([data-type="molar"]) { opacity: .3; }
+  svg.chewing .chop { animation: chop .9s ease-in-out 3; }
+  svg.chewing .grind { animation: grind 1.6s ease-in-out 2; }
+  @keyframes chop { 0%, 100% { transform: none; } 40%, 55% { transform: translateY(-58px); } }
+  @keyframes grind { 0%, 100% { transform: none; } 20% { transform: translateY(-44px); } 40% { transform: translate(14px, -44px); } 60% { transform: translate(-14px, -44px); } 80% { transform: translateY(-44px); } }
+  #drawer a { color: var(--blue); }
+
+  /* ---------- Missions ---------- */
+  .btn.missions { background: var(--blue); color: #fff; }
+  .tabs .btn { padding: 9px 11px; }
+  @media (max-width: 1399px) {
+    .topbar .long { display: none; }
+    .brand { font-size: 18px; }
+    .topbar, .tabs { gap: 4px; }
+    .tabs .btn { padding: 9px 8px; font-size: 14.5px; }
+  }
+  a.btn { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
+  #drawer a.btn { color: #fff; }
+  .modal-box ul.icons { list-style: none; padding: 0; margin: 0 0 14px; }
+  .icons li { display: flex; gap: 10px; padding: 6px 0; line-height: 1.35; }
+  .icons .em { font-size: 24px; width: 32px; flex: none; text-align: center; }
+  .banner { position: absolute; top: 10px; right: 10px; width: calc(var(--drawerW) - 20px); z-index: 6; background: #fff; border: 3px solid var(--yellow); border-radius: 16px; padding: 9px 44px 9px 14px; box-shadow: 0 6px 16px rgba(0,0,0,.18); }
+  .banner.hidden { display: none; }
+  .banner .kicker { font-size: 12.5px; font-weight: 700; color: var(--blue); text-transform: uppercase; letter-spacing: .04em; }
+  .banner .close { position: absolute; top: 6px; right: 6px; border: 0; background: var(--soft); border-radius: 50%; width: 32px; height: 32px; cursor: pointer; }
+  .banner .hint { margin-top: 4px; color: var(--muted); font-size: 15px; }
+  .banner .hint.hidden { display: none; }
+  .linkbtn { border: 0; background: none; color: var(--blue); font-weight: 600; cursor: pointer; padding: 4px 0; font-size: 15px; min-height: 32px; }
+  .modal { position: fixed; inset: 0; background: rgba(5,10,30,.6); display: flex; align-items: center; justify-content: center; z-index: 20; padding: 16px; }
+  .modal.hidden { display: none; }
+  .modal-box { background: #fff; border-radius: 24px; padding: 20px; width: min(580px, 100%); max-height: calc(100vh - 32px); overflow-y: auto; }
+  .modal-box h2 { margin: 0 0 8px; font-size: 25px; }
+  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+  .btn.primary { background: var(--green); color: #fff; }
+  .mission-list { display: grid; gap: 8px; margin-bottom: 14px; }
+  .mission-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; min-height: 52px; border-radius: 16px; background: var(--soft); border: 0; text-align: left; cursor: pointer; font-size: 16px; }
+  .mission-item .em { font-size: 25px; } .mission-item .t { flex: 1; font-weight: 600; }
+  .mission-item .star { font-size: 21px; filter: grayscale(1); opacity: .35; }
+  .mission-item.done .star { filter: none; opacity: 1; }
+  .win-emoji { font-size: 56px; text-align: center; }
+  .win-text { font-size: 17.5px; line-height: 1.5; margin-bottom: 14px; }
+  .confetti { position: fixed; top: -40px; font-size: 26px; z-index: 40; pointer-events: none; animation: fall linear forwards; }
+  @keyframes fall { to { transform: translateY(110vh) rotate(540deg); } }
+
+  /* ---------- Narrow screens: stage on top, drawer below ---------- */
+  @media (max-width: 760px) {
+    :root { --drawerW: 0px; }
+    #stage { bottom: 42%; right: 0; }
+    #drawer { top: 58%; width: 100%; }
+    .banner { top: calc(58% + 8px); left: 8px; right: 8px; width: auto; }
+    .brand { font-size: 18px; }
+  }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a class="hub-link" href="../index.html" title="Back to the Science Hub" aria-label="Back to the Science Hub">🏠</a>
+  <div class="brand">🍎 Digestion Journey</div>
+  <div class="tabs" id="tabs"></div>
+  <button class="btn missions" data-act="missions" title="Missions">🚀 <span class="long">Missions </span><span id="starCount"></span></button>
+  <button class="btn" data-act="model" title="How is this model different from real life?">🤔<span class="long"> Real life?</span></button>
+  <button class="btn" id="helpBtn" data-act="view" data-view="help" aria-label="How to use">❓</button>
+</div>
+<main>
+  <div id="stage"></div>
+  <div id="drawer"></div>
+  <div id="banner" class="banner hidden" role="status">
+    <div class="kicker" id="bannerKicker"></div>
+    <div id="bannerText"></div>
+    <button class="linkbtn" data-act="hint" id="hintBtn">💡 Show a hint</button>
+    <div class="hint hidden" id="bannerHint"></div>
+    <button class="close" data-act="stopMission" aria-label="Stop this mission">✖</button>
+  </div>
+</main>
+<div id="missionsModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="missionsTitle">
+  <div class="modal-box">
+    <h2 id="missionsTitle">🚀 Missions</h2>
+    <div class="mission-list" id="missionList"></div>
+    <div class="modal-actions"><button class="btn" data-act="resetStars">Reset stars</button><button class="btn primary" data-act="closeModals">Close</button></div>
+  </div>
+</div>
+<div id="modelModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modelTitle">
+  <div class="modal-box">
+    <h2 id="modelTitle">🤔 How is this model different from real life?</h2>
+    <p style="margin-top:0">A <span class="term">model</span> shows some important features of something real – but not everything.</p>
+    <ul class="icons">
+      <li><span class="em">📏</span><span>The organs are <b>not drawn to scale</b>.</span></li>
+      <li><span class="em">🌀</span><span>The small intestine is much <b>longer</b> and more tightly coiled than the picture shows.</span></li>
+      <li><span class="em">⏱️</span><span>The times are <b>averages</b>. They are different from person to person, and from food to food.</span></li>
+      <li><span class="em">🍎</span><span>The journey follows <b>one apple</b>, but real meals are a mix of different foods.</span></li>
+      <li><span class="em">🐕</span><span>The other animals are simple drawings. Their real organs have different shapes and sizes.</span></li>
+    </ul>
+    <div class="modal-actions"><button class="btn primary" data-act="closeModals">Got it!</button></div>
+  </div>
+</div>
+<div id="winModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="winTitle">
+  <div class="modal-box">
+    <div class="win-emoji">⭐</div>
+    <h2 id="winTitle" style="text-align:center">Mission complete!</h2>
+    <div class="win-text" id="winText"></div>
+    <div class="modal-actions"><button class="btn" data-act="closeModals">Keep exploring</button><a class="btn primary" id="winPractise" href="../practice/index.html#digestion">✏️ Practise this</a><button class="btn primary" id="winNext" data-act="nextMission">Next mission ▶</button></div>
+  </div>
+</div>
+
+<template id="diagramSvg">
+<svg viewBox="-200 0 1000 860" role="img" aria-label="The human digestive system, labelled">
+  <g id="body">
+<path d="M233 92 C219 90 216 118 232 124 M367 92 C381 90 384 118 368 124" fill="#fde9dd" stroke="#e6ab98" stroke-width="3"/>
+<path d="M300 18 C262 18 230 50 230 105 C230 135 236 165 252 185 C262 198 266 214 266 240 C232 252 172 256 146 282 C128 300 124 336 128 380 C133 460 138 545 140 625 C142 705 152 765 182 820 L182 860 L300 860 L300 18 Z" fill="#fde9dd" stroke="#fde9dd" stroke-width="1"/>
+<path d="M 300 18 C 338 18 370 50 370 105 C 370 135 364 165 348 185 C 338 198 334 214 334 240 C 368 252 428 256 454 282 C 472 300 476 336 472 380 C 467 460 462 545 460 625 C 458 705 448 765 418 820 L 418 860 L300 860 L300 18 Z" fill="#fde9dd" stroke="#fde9dd" stroke-width="1"/>
+<path d="M300 18 C262 18 230 50 230 105 C230 135 236 165 252 185 C262 198 266 214 266 240 C232 252 172 256 146 282 C128 300 124 336 128 380 C133 460 138 545 140 625 C142 705 152 765 182 820 L182 860" fill="none" stroke="#e6ab98" stroke-width="3" stroke-linecap="round"/>
+<path d="M 300 18 C 338 18 370 50 370 105 C 370 135 364 165 348 185 C 338 198 334 214 334 240 C 368 252 428 256 454 282 C 472 300 476 336 472 380 C 467 460 462 545 460 625 C 458 705 448 765 418 820 L 418 860" fill="none" stroke="#e6ab98" stroke-width="3" stroke-linecap="round"/>
+<path d="M300 812 C296 828 293 845 291 860 M300 812 C304 828 307 845 309 860" fill="none" stroke="#e6ab98" stroke-width="3" stroke-linecap="round"/>
+<circle cx="276" cy="98" r="6" fill="#1d2340"/><circle cx="324" cy="98" r="6" fill="#1d2340"/>
+<path d="M296 112 Q300 122 304 112" fill="none" stroke="#e6ab98" stroke-width="2.5" stroke-linecap="round"/>
+</g>
+<g id="liver" opacity=".45" aria-hidden="true"><path d="m 699.17492,408.68343 c 29.50074,0.002 35.24118,-2.32859 56.12986,1.68747 7.34454,1.41206 18.02491,3.81796 19.64342,8.78381 -4.81837,-5.81707 -21.40836,-2.81967 -45.08268,4.47143 -10.91231,3.36071 -22.03702,8.84399 -44.7751,19.11431 -5.96069,2.69233 -14.54166,3.21686 -27.81642,10.31319 -4.25505,2.27463 -6.7132,6.36266 -10.84491,8.77021 -9.73642,5.67341 -15.28192,13.6467 -20.29745,16.41251 -13.11253,7.00344 -33.27427,43.45164 -34.26417,55.88926 -0.82888,-9.24674 -0.70825,-20.46366 -1.02754,-29.74254 0,0 -4.56192,-45.23082 5.25832,-64.72051 25.77227,-51.1488 78.67275,-30.9812 103.07667,-30.97914 z" transform="matrix(1,0,0,1,-400.408,6.78591)" fill="#d8c4ba" stroke="#c2aa9e" stroke-width="1.2" stroke-linejoin="round" vector-effect="non-scaling-stroke"/></g>
+<g id="oesophagus" class="organ">
+<path d="M300 150 C300 260 302 360 304 405 C306 428 318 444 334 456" fill="none" stroke="#c25e7f" stroke-width="15" stroke-linecap="round"/>
+<path d="M300 150 C300 260 302 360 304 405 C306 428 318 444 334 456" fill="none" stroke="#f4a6bd" stroke-width="12" stroke-linecap="round"/>
+</g>
+<defs><clipPath id="clipRect"><rect x="276" y="742" width="42" height="44"/></clipPath><clipPath id="clipNotRect"><path d="M150 480 H460 V742 H150 Z"/></clipPath></defs>
+<g id="small-intestine" class="organ">
+<path d="M256 528 C240 535 238 565 252 583 C268 602 312 601 334 584" fill="none" stroke="#c2574a" stroke-width="20" stroke-linecap="round"/>
+<path d="M256 528 C240 535 238 565 252 583 C268 602 312 601 334 584" fill="none" stroke="#fb8f7c" stroke-width="17" stroke-linecap="round"/>
+</g>
+<g id="stomach" class="organ">
+<path d="M324 466 C326 455 334 449 342 446 C350 436 360 433 369 435 C382 440 388 462 386 484 C386 505 377 532 363 546 C352 556 342 559 332 559 C315 559 300 556 285 551 C270 546 258 542 251 536 C247 531 248 523 253 520 C262 514 272 512 281 512 C292 512 300 510 307 506 C316 500 322 490 324 480 C325 474 324 470 324 466 Z" fill="#ffb062" stroke="#c06f22" stroke-width="1.6" stroke-linejoin="round"/>
+<path d="M352 446 C360 440 371 441 378 450" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" opacity=".45"/>
+<path d="M288 545 C318 552 350 546 372 522" fill="none" stroke="#c06f22" stroke-width="5" stroke-linecap="round" opacity=".18"/>
+</g>
+<g id="large-intestine" class="organ">
+<g clip-path="url(#clipNotRect)"><path d="m 647.57998,808.62346 c -0.28844,-2.78614 -0.26015,-6.43303 0.90276,-9.16834 3.83267,-3.6345 7.91881,-9.27636 8.9386,-15.60795 0.31631,-1.97906 0.86867,-17.18922 -4.95263,-21.84143 6.72011,-8.01577 1.87114,-16.83369 0.62252,-20.46737 11.64233,7.72705 19.31127,16.11736 34.58417,13.9401 25.55539,-3.64464 43.60881,-6.30698 54.90491,-31.92719 1.45541,-3.29816 2.52691,-6.86003 4.56874,-9.85094 2.38891,-3.50185 6.06844,-5.78333 7.35693,-10.06833 0.7839,-2.61071 0.4818,-4.74947 1.87031,-6.9753 0.75123,-1.20293 2.29761,-1.75811 3.17909,-3.12963 3.42115,-5.32763 -0.70804,-8.88918 0.26802,-14.06522 0.84948,-4.49329 5.7726,-6.51005 5.80714,-12.55843 0.0173,-3.11769 -2.31564,-6.47777 -1.5,-9.57884 0.68357,-2.60134 3.46034,-4.91239 4.51636,-7.64719 1.48992,-3.85967 1.70038,-7.45079 0.0696,-11.21054 -0.61388,-1.41608 -2.0282,-3.25777 -2.34761,-4.69505 -0.30723,-1.38196 0.39,-2.51781 0.89399,-4.03822 1.43931,-4.34289 1.65323,-9.46015 0.23225,-13.78709 -0.89443,-2.7225 -1.97345,-4.18772 -1.24612,-7.10431 0.7049,-2.82956 4.48939,-2.62185 4.26905,-8.08389 -0.19526,-6.2849 -3.51904,-8.67905 -4.06447,-11.06133 -0.63853,-2.78887 3.06939,-2.78167 4.29983,-11.66233 1.15836,-8.36039 -0.86734,-12.68813 -3.32295,-16.0512 3.20655,-10.93786 2.91686,-16.31937 -4.35971,-25.13287 -2.62554,-10.61309 -10.85201,-14.16252 -20.97538,-6.75596 -10.0146,7.32497 -14.42717,16.85422 -11.79546,27.5449 1.35959,5.518 1.88335,7.45167 1.29415,13.16113 -0.0832,0.7999 -0.23855,15.66627 4.44907,12.37745 -3.70148,2.59737 -4.26819,6.72099 -4.87193,11.03511 -0.92551,6.63607 1.90121,7.11539 3.14887,12.36539 0.76122,3.21057 -0.19373,4.02619 -0.89378,7.90844 -0.97048,5.36489 1.6445,9.4782 1.80073,13.51834 0.11018,2.89168 -2.00601,5.06862 -2.60619,8.38737 -0.83174,4.60501 2.07698,6.3598 2.43608,10.20683 0.19621,2.09173 -2.64904,18.24086 -3.27762,19.27434 -2.15324,3.54389 -7.71809,4.11871 -9.8054,7.50282 -2.8439,4.61049 0.8456,10.33517 -1.09292,15.02486 -1.5283,3.69666 -7.20404,3.55353 -8.77354,8.52663 -1.34742,4.27424 0.9072,10.13845 0.92175,14.73594 -9.45861,-0.15059 -17.47566,7.14284 -19.11815,16.62425 -0.39353,2.27439 -31.29054,-11.86576 -34.36149,-11.99744 -10.8849,-0.46504 -19.3078,6.31192 -24.46225,15.5128 -5.54343,9.89361 -4.83193,16.40218 -2.26105,25.37127 0.89645,3.12744 1.10372,2.49032 3.40155,5.661 -2.20894,7.6719 -2.05064,9.45443 -1.1944,18.43716 1.69043,6.74061 4.12496,13.05376 9.56443,18.21762 1.57852,3.46093 1.64072,7.13804 -0.0119,9.22214" transform="matrix(1,-0.00051,0.00051,1,-348.933,-12.8338)" fill="#86cf9f" stroke="#3f8f5d" stroke-width="1.4" stroke-linejoin="round" vector-effect="non-scaling-stroke"/></g>
+<path d="m 760.41697,553.61359 c -0.0479,0.55393 -0.0839,1.07844 -0.1071,1.56868 -0.15538,3.27179 -4.57681,7.00732 -0.91624,9.30048 2.35974,1.48005 4.856,-1.92449 6.60999,-3.06436 1.3697,12.35745 -13.38726,12.18958 -12.00071,22.50744 1.04111,7.73863 6.02566,4.07601 10.71425,2.6843 3.00976,6.49895 -3.06521,6.66889 -5.27508,10.68601 -2.50353,4.55156 -2.4814,12.9393 4.50881,9.80402 -0.0401,-0.088 0.69253,3.04902 0.7083,3.22115 -1.17867,-0.0359 -4.80077,1.56488 -7.31144,1.57239 -2.47994,3.69513 -3.89669,10.18119 -3.42013,14.54642 0.68337,6.27273 7.71132,8.35397 11.56496,1.80508 1.1499,11.38412 -10.13052,6.06368 -13.9369,13.58376 -5.19033,10.25616 5.48281,14.1575 13.61715,12.59841 -1.63815,2.91929 -3.10893,4.76563 -5.63448,6.29556 -3.82778,2.31986 -1.98706,-2.44717 -5.5378,2.57086 -3.69748,5.2268 -4.41439,18.59888 5.30155,14.59958 -2.37264,6.19146 -7.42908,1.76123 -11.74115,3.10414 -1.05472,2.88963 -0.55485,6.37799 -0.59573,9.63726 4.02819,-2.16039 8.21447,2.0703 12.93551,0.10543 -2.30298,5.89722 -7.7612,6.44017 -12.59515,5.78219 0.84268,0.78917 1.20786,2.11471 1.9016,2.9598 -2.85515,1.80782 -7.99169,11.26357 -1.98749,10.13547 -0.70412,0.98793 -1.78287,2.8086 -2.36234,3.63387 -3.03366,2.04827 -6.4109,3.01802 -8.23477,5.61399 -3.92627,-1.59555 -15.50476,11.09005 -19.49061,14.60055 6.80796,-5.31001 23.76624,-29.17314 7.97096,-30.66406 -0.0526,-0.68576 -0.20532,-1.15178 -0.45427,-1.71758 3.88268,2.38023 9.51996,-2.54609 10.96711,-6.41385 -3.55423,-2.28023 -6.33846,-6.9528 -4.64725,-10.98413 4.01702,6.15289 8.31019,-0.15265 6.70673,-4.97047 0.12079,-0.16747 1.13891,-0.74451 1.1298,-0.71904 -2.70866,-5.0828 -9.70056,-14.93818 -5.49827,-20.19049 2.53912,6.0058 8.50079,9.46051 8.09178,1.12659 -5.40128,-4.15793 -8.98941,-12.76205 -6.36493,-19.23407 1.52743,2.90923 3.29435,7.43035 7.87357,6.73183 -0.67615,-5.1217 3.89808,-10.54253 1.59556,-14.48157 -0.57033,0.14827 -1.52384,0.40972 -2.15193,0.49657 -3.44497,-4.35341 -9.73592,-14.10786 -5.11956,-19.10765 2.53674,3.22733 4.53678,10.29441 8.19267,5.66428 1.68182,-2.13015 0.60871,-9.98417 -0.72929,-12.053 -7.37329,4.88848 -10.24989,-10.26945 -8.06429,-15.11107 0.75439,2.08584 3.44549,4.38944 5.74413,2.24468 1.09975,-1.02632 -0.3467,-6.65202 0.75739,-8.81688 -8.39598,-4.52065 -12.28975,-12.37103 -9.25343,-23.25347 -0.12868,-0.11581 1.55586,-0.0324 1.5247,-0.0241 -0.13856,1.68701 0.723,3.05827 0.87509,4.52644 8.3852,-4.97945 -11.06796,-11.58394 -1.59878,-19.85277 0.70198,-0.61294 3.94351,-1.26794 5.77614,-2.93301 4.95903,-4.50755 3.42988,-14.07035 9.6841,-16.91157 4.71939,-2.14404 8.62775,0.6341 10.40126,4.6302 2.36543,5.33558 0.42707,15.72153 -0.12399,22.16568 z" transform="matrix(1,-0.00051,0.00051,1,-348.933,-12.8338)" fill="#86cf9f" stroke="#3f8f5d" stroke-width="1.2" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+<path d="m 742.60348,550.20677 c 1.12821,8.16504 2.83495,24.63827 3.28685,34.81897 0.65837,14.80925 0.19986,30.76987 -0.57036,45.62895 -1.65911,32.05832 -2.13254,64.04728 -18.78533,91.72128 5.62865,-8.9201 12.25529,-18.69349 15.20506,-28.87824 2.18435,-7.54121 1.76272,-15.2419 2.6097,-22.91392 1.5406,-13.95773 3.36197,-28.0319 3.811,-42.16425 0.47461,-14.91673 0.28042,-30.07028 0.61255,-44.94288 0.22696,-10.23038 -0.55413,-24.67832 -5.57085,-33.36311 -1.48395,0.28443 -0.65937,1.00182 -1.14082,1.85476" transform="matrix(1,-0.00051,0.00051,1,-348.933,-12.8338)" fill="#ffffff" opacity=".3"/>
+</g>
+<g id="rectum" class="organ"><g clip-path="url(#clipRect)"><path d="m 647.57998,808.62346 c -0.28844,-2.78614 -0.26015,-6.43303 0.90276,-9.16834 3.83267,-3.6345 7.91881,-9.27636 8.9386,-15.60795 0.31631,-1.97906 0.86867,-17.18922 -4.95263,-21.84143 6.72011,-8.01577 1.87114,-16.83369 0.62252,-20.46737 11.64233,7.72705 19.31127,16.11736 34.58417,13.9401 25.55539,-3.64464 43.60881,-6.30698 54.90491,-31.92719 1.45541,-3.29816 2.52691,-6.86003 4.56874,-9.85094 2.38891,-3.50185 6.06844,-5.78333 7.35693,-10.06833 0.7839,-2.61071 0.4818,-4.74947 1.87031,-6.9753 0.75123,-1.20293 2.29761,-1.75811 3.17909,-3.12963 3.42115,-5.32763 -0.70804,-8.88918 0.26802,-14.06522 0.84948,-4.49329 5.7726,-6.51005 5.80714,-12.55843 0.0173,-3.11769 -2.31564,-6.47777 -1.5,-9.57884 0.68357,-2.60134 3.46034,-4.91239 4.51636,-7.64719 1.48992,-3.85967 1.70038,-7.45079 0.0696,-11.21054 -0.61388,-1.41608 -2.0282,-3.25777 -2.34761,-4.69505 -0.30723,-1.38196 0.39,-2.51781 0.89399,-4.03822 1.43931,-4.34289 1.65323,-9.46015 0.23225,-13.78709 -0.89443,-2.7225 -1.97345,-4.18772 -1.24612,-7.10431 0.7049,-2.82956 4.48939,-2.62185 4.26905,-8.08389 -0.19526,-6.2849 -3.51904,-8.67905 -4.06447,-11.06133 -0.63853,-2.78887 3.06939,-2.78167 4.29983,-11.66233 1.15836,-8.36039 -0.86734,-12.68813 -3.32295,-16.0512 3.20655,-10.93786 2.91686,-16.31937 -4.35971,-25.13287 -2.62554,-10.61309 -10.85201,-14.16252 -20.97538,-6.75596 -10.0146,7.32497 -14.42717,16.85422 -11.79546,27.5449 1.35959,5.518 1.88335,7.45167 1.29415,13.16113 -0.0832,0.7999 -0.23855,15.66627 4.44907,12.37745 -3.70148,2.59737 -4.26819,6.72099 -4.87193,11.03511 -0.92551,6.63607 1.90121,7.11539 3.14887,12.36539 0.76122,3.21057 -0.19373,4.02619 -0.89378,7.90844 -0.97048,5.36489 1.6445,9.4782 1.80073,13.51834 0.11018,2.89168 -2.00601,5.06862 -2.60619,8.38737 -0.83174,4.60501 2.07698,6.3598 2.43608,10.20683 0.19621,2.09173 -2.64904,18.24086 -3.27762,19.27434 -2.15324,3.54389 -7.71809,4.11871 -9.8054,7.50282 -2.8439,4.61049 0.8456,10.33517 -1.09292,15.02486 -1.5283,3.69666 -7.20404,3.55353 -8.77354,8.52663 -1.34742,4.27424 0.9072,10.13845 0.92175,14.73594 -9.45861,-0.15059 -17.47566,7.14284 -19.11815,16.62425 -0.39353,2.27439 -31.29054,-11.86576 -34.36149,-11.99744 -10.8849,-0.46504 -19.3078,6.31192 -24.46225,15.5128 -5.54343,9.89361 -4.83193,16.40218 -2.26105,25.37127 0.89645,3.12744 1.10372,2.49032 3.40155,5.661 -2.20894,7.6719 -2.05064,9.45443 -1.1944,18.43716 1.69043,6.74061 4.12496,13.05376 9.56443,18.21762 1.57852,3.46093 1.64072,7.13804 -0.0119,9.22214" transform="matrix(1,-0.00051,0.00051,1,-348.933,-12.8338)" fill="#86b2ee" stroke="#3f6fb8" stroke-width="1.4" stroke-linejoin="round" vector-effect="non-scaling-stroke"/></g>
+<path d="M297 778 V797" stroke="#3f6fb8" stroke-width="14"/><path d="M297 778 V797" stroke="#86b2ee" stroke-width="11.5"/></g>
+<g id="small-intestine-coils" class="organ" data-organ="small-intestine"><path d="m 720.85714,606.70256 c 1.06969,-1.66081 3.19264,-1.80341 5.17551,-2.19409 2.8488,-5.51336 8.60371,-5.85842 12.63815,-10.07089 6.42654,-6.71028 4.25677,-25.67558 -5.34625,-29.11759 -8.59213,-3.08009 -17.56374,2.96431 -23.29162,8.30985 -5.24721,4.89679 -11.40357,11.47912 -10.95525,18.79859 -0.0806,-1.31153 -0.18506,-3.08722 -0.59277,-4.2738 -1.9367,0.5672 -3.87068,2.10629 -6.12324,2.26554 2.46253,-0.97381 5.29793,-1.98761 7.19811,-3.76574 3.83403,-3.58796 6.34968,-10.5715 6.47399,-15.5286 0.1315,-5.17926 -3.1031,-8.62152 -8.67542,-9.5415 -14.06711,-2.32069 -20.96048,10.69412 -33.46351,11.26066 -24.81292,-5.06796 -35.59586,18.08176 -28.44713,19.20238 1.19099,-1.0745 1.55031,-2.11347 3.29807,-2.703 2.08073,-0.70095 4.46276,-0.88659 6.63924,-1.19365 2.36853,-0.33249 5.01829,-0.3568 7.396,-0.12068 2.96722,0.2979 5.70202,1.43214 8.63193,1.90301 2.28768,0.36706 4.51193,0.54327 6.79042,1.06046 1.83725,0.418 6.17894,2.29332 7.63111,0.53687 0.74425,-0.90091 1.04551,-2.08699 1.92026,-3.00847 1.02321,-1.07574 2.2904,-1.99368 3.42096,-2.98737 2.89473,-2.54275 5.56721,-5.37904 7.79268,-8.38648 1.31165,-1.77371 1.05782,-4.63585 0.51981,-6.70271 0.60801,1.59926 0.28633,3.40408 1.15112,4.93306 0.33815,-1.06103 4.59423,-1.49345 5.78728,-2.16479 -2.39428,0.58221 -4.99132,1.56205 -6.71493,3.16307 -2.45872,2.28266 -3.99302,5.63077 -6.2259,8.12704 -2.01465,2.2513 -7.70946,3.99489 -7.24273,7.48669 0.2584,1.93591 2.17633,2.2309 4.01321,3.14559 2.94815,1.46687 5.92125,2.88951 8.889,4.33562 3.44506,1.68009 12.36468,4.07525 15.71417,1.25749 2.13593,-1.79647 4.18126,-4.54591 6.12331,-6.57402 5.1202,-5.35445 11.9768,-9.99033 14.96134,-16.73196 -0.45237,2.39999 -3.52389,5.95449 -4.81859,8.43984 2.46212,-1.98276 4.75216,-3.41353 8.08334,-3.89951 -7.28444,1.66935 -10.5649,5.12976 -15.20355,9.96532 -2.23717,2.33078 -4.1373,4.89678 -6.28685,7.25734 -1.15868,1.27656 -2.7202,2.35594 -3.70236,3.77872 -0.86706,1.25539 -0.66326,2.10628 -0.71698,3.49978 -0.0864,2.27832 -1.35691,3.68519 -2.07958,5.81189 -1.37996,4.0566 2.3792,6.08915 5.90037,7.46224 1.97981,0.77122 4.0446,1.38917 5.95171,2.31055 0.7531,0.36305 2.09302,0.86487 2.65372,1.42477 1.08484,1.08239 0.48954,2.45036 0.85716,3.74761 0.42762,1.51349 1.74077,2.84938 2.13836,4.44904 0.39557,1.59093 0.45361,3.37125 -0.28292,4.86904 -0.73189,1.49089 -2.46212,2.24376 -3.0466,3.70408 4.41317,3.34086 14.82052,5.84205 17.94171,0.28835 1.01269,-1.80112 1.08657,-3.9614 1.20209,-5.9295 0.15571,-2.66117 0.38686,-5.41411 0.13955,-8.08839 -0.18178,-1.94685 -0.60227,-3.88312 -0.86921,-5.81986 -0.19598,-1.42268 -1.13731,-3.78507 -0.79893,-5.15678 0.20766,-0.84374 1.63889,-1.88795 2.24324,-2.63181 1.34838,-1.65937 2.46546,-3.45143 3.98226,-5.00049 -2.61937,2.18489 -5.74974,5.603 -5.55174,8.99484 0.21586,3.70808 0.44491,7.47633 0.66205,11.20678 0.30303,5.20941 -0.64063,10.2671 -2.83482,15.10399 -2.13445,4.70836 -7.14535,9.56051 -5.78332,14.91973 0.28481,-4.99957 1.39856,-11.20426 5.43626,-14.99606 -1.22404,1.14904 -4.98675,1.02829 -6.55635,0.89725 -2.43409,-0.20211 -4.4694,-1.00947 -6.54051,-2.12887 -3.87378,-2.09307 -6.57522,0.18369 -8.08872,3.65904 -1.05303,2.41824 -0.31551,5.49771 -0.11146,7.99933 0.21069,2.56773 -0.62887,5.13063 0.65265,7.48765 1.20362,2.21412 3.29942,4.25151 4.26955,6.50827 -0.62123,-1.07316 -1.31676,-2.10716 -2.05962,-3.13651 -0.4604,-0.63744 -2.03576,-3.32192 -2.8021,-3.48707 -0.74635,-0.15962 -1.15633,0.65421 -1.74915,1.14759 -1.96857,1.63703 -4.20357,3.20327 -6.42297,4.53748 1.62799,-2.24714 4.46509,-3.6661 6.52377,-5.56068 1.93332,-1.7806 1.00365,-4.3847 0.99151,-6.52901 -0.0182,-3.08402 0.60899,-6.63205 1.33778,-9.64411 0.86834,-3.58495 5.41437,-4.74165 7.09941,-7.89151 0.75024,-1.40256 1.5287,-3.86516 1.28697,-5.43611 -0.18836,-1.22413 -3.16395,-4.1251 -3.10364,-4.5419 0.3904,-2.6863 -1.71022,-4.85996 -4.27977,-5.84002 -2.73824,-1.04459 -5.11898,-0.37787 -7.51652,1.09063 -4.60439,2.81907 -6.76737,7.97783 -9.33,12.24496 -0.72836,1.21231 -1.31808,2.4419 -1.90255,3.70647 -0.46039,0.99771 -1.92151,2.79131 -1.83254,3.89332 0.0565,0.69252 0.90901,1.57211 1.27793,2.17496 0.75923,1.24336 1.48135,2.47658 1.94363,3.83175 -0.28585,-1.34529 -2.11466,-5.62489 -3.97348,-5.43874 2.19328,-6.79536 7.7067,-12.6157 11.61649,-18.62594 0.53034,-0.81476 1.06194,-1.73861 1.71222,-2.45202 0.29855,-0.32805 1.2009,-0.78347 1.33281,-1.16439 0.41925,-1.22008 -1.7693,-1.61404 -2.45417,-2.17489 -0.93715,-0.76724 -1.56201,-2.09062 -1.79504,-3.1923 -0.66974,-3.17696 1.88389,-4.53593 2.46233,-6.2815 0.94447,-2.84503 -0.15948,-4.91854 -2.96615,-6.23668 -1.42959,-0.67279 -2.69406,-0.80864 -4.12716,-0.87366 -0.92379,-0.0419 -1.29642,0.27563 -2.31579,-0.0832 -2.61229,-0.92095 -5.10431,-2.50312 -7.58561,-3.73778 -2.61878,-1.30359 -5.48028,-2.28585 -8.26384,-3.25279 -5.20224,-1.80525 -10.48191,-3.19829 -15.82687,-4.51823 -5.25362,-1.29607 -10.44169,-2.97396 -15.97127,-2.38509 -3.16085,0.33624 -9.37632,1.4706 -10.15777,4.96946 -0.30435,1.36532 1.59285,2.77964 1.98979,4.07254 1.20471,3.92327 -2.73766,7.03379 -5.27041,9.63608 -2.69811,2.76852 -5.42287,5.59394 -6.85219,9.12251 1.17889,1.62043 3.83222,1.64573 5.74794,1.91933 3.2948,0.469 6.15001,2.12822 9.21981,3.35651 6.33689,2.53138 13.79462,5.7521 18.65471,10.36852 1.71478,-3.05976 3.98046,-5.64713 6.96064,-7.85329 -5.40458,6.1361 -8.90142,8.27057 -4.11243,15.89158 -0.76635,-5.13197 -4.26831,-9.167 -8.95311,-11.76148 -7.27321,-4.02611 -28.47903,-18.15543 -32.9198,-4.25123 2.6903,-2.84923 3.62774,-6.89787 6.01461,-10.01694 2.24271,-2.92981 5.24889,-5.23865 7.57266,-8.1337 2.06216,-2.56954 4.94078,-6.48425 2.78012,-9.66104 -2.24011,-3.29532 -6.28009,-1.68694 -9.42317,-1.17082 -11.45276,1.87931 -19.04314,-0.88061 -29.57292,-4.37323 -9.23452,-3.06411 -16.47922,-2.11801 -22.18653,4.51469 -2.40205,2.79208 -5.55768,4.72931 -5.84455,8.01876 -0.25605,2.93155 0.74848,5.79547 0.0568,9.0134 -0.82488,3.83651 -1.93162,7.51775 -2.29867,11.42202 -0.52285,5.57889 2.24055,10.51474 2.07659,16.07043 -0.1126,3.80286 -2.29407,7.81856 -1.63109,11.57411 0.34358,0.0978 0.65708,-0.0484 0.98976,0.0818 1.24371,2.10246 -0.0609,4.16238 0.86172,6.61078 1.68561,4.46982 6.67152,12.27178 11.90462,13.85254 3.46525,1.04675 10.68469,2.01863 13.78466,-0.29363 1.58469,-1.18103 2.02299,-3.63631 2.62429,-5.3092 1.01856,-2.83354 3.00572,-6.71859 5.65929,-8.57095 6.63391,-4.63333 17.10006,-0.49499 22.79054,-6.58984 0.63277,-0.67905 1.26242,-1.44279 1.84154,-2.16189 -0.9965,1.34898 -2.38442,2.83076 -2.89099,4.36971 0.0509,0.043 0.0998,0.0861 0.146,0.13306 2.58156,-0.41376 5.64375,-0.75526 8.3068,-0.58208 -1.65746,0.73808 -4.27241,0.35184 -6.17964,0.66438 -1.39567,0.22851 -2.67637,0.34612 -4.07164,0.47138 -2.21972,0.20159 -4.24808,1.18024 -6.42348,1.43177 -1.7174,0.1995 -3.53181,0.11518 -5.28438,0.30744 -3.77579,0.41509 -7.68971,1.1742 -10.30846,3.9249 -1.3397,1.40797 -1.63652,4.79595 -2.45427,6.51024 -0.62461,1.30708 -2.63628,3.50185 -2.87752,4.84086 -1.33639,7.38661 9.14557,15.16314 15.46537,17.49709 8.25806,3.04934 10.84605,-2.93224 15.32897,-7.85299 5.67616,-6.23194 12.41005,-11.09474 20.06247,-15.10138 2.90199,-1.51932 3.63566,-2.62653 3.56862,-5.74581 0.12984,1.11013 0.0787,2.35557 0.57689,3.37515 1.13361,-0.32565 2.4813,-0.20279 3.689,-0.38645 -4.71031,-0.0405 -8.8083,3.12308 -12.41595,5.59042 -1.18065,0.80749 -5.30219,3.00052 -3.15913,4.50639 1.37702,0.9687 3.01551,0.62145 4.59483,0.83511 1.831,0.24767 3.7379,0.82819 5.54202,1.24866 2.04283,0.47611 9.34221,1.92783 6.49315,4.614 1.92561,-0.54851 4.17849,0.0334 6.0616,0.34546 0.99857,0.16634 2.33238,-0.0144 3.14366,0.5045 -0.0749,-0.85 0.46379,-2.52775 0.70997,-3.525 0.75446,-3.07187 2.21009,-6.1587 3.73038,-8.96998 0.76892,-1.42135 4.19058,-5.21024 6.16222,-4.67555 -2.84029,0.61068 -4.86741,3.37445 -6.21189,5.56355 2.10481,-0.41305 3.96351,-1.52244 6.04716,-1.95659 1.62345,-0.33825 3.38374,-0.2599 4.99234,-0.51124 -3.14436,0.49277 -6.08236,1.16343 -9.21447,2.10886 -1.44478,0.43672 -1.8955,0.53246 -2.56963,1.75852 -1.30014,2.37149 -1.6427,4.8272 -2.67211,7.24019 -0.3547,0.83438 -0.91596,1.80447 -0.71164,2.75663 0.68313,3.18454 4.92867,4.31246 7.73262,5.44366 4.12346,1.66354 5.92853,4.43691 8.81509,7.47368 2.19647,2.31238 3.83052,5.58027 7.35721,6.41958 3.57617,0.85216 6.72652,-1.45018 9.95095,-2.36883 -2.42244,1.12413 -5.81694,0.90407 -7.72616,2.77779 -2.23069,2.19044 -4.02101,7.23033 -3.21388,10.07692 0.38218,-2.469 2.78378,-8.1019 0.98934,-10.1421 -0.86251,-0.97975 -3.08427,-1.63807 -4.18783,-2.63836 -3.88886,-3.52542 -5.73754,-8.78248 -10.98035,-10.9669 -1.89572,-0.79008 -4.0152,-0.86569 -5.87209,-1.65735 -2.37761,-1.01231 -2.47478,-3.92172 -5.15489,-4.61761 -0.94189,-0.24515 -8.28169,-0.30066 -8.4059,-0.0426 0.28247,-0.58685 0.88226,-0.99172 1.58842,-1.11973 -0.35677,-0.87671 -1.74729,-1.66503 -2.73172,-2.09845 -4.72091,-2.07774 -13.01281,-3.73583 -18.16744,-2.25886 -3.24324,0.92966 -5.78603,3.10068 -7.77121,5.55409 -1.91903,2.37347 -3.89264,5.10133 -5.35488,7.73249 -0.8729,1.57201 -0.23356,2.97892 1.231,3.97155 1.42724,0.96791 3.58196,1.9701 5.19743,2.64969 4.3457,1.82558 9.21674,0.66181 13.80631,1.06849 2.44,0.2176 4.57017,-0.0157 6.72356,1.22221 2.27768,1.31092 3.74713,3.62115 5.39055,5.44363 -1.88751,-2.96782 -8.59585,-6.47306 -12.49054,-6.87123 -4.84107,-0.49523 -9.30238,0.36017 -14.11678,-1.10547 -3.61958,-1.10079 -12.85872,-6.37848 -16.07043,-2.09914 -0.90011,1.19846 -0.98605,4.61816 -1.37702,6.08906 -0.69837,2.62592 -2.19126,5.95389 -1.65164,8.65472 0.9443,4.72403 8.2254,8.9672 12.54421,11.16037 2.11213,1.072 4.22707,1.35707 6.50238,1.91716 2.04609,0.50527 4.08176,0.94546 6.20649,1.1213 2.91994,0.24119 5.89216,0.0998 8.82098,0.23371 2.3626,0.10877 4.68353,0.48115 7.04059,0.59976 2.98974,0.15243 6.12799,0.34927 9.10719,0.29736 1.07645,-0.019 2.04273,-0.44519 3.0894,-0.62241 1.31613,-0.22335 2.60089,-0.19202 3.92757,-0.0795 -1.78201,0.25408 -4.49119,-0.0937 -6.06726,0.70157 1.4647,0.8709 2.63253,2.12046 4.097,2.97578 -1.15554,-0.79398 -2.16721,-1.73241 -3.46919,-2.36338 -1.01275,-0.49043 -1.8964,-0.44434 -3.01013,-0.51245 -4.0185,-0.24332 -8.05062,-0.77178 -12.08733,-0.89794 -4.53836,-0.14356 -8.90505,-0.5411 -13.3779,-1.19991 -8.94761,-1.31857 -18.91452,-4.23282 -23.16536,-12.32687 -2.17662,-4.14556 1.37864,-9.11398 1.91072,-13.27212 0.6724,-5.26571 -4.71956,-9.36926 -10.05931,-10.26467 -2.26417,-0.3801 -7.68374,-5.12119 -9.96405,-4.39177 -2.12557,0.68022 -4.93183,1.7125 -6.69368,2.9645 -1.82847,1.29882 -3.66966,3.04288 -4.96311,4.89518 -3.44574,4.93846 -2.76002,3.16745 3.09428,3.79373 4.35424,-1.06001 12.97508,5.18977 14.62017,3.65381 -0.74468,2.24293 -0.52801,3.42787 -2.62103,4.84968 -1.88467,1.27926 -1.94846,1.39031 -2.68742,3.37411 -1.48066,3.97541 -0.54556,6.39916 -0.66072,10.74452 -0.0918,3.4753 4.08109,5.82439 6.95548,8.15236 0.93243,1.22912 3.76754,1.61009 6.20453,1.19084 2.7515,4.74668 9.26243,9.36667 15.44162,11.87326 6.12011,2.48514 13.34433,2.28341 19.84092,1.38321 4.93108,-0.68362 8.99917,-0.55016 13.87244,-0.25315 5.8504,0.35756 10.43133,0.43033 16.09479,-0.9271 4.20035,-1.00711 10.2289,-2.02555 10.77647,-7.01076 0.34647,-3.16671 0.45594,-7.77395 -1.59482,-10.43047 -1.70975,-2.21392 -4.8313,-3.41607 -6.47576,-5.63686 -1.00792,0.95377 -2.26968,0.35138 -3.71133,0.67703 -1.65894,0.37484 -2.95185,1.34967 -4.71996,1.45063 -5.29773,0.30278 -11.14673,-1.33059 -16.02789,-3.08636 -3.65109,-1.31261 -7.45391,-1.5194 -11.05107,-3.03445 -2.48045,-1.04575 -5.17024,-2.80107 -7.69878,-3.56849 -2.68182,-0.8137 -5.39799,0.18652 -8.01807,0.68854 1.44896,0.0472 2.85719,-0.68788 4.34518,-0.7591 -0.59185,-1.07361 -1.34528,-2.30927 -1.56211,-3.47061 0.81396,4.3638 5.82236,3.84841 9.2604,5.30559 1.07289,0.45442 1.99863,1.08841 3.03911,1.59593 1.9521,0.95183 4.1746,1.33356 6.31114,1.80137 2.0215,0.44334 4.08816,0.73306 6.07546,1.30159 1.77218,0.50571 3.35382,1.40203 5.06463,2.05479 2.26265,0.86316 4.48438,0.93131 6.93151,1.05141 2.37693,0.11634 4.35323,-0.33461 6.65292,-0.77314 1.87626,-0.35588 4.12075,-0.74484 4.82955,-2.58694 0.78914,-2.05276 0.17869,-4.60542 -0.69482,-6.5394 -2.36888,-5.2469 -6.84935,-12.37805 -12.87478,-14.60854 -1.57235,-0.58191 -2.31898,-1.21775 -3.64615,-2.08303 -1.58844,-1.03743 -1.68056,-0.85386 -3.81285,-0.96335 -1.42277,-0.072 -2.73932,-0.39986 -4.14639,-0.4351 -1.66021,-0.039 -3.16039,0.36837 -4.83073,0.41422 2.0392,-1.27683 4.92331,-1.08864 7.04207,-0.47446 -0.98296,-0.98466 -1.42962,-2.37319 -2.38492,-3.41185 0.55742,1.05274 1.81413,3.13649 2.95714,3.7203 0.96254,0.4922 2.44141,0.053 3.47825,0.30931 2.14597,0.52999 3.58417,2.38396 5.70318,3.21142 2.65473,1.03714 5.9025,2.57719 7.74834,4.76364 1.81787,2.1528 2.60876,5.25188 3.59912,7.7927 0.8821,2.26496 2.05585,4.44547 2.18396,6.87426 0.10479,1.99677 0.58017,3.34004 2.23386,4.8254 2.73119,2.45295 6.70077,4.02834 10.3667,4.92681 3.38914,0.83077 6.71732,1.31385 10.18611,1.16656 3.39869,-0.14424 4.29532,-0.0795 6.45589,-2.26787 5.84466,-5.92003 9.19133,-11.61169 10.82132,-19.6681 0.40599,-2.00386 -0.64218,-4.34801 -2.08712,-6.01294 -1.92597,-2.22219 -5.84772,-2.00249 -8.356,-3.33314 -0.006,-0.0145 0.10423,-0.26362 0.0907,-0.34424 -6.92985,-2.44021 -13.54108,-4.02064 -14.21187,-11.71349 -0.30124,-3.45157 0.96831,-6.69032 2.74476,-9.68093 4.2811,-7.20328 -3.94185,-9.07379 -9.04115,-11.75424 -1.45464,-0.76588 -3.58144,-2.45705 -5.36315,-2.50877 -2.97359,-0.0845 -5.15631,2.53756 -7.99107,2.81119 -3.19254,0.30752 -7.26669,-1.02762 -10.32179,-1.76531 -2.32559,-0.56319 -4.35845,-1.07062 -6.32441,-2.19363 -2.00035,-1.14195 -3.57258,-1.91181 -5.92156,-0.82 -2.99298,1.38928 -3.25549,5.18185 -6.51616,7.19669 -3.14793,1.94587 -6.8567,3.25685 -10.16321,4.92085 -3.54835,1.78468 -11.10593,4.55397 -12.40058,8.41445 -0.91129,2.71498 -0.84558,6.78771 0.4786,9.34176 -1.44081,-3.66828 -0.27673,-7.05534 -0.503,-10.63177 -0.0996,-1.57223 -0.53626,-1.61988 -2.01753,-2.26068 -2.89095,-1.24864 -5.81232,-1.71867 -7.87028,-4.21828 1.57232,2.14889 6.34863,4.3212 9.17983,4.78291 1.64647,0.26812 4.83811,-1.53918 6.43542,-2.11172 3.54537,-1.2714 6.73193,-3.42921 10.0321,-5.13791 3.63791,-1.88348 7.69391,-3.0412 9.72392,-6.65132 1.13096,-2.01141 2.67261,-3.54625 1.90675,-5.89973 -0.63392,-1.94848 -2.60888,-3.75794 -4.34883,-4.91666 -1.95526,-1.30043 -4.1814,-2.32584 -6.47479,-3.02101 -1.77837,-0.54067 -3.67137,-0.6851 -5.44235,-1.23855 -1.56628,-0.49045 -2.92623,-1.32794 -4.5215,-1.79164 -3.26668,-0.9486 -6.83894,-0.87759 -10.22238,-0.66152 -1.59562,0.10019 -3.23484,0.0706 -4.78903,0.47881 -1.49847,0.39472 -3.03492,0.91566 -4.50115,0.39636 -3.07056,-1.08512 -4.45012,-4.90824 -4.63847,-7.56885 -0.27254,-3.82599 1.24927,-6.85933 2.31711,-10.41238 0.7107,-2.36414 1.49848,-4.70709 1.36876,-7.18163 -0.0916,-1.7389 -0.39694,-1.81588 -2.32388,-2.07859 -1.68952,-0.23043 -3.42001,-0.34529 -5.12427,-0.15477 -4.45228,0.49785 -6.7736,4.54302 -8.04817,8.02337 -1.63649,4.47164 -2.9428,8.63908 -3.50697,13.32946 -0.44925,3.72637 -0.53625,7.07305 0.25421,10.73115 0.72636,3.35526 0.53227,6.3764 5.05079,5.80544 -0.88555,-0.21585 -1.98753,0.33037 -3.00566,0.12245 1.08518,2.93569 2.91286,5.96094 4.58692,8.65458 -3.70348,-4.40193 -6.6603,-10.32224 -7.46844,-15.85285 -0.61247,-4.1946 0.26461,-9.66027 1.60639,-13.73478 1.71948,-5.21894 1.37917,-12.47584 7.26081,-15.6501 0.40236,-0.55465 1.46313,-1.19761 2.32056,-1.41762 -7.09444,0.78499 -15.41402,-1.27878 -16.66499,-8.58753 1.13376,3.27871 5.01979,7.26287 8.75955,8.35008 2.13022,0.61984 4.66208,0.0471 6.86781,0.25384 1.47113,0.13843 2.66465,0.0875 4.19977,0.0632 2.83903,-0.0448 5.64919,0.33833 8.37852,-0.40792 3.74043,-1.02321 7.92765,-3.00107 11.2767,-4.80403 -3.9834,1.45848 -7.63764,3.71912 -11.52159,5.36788 -1.67021,0.70907 -2.23312,0.91177 -2.71881,2.51758 -0.59245,1.95616 -0.63389,4.00003 -1.0069,5.9907 -0.3625,1.93013 -1.31279,3.59003 -1.85326,5.47038 -1.09259,3.80762 -1.25524,8.08166 1.61471,11.27938 3.09825,3.45123 8.12355,0.31095 12.72122,0.10005 5.9938,-0.27676 9.88461,2.07606 15.08657,3.86184 3.1854,1.09499 7.25616,1.54297 10.05214,3.43199 2.64282,1.7843 3.71794,4.4835 6.9104,5.93482 6.52901,2.96951 14.59915,6.06759 21.9905,5.56035 7.54383,-0.51452 9.46402,-7.51398 10.63008,-13.24814 0.68303,-3.35706 0.96065,-6.76129 1.34748,-10.15165 0.35913,-3.14354 1.50037,-6.01408 1.70763,-9.17275 0.52112,-7.92008 -5.25735,-8.54562 -12.76036,-10.77128 -3.73054,-1.10489 -9.81334,-3.89252 -13.68211,-3.74572 -2.28112,0.0857 -6.12555,2.17208 -8.62971,2.62844 2.56779,-1.16636 5.22925,-2.21344 7.9358,-3.09274 -5.19065,-1.52885 -4.13881,-4.42135 -7.32266,-7.76215 3.71992,10.7631 22.34009,8.7521 30.34036,14.09025 7.59733,5.06891 3.92763,12.34141 2.93653,20.40137 -0.52399,4.25832 -1.28594,8.90508 -2.75266,12.99227 -1.37561,3.83352 -2.45392,4.18167 0.74788,6.73431 1.61864,1.29016 3.96713,1.40598 5.8771,2.26303 3.69877,1.65953 8.33324,4.63948 7.00266,9.0946 -0.85415,2.86406 -2.49608,5.45715 -3.05282,8.5035 -1.40933,7.71694 5.43686,13.53785 13.11542,15.18908 3.66908,0.78837 8.1708,1.47691 11.82752,0.23687 5.21105,-1.76906 4.77696,-5.82039 7.94406,-9.25466 -1.73629,-1.16755 -2.59402,-3.1904 -2.54661,-5.21489 -0.18867,8.03463 16.47985,-1.89052 19.07594,-3.52382 6.27514,-3.94789 6.96904,-9.88787 10.25375,-15.73437 2.79038,-4.96706 0.46625,-6.73692 -0.64316,-12.32315 -1.17193,-5.91052 1.65163,-11.59586 2.48421,-17.38514 1.1553,-8.04502 2.3848,-26.26541 -9.597,-27.92562 -3.76665,-0.52291 -8.25163,1.18405 -10.91813,3.84396 -1.51919,1.51501 -2.04453,3.45842 -4.02168,4.56968 -2.93139,1.64931 -6.32356,-0.30528 -9.08092,1.51463 2.91843,-0.58269 5.86574,-1.06846 8.78207,-1.66475" transform="matrix(1,-0.00051,0.00051,1,-348.933,-12.8338)" fill="#fb8f7c" stroke="#c2574a" stroke-width="1.2" stroke-linejoin="round" vector-effect="non-scaling-stroke"/><path d="m 588.77729,685.89696 c 0.70707,-0.14596 -2.89732,2.79081 -6.23258,4.32473 -3.66565,1.68587 -7.36201,0.27281 -7.99282,0.87757 -0.56155,0.53835 2.37282,-3.53231 5.89104,-4.66626 3.41231,-1.09982 7.13875,-0.28924 8.33436,-0.53604 z" transform="matrix(1,-0.00051,0.00051,1,-348.933,-12.8338)" fill="#c2574a" opacity=".5"/></g>
+<g id="large-intestine-front" class="organ" data-organ="large-intestine">
+<path d="m 558.09988,728.94334 c 0.98356,0.69931 2.03351,1.33621 3.15257,1.90287 5.1141,2.58964 10.14479,3.42913 15.92177,3.14924 3.29715,-0.15974 9.25869,-3.29663 10.99606,-4.07257 0,0 2.01256,2.09513 2.49162,3.44294 2.46372,3.95894 6.24111,6.48849 8.9019,10.3059 0.53081,0.76155 3.03202,-0.13241 2.59497,-2.19479 -3.75102,-5.2774 -6.94411,-6.14224 -9.18132,-10.54491 -0.79142,-1.82 -1.38045,-2.65712 -1.86791,-3.72845 1.83863,-1.77711 4.83433,-5.88539 6.06099,-8.74851 2.04991,-4.78689 4.2506,-9.95987 4.8397,-15.21842 -0.66866,-8.39934 -3.61463,-17.30035 -7.91569,-17.51913 -3.51824,-0.0458 -6.01958,0.22999 -6.01958,0.22999 0.76947,-2.9065 1.25992,-7.32463 0.60256,-10.16887 -0.0279,-3.38604 -2.56886,-8.04754 -9.95947,-7.16595 1.58846,-1.24828 1.55283,-4.43943 1.55283,-4.43943 -2.45904,-6.89383 -7.05145,-9.906 -10.08075,-10.72916 -1.92909,-0.41071 -4.07398,2.07444 -5.51821,3.00685 3.28662,-2.12043 3.10888,-3.50005 3.60765,-7.73265 0.30299,-2.57 -0.5719,-9.56623 -3.47312,-10.54202 1.48019,-2.17761 5.68035,-8.23042 1.38083,-10.00902 1.53651,-2.34601 4.2918,-11.17009 1.45939,-13.414 2.01897,-3.52131 3.6741,-7.36119 2.97665,-11.46778 -0.30369,-1.79105 -0.61482,-3.24599 -0.4826,-5.1082 0.0244,-0.3432 -0.0361,-4.85121 0.1545,-4.65554 -1.69999,-1.73687 -2.57148,-3.90767 -4.48666,-5.58173 7.03677,6.15292 4.33216,10.23727 12.54967,10.97574 -0.5958,8.59816 16.63455,15.93194 21.04979,14.25949 0.62505,-0.1657 0.66113,-0.81487 1.4904,-0.82018 1.23394,-0.009 3.25357,1.613 4.38069,2.08117 2.97131,1.23374 9.15265,3.56209 11.9806,0.98922 4.1324,6.10548 14.84077,5.86798 19.91314,1.16304 1.55352,1.17919 13.0505,-0.83108 12.23292,-3.80995 4.37091,3.41264 13.95543,-2.24589 13.92038,-3.3743 2.32764,3.97176 20.26186,-2.55504 20.82635,-6.89678 3.24977,0.17463 15.69056,-1.54693 13.54393,-7.21904 2.75903,1.49712 7.54539,-1.5533 11.04333,-3.34911 3.46479,-1.77879 2.20655,-4.11012 3.32612,-4.81537 1.47088,-0.92504 7.43212,0.38094 9.20593,-0.31458 4.26365,-1.6718 5.20594,-1.1967 7.08586,-4.60126 3.58343,-6.21988 2.42196,-5.70249 7.74463,-8.6634 2.14752,-1.19382 2.45769,-7.97612 5.63057,-8.39728 7.24261,-0.9597 10.16725,-7.83377 9.99541,-14.64393 16.03242,6.99353 14.22826,-17.07851 4.574,-23.33424 -7.74714,-5.70543 -29.44228,11.21425 -34.51323,22.58069 -3.62198,-1.13582 -5.25648,-0.94735 -8.67998,0.62306 -4.08859,1.85098 -4.91756,4.25995 -5.11601,6.18199 -1.99382,-4.38034 -11.53299,5.31047 -14.44362,10.10266 -3.27187,-1.69841 -7.99059,-3.1795 -11.47329,-1.50785 -2.86994,1.37662 -8.15054,4.75564 -7.15849,8.58878 -0.82119,-0.28699 -1.48007,-1.08102 -2.2191,-1.32353 -1.96753,-0.64384 -7.90944,-2.15894 -9.79279,-1.57214 -2.57779,0.80326 -10.38982,2.60094 -9.03312,6.41663 -1.74125,-2.00647 -7.36679,-3.20933 -11.5731,-1.07041 -4.09293,2.08128 -5.93219,5.02185 -5.22814,5.52036 -0.0498,0.0923 -0.16943,0.40781 -0.20092,0.5242 -1.78522,-1.20077 -3.14736,-3.12336 -7.3402,-1.94862 -2.85783,0.80071 -6.29107,-3.31413 -7.16702,0.0496 -3.5129,-3.67565 -10.30064,-8.46276 -15.14769,-3.14324 -2.82709,-4.74058 -9.63143,-6.71548 -13.98422,-4.91233 0.85164,-3.03451 -4.42395,-9.56759 -6.46656,-12.57776 -1.73271,-2.55442 -2.26523,-5.8767 -5.39788,-7.25593 -3.02389,-1.3303 -10.58543,-0.27207 -12.12745,3.00117 -1.03604,-1.44252 -6.0271,-2.86836 -7.95852,-3.17873 -3.72893,-0.60141 -7.69575,1.01945 -10.58484,3.2982 -3.24147,2.55407 -5.40869,5.32979 -6.50343,9.44617 -0.59772,2.24645 -1.79354,5.86385 -0.64222,8.00088 -2.98485,0.96941 -5.025,4.40244 -5.77022,7.3271 -0.44393,1.74053 0.004,3.82536 -0.43861,5.44025 -0.28,1.01823 -0.37187,0.82685 -1.14254,1.80122 -2.37249,3.00003 -4.30134,4.76206 -4.43342,8.98692 -0.0506,1.60772 0.73232,3.8314 0.46937,5.3071 -0.37685,2.11733 -2.33823,3.59745 -2.59706,6.00996 -0.17452,1.62525 0.32079,2.90491 0.47019,4.51433 0.12139,1.31186 0.21902,2.88023 -0.13315,3.95512 -0.28499,0.87028 -1.21395,1.58225 -1.4926,2.49821 -1.0694,3.5112 -1.6097,9.63169 2.56614,13.20834 -5.40449,1.53132 -3.49657,5.30827 -1.92912,8.82067 -4.14264,0.54262 -4.57402,9.29105 -3.97705,12.28606 0.76457,3.83381 3.45982,6.38522 9.24919,7.57562 -8.76076,-0.35236 -6.32299,10.2563 -4.58741,16.14623 0.76159,2.58241 2.02465,5.5161 4.44821,7.11467 5.87987,3.44378 8.73239,-1.86442 8.23785,0.24215 -2.2554,2.9885 -4.18328,7.47621 -2.29656,11.30496 0.77342,1.56841 2.89199,5.17534 4.84202,5.20006 0.70887,10.57983 4.22557,21.90515 13.06419,28.19128 z" transform="matrix(1,-0.00051,0.00051,1,-348.933,-12.8338)" fill="#86cf9f" stroke="#3f8f5d" stroke-width="1.4" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+<path d="m 545.98922,701.2581 c 8.17059,2.00098 9.78887,-5.27411 15.3602,-8.81511 0.50681,0.24228 1.04026,1.14542 1.44332,1.55393 0.54105,-0.20722 0.83482,-0.99486 1.42668,-1.03148 5.21781,8.82576 7.50887,4.44113 9.68834,-0.88831 -6.1687,5.6693 -18.68068,-12.73181 -12.4677,-16.65486 5.11541,-1.24067 13.82288,-3.24475 17.69262,-8.68366 -10.16033,9.56332 -25.49642,2.18548 -24.43284,-9.11185 6.58119,1.46988 9.82082,-2.88342 11.47208,-9.27677 -9.25144,13.15236 -20.18204,-0.59286 -15.03258,-11.18339 4.2179,2.75085 10.93214,0.84703 13.58551,-3.37187 -10.18366,5.01369 -15.16304,0.66795 -13.62079,-9.90848 1.88937,1.33166 3.71636,1.10706 6.10918,0.88132 -7.19919,-2.71254 -5.60223,-12.1309 -3.50975,-17.83781 3.01425,1.12301 5.19646,3.10547 8.26915,1.9847 -3.5478,-1.96771 -6.68715,-4.91966 -5.53705,-9.46737 1.63944,-1.327 2.0486,-4.68071 3.75807,-5.62316 3.0024,-1.65433 5.54963,1.51246 7.87865,-1.67484 -2.35482,-4.01614 -6.97857,-6.64858 -10.29449,-9.94639 -2.89181,-2.876 -4.77524,-5.95491 -7.54905,-8.99443 0.88795,8.68084 0.25508,17.32629 -9.98982,9.49148 0.13545,5.2218 7.64485,6.84258 11.90632,7.30411 -1.67395,7.11633 -4.61083,13.87668 -13.81078,10.12446 2.88516,3.20138 7.08813,3.48561 11.13351,3.36038 0.33616,7.2969 -5.54175,14.12707 -12.74406,13.81326 2.92422,1.38544 7.31253,2.42345 10.11277,-0.22981 0.009,0.67477 -0.15988,1.39324 -0.36786,2.08409 0.2431,0.0312 0.40944,-0.0669 0.49622,-0.29222 -1.26009,6.24402 0.25842,14.22344 -8.75975,13.46403 2.18546,1.22667 4.742,1.37524 7.14356,0.57573 1.3286,9.32834 -0.0459,11.27445 -9.39064,8.19552 2.65187,2.34318 7.11003,3.03436 10.69248,3.3391 -1.2009,8.2337 3.48469,19.61213 -9.70127,16.41953 3.23351,2.05936 6.96623,1.48523 10.22022,0.25155 2.66641,4.653 6.1501,9.39879 6.2563,15.02229 -5.02891,2.04179 -12.71544,9.7069 -18.36763,7.92044 4.77178,3.5592 17.01905,-5.68317 20.30639,-3.70257 1.09195,0.65766 4.42742,8.20046 3.86491,9.54162 -2.92438,6.96857 -9.54698,11.89959 -14.29633,9.95182 0.46646,4.15897 0.0838,4.0514 1.26038,6.40762 -0.66037,-2.50166 -0.0833,-2.85967 -0.20447,-4.9926 z" transform="matrix(1,-0.00051,0.00051,1,-348.933,-12.8338)" fill="#2f7a4b" opacity=".18"/>
+<path d="m 739.65938,539.1242 c 5.55875,0.57252 17.78413,11.57723 18.17022,-1.86267 -0.14585,5.10547 1.38317,15.37824 -7.52285,11.96029 0.44317,10.16623 -4.205,13.25296 -10.63616,15.59251 -2.53154,0.92134 -2.41946,6.18853 -4.46594,7.42165 -2.95598,1.78312 -4.54299,8.57243 -7.76107,10.51746 -4.55512,2.75207 -9.25314,10.29839 -14.47291,9.57151 -0.38961,6.92321 -9.85611,6.55572 -15.23334,2.762 1.71453,4.87865 -7.86143,7.42634 -13.35043,7.09836 0.33087,3.13716 -17.10111,11.76192 -20.63153,7.00251 -2.99553,2.78198 -10.25571,6.06997 -14.54255,3.14004 0.78771,4.8499 -11.55856,4.37335 -11.55856,4.37335 -15.97163,7.20649 -13.94842,1.63141 -20.72052,-1.4706 -2.25246,0.75419 -6.896,1.678 -12.28345,-1.40364 -2.46287,-0.74898 -1.78185,-1.68882 -4.54591,-1.63836 -8.36137,1.08479 -23.24878,-3.98047 -20.4026,-13.96812 -3.66255,1.16515 -4.13046,-4.12128 -7.79354,-5.34605 -2.17344,-0.72433 -8.63814,-7.10152 -9.45355,-7.12079 5.00436,0.12063 9.22404,-6.15454 13.43585,-8.13668 -1.95369,2.46752 -4.65191,5.03249 -5.4804,7.83576 2.37487,0.56241 2.13079,2.2495 4.40053,3.34044 1.66011,2.49455 4.48525,5.32906 6.93125,6.09097 1.11438,11.75214 10.86023,7.99526 15.91565,-1.14017 -0.90406,2.69052 -6.87745,10.54435 -6.17664,12.26875 2.35116,5.78964 10.05924,0.59956 12.27554,-1.01411 5.06197,8.92852 10.32568,1.51009 10.86837,-5.51047 0.80735,-10.46938 -7.98902,-11.68613 -16.05275,-13.68868 0.12727,1.39065 -0.31646,3.01431 -0.009,4.42353 -7.11271,-2.43003 -21.781,-18.08102 -20.99371,-21.66047 -0.0141,2.16517 -0.59854,4.34617 -0.74864,6.28268 0.33077,-2.22276 -1.44355,-5.35988 -4.40296,-6.4263 0.2079,-4.09458 -3.5978,-8.81335 -5.72277,-12.60036 2.08262,1.45522 4.12853,3.25479 5.88584,5.08814 -0.42959,-0.93107 -0.52862,-2.07285 -0.86903,-2.99753 2.72246,3.15817 9.87523,8.61683 13.54975,4.81421 -0.29819,1.07112 0.0627,2.55741 -0.32821,3.77218 3.95384,3.75715 7.19878,16.54043 7.40493,11.67163 2.29494,1.58626 17.40411,11.77703 15.38777,2.67089 1.38216,6.22468 13.73275,11.12271 17.82828,10.14161 -0.55732,-1.37217 -0.98217,-6.22836 -2.10593,-7.576 3.89164,4.89271 16.93762,8.37114 13.29265,-1.60331 1.34122,1.11437 2.71733,1.62513 3.39441,3.21649 -0.36187,0.66698 -0.84296,0.76028 -1.29193,1.30398 3.02924,2.02557 7.99584,2.6194 11.89731,2.30848 -3.43698,1.36025 -7.07012,2.06499 -10.8285,0.54371 0.91449,2.01514 1.92331,4.12911 2.91204,6.10022 -3.46553,-7.14327 -8.30487,-3.58326 -14.01591,-2.37019 0.9286,1.68088 1.36472,3.30817 2.67833,4.87195 -3.56229,-3.81593 -4.32824,-1.53148 -8.91985,-2.20984 -2.83721,-0.41877 -4.84883,-4.00072 -8.03524,-5.36157 1.57589,2.78673 6.01664,8.74789 1.27825,9.97385 0.48291,2.45046 0.26137,4.88576 -0.26019,7.48161 2.89623,4.42246 18.89182,8.87654 19.5626,3.56411 2.79975,1.82176 7.6418,-0.5274 9.75907,-2.10699 0.002,-0.95445 0.29043,-1.80239 0.44724,-2.62293 6.73321,3.58568 14.63784,0.87327 16.52958,-5.27748 2.12987,2.55691 15.02686,2.59574 17.38875,-1.00404 2.40364,-3.66276 -3.06709,-13.61604 -6.12856,-15.38107 -3.87968,-3.37416 -9.6449,3.67123 -18.48305,-5.67131 5.26441,3.80463 29.36934,5.22306 21.02887,-5.20802 1.46583,1.99475 2.25853,4.13766 4.33105,5.55018 5.16332,-2.53181 15.98134,-4.31951 13.91161,-12.20551 0.0108,1.92131 0.53377,4.55366 1.1956,6.20466 2.30942,-1.20513 4.14146,3.51017 6.5501,2.34924 -5.56858,3.97764 -12.32416,1.69328 -17.78138,5.57274 1.27383,0.84665 2.37048,2.22004 3.65355,2.91948 -5.90256,-3.62704 -8.62649,-2.84488 -13.99331,0.73223 3.90613,-2.60353 6.70436,8.6201 8.71286,9.99662 3.05388,2.09141 14.87352,1.58923 9.71315,-3.47239 -0.30514,-1.10638 -0.15378,-2.82574 -0.36904,-3.879 5.92119,0.20645 12.55925,11.31414 16.51211,2.78377 0.29852,0.25824 0.60168,0.50958 0.90948,0.75404 0.51235,-2.64246 -0.0545,-5.12763 -1.78038,-7.14846 5.42508,5.86381 10.59406,-0.5492 9.31766,-11.30998 4.01226,11.64082 15.68352,9.14819 16.74078,1.3365 0.44277,-0.18619 0.58451,-7.55469 1.4065,-7.86568 6.64168,-5.17646 23.6772,-17.37755 4.99351,-25.84085 -7.14386,-2.75334 -4.57843,16.49593 -10.64383,19.93993 1.13772,2.11387 1.88169,4.3966 2.05043,6.816 -3.88766,-9.32396 -11.54806,-7.81934 -17.56813,-3.86379 0.54944,1.35185 0.73579,3.35219 1.29846,4.50515 -1.33655,-2.55677 -2.2388,-2.87851 -4.45434,-4.28391 4.19703,-2.08612 19.45453,-5.73041 9.51435,-11.24537 -5.08331,-2.81996 -11.34426,0.23864 -10.18589,5.99847 -3.39226,-6.20852 2.03668,-6.51645 6.49988,-9.00022 4.42822,0.4105 6.48814,4.01615 7.58996,-1.84363 3.40162,-1.5759 9.58518,-10.75039 13.65342,-9.10351 -4.74215,0.83549 -16.10493,11.03351 -13.64132,16.66945" transform="matrix(1,-0.00051,0.00051,1,-348.933,-12.8338)" fill="#2f7a4b" opacity=".18"/>
+<path d="m 546.41685,708.13801 c 16.16047,27.34223 28.43225,23.88532 38.45275,17.10337 0.403,-0.27275 0.35748,-4.749 -1.35305,-10.55639 0.84428,0.86572 3.74799,9.39427 3.66219,9.06014 l 0.98008,5.95109 c -9.45888,6.64549 -18.43289,5.04827 -27.25182,0.81449 -8.58298,-5.41051 -12.98588,-13.10107 -14.49015,-22.3727 z" transform="matrix(1,-0.00051,0.00051,1,-348.933,-12.8338)" fill="#2f7a4b" opacity=".18"/>
+<path d="m 597.7097,712.07783 3.92767,-12.29531 c 1.00451,8.41839 -3.46874,20.55418 -10.58762,27.23752 l -4.26921,-12.55146 5.14478,8.09816 z" transform="matrix(1,-0.00051,0.00051,1,-348.933,-12.8338)" fill="#2f7a4b" opacity=".18"/>
+<path d="m 568.2251,557.52693 c 1.25705,0.73491 3.28347,0.99508 4.63783,1.447 -0.21498,-1.42529 0.30686,-1.38874 0.36339,-2.06551 3.0557,11.23521 19.59834,25.12153 28.11563,27.19445 18.44525,4.48918 49.09911,6.87284 66.78842,-0.17452 24.98404,-9.95356 60.41487,-17.80152 68.72408,-42.58523 1.47866,-4.93585 3.3643,-7.95812 6.43279,-12.12878 0.30708,-0.13145 -1.15435,3.84246 -1.72283,4.57601 -1.05382,2.6039 -1.8089,4.43701 -2.81957,7.37267 0.40135,17.61232 -44.4034,36.61555 -69.69895,44.89755 -17.9366,5.87261 -50.30099,7.45039 -68.97849,0.46065 -8.3695,-3.13214 -17.17599,-10.04639 -21.3986,-14.3165 -4.90994,-4.96519 -4.0924,-8.99611 -9.30656,-14.69477" transform="matrix(1,-0.00051,0.00051,1,-348.933,-12.8338)" fill="#ffffff" opacity=".28"/>
+<path d="m 553.77291,580.54411 c 0.37967,9.51278 -3.24011,18.92023 -4.6935,28.23893 -2.72807,17.49709 -3.64409,33.67516 -0.83697,51.2319 1.26617,10.07024 5.74303,24.23222 16.64611,33.98637 4.9207,4.40218 11.42417,8.11399 15.13935,13.90157 4.25861,6.63416 7.43292,16.7859 8.27015,21.75893 0.55806,-0.85608 2.42169,-2.01022 2.29915,-3.03889 -0.70618,-5.92833 -4.7934,-14.58252 -9.30997,-21.64653 -3.24122,-5.06936 -9.29136,-8.70795 -13.8935,-13.43388 -8.96744,-9.20862 -14.08977,-21.7212 -15.72775,-30.61748 -4.42717,-24.0416 -3.80148,-50.62496 7.44964,-72.81151 1.61954,0.37177 3.24459,0.013 4.81941,1.09256 -5.16207,-3.74099 -9.40452,-6.61611 -11.8116,-12.66685 0.45086,2.26594 0.94755,5.14372 1.7022,7.50907" transform="matrix(1,-0.00051,0.00051,1,-348.933,-12.8338)" fill="#ffffff" opacity=".28"/>
+</g>
+<g id="anus" class="organ"><ellipse cx="297" cy="798" rx="7" ry="3" fill="#2d4f8f" stroke="#3f6fb8" stroke-width="1.2"/></g>
+<g id="teeth" class="organ">
+<rect x="279" y="134" width="42" height="22" rx="10" fill="#b8455e"/>
+<path d="M282 135 H318 V141 H282 Z M282 150 H318 V155 H282 Z" fill="#fff" stroke="#9aa3bd" stroke-width="1"/>
+</g>
+
+  <!-- Leader-line labels: left side -->
+  <g class="lab"><text x="112" y="397" text-anchor="end">Oesophagus</text><line x1="118" y1="390" x2="300" y2="390"/><circle cx="300" cy="390" r="5"/></g>
+  <g class="lab"><text x="112" y="637" text-anchor="end">Large intestine</text><line x1="118" y1="630" x2="200" y2="630"/><circle cx="200" cy="630" r="5"/></g>
+  <g class="lab"><text x="112" y="822" text-anchor="end">Anus</text><polyline points="118,815 291,800"/><circle cx="291" cy="800" r="5"/></g>
+  <!-- right side -->
+  <g class="lab"><text x="488" y="440">Stomach</text><polyline points="482,433 368,468"/><circle cx="368" cy="468" r="5"/></g>
+  <g class="lab"><text x="488" y="637">Small intestine</text><line x1="482" y1="630" x2="300" y2="645"/><circle cx="300" cy="645" r="5"/></g>
+  <g class="lab"><text x="488" y="777">Rectum</text><line x1="482" y1="770" x2="308" y2="768"/><circle cx="308" cy="768" r="5"/></g>
+
+  <!-- Inset: inside the mouth (side view) -->
+  <path class="callout" d="M279 150 C220 180 160 200 105 200"/>
+  <g class="inset" id="insetMouth">
+    <rect class="frame" x="-195" y="8" width="300" height="350" rx="18"/>
+    <text class="title" x="-180" y="34">Inside the mouth (side view)</text>
+    <defs><clipPath id="clipMouth"><rect x="185" y="5" width="145" height="232"/></clipPath></defs>
+    <g transform="translate(-178 46) scale(1.3) translate(-185 -5)"><g clip-path="url(#clipMouth)">
+      <path d="m 320.11618,82.686031 c -0.8349,-0.36808 -0.62114,-3.72307 -2.08254,-5.16823 -0.60655,-0.59982 -2.81464,-0.0266 -3.41978,-0.11543 4.53404,4.37567 -6.05716,17.38835 -9.80915,-2.78165 -5.47713,-0.9618 -10.04806,0.15373 -14.69277,-0.65535 -16.63462,-2.89764 -29.22304,-0.44211 -35.7632,-2.99077 -1.57055,-0.61204 -2.41097,-2.07261 -3.43449,-3.38901 -3.64662,-6.43163 -6.63971,-13.1126 -12.54711,-17.16918 -3.61284,-3.74809 0.0725,-13.29794 1.08065,-21.04916 l -2.94758,-1.17889 c -3.03382,10.95497 -4.42821,25.21696 -6.11824,36.70945 -4.81324,10.6946 -12.91438,15.59343 -17.33502,22.20695 l 1.73888,0.90212 c 4.52593,-3.21645 15.25724,-17.17775 19.97537,-17.825 14.20746,4.13008 22.26376,4.83772 40.921,4.13079 3.56399,1.59725 9.28358,3.18079 11.59483,6.69469 3.88886,5.91242 2.13918,7.19429 4.3167,10.57443 1.02878,1.59696 2.92462,3.92938 7.47955,5.89808 10.57179,4.569249 27.57322,15.750899 31.98512,18.464089 2.05258,0.75033 0.95397,-1.83748 1.3878,-3.11058 z" transform="matrix(1,0,0,1,-8.50541,-17.0124)" fill="#f6f0dc"/>
+<path d="m 544.33477,318.80172 c -0.92965,-2.69666 -2.2274,-6.23288 -2.73662,-8.38067 -1.40329,-5.91293 -2.61841,-11.96632 -4.42629,-17.79859 -0.64116,-2.06731 -1.5982,-4.04187 -1.98599,-6.1495 -2.11385,-5.04572 -4.60199,-7.86074 -6.54832,-11.73151 -6.37128,-10.39433 -4.84285,-9.15916 6.87495,-22.42744 5.35981,-4.13394 8.68992,-9.30181 12.1948,-15.11863 0.88378,-1.46781 6.33666,-8.00502 4.1053,-8.58276 1.51297,-9.89355 -2.38906,-25.48626 4.22606,-29.47207 1.54837,-0.13523 4.75241,-1.58018 0.46687,-12.43375 -4.28554,-10.85357 -7.93473,-13.42167 -21.79424,-16.72933 -14.35993,-1.61605 -37.64961,0.23174 -52.39928,-1.9884 -6.0063,-0.70124 -9.52898,-0.88852 -9.52898,-0.88852 -2.05232,0.0213 -1.47552,4.11883 -3.0969,5.51796 -1.94185,0.91842 -18.8964,-6.98024 -18.11832,-6.61237 -0.4886,-1.89593 0.01,-6.16579 0.83977,-7.89572 1.40464,-2.92555 3.73473,-5.39207 5.61184,-8.01047 4.34228,-6.05608 8.82503,-12.73047 13.91399,-18.20521 5.48733,-6.00468 10.2453,-12.34096 18.04122,-9.84822 12.94284,4.44041 20.85465,2.34067 34.64028,2.83465 3.32325,-0.021 9.51017,2.94638 11.03095,6.27678 1.63512,3.58083 2.43637,7.75529 4.45462,10.94026 3.14531,4.96395 17.54849,8.72489 21.09033,12.92671 4.09832,4.86046 6.29505,10.45194 4.76339,16.36083 0.8786,11.90871 0.52738,23.77239 -1.01484,35.42197 -1.11575,8.42818 -2.41097,16.227 -3.65475,23.83519 -1.07616,6.32157 -1.07269,12.99116 -0.10277,18.82726 -3.4896,3.91464 -2.68126,4.12634 -7.61188,10.01525 -0.22246,-1.21713 -1.13401,-2.55456 -2.82832,-2.55187 -2.26893,0.002 -1.67548,1.97993 -1.93289,3.28578 -0.0615,4.82578 0.9021,5.55664 0.17418,9.79918 -0.91134,5.58361 -0.3851,11.21629 0.83673,16.70849 1.3045,5.87865 2.65739,11.62558 3.43431,17.61176 0.0383,0.30042 0.0759,0.60151 0.11157,0.9026 0.34244,2.87209 1.19118,6.01202 1.94221,8.86867" transform="matrix(1,0,0,1,-257.66,-65.9847)" fill="#e7edf9" stroke="#a9b4d6" stroke-width="1" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+<path d="m 483.21892,115.20978 c 0.48121,-1.16807 9.91985,2.66008 11.06439,2.67688 7.46811,0.11559 -0.73256,-11.0812 -5.23178,-11.66456 -4.06371,1.92953 -4.40646,5.52581 -5.83261,8.98768 z" transform="matrix(1,0,0,1,-257.66,-65.9847)" fill="#e7edf9" stroke="#a9b4d6" stroke-width="1" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+<path d="m 554.82999,143.27866 c 9.7581,-2.06883 5.73653,-4.98146 1.57273,-8.614 -1.53503,-1.39456 -2.66092,-7.78074 -4.84584,-8.75659 -4.31473,-1.92617 -9.94389,0.58781 -9.94389,0.58781 -1.91368,7.27063 1.29762,19.04545 13.217,16.78278 z" transform="matrix(1,0,0,1,-257.66,-65.9847)" fill="#e7edf9" stroke="#a9b4d6" stroke-width="1" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+<path d="m 328.01512,114.30577 3.84555,-0.48069 0.64093,5.76833 -3.52509,0 z" transform="matrix(1,0,0,1,-8.50541,-17.0124)" fill="#e3e3e8"/>
+<path d="m 316.15799,106.77489 8.6525,4.96718 -10.41504,80.4362 -2.24325,1.28186 c 1.99315,-21.87744 10.52075,-59.24799 4.00579,-86.68524 z" transform="matrix(1,0,0,1,-8.50541,-17.0124)" fill="#e3e3e8"/>
+<path d="m 300.95688,207.74394 c -8.52244,-11.42132 -1.77798,-19.29086 2.34477,-25.30814 0.49716,-0.72562 0.39928,-1.94006 0.40079,-2.72978 0.002,-0.80044 -1.39213,-0.091 -1.37542,-0.81457 0.3056,-13.23051 1.94249,-25.86372 4.93258,-28.19706 4.56204,-0.56168 2.12345,-8.28314 1.72877,-11.03903 0.89181,1.08276 5.28114,0.37237 7.73232,0.20381 0.54882,3.16856 -1.47518,18.47955 -1.47626,20.05693 -0.002,3.11163 -6.7617,27.05518 -3.60922,42.13517 l -7.1988,9.30957 c 0.35014,-1.69277 -2.47103,-3.95747 -3.47953,-3.61695 z" transform="matrix(1,0,0,1,-8.50541,-17.0124)" fill="#d9d2cc"/>
+<path d="m 292.85247,145.08617 c 2.75148,2.89799 4.12319,7.18651 5.31881,10.93266 1.09683,3.43633 2.82272,9.3842 0.9194,12.8501 -2.22188,4.04657 -13.17169,7.98753 -16.46352,13.18571 -3.90625,5.268 -5.75195,11.62126 -11.73343,13.15494 -1.01496,0.81511 -0.36131,5.05959 -1.66096,5.06466 -5.44817,0.0213 -24.4536,-3.95957 -31.7825,-5.53402 -0.8814,-0.18935 1.68752,-3.01916 0.99667,-3.0151 0,0 -1.48855,-6.10839 -2.24124,-16.2356 0.94258,1.18046 11.8583,-6.84225 10.95305,-8.88926 -2.64059,-4.41823 -9.64895,-9.638 -11.03007,-13.1906 -1.01886,-2.62311 1.55398,-7.10276 3.34305,-8.34677 8.5444,-8.99441 21.98993,-9.87188 29.18188,-9.86518 9.08266,0.008 17.6234,3.62283 24.19886,9.88846 z" transform="matrix(1,0,0,1,-8.50541,-17.0124)" fill="#f5cccc"/>
+<path d="m 283.61721,122.70064 c 9.24816,2.04548 18.36336,2.75212 23.57128,21.95172 0.005,2.10437 -0.0119,4.00291 -1.28185,3.55649 0,0 -1.45352,-1.42169 -1.82601,-2.47651 -3.75581,-10.63587 -9.85204,-18.23318 -19.98272,-21.07752 z" transform="matrix(1,0,0,1,-8.50541,-17.0124)" fill="#f5cccc"/>
+<path d="m 299.66539,210.94249 c 0.79323,-3.6216 2.29644,-1.23582 3.00247,0 l 0.0566,10.31038 c -1.549,-2.78421 -1.75562,-0.64638 -2.49261,-0.45321 z" transform="matrix(1,0,0,1,-8.50541,-17.0124)" fill="#f5cccc"/>
+<path d="m 225.94765,120.38319 0.64092,6.26041 c -4.33039,4.60233 -4.35827,9.96427 -4.64671,16.18338 -1.41918,2.8841 -3.92691,-0.87261 -4.96718,-0.64092 0.89374,-5.65989 2.79426,-9.36247 2.04375,-17.11403 0.32152,0.50712 3.10048,-1.46393 3.77459,-5.4414 0.20077,-1.18458 2.51665,1.3799 3.15463,0.75256 z" transform="matrix(1,0,0,1,-8.50541,-17.0124)" fill="#f5cccc"/>
+<path d="m 227.90247,190.52598 1.08958,-13.6643 c -5.19648,-5.64914 -5.22993,-12.23068 -5.57606,-19.86435 -1.70302,-3.5401 -2.78951,0.28439 -4.03784,0 1.24318,8.05286 1.47722,15.53415 5.54628,22.02103 0.89621,1.42874 1.658,10.17988 2.97804,11.50762 z" transform="matrix(1,0,0,1,-8.50541,-17.0124)" fill="#f5cccc"/>
+<path d="m 232.84381,139.74664 c 0.79983,0.73045 1.68653,0.76593 2.68295,-0.0763 0.83438,0.48616 1.66877,0.97763 2.50315,-0.0712 1.08318,0.42413 2.13448,0.65703 3.02313,-0.086 1.33065,0.84602 2.47674,0.40004 3.6147,-0.10283 l 1.32434,-0.0377 c -5.21226,2.87028 -6.9145,4.7819 -9.10703,7.65219 l -1.72249,0.0821 0.14147,-1.67472 -1.25564,1.72783 -3.57656,0.17049 1.26965,-6.79029 c 1.52184,-0.72227 1.10233,-0.79354 1.10233,-0.79354 z" transform="matrix(1,0,0,1,-8.50541,-17.0124)" fill="#f3e7c4"/>
+<path d="m 234.26642,162.68711 c 0.5172,0.51672 1.03439,0.74042 1.55159,0.0842 0.4607,0.3402 0.97115,1.0287 1.24596,0.0676 0.46594,0.30529 0.90867,0.72665 1.56402,0.0849 0.71075,0.79357 1.42151,0.47824 2.13227,0.11576 1.13629,0.38554 2.26847,0.75052 3.21243,0.1744 -3.85266,-3.09689 -5.90212,-5.29811 -8.09466,-8.1684 l -5.26408,0.13675 c 0.93787,4.23764 1.79749,5.28472 3.65247,7.5047 z" transform="matrix(1,0,0,1,-8.50541,-17.0124)" fill="#f3e7c4"/>
+<path d="m 300.78633,207.89143 10.15689,-10.28138 c 0.79938,6.31831 2.98781,13.46761 3.30911,21.99026 0.78338,20.77971 -0.10359,53.86479 -3.36736,81.9743 -0.41586,3.58164 -0.27856,12.24857 0.0984,15.84723 6.32367,60.36964 9.55229,106.68853 9.88949,115.75434 -5.58931,-0.27022 -10.45492,0.54509 -16.76792,-0.81067 -6.44873,-25.40914 -11.80958,-68.67098 -6.01658,-115.77883 0.42757,-3.47696 1.23528,-10.59348 0.57233,-13.97205 -8.16935,-41.63308 4.19128,-88.7211 5.39662,-91.94061 -0.20287,-1.4231 -1.9273,-3.12979 -3.27096,-2.78259 z" transform="matrix(1,0,0,1,-8.50541,-17.0124)" fill="#f4a6bd" stroke="#c25e7f" stroke-width="1.4" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+<path d="m 301.93187,179.92793 c -1.87813,-1.18485 -11.72755,13.3001 -10.37198,5.71774 1.08675,-6.0796 9.20286,-11.34105 9.32921,-17.40721 0.0491,-2.36907 -4.26251,-20.23259 -6.1087,-21.25415 -5.62239,-9.03898 -18.89199,-11.90922 -23.83729,-12.36141 -13.84745,-1.26618 -36.75587,7.48473 -35.0939,18.80457 0.59473,4.05081 13.93009,12.29428 10.49646,14.16601 -1.80923,0.98527 -3.83364,1.98644 -5.83777,1.52271 -3.09491,-0.71576 -3.55461,-3.27973 -6.11254,-4.46797 -0.2574,1.37238 0.3147,1.2156 0.10838,2.49456 -3.01002,0.18071 -5.10765,-5.67994 -6.24606,-4.94208 -0.26821,0.17383 0.16479,7.03811 -1.31379,4.27044 0,0 -0.53864,-3.7575 -0.97415,-5.78448 -0.46373,-2.15737 -0.36223,-4.11988 -1.21039,-5.57829 -2.41074,-4.14805 -0.9162,-21.81653 1.15637,-26.31193 1.26122,-1.28261 -1.12215,6.53254 0.74732,7.7761 2.5381,1.68832 3.74406,1.78684 6.03727,2.60432 1.97109,-0.94582 2.34032,-10.11165 6.82995,-11.40002 15.31137,-2.96877 36.15142,-3.12228 45.88725,-1.00205 11.97703,2.60831 14.86766,12.9092 19.07178,22.06459 0.74427,0.8743 1.4849,1.76688 2.49409,1.31656" transform="matrix(1,0,0,1,-8.50541,-17.0124)" fill="#f59a9a" stroke="#c86464" stroke-width="1.2" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+<path d="m 230.49486,155.28057 c 0,0 -0.90348,-0.27296 -1.08337,0.0845 -1.17439,2.33376 -0.88552,9.90583 -0.53934,12.81226 0.53443,1.55665 2.28953,6.42358 3.15764,7.28223 0.58141,-0.0138 1.7307,0.24844 1.64583,-0.54348 -0.25762,-2.40391 1.17909,-8.18513 1.12694,-9.43982 -0.44156,-3.79992 -2.11624,-3.87718 -3.10597,-6.81828 -0.39875,-1.11668 -0.66409,-1.56627 -1.20173,-3.37744 z" transform="matrix(1,0,0,1,-8.50541,-17.0124)" fill="#ffffff" stroke="#7b84a3" stroke-width="1.2" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+<path d="m 227.24573,139.11141 c 0.036,1.03353 0.22191,6.05796 1.40641,8.16608 0.27743,0.49374 1.52012,-0.008 1.52012,-0.008 0,0 1.74906,-9.58527 2.69412,-10.66114 -0.49409,-2.15507 0.30822,-7.04993 -0.15565,-7.73711 -0.2982,-0.44174 -0.98101,-0.46527 -1.65638,-0.41589 -2.44916,1.96316 -4.50197,6.80054 -3.80862,10.65569 z" transform="matrix(1,0,0,1,-8.50541,-17.0124)" fill="#ffffff" stroke="#7b84a3" stroke-width="1.2" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+<path d="m 383.29838,255.12953 c -0.295,3.39 -2.319,11.651 2.256,13.259 3.273,1.15 7.734,-2.624 10.002,-4.555 2.973,-2.533 6.379,-4.806 8.369,-8.264 1.754,-3.049 2.42,-6.211 3.792,-9.357 2.251,-5.161 2.02256,-12.9792 -4.09644,-17.8332 -3.85,-3.056 -6.01556,-4.0178 -11.03156,-3.3498 -3.002,0.399 -6.291,1.496 -8.697,3.381 -0.79689,0.62491 -1.19105,4.66333 -1.12076,6.14929 0.30497,6.98031 1.01993,14.29597 0.52676,20.56971 z" transform="matrix(0.9997,0,0,1.12339,-106.119,-141.899)" fill="#ffd34d" stroke="#c7960d" stroke-width="1.2" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+<path d="m 382.91905,248.27749 c -1.26934,2.73575 -2.87055,3.68126 -2.3583,6.99059 0.75725,4.89391 7.16733,5.22111 9.96935,5.59622 3.82565,0.51183 9.76629,1.01663 12.2385,-4.00113 2.70006,-5.48169 1.43141,-11.48454 -3.52584,-12.18685 -4.05266,-0.57375 -7.17076,0.82981 -11.19551,0.78909 -1.64589,-0.0166 -3.28318,0.2323 -5.1282,2.81208 z" transform="matrix(1,0,0,1,-124.17,-82.8795)" fill="#ffd34d" stroke="#c7960d" stroke-width="1.2" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+<path d="m 381.19259,250.49164 c -5.9194,-2.52639 -8.52159,-5.63677 -14.09606,-9.75552 -2.51816,-1.86059 -6.1249,-5.81365 -6.09324,-6.11535 -0.28,0.12627 -0.56932,0.32824 -1.0816,0.33461 1.37558,1.68296 2.22748,3.18811 4.43973,4.88138 l 10.14153,7.76241 c 1.37659,1.17207 4.94501,3.29737 6.18399,3.94754" transform="matrix(1,0,0,1,-124.17,-82.8795)" fill="#ffd34d" stroke="#c7960d" stroke-width="1.2" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+<path d="m 382.77162,235.18555 c -6.36636,-0.14271 -13.89989,1.37653 -19.35755,1.97969 -3.66361,0.40489 -7.08881,1.07358 -12.06921,2.43377 0.628,0.321 2.17358,-0.58304 2.20585,2.13689 4.25733,-1.23829 3.81362,-1.66028 12.88667,-2.99193 4.03595,-0.59235 12.81807,-2.18597 16.57507,-1.53481" transform="matrix(0.9997,0,0,1.12339,-106.119,-141.899)" fill="#f2b52a" stroke="#c7960d" stroke-width="0.8" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+<path d="m 369.17629,256.38271 c 0.17785,-0.32592 3.18464,-1.67903 3.98964,-1.63315 3.4082,-0.0436 6.2232,1.74362 9.53405,2.35276 2.89448,0.51049 9.9841,-0.24963 12.81861,1.3217 3.5529,1.96958 -0.48663,6.09413 -1.07882,6.82791 -1.83474,2.27342 -25.43655,2.75492 -26.38372,1.88281 -1.04507,-0.47772 -1.18503,-8.74317 1.12024,-10.75203 z" transform="matrix(1,0,0,1,-135.016,-102.069)" fill="#f2b52a" stroke="#c7960d" stroke-width="0.8" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+<path d="m 249.25421,12.478801 c -9.40907,3.76094 -17.82413,15.97861 -19.22474,25.74119 -1.18218,8.24033 -0.52624,16.64465 -2.60564,24.76937 -1.34818,5.26572 -5.98618,9.68261 -9.4178,14.22248 -5.2012,6.88139 -10.89302,13.90996 -15.52698,21.18855 -6.22679,9.781389 -8.05272,16.886109 4.27248,21.240489 3.75825,1.3287 6.33066,0.94858 8.57943,4.68263 2.11166,3.50757 -1.62534,14.46054 -2.09311,18.15494 0,3.30637 4.02105,5.90532 9.95212,3.19515" transform="matrix(1,0,0,1,-8.50541,-17.0124)" fill="none" stroke="#e6ab98" stroke-width="2.2" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+<path d="m 223.5945,152.55819 c -12.28053,-4.14808 -7.45999,7.73731 -6.89897,12.28115 0.89266,7.23378 -3.78722,13.66459 -3.43742,20.74161 0.71977,14.51138 22.37216,19.06785 35.50634,20.50499 6.7477,0.73869 13.47315,-1.51256 15.94795,5.4954 2.26561,6.4164 5.53483,12.53712 8.7543,18.97514" transform="matrix(1,0,0,1,-8.50541,-17.0124)" fill="none" stroke="#e6ab98" stroke-width="2.2" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+    </g></g>
+    <g class="lab"><text x="-180" y="345">Teeth</text><polyline points="-150,330 -122,214"/><circle cx="-122" cy="214" r="4"/></g>
+    <g class="lab"><text x="-45" y="345">Salivary glands</text>
+      <polyline points="20,327 -35,214"/><circle cx="-35" cy="214" r="4"/>
+      <polyline points="20,327 -61,257"/><circle cx="-61" cy="257" r="4"/>
+      <polyline points="20,327 -90,248"/><circle cx="-90" cy="248" r="4"/>
+    </g>
+  </g>
+
+  <!-- Inset: lower teeth from above -->
+  <path class="callout" d="M321 148 C390 170 440 190 495 190"/>
+  <g class="inset" id="insetTeeth">
+    <rect class="frame" x="495" y="8" width="300" height="350" rx="18"/>
+    <text class="title" x="510" y="34">Lower teeth from above</text>
+    <g id="teethArch" transform="translate(645 82) scale(1.2)">
+      <path d="M-90 185 C-92 110 -80 40 -50 12 C-30 -8 30 -8 50 12 C80 40 92 110 90 185 L60 185 C58 120 52 70 32 40 C18 24 -18 24 -32 40 C-52 70 -58 120 -60 185 Z" fill="#f6c3c8" stroke="#d98a96" stroke-width="2"/>
+<g class="incisor"><g transform="translate(9 4) rotate(4)"><rect x="-8" y="-5" width="16" height="10" rx="3"/></g></g>
+<g class="incisor"><g transform="translate(-9 4) rotate(-4)"><rect x="-8" y="-5" width="16" height="10" rx="3"/></g></g>
+<g class="incisor"><g transform="translate(27 10) rotate(20)"><rect x="-8" y="-5" width="16" height="10" rx="3"/></g></g>
+<g class="incisor"><g transform="translate(-27 10) rotate(-20)"><rect x="-8" y="-5" width="16" height="10" rx="3"/></g></g>
+<g class="canine"><g transform="translate(44 23) rotate(38)"><path d="M-8 3 Q-8 -5 0 -9 Q8 -5 8 3 Q0 7 -8 3 Z"/></g></g>
+<g class="canine"><g transform="translate(-44 23) rotate(-38)"><path d="M-8 3 Q-8 -5 0 -9 Q8 -5 8 3 Q0 7 -8 3 Z"/></g></g>
+<g class="molar"><g transform="translate(56 44) rotate(62)"><rect x="-10" y="-10" width="20" height="20" rx="7"/><path d="M-5 0 H5" fill="none"/></g></g>
+<g class="molar"><g transform="translate(-56 44) rotate(-62)"><rect x="-10" y="-10" width="20" height="20" rx="7"/><path d="M-5 0 H5" fill="none"/></g></g>
+<g class="molar"><g transform="translate(63 68) rotate(78)"><rect x="-10" y="-10" width="20" height="20" rx="7"/><path d="M-5 0 H5" fill="none"/></g></g>
+<g class="molar"><g transform="translate(-63 68) rotate(-78)"><rect x="-10" y="-10" width="20" height="20" rx="7"/><path d="M-5 0 H5" fill="none"/></g></g>
+<g class="molar"><g transform="translate(68 96) rotate(86)"><rect x="-13" y="-13" width="26" height="26" rx="8"/><path d="M0 -8 V8 M-8 0 H8" fill="none"/></g></g>
+<g class="molar"><g transform="translate(-68 96) rotate(-86)"><rect x="-13" y="-13" width="26" height="26" rx="8"/><path d="M0 -8 V8 M-8 0 H8" fill="none"/></g></g>
+<g class="molar"><g transform="translate(70 128) rotate(89)"><rect x="-13" y="-13" width="26" height="26" rx="8"/><path d="M0 -8 V8 M-8 0 H8" fill="none"/></g></g>
+<g class="molar"><g transform="translate(-70 128) rotate(-89)"><rect x="-13" y="-13" width="26" height="26" rx="8"/><path d="M0 -8 V8 M-8 0 H8" fill="none"/></g></g>
+<g class="molar"><g transform="translate(71 160) rotate(90)"><rect x="-13" y="-13" width="26" height="26" rx="8"/><path d="M0 -8 V8 M-8 0 H8" fill="none"/></g></g>
+<g class="molar"><g transform="translate(-71 160) rotate(-90)"><rect x="-13" y="-13" width="26" height="26" rx="8"/><path d="M0 -8 V8 M-8 0 H8" fill="none"/></g></g>
+    </g>
+    <g class="lab"><text x="510" y="74">Incisors</text><polyline points="560,82 612,94"/><circle cx="612" cy="94" r="4"/><polyline points="560,82 634,87"/><circle cx="634" cy="87" r="4"/></g>
+    <g class="lab"><text x="782" y="74" text-anchor="end">Canines</text><polyline points="730,80 698,110"/><circle cx="698" cy="110" r="4"/></g>
+    <g class="lab"><text x="645" y="250" text-anchor="middle">Molars</text><polyline points="612,243 563,240"/><circle cx="563" cy="240" r="4"/><polyline points="678,243 727,240"/><circle cx="727" cy="240" r="4"/></g>
+  </g>
+</svg>
+</template>
+
+<script>
+// ================= Utilities =================
+const $ = (s, r = document) => r.querySelector(s);
+
+const SVGNS = 'http://www.w3.org/2000/svg';
+const svgEl = (tag, attrs = {}) => { const e = document.createElementNS(SVGNS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); return e; };
+const ease = p => p < .5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
+const clamp01 = p => Math.max(0, Math.min(1, p));
+// Saved progress; private windows can block storage, so failures are ignored
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+};
+
+// ================= State =================
+const state = { view: 'diagram', step: 0, outlines: true, close: 0, cpaused: false,
+  predict: null, vpart: null, vdog: new Set(),
+  mission: null, done: store.get('dj-done', []), seenClose: new Set() };
+
+// ================= Journey =================
+// Each stop: the organ(s) to light up, the route from the previous stop, and what the apple looks like on arrival.
+const OES_D = 'M300 150 C300 260 302 360 304 405 C306 428 318 444 334 456';
+const STOPS = [
+  { id: 'mouth', name: 'Mouth', organs: ['teeth'], at: [300, 145], form: 'slice', time: 'About 1 minute',
+    now: 'being chewed and ground into smaller, easier-to-swallow pieces',
+    text: 'Your <span class="term">teeth</span> bite and chew the apple into small pieces. <span class="term">Saliva</span> from the salivary glands makes it soft and wet, so it is easy to swallow.' },
+  { id: 'oesophagus', name: 'Oesophagus', organs: ['oesophagus'], form: 'bolus', time: 'About 7 seconds', ms: 6500, peri: true,
+    now: 'a soft, wet ball',
+    text: 'When you swallow, the ball of food goes down the <span class="term">oesophagus</span>. Rings of muscle squeeze behind the food in waves to push it along. This squeezing is called <span class="term">peristalsis</span>.' },
+  { id: 'stomach', name: 'Stomach', organs: ['stomach'], form: 'mush', time: 'About 2–4 hours', ms: 1200, churn: true,
+    route: 'M326 449 C338 462 350 478 355 495',
+    now: 'a thick mush called chyme',
+    text: 'The <span class="term">stomach</span> churns the food and mixes it with acid and digestive juices. This breaks it down into a thick mush called <span class="term">chyme</span>.' },
+  { id: 'small-intestine', name: 'Small intestine', organs: ['small-intestine'], form: 'liquid', time: 'About 3–5 hours', ms: 10000, fx: 'nutrients', switchAt: .12, flow: true,
+    route: 'M355 495 C340 525 290 535 258 530 C240 535 238 565 252 583 C268 602 312 601 334 584 C370 600 380 620 350 628 C320 636 280 620 255 640 C240 655 280 668 320 662 C360 656 385 672 360 690 C335 706 280 700 250 696 C238 694 232 690 226 684',
+    now: 'a runny liquid',
+    text: 'The chyme becomes a runny liquid. <span class="term">Nutrients</span> from the food pass through the walls of the <span class="term">small intestine</span> into the <b>blood</b>, which carries them all around the body.' },
+  { id: 'large-intestine', name: 'Large intestine', organs: ['large-intestine'], form: 'waste', time: 'About 1–2 days', ms: 10000, fx: 'water', blend: [.45, .65], flow: true,
+    route: 'M226 684 C214 690 202 682 200 665 C198 640 199 600 202 578 C205 562 215 556 232 560 C260 568 285 584 310 582 C335 580 360 568 378 552 C388 543 394 538 397 548 C402 568 402 600 400 630 C398 660 392 688 382 708',
+    now: 'solid waste (faeces)',
+    text: '<b>Water</b> is taken back into the body. What is left is solid waste. The scientific word for it is <span class="term">faeces</span>.' },
+  { id: 'rectum', name: 'Rectum', organs: ['rectum'], form: 'waste', time: 'Until you need the toilet', ms: 2200, flow: true,
+    route: 'M382 708 C372 724 352 733 330 734 C312 735 300 738 296 748 C294 755 297 760 297 765',
+    now: 'faeces, waiting',
+    text: 'The faeces are stored in the <span class="term">rectum</span> until you go to the toilet.' },
+  { id: 'anus', name: 'Anus', organs: ['anus'], form: 'gone', time: 'When you go to the toilet', ms: 1600,
+    route: 'M297 765 L297 836',
+    now: 'gone! The journey is over.',
+    text: 'The faeces leave the body through the <span class="term">anus</span>. The apple\'s journey is complete!' }
+];
+// Choices for "Where do you think food stays the longest?" (the rectum and anus just wait for the toilet)
+const PREDICT = STOPS.slice(0, 5);
+
+const KEYS = {
+  nutrients: { icon: '<circle cx="-165" cy="490" r="7" fill="#b3001b" stroke="#fff" stroke-width="1.5"/>', lines: ['Red dots: nutrients carried', 'away by blood vessels'] },
+  water: { icon: '<path d="M-165 478 C-159 486 -157 490 -157 494 A8 8 0 0 1 -173 494 C-173 490 -171 486 -165 478 Z" fill="#0a5fd6" stroke="#fff" stroke-width="1.5"/>', lines: ['Blue drops: water taken', 'back into the body'] }
+};
+
+// Apple shapes, all centred on 0,0 (liquid is drawn as a flowing trail instead, see J.slug)
+const FOOD = {
+  slice: '<g class="chew"><path d="M-14 -3 A14 13 0 0 0 14 -3 Z" fill="#fff4cf" stroke="#b9a35e" stroke-width="1.2"/><path d="M-14 -3 A14 13 0 0 0 14 -3" fill="none" stroke="#e0453a" stroke-width="3.2"/><ellipse cx="0" cy="2" rx="1.6" ry="2.6" fill="#6b4423"/></g>',
+  bolus: '<circle r="8" fill="#efdca0" stroke="#b99a4f" stroke-width="1.2"/><circle cx="-3" cy="-2" r="1.3" fill="#e0453a"/><circle cx="3" cy="2" r="1.1" fill="#e0453a"/><circle cx="-2" cy="-4" r="2" fill="#fff" opacity=".5"/>',
+  mush: '<path d="M-11 -2 C-12 -9 -4 -12 2 -10 C9 -11 13 -4 11 2 C12 9 4 12 -2 10 C-9 11 -12 5 -11 -2 Z" fill="#e6c977" stroke="#b0913e" stroke-width="1.2"/><circle cx="-3" cy="-3" r="1.6" fill="#c9a84e"/><circle cx="4" cy="3" r="1.4" fill="#c9a84e"/>',
+  liquid: '',
+  waste: '<rect x="-11" y="-6.5" width="22" height="13" rx="6.5" fill="#8a5a33" stroke="#5e3b1f" stroke-width="1.2"/>',
+  gone: ''
+};
+
+// Steady speed in the middle, gentle start and stop
+const easeEnds = (p, e = .12) => p < e ? p * p / (2 * e * (1 - e)) : p > 1 - e ? 1 - (1 - p) * (1 - p) / (2 * e * (1 - e)) : (p - e / 2) / (1 - e);
+const gauss = (d, w) => Math.exp(-(d / w) * (d / w));
+const mix = (a, b, t) => '#' + [1, 3, 5].map(i => Math.round(parseInt(a.substr(i, 2), 16) * (1 - t) + parseInt(b.substr(i, 2), 16) * t).toString(16).padStart(2, '0')).join('');
+
+const J = {
+  tok: 0,
+  mount() {
+    const svg = $('#stage svg');
+    svg.classList.add('journey');
+    const layer = svgEl('g', { id: 'jLayer' });
+    layer.innerHTML = `<g id="jFx"></g>
+      <g id="oesTube" style="display:none">
+        <path class="wall" fill="#f4a6bd" stroke="#c25e7f" stroke-width="1.4" stroke-linejoin="round"/>
+        <path class="rings" fill="none" stroke="#c25e7f" stroke-width="1.2" stroke-linecap="round" opacity=".18"/>
+        <path class="hot" fill="none" stroke="#a8405f" stroke-width="2" stroke-linecap="round"/>
+      </g>
+      <g id="slug" style="display:none">
+        <path fill="none" stroke-linecap="round"/><path fill="none" stroke-linecap="round"/>
+        <path fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>
+      </g>
+      <g id="food"></g><path id="jRoute" fill="none" stroke="none"/><path id="jOes" d="${OES_D}" fill="none" stroke="none"/>
+      <g id="jKey"><rect x="-190" y="452" width="300" height="76" rx="14" fill="#fff" stroke="#9fb2e8" stroke-width="2.5"/><g class="icon"></g>
+        <text x="-148" y="484" class="t1"></text><text x="-148" y="510" class="t2"></text></g>`;
+    svg.insertBefore(layer, svg.querySelector('.lab'));
+    J.order = [...svg.querySelectorAll(':scope > .organ')];
+    // Points and sideways directions along the oesophagus, for drawing the squeezing tube
+    const o = $('#jOes'), L = o.getTotalLength();
+    J.oesEnd = L - 14;
+    J.pts = [];
+    for (let d = 8; d <= L - 9; d += 3) {
+      const a = o.getPointAtLength(Math.max(0, d - 1)), b = o.getPointAtLength(d + 1), c = o.getPointAtLength(d);
+      const len = Math.hypot(b.x - a.x, b.y - a.y);
+      J.pts.push({ d, x: c.x, y: c.y, nx: -(b.y - a.y) / len, ny: (b.x - a.x) / len });
+    }
+    J.show(state.step);
+  },
+  setForm(form) {
+    const f = $('#food');
+    if (f.dataset.form !== form) { f.dataset.form = form; f.innerHTML = FOOD[form]; }
+  },
+  // Waste and the squeezed ball line up with the tube they are in; stretch makes the ball longer as it is pushed
+  place(x, y, opacity = 1, angle = 0, stretch = 0) {
+    const f = $('#food'), turn = f.dataset.form === 'waste' || f.dataset.form === 'bolus';
+    f.setAttribute('transform', `translate(${x} ${y}) rotate(${turn ? angle : 0}) scale(${1.5 * (1 + .3 * stretch)} ${1.5 * (1 - .2 * stretch)})`);
+    f.setAttribute('opacity', opacity);
+  },
+  angleAt(r, s) { const a = r.getPointAtLength(Math.max(0, s - 2)), b = r.getPointAtLength(s + 2); return Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI; },
+  highlight(n) {
+    const svg = $('#stage svg');
+    const layer = $('#jLayer');
+    // Lit organs move to the front so dimmed ones never cover them
+    J.order.forEach(g => svg.insertBefore(g, layer));
+    J.order.forEach(g => { const on = STOPS[n].organs.includes(g.dataset.organ || g.id); g.classList.toggle('on', on); if (on) svg.insertBefore(g, layer); });
+    svg.classList.toggle('at-mouth', n === 0);
+  },
+  // The oesophagus as a soft tube: it bulges round the food (sb) and squeezes shut where the muscle ring is (sc)
+  tube(sb, sc, str) {
+    const t = $('#oesTube');
+    if (sb == null) { t.style.display = 'none'; $('#oesophagus').style.visibility = ''; return; }
+    t.style.display = ''; $('#oesophagus').style.visibility = 'hidden';
+    const left = [], right = [];
+    let rings = '', hot = '';
+    J.pts.forEach((p, i) => {
+      const w = (12 + 12 * gauss(p.d - sb, 11) - 8 * str * gauss(p.d - sc, 8)) / 2;
+      left.push(`${(p.x + p.nx * w).toFixed(1)} ${(p.y + p.ny * w).toFixed(1)}`);
+      right.unshift(`${(p.x - p.nx * w).toFixed(1)} ${(p.y - p.ny * w).toFixed(1)}`);
+      if (i % 4 === 1) {
+        const k = w * .75, seg = `M${(p.x + p.nx * k).toFixed(1)} ${(p.y + p.ny * k).toFixed(1)} L${(p.x - p.nx * k).toFixed(1)} ${(p.y - p.ny * k).toFixed(1)}`;
+        if (str > .05 && Math.abs(p.d - sc) < 13) hot += seg; else rings += seg;
+      }
+    });
+    const [wall, rg, ht] = t.children;
+    wall.setAttribute('d', `M${left.join(' L')} L${right.join(' L')} Z`);
+    rg.setAttribute('d', rings); ht.setAttribute('d', hot); ht.setAttribute('opacity', Math.min(1, str * 1.4));
+  },
+  // Liquid food as a short flowing trail along the route; t blends it from liquid (0) to faeces (1)
+  slug(r, d, t = 0, now = 0) {
+    const g = $('#slug');
+    if (r == null) { g.style.display = 'none'; return; }
+    g.style.display = '';
+    const len = (46 + 5 * Math.sin(now / 170)) * (1 - .55 * t), big = 5000, path = r.getAttribute('d');
+    const [o, i, sh] = g.children;
+    o.setAttribute('stroke', mix('#c9a84e', '#5e3b1f', t)); o.setAttribute('stroke-width', 13 + 7 * t);
+    i.setAttribute('stroke', mix('#f4dc84', '#8a5a33', t)); i.setAttribute('stroke-width', 10.5 + 6.5 * t);
+    sh.setAttribute('opacity', .55 * (1 - t));
+    for (const e of [o, i]) { e.setAttribute('d', path); e.setAttribute('stroke-dasharray', `${len} ${big}`); e.setAttribute('stroke-dashoffset', -(d - len)); }
+    sh.setAttribute('d', path); sh.setAttribute('stroke-dasharray', `${len * .45} ${big}`); sh.setAttribute('stroke-dashoffset', -(d - len * .7));
+  },
+  key(kind) {
+    const k = $('#jKey');
+    if (!kind) { k.classList.remove('show'); return; }
+    if (k.dataset.kind !== kind) {
+      k.dataset.kind = kind;
+      k.querySelector('.icon').innerHTML = KEYS[kind].icon;
+      k.querySelector('.t1').textContent = KEYS[kind].lines[0];
+      k.querySelector('.t2').textContent = KEYS[kind].lines[1];
+    }
+    k.classList.add('show');
+  },
+  reset() {
+    J.tok++;
+    $('#jFx').innerHTML = '';
+    $('#stomach').classList.remove('churn');
+    J.tube(null); J.slug(null); J.key(null);
+  },
+  // Still picture of a stop (used on load, the mouth and jumps ahead)
+  show(n) {
+    J.reset();
+    J.highlight(n);
+    const s = STOPS[n];
+    if (s.peri) {
+      const o = $('#jOes'), p = o.getPointAtLength(J.oesEnd);
+      J.tube(J.oesEnd, 0, 0); J.setForm('bolus'); J.place(p.x, p.y, 1, J.angleAt(o, J.oesEnd));
+      return;
+    }
+    J.setForm(s.form);
+    if (!s.route) { J.place(...s.at); return; }
+    const r = $('#jRoute'); r.setAttribute('d', s.route);
+    const L = r.getTotalLength(), p = r.getPointAtLength(L);
+    if (s.form === 'liquid') J.slug(r, L); else J.place(p.x, p.y, s.form === 'gone' ? 0 : 1, J.angleAt(r, L - 2));
+    if (s.fx) J.key(s.fx);
+  },
+  dot(kind, x, y, opacity = 1) {
+    const e = kind === 'nutrients'
+      ? svgEl('circle', { cx: x, cy: y, r: 4, fill: '#b3001b', stroke: '#fff', 'stroke-width': 1.6, opacity })
+      : svgEl('path', { d: `M${x} ${y - 6} C${x + 3.5} ${y - 1} ${x + 4.6} ${y + 1} ${x + 4.6} ${y + 2.4} A4.6 4.6 0 0 1 ${x - 4.6} ${y + 2.4} C${x - 4.6} ${y + 1} ${x - 3.5} ${y - 1} ${x} ${y - 6} Z`, fill: '#0a5fd6', stroke: '#fff', 'stroke-width': 1.6, opacity });
+    $('#jFx').appendChild(e);
+    return e;
+  },
+  // Swallowing: a quick chew, then waves of muscle squeeze the ball down in surges
+  peri(p) {
+    const o = $('#jOes');
+    if (p < .2) {
+      J.setForm(p < .14 ? 'slice' : 'bolus'); J.place(300, 145);
+      J.tube(-60, 0, 0);
+      return o.getPointAtLength(0);
+    }
+    const N = 5, u = clamp01((p - .2) / .8), k = Math.min(N - 1, Math.floor(u * N)), tau = u * N - k;
+    const push = clamp01((tau - .3) / .6);
+    const sb = J.oesEnd * (k + push * push * (3 - 2 * push)) / N;
+    const sc = sb - 15 - 28 * (1 - clamp01(tau / .65));
+    const str = Math.pow(Math.sin(Math.PI * tau), .6);
+    const pt = o.getPointAtLength(Math.max(0, sb));
+    J.tube(sb, sc, str);
+    J.setForm('bolus');
+    J.place(pt.x, pt.y, 1, J.angleAt(o, Math.max(2, sb)), str * (tau > .3 && tau < .9 ? 1 : .3));
+    return pt;
+  },
+  // One frame of the trip to stop n, at progress p (0–1)
+  frame(n, p, now = performance.now()) {
+    const s = STOPS[n], prev = STOPS[n - 1];
+    if (s.peri) return J.peri(p);
+    const r = $('#jRoute'); r.setAttribute('d', s.route);
+    const L = r.getTotalLength();
+    const d = (s.flow ? easeEnds(p) : ease(p)) * L;
+    const pt = r.getPointAtLength(d);
+    let form = p < (s.switchAt ?? 1) ? prev.form : s.form, t = 0;
+    if (s.blend) { form = p < s.blend[1] ? 'liquid' : 'waste'; t = clamp01((p - s.blend[0]) / (s.blend[1] - s.blend[0])); }
+    if (form === 'gone') form = 'waste';
+    J.setForm(form);
+    if (form === 'liquid') J.slug(r, d, t, now); else J.slug(null);
+    J.place(pt.x, pt.y, s.form === 'gone' ? 1 - clamp01((p - .45) / .5) : 1, J.angleAt(r, d));
+    if (s.fx && p > .1) J.key(s.fx);
+    return pt;
+  },
+  go(n) {
+    J.reset();
+    const s = STOPS[n], tok = J.tok;
+    J.highlight(n);
+    const t0 = performance.now();
+    let last = 0;
+    const tick = () => {
+      const now = performance.now();
+      if (tok !== J.tok) return;
+      const p = clamp01((now - t0) / s.ms);
+      const pt = J.frame(n, p, now);
+      if (s.fx && p > .08 && p < .97 && now - last > 140 && (!s.blend || p < s.blend[1] + .1)) {
+        last = now;
+        // Each dot drifts clear of the tube and stays bright for most of its trip before fading
+        const e = J.dot(s.fx, pt.x, pt.y), a = Math.random() * Math.PI * 2, d = 30 + Math.random() * 16;
+        e.animate([{ transform: 'translate(0,0)', opacity: 1 }, { offset: .7, opacity: 1 }, { transform: `translate(${Math.cos(a) * d}px,${Math.sin(a) * d}px)`, opacity: 0 }], { duration: 2200, easing: 'ease-out' }).onfinish = () => e.remove();
+      }
+      if (p < 1) return requestAnimationFrame(tick);
+      if (s.churn) $('#stomach').classList.add('churn');
+      if (s.form === 'gone') { J.setForm('gone'); J.place(0, 0, 0); }
+    };
+    requestAnimationFrame(tick);
+  }
+};
+
+function setStep(n, animate) {
+  state.step = n;
+  location.hash = `view=journey&step=${n}`;
+  $('#drawer').innerHTML = VIEWS.journey.drawer();
+  if (animate) J.go(n); else J.show(n);
+  emit('step', { n, walked: animate });
+}
+
+// ================= Drag the organs =================
+// Each piece: the drawing groups it is made of, and the label that appears when it is placed.
+const PIECES = [
+  { id: 'oesophagus', name: 'Oesophagus', groups: ['oesophagus'] },
+  { id: 'stomach', name: 'Stomach', groups: ['stomach'] },
+  { id: 'small-intestine', name: 'Small intestine', groups: ['small-intestine', 'small-intestine-coils'] },
+  { id: 'large-intestine', name: 'Large intestine', groups: ['large-intestine', 'large-intestine-front'] },
+  // The rectum is a clipped slice of a longer path, so its visible box is given here
+  { id: 'rectum', name: 'Rectum', groups: ['rectum'], box: { x: 280, y: 742, width: 34, height: 60 } },
+  { id: 'anus', name: 'Anus', groups: ['anus'], snap: 22 }
+];
+// Tray spaces either side of the body
+const SLOTS = [[-40, 230], [-40, 450], [-40, 670], [640, 450], [640, 670], [640, 230]];
+const SLOT_SIZE = 170;
+
+const D = {
+  mount() {
+    const svg = $('#stage svg');
+    svg.classList.add('dragmode');
+    state.placed = new Set();
+    const firstLab = svg.querySelector(':scope > .lab');
+    const tray = svgEl('g', { id: 'tray' }), layer = svgEl('g', { id: 'pieces' });
+    svg.insertBefore(tray, firstLab); svg.insertBefore(layer, firstLab);
+    const order = PIECES.map((p, i) => i).sort(() => Math.random() - .5);
+    D.items = PIECES.map((p, i) => {
+      const wrap = svgEl('g', { class: 'piece', 'data-id': p.id });
+      p.groups.forEach(id => {
+        const g = svg.querySelector('#' + id);
+        // A dashed outline stays behind to show where the organ goes
+        const ghost = g.cloneNode(true);
+        ghost.removeAttribute('id'); ghost.querySelectorAll('[id]').forEach(e => e.removeAttribute('id'));
+        ghost.setAttribute('class', 'ghost'); ghost.dataset.for = p.id;
+        g.parentNode.insertBefore(ghost, g);
+        wrap.appendChild(g);
+      });
+      layer.appendChild(wrap);
+      const b = p.box || wrap.getBBox();
+      // Invisible pad so thin or tiny organs are easy to grab
+      const pad = Math.max(12, (50 - Math.min(b.width, b.height)) / 2);
+      wrap.insertBefore(svgEl('rect', { x: b.x - pad, y: b.y - pad, width: b.width + pad * 2, height: b.height + pad * 2, fill: 'transparent' }), wrap.firstChild);
+      const [sx, sy] = SLOTS[order[i]];
+      tray.appendChild(svgEl('rect', { class: 'slot', x: sx - SLOT_SIZE / 2, y: sy - SLOT_SIZE / 2, width: SLOT_SIZE, height: SLOT_SIZE, rx: 18 }));
+      const item = { p, wrap, cx: b.x + b.width / 2, cy: b.y + b.height / 2, sx, sy,
+        s: Math.min(3, (SLOT_SIZE - 30) / Math.max(b.width, b.height)) };
+      wrap.style.transition = 'none';
+      D.to(item, sx, sy, item.s);
+      wrap.addEventListener('pointerdown', e => D.grab(item, e));
+      return item;
+    });
+    // The mouth sits in front, so the top of the oesophagus tucks in behind it as in the diagram
+    svg.insertBefore(svg.querySelector('#teeth'), firstLab);
+    svg.classList.toggle('nohints', !state.outlines);
+    D.svg = svg;
+    // Whether the outlines were on at any point this round (the "no peeking" mission needs them off throughout)
+    D.peeked = state.outlines;
+    // Start in the tray without animating there
+    void svg.getBoundingClientRect();
+    D.items.forEach(item => { item.wrap.style.transition = ''; });
+  },
+  // Put the organ's centre at x,y at the given size
+  to(item, x, y, s) { item.wrap.style.transform = `translate(${x}px,${y}px) scale(${s}) translate(${-item.cx}px,${-item.cy}px)`; },
+  point(e) { const p = D.svg.createSVGPoint(); p.x = e.clientX; p.y = e.clientY; return p.matrixTransform(D.svg.getScreenCTM().inverse()); },
+  grab(item, e) {
+    if (state.placed.has(item.p.id)) return;
+    e.preventDefault();
+    item.wrap.classList.add('dragging');
+    item.wrap.parentNode.appendChild(item.wrap);
+    // Listen on the window: moving the piece to the front would drop an element's pointer capture
+    const move = ev => { if (ev.pointerId !== e.pointerId) return; const q = D.point(ev); D.to(item, q.x, q.y, 1); };
+    const drop = ev => {
+      if (ev.pointerId !== e.pointerId) return;
+      removeEventListener('pointermove', move);
+      removeEventListener('pointerup', drop);
+      removeEventListener('pointercancel', drop);
+      item.wrap.classList.remove('dragging');
+      const q = D.point(ev);
+      if (Math.hypot(q.x - item.cx, q.y - item.cy) < (item.p.snap || 45)) D.place(item);
+      else { D.to(item, item.sx, item.sy, item.s); D.say(`Not quite! The ${item.p.name.toLowerCase()} goes somewhere else.`); }
+    };
+    addEventListener('pointermove', move);
+    addEventListener('pointerup', drop);
+    addEventListener('pointercancel', drop);
+    move(e);
+  },
+  place(item) {
+    D.to(item, item.cx, item.cy, 1);
+    item.wrap.classList.add('placed');
+    state.placed.add(item.p.id);
+    D.svg.querySelectorAll(`.ghost[data-for="${item.p.id}"]`).forEach(g => g.classList.add('filled'));
+    D.svg.querySelectorAll(':scope > .lab').forEach(l => { if (l.querySelector('text').textContent === item.p.name) l.classList.add('show'); });
+    $('#drawer').innerHTML = VIEWS.organs.drawer();
+    if (state.placed.size < PIECES.length) D.say(`Yes! That is the ${item.p.name.toLowerCase()}.`);
+    else emit('placed', { peeked: D.peeked });
+  },
+  say(msg) { const m = $('#dragMsg'); if (m) m.textContent = msg; }
+};
+
+// The mouth has no label on the main diagram, so the activities add one
+function addMouthLabel(svg) {
+  const mouth = svgEl('g', { class: 'lab' });
+  mouth.innerHTML = '<text x="488" y="152">Mouth</text><line x1="482" y1="145" x2="324" y2="145"/><circle cx="324" cy="145" r="5"/>';
+  svg.appendChild(mouth);
+}
+const labelFor = (svg, name) => [...svg.querySelectorAll(':scope > .lab')].find(l => l.querySelector('text').textContent === name);
+const organGroups = (svg, id) => svg.querySelectorAll(`#${id}, [data-organ="${id}"]`);
+
+// ================= Journey order =================
+// Children tap the stops in the order food visits them; each correct tap lights the organ, numbers it and extends the route.
+const O = {
+  mount() {
+    const svg = $('#stage svg');
+    svg.classList.add('ordermode');
+    state.order = { done: 0, mistakes: 0, choices: STOPS.map((s, i) => i).sort(() => Math.random() - .5) };
+    const firstLab = svg.querySelector(':scope > .lab');
+    addMouthLabel(svg);
+    const trail = svgEl('g', { id: 'oTrail', class: 'oTrail' });
+    trail.innerHTML = STOPS.map((s, i) => i ? `<path data-n="${i}" d="${i === 1 ? OES_D : s.route}"/>` : '').join('');
+    svg.insertBefore(trail, firstLab);
+    svg.appendChild(svgEl('g', { id: 'oBadges' }));
+    O.svg = svg;
+  },
+  pick(n) {
+    const o = state.order, s = STOPS[n];
+    if (n !== o.done) {
+      o.mistakes++;
+      const el = $(`.choices [data-n="${n}"]`);
+      el.classList.remove('wrong'); void el.offsetWidth; el.classList.add('wrong');
+      O.say(o.done ? `Not quite! Where does the food go after the ${STOPS[o.done - 1].name.toLowerCase()}?` : 'Not quite! Where does the food go in?');
+      return;
+    }
+    s.organs.forEach(id => organGroups(O.svg, id).forEach(g => g.classList.add('on')));
+    const lab = labelFor(O.svg, s.name);
+    lab.classList.add('show');
+    // Number badge just outside the label text
+    const b = lab.querySelector('text').getBBox(), left = b.x < 300;
+    const badge = svgEl('g', { class: 'badge' });
+    badge.innerHTML = `<circle cx="${left ? b.x - 24 : b.x + b.width + 24}" cy="${b.y + b.height / 2}" r="18"/><text x="${left ? b.x - 24 : b.x + b.width + 24}" y="${b.y + b.height / 2 + 7}">${n + 1}</text>`;
+    $('#oBadges').appendChild(badge);
+    if (n) O.svg.querySelector(`#oTrail [data-n="${n}"]`).classList.add('show');
+    // Once the large intestine is in, it covers the small intestine's route where the two overlap
+    if (s.id === 'large-intestine') {
+      const g = svgEl('g', { class: 'oTrail' });
+      g.appendChild(O.svg.querySelector('#oTrail [data-n="3"]'));
+      O.svg.insertBefore(g, O.svg.querySelector('#large-intestine-front'));
+    }
+    o.done++;
+    $('#drawer').innerHTML = VIEWS.order.drawer();
+    if (o.done < STOPS.length) O.say(`Yes! Number ${n + 1} is the ${s.name.toLowerCase()}.`);
+    else emit('ordered', { mistakes: o.mistakes });
+  },
+  say(msg) { const m = $('#orderMsg'); if (m) m.textContent = msg; }
+};
+
+// ================= What happens here? =================
+// A job is shown; children tap the part of the body that does it. A wrong tap says what that part does instead.
+const JOBS = {
+  mouth: { job: 'Bites, chews and grinds food into small pieces. Saliva makes it soft and wet.', does: 'chews food into small pieces' },
+  oesophagus: { job: 'A muscly tube that squeezes food down to the stomach.', does: 'squeezes food down to the stomach' },
+  stomach: { job: 'Churns food with acid and digestive juices to make a thick mush called chyme.', does: 'churns food into chyme' },
+  'small-intestine': { job: 'Nutrients from the food pass through its walls into the blood.', does: 'passes nutrients into the blood' },
+  'large-intestine': { job: 'Takes water back into the body, leaving solid waste called faeces.', does: 'takes water back into the body' },
+  rectum: { job: 'Stores faeces until you go to the toilet.', does: 'stores faeces until you go to the toilet' },
+  anus: { job: 'The opening where faeces leave the body.', does: 'is where faeces leave the body' }
+};
+const W = {
+  mount() {
+    const svg = $('#stage svg');
+    svg.classList.add('quizmode');
+    state.quiz = { n: 0, firstTry: 0, missed: false, order: STOPS.map((s, i) => i).sort(() => Math.random() - .5) };
+    addMouthLabel(svg);
+    addTapPads(svg);
+    svg.addEventListener('click', e => {
+      const g = e.target.closest('.organ');
+      if (g) W.tap(g.dataset.organ || g.id);
+    });
+    W.svg = svg;
+  },
+  // STOPS index for an organ id (the teeth stand for the mouth)
+  stopOf(id) { return STOPS.findIndex(s => s.organs.includes(id)); },
+  tap(id) {
+    const q = state.quiz;
+    if (q.n === STOPS.length) return;
+    const want = q.order[q.n], got = W.stopOf(id), s = STOPS[got];
+    if (got < 0) return;
+    W.flash(s, 'oops');
+    if (got !== want) {
+      q.missed = true;
+      W.say(`Not quite! That is the ${s.name.toLowerCase()}. It ${JOBS[s.id].does}.`);
+      return;
+    }
+    if (!q.missed) q.firstTry++;
+    q.missed = false;
+    W.flash(s, 'yay');
+    labelFor(W.svg, s.name).classList.add('show');
+    q.n++;
+    $('#drawer').innerHTML = VIEWS.quiz.drawer();
+    W.say(`Yes! The ${s.name.toLowerCase()} does that.`);
+    if (q.n === STOPS.length) emit('matched', { firstTry: q.firstTry });
+  },
+  flash(s, cls) {
+    s.organs.forEach(id => organGroups(W.svg, id).forEach(g => { g.classList.remove('oops', 'yay'); void g.getBBox(); g.classList.add(cls); }));
+  },
+  say(msg) { const m = $('#quizMsg'); if (m) m.textContent = msg; }
+};
+
+// Bigger invisible tap areas for the thin oesophagus and the small mouth and anus
+function addTapPads(svg) {
+  const pad = (id, html) => svg.querySelector('#' + id).insertAdjacentHTML('beforeend', html);
+  pad('oesophagus', `<path d="${OES_D}" fill="none" stroke="transparent" stroke-width="36"/>`);
+  pad('teeth', '<rect x="262" y="122" width="76" height="46" rx="16" fill="transparent"/>');
+  pad('anus', '<ellipse cx="297" cy="800" rx="22" ry="11" fill="transparent"/>');
+}
+
+// ================= Diagram pop-ups =================
+// Hovering over a part (or tapping it) lights it up and shows its name and job.
+const TIPS = Object.assign(Object.fromEntries(STOPS.map(s => [s.id, [s.name, JOBS[s.id].job]])), {
+  glands: ['Salivary glands', 'Make saliva, which makes food soft and wet so it is easy to swallow.'],
+  teeth: ['Teeth', 'Bite, chew and grind food into small pieces.'],
+  incisor: ['Incisors', 'Sharp front teeth for biting and cutting food.'],
+  canine: ['Canines', 'Pointed teeth for gripping and tearing food.'],
+  molar: ['Molars', 'Wide, flat back teeth for chewing and grinding food.']
+});
+// Colours of the parts in the mouth close-up that have pop-ups
+const INSET_TIPS = { '#ffd34d': 'glands', '#f2b52a': 'glands', '#ffffff': 'teeth', '#f4a6bd': 'oesophagus' };
+const P = {
+  mount() {
+    const svg = $('#stage svg');
+    svg.classList.add('tipmode');
+    addTapPads(svg);
+    STOPS.forEach(s => s.organs.forEach(id => organGroups(svg, id).forEach(g => { g.dataset.tip = s.id; })));
+    svg.querySelectorAll('#insetMouth path').forEach(p => { const k = INSET_TIPS[p.getAttribute('fill')]; if (k) p.dataset.tip = k; });
+    ['incisor', 'canine', 'molar'].forEach(k => svg.querySelectorAll('#teethArch .' + k).forEach(g => { g.dataset.tip = k; }));
+    // Labels show the pop-up too
+    const byName = Object.fromEntries(Object.entries(TIPS).map(([k, [name]]) => [name, k]));
+    svg.querySelectorAll('.lab').forEach(l => { const k = byName[l.querySelector('text').textContent]; if (k) l.dataset.tip = k; });
+    const box = document.createElement('div');
+    box.className = 'tipbox'; box.hidden = true;
+    $('#stage').appendChild(box);
+    P.svg = svg; P.box = box; P.key = null;
+    // Mouse: follow the pointer. Touch and pen: tap a part to show it, tap anywhere else to hide it.
+    svg.addEventListener('pointermove', e => {
+      if (e.pointerType !== 'mouse') return;
+      const t = e.target.closest('[data-tip]');
+      if (t) P.show(t.dataset.tip, e); else P.hide();
+    });
+    svg.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') P.hide(); });
+    svg.addEventListener('click', e => {
+      const t = e.target.closest('[data-tip]');
+      if (t) P.show(t.dataset.tip, e); else P.hide();
+    });
+  },
+  show(key, e) {
+    if (key !== P.key) {
+      P.hide();
+      P.key = key;
+      P.svg.classList.add('hovering');
+      P.svg.querySelectorAll(`[data-tip="${key}"]`).forEach(el => el.classList.add('hl'));
+      const [name, text] = TIPS[key];
+      P.box.innerHTML = `<b>${name}</b>${text}`;
+      P.box.hidden = false;
+    }
+    // Beside the pointer, flipped to the other side near the edges of the stage
+    const r = $('#stage').getBoundingClientRect(), w = P.box.offsetWidth, h = P.box.offsetHeight;
+    let x = e.clientX - r.left + 16, y = e.clientY - r.top + 16;
+    if (x + w > r.width - 8) x = e.clientX - r.left - w - 16;
+    if (y + h > r.height - 8) y = e.clientY - r.top - h - 16;
+    P.box.style.left = `${Math.max(8, x)}px`; P.box.style.top = `${Math.max(8, y)}px`;
+  },
+  hide() {
+    if (!P.key) return;
+    P.key = null;
+    P.box.hidden = true;
+    P.svg.classList.remove('hovering');
+    P.svg.querySelectorAll('.hl').forEach(el => el.classList.remove('hl'));
+  }
+};
+
+// ================= Lion vs zebra teeth =================
+// Side views of both mouths, open, front on the left. Premolars are counted as molars, as on the main diagram.
+const TOOTH = 'fill="#fffaf0" stroke="#9aa3bd" stroke-width="1.6" stroke-linejoin="round"';
+const GUM = 'fill="#f6c3c8" stroke="#d98a96" stroke-width="2"';
+function lionJaw() {
+  const up = [], lo = [];
+  // Upper teeth hang down from y 100, lower teeth stand up from y 240
+  [22, 40, 58].forEach(x => up.push(`<path class="incisor" d="M${x - 7} 100 V114 Q${x} 122 ${x + 7} 114 V100 Z"/>`));
+  up.push('<path class="canine" d="M78 100 Q80 140 96 168 Q102 138 108 100 Z"/>');
+  [150, 200, 255, 318].forEach((c, i) => up.push(`<path class="molar" d="M${c - 24} 100 L${c - 12} ${126 + i * 3} L${c - 2} ${116 + i * 2} L${c + 10} ${136 + i * 3} L${c + 22} 100 Z"/>`));
+  [30, 48, 66].forEach(x => lo.push(`<path class="incisor" d="M${x - 7} 240 V226 Q${x} 218 ${x + 7} 226 V240 Z"/>`));
+  lo.push('<path class="canine" d="M106 240 Q110 205 122 182 Q132 210 134 240 Z"/>');
+  [176, 228, 286, 344].forEach((c, i) => lo.push(`<path class="molar" d="M${c - 24} 240 L${c - 10} ${208 - i * 3} L${c} ${220 - i * 2} L${c + 12} ${202 - i * 3} L${c + 22} 240 Z"/>`));
+  return `<g class="lower chop"><path d="M8 240 H396 V286 Q396 300 380 300 H40 Q8 300 8 270 Z" ${GUM}/><g ${TOOTH}>${lo.join('')}</g></g>
+    <g class="upper"><path d="M8 100 H396 V54 Q396 40 380 40 H40 Q8 40 8 70 Z" ${GUM}/><g ${TOOTH}>${up.join('')}</g></g>`;
+}
+function zebraJaw() {
+  const up = [], lo = [], M = [222, 262, 302, 342, 382, 422];
+  [24, 46, 68].forEach(x => {
+    up.push(`<path class="incisor" d="M${x - 9} 100 L${x - 11} 126 Q${x} 130 ${x + 9} 126 L${x + 9} 100 Z"/>`);
+    lo.push(`<path class="incisor" d="M${x - 9} 200 L${x - 11} 174 Q${x} 170 ${x + 9} 174 L${x + 9} 200 Z"/>`);
+  });
+  // Flat-topped molars with grinding ridges
+  M.forEach(c => {
+    up.push(`<g class="molar"><rect x="${c - 19}" y="100" width="38" height="28" rx="4"/><path d="M${c - 13} 121 l6.5 -6 l6.5 6 l6.5 -6 l6.5 6" fill="none" stroke="#c3c9dc"/></g>`);
+    lo.push(`<g class="molar"><rect x="${c - 19}" y="172" width="38" height="28" rx="4"/><path d="M${c - 13} 179 l6.5 6 l6.5 -6 l6.5 6 l6.5 -6" fill="none" stroke="#c3c9dc"/></g>`);
+  });
+  return `<g class="lower grind"><path d="M8 200 H462 V246 Q462 260 446 260 H40 Q8 260 8 230 Z" ${GUM}/><g ${TOOTH}>${lo.join('')}</g></g>
+    <g class="upper"><path d="M8 100 H462 V54 Q462 40 446 40 H40 Q8 40 8 70 Z" ${GUM}/><g ${TOOTH}>${up.join('')}</g></g>`;
+}
+// Label under the lower jaw, with a line up to a tooth (x, y in the jaw's own coordinates)
+const tlab = (text, tx, ty, x, y, type) =>
+  `<g class="lab tl" data-type="${type}"><text x="${tx}" y="${ty}" text-anchor="middle">${text}</text><line x1="${tx}" y1="${ty - 22}" x2="${x}" y2="${y}"/><circle cx="${x}" cy="${y}" r="4"/></g>`;
+function teethSvg() {
+  const panel = (x, w, em, name, role) => `<rect class="frame" x="${x}" y="14" width="${w}" height="452" rx="22"/>
+    <text x="${x + 28}" y="92" font-size="58">${em}</text>
+    <text class="tname" x="${x + 104}" y="68">${name}</text><text class="trole" x="${x + 104}" y="96">${role}</text>`;
+  return `<svg viewBox="0 0 1000 480" role="img" aria-label="A lion's teeth and a zebra's teeth, side by side">
+    ${panel(10, 430, '🦁', 'Lion', 'Predator · eats meat')}
+    ${panel(456, 534, '🦓', 'Zebra', 'Prey · eats grass')}
+    <g transform="translate(23 112)">${lionJaw()}
+      ${tlab('Incisors', 48, 340, 48, 232, 'incisor')}${tlab('Canines', 160, 340, 122, 205, 'canine')}${tlab('Molars', 312, 340, 290, 222, 'molar')}</g>
+    <g transform="translate(486 132)">${zebraJaw()}
+      ${tlab('Incisors', 52, 312, 46, 186, 'incisor')}${tlab('Gap', 148, 312, 148, 210, 'canine')}${tlab('Molars', 330, 312, 342, 186, 'molar')}</g>
+  </svg>`;
+}
+const TEETH = {
+  incisor: { name: 'Incisors', lion: 'Small front teeth for nibbling.', zebra: 'Big and sharp, for nipping off grass like scissors.' },
+  canine: { name: 'Canines', lion: 'Long, pointed fangs for catching and gripping its prey.', zebra: 'Very small or none at all. A zebra has nothing to grip, so there is a <b>gap</b> instead.' },
+  molar: { name: 'Molars', lion: 'Sharp and jagged, for slicing meat like scissors.', zebra: 'Wide and flat with ridges, for grinding tough grass.' }
+};
+const TQUIZ = [
+  ['I have long, pointed canines for gripping.', 'lion'],
+  ['My flat molars grind tough grass.', 'zebra'],
+  ['My jagged back teeth slice meat like scissors.', 'lion'],
+  ['I have tiny canines or none at all.', 'zebra'],
+  ['I am a herbivore: I only eat plants.', 'zebra'],
+  ['I am a predator: I eat meat.', 'lion']
+];
+const T = {
+  mount() {
+    state.teeth = { type: null, q: 0, right: 0, answered: null, order: TQUIZ.map((x, i) => i).sort(() => Math.random() - .5) };
+  },
+  pick(type) {
+    state.teeth.type = state.teeth.type === type ? null : type;
+    const svg = $('#stage svg');
+    ['incisor', 'canine', 'molar'].forEach(t => svg.classList.toggle('show-' + t, state.teeth.type === t));
+    $('#drawer').innerHTML = VIEWS.teeth.drawer();
+  },
+  chew() {
+    const svg = $('#stage svg');
+    svg.classList.remove('chewing'); void svg.getBoundingClientRect(); svg.classList.add('chewing');
+    emit('chew', { type: state.teeth.type });
+  },
+  answer(who) {
+    const t = state.teeth;
+    if (t.answered) return;
+    t.answered = who;
+    if (who === TQUIZ[t.order[t.q]][1]) t.right++;
+    $('#drawer').innerHTML = VIEWS.teeth.drawer();
+  },
+  next() {
+    const t = state.teeth;
+    t.q++; t.answered = null;
+    $('#drawer').innerHTML = VIEWS.teeth.drawer();
+    if (t.q === TQUIZ.length) emit('tquiz', { right: t.right });
+  }
+};
+
+// ================= Close-ups =================
+// Four looping animations. Each scene gives its SVG and a frame(svg) that returns a draw(t) function (t in seconds).
+const rnd = i => { const x = Math.sin(i * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+const lerp = (a, b, t) => a + (b - a) * t;
+const cl = (text, tx, ty, anchor, x1, y1, x2, y2) => `<g class="lab tl"><text x="${tx}" y="${ty}" text-anchor="${anchor}">${text}</text>${x1 != null
+  ? `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/><circle cx="${x2}" cy="${y2}" r="4"/>` : ''}</g>`;
+const DROP = 'M0 -10 C6 -2 8 2 8 5 A8 8 0 0 1 -8 5 C-8 2 -6 -2 0 -10 Z';
+const VESSEL = (d, w = 30) => `<path d="${d}" fill="none" stroke="#a51d2d" stroke-width="${w}"/><path d="${d}" fill="none" stroke="#e8505f" stroke-width="${w - 6}"/>`;
+
+const CLOSE = [
+  { id: 'teeth', name: 'Teeth', title: 'Chewing',
+    text: 'Your <span class="term">incisors</span> bite off a piece of apple and your <span class="term">canines</span> help grip and tear. Your <span class="term">molars</span> grind it into smaller and smaller pieces. <span class="term">Saliva</span> from the salivary glands makes it soft and wet, ready to swallow.',
+    svg() {
+      const T = [[185, 'i'], [226, 'i'], [266, 'c'], [316, 'p'], [364, 'p'], [422, 'm'], [492, 'm'], [562, 'm']];
+      const tooth = ([c, k]) => k === 'i' ? `M${c - 17} 190 L${c - 16} 242 Q${c} 250 ${c + 16} 242 L${c + 17} 190 Z`
+        : k === 'c' ? `M${c - 17} 190 L${c - 14} 236 Q${c} 262 ${c + 14} 236 L${c + 17} 190 Z`
+        : k === 'p' ? `M${c - 22} 190 L${c - 21} 230 Q${c - 11} 242 ${c} 234 Q${c + 11} 242 ${c + 21} 230 L${c + 22} 190 Z`
+        : `M${c - 32} 190 L${c - 31} 228 Q${c - 21} 242 ${c - 11} 232 Q${c} 244 ${c + 11} 232 Q${c + 21} 242 ${c + 31} 228 L${c + 32} 190 Z`;
+      const teeth = `<g ${TOOTH}>${T.map(x => `<path d="${tooth(x)}"/>`).join('')}</g>`;
+      // Lower teeth are the upper row flipped about y = 300
+      return `<g transform="translate(0 50)"><path d="M790 192 C740 205 700 212 664 222" fill="none" stroke="#c7960d" stroke-width="7" stroke-linecap="round"/>
+        <ellipse cx="830" cy="170" rx="82" ry="48" fill="#ffd34d" stroke="#c7960d" stroke-width="2.5"/>
+        <g id="cLower"><path d="M150 410 V452 Q150 480 178 480 H632 Q660 480 660 452 V410 Z" ${GUM}/><g transform="matrix(1 0 0 -1 0 600)">${teeth}</g></g>
+        <g id="cFood"></g><g id="cSpit"></g>
+        <g><path d="M150 190 V148 Q150 120 178 120 H632 Q660 120 660 148 V190 Z" ${GUM}/>${teeth}</g>
+        ${cl('Incisors', 150, 78, 'middle', 168, 88, 205, 222)}${cl('Canine', 282, 78, 'middle', 276, 88, 266, 226)}${cl('Molars', 492, 78, 'middle', 492, 88, 492, 222)}
+        ${cl('Salivary gland', 830, 104, 'middle')}${cl('Saliva', 712, 312, 'start', 722, 292, 662, 236)}</g>`;
+    },
+    frame(svg) {
+      const lower = svg.querySelector('#cLower'), food = svg.querySelector('#cFood'), spit = svg.querySelector('#cSpit');
+      // Each chew breaks the apple into more, smaller pieces: [x, width, height, has skin]
+      const SETS = [
+        [[492, 150, 74, 1]],
+        [[436, 64, 50, 1], [500, 58, 46, 0], [560, 52, 42, 1]],
+        [[414, 34, 30, 0], [450, 30, 26, 1], [486, 34, 28, 0], [522, 30, 26, 0], [556, 32, 28, 1], [588, 26, 22, 0]],
+        Array.from({ length: 10 }, (_, i) => [406 + i * 20, 20, 16, i % 3 === 0 ? 1 : 0])
+      ];
+      return t => {
+        const tt = t % 7;
+        let off = 0, set = 0;
+        if (tt > .8 && tt < 6.3) {
+          const c = (tt - .8) / 1.1, k = Math.floor(c), u = c - k;
+          off = 108 * Math.pow(Math.sin(Math.PI * u), 2);
+          set = Math.min(3, k + (u > .5 ? 1 : 0));
+        } else if (tt >= 6.3) set = 3;
+        lower.setAttribute('transform', `translate(0 ${-off})`);
+        const gap = 120 - off, base = 358 - off;
+        food.innerHTML = SETS[set].map(([x, w, h, skin]) => {
+          const hh = Math.min(h, Math.max(6, gap - 4)), ww = w * Math.sqrt(h / hh), y = base - hh / 2;
+          return `<ellipse cx="${x}" cy="${y}" rx="${ww / 2}" ry="${hh / 2}" fill="${set > 1 ? '#efdca0' : '#fff4cf'}" stroke="#b9a35e" stroke-width="1.5"/>` +
+            (skin ? `<path d="M${x - ww / 2 + 4} ${y - hh * .2} Q${x} ${y - hh / 2 - 2} ${x + ww / 2 - 4} ${y - hh * .2}" fill="none" stroke="#e0453a" stroke-width="${set > 1 ? 2.5 : 4}" stroke-linecap="round"/>` : '');
+        }).join('');
+        spit.innerHTML = tt < 1 || tt > 6.6 ? '' : [0, 1, 2, 3].map(j => {
+          const u = (tt + j * .25) % 1;
+          return `<circle cx="${662 - 80 * u}" cy="${226 + 62 * u}" r="7" fill="#8fd3ff" stroke="#3d8fd0" stroke-width="1.5" opacity="${Math.sin(Math.PI * u)}"/>`;
+        }).join('');
+      };
+    }
+  },
+  { id: 'stomach', name: 'Stomach', title: 'Inside the stomach',
+    text: 'The stomach\'s muscly walls squeeze and churn the food. <span class="term">Acid</span> and <span class="term">digestive juices</span> break it down (the acid also kills most germs). Bit by bit, the chunks turn into a thick mush called <span class="term">chyme</span>, which is squirted into the small intestine.',
+    svg() {
+      const STO = $('#diagramSvg').content.querySelector('#stomach path').getAttribute('d');
+      const tube = (d, a, b, w) => `<path d="${d}" fill="none" stroke="${a}" stroke-width="${w + 3}" stroke-linecap="round"/><path d="${d}" fill="none" stroke="${b}" stroke-width="${w}" stroke-linecap="round"/>`;
+      return `<defs><clipPath id="sClip"><path d="${STO}"/></clipPath></defs>
+        <g transform="translate(480 300) scale(3) translate(-318 -496)">
+          ${tube('M300 413 C302 425 312 444 332 458', '#c25e7f', '#f4a6bd', 12)}
+          ${tube('M256 528 C240 535 238 565 252 584', '#c2574a', '#fb8f7c', 17)}
+          <path id="sDuo" d="M256 528 C240 535 238 565 252 584" fill="none"/>
+          <g id="sChurn">
+            <g clip-path="url(#sClip)"><path d="${STO}" fill="#ffe9cf"/>
+              <rect id="sChyme" x="240" y="425" width="160" height="145" fill="#e6c977" opacity="0"/><g id="sBits"></g><g id="sDrops"></g></g>
+            <path d="${STO}" fill="none" stroke="#c06f22" stroke-width="7.5" stroke-linejoin="round"/>
+            <path d="${STO}" fill="none" stroke="#f0a35a" stroke-width="5.5" stroke-linejoin="round"/>
+            <path d="${STO}" fill="none" stroke="#c06f22" stroke-width=".6" stroke-dasharray="3 2" opacity=".5"/>
+          </g>
+          <g id="sOut"></g>
+        </g>
+        ${cl('From the oesophagus', 400, 70, 'end', 406, 64, 440, 92)}${cl('Muscly wall', 740, 220, 'start', 736, 214, 690, 258)}
+        ${cl('To the small intestine', 30, 360, 'start', 120, 370, 240, 460)}
+        <g class="lab tl"><circle cx="772" cy="452" r="9" style="fill:#a3d977;stroke:#5e9c3a;stroke-width:2"/><text x="792" y="459">Acid and</text><text x="792" y="483">digestive juices</text>
+          <rect x="762" y="510" width="20" height="20" rx="5" fill="#e6c977" stroke="#b0913e" stroke-width="1.5"/><text x="792" y="527">Chyme</text></g>`;
+    },
+    frame(svg) {
+      const wall = svg.querySelector('#sChurn > path'), Lw = wall.getTotalLength(), duo = svg.querySelector('#sDuo'), Ld = duo.getTotalLength();
+      const churn = svg.querySelector('#sChurn'), bits = svg.querySelector('#sBits'), drops = svg.querySelector('#sDrops'), out = svg.querySelector('#sOut'), chyme = svg.querySelector('#sChyme');
+      const B = Array.from({ length: 9 }, (_, i) => ({ a: rnd(i) * 6.28, rx: 14 + rnd(i + 20) * 22, ry: 10 + rnd(i + 40) * 16, sp: .5 + rnd(i + 60) * .5, sz: 9 + rnd(i + 80) * 4,
+        pts: Array.from({ length: 6 }, (_, k) => [Math.cos(k * 1.047), Math.sin(k * 1.047), .75 + rnd(i * 6 + k) * .45]) }));
+      return t => {
+        const tt = t % 9, p = clamp01(tt / 7.2), w = Math.sin(tt * 5);
+        churn.setAttribute('transform', `translate(330 500) rotate(${3 * w}) scale(${1 + .035 * w} ${1 - .035 * w}) translate(-330 -500)`);
+        chyme.setAttribute('opacity', .1 + .8 * p);
+        bits.innerHTML = B.map((b, i) => {
+          const e = ease(clamp01((tt - i * .1) / 1)), ang = b.a + tt * b.sp * 2;
+          const x = lerp(330, 338 + b.rx * Math.cos(ang), e), y = lerp(456, 497 + b.ry * Math.sin(ang), e), f = b.sz * (1 - .8 * p);
+          return `<polygon points="${b.pts.map(([c, s, r]) => `${x + c * r * f},${y + s * r * f}`).join(' ')}" fill="#fff4cf" stroke="#b9a35e" stroke-width=".4" stroke-linejoin="round" opacity="${1 - p * p}"/>`;
+        }).join('');
+        drops.innerHTML = tt > 7.5 ? '' : Array.from({ length: 12 }, (_, j) => {
+          const u = (tt * .6 + j / 12) % 1, q = wall.getPointAtLength(Lw * j / 12);
+          return `<circle cx="${lerp(q.x, 330, .35 * u)}" cy="${lerp(q.y, 500, .35 * u)}" r="2.3" fill="#a3d977" stroke="#5e9c3a" stroke-width=".5" opacity="${Math.sin(Math.PI * u)}"/>`;
+        }).join('');
+        out.innerHTML = tt < 7.2 ? '' : [0, 1, 2].map(k => {
+          const v = clamp01((tt - 7.2 - k * .3) / 1.2), q = duo.getPointAtLength(Ld * v);
+          return v > 0 && v < 1 ? `<circle cx="${q.x}" cy="${q.y}" r="4" fill="#e6c977" stroke="#b0913e" stroke-width=".5"/>` : '';
+        }).join('');
+      };
+    }
+  },
+  { id: 'villi', name: 'Small intestine', title: 'Into the blood',
+    text: 'The food is now a runny liquid. Its <span class="term">nutrients</span> pass through the thin, folded wall of the small intestine and into the <b>blood</b>. The blood then carries them all around your body.',
+    svg() {
+      const V = Array.from({ length: 7 }, (_, i) => 130 + i * 123);
+      // Open at the bottom so no outline shows where a villus joins the wall
+      const villus = c => `<path d="M${c - 40} 482 C${c - 40} 380 ${c - 36} 300 ${c - 30} 272 Q${c} 220 ${c + 30} 272 C${c + 36} 300 ${c + 40} 380 ${c + 40} 482" fill="#fdb5a8" stroke="#c2574a" stroke-width="2.5"/>
+        <path d="M${c - 18} 520 V380 C${c - 18} 320 ${c - 14} 290 ${c - 10} 280 Q${c} 262 ${c + 10} 280 C${c + 14} 290 ${c + 18} 320 ${c + 18} 380 V520" fill="none" stroke="#e8505f" stroke-width="6"/>`;
+      return `<defs><clipPath id="vClip"><rect x="10" y="10" width="980" height="580" rx="22"/></clipPath></defs>
+        <g clip-path="url(#vClip)"><rect x="10" y="10" width="980" height="580" fill="#fff3c4"/><g id="vFlow"></g>
+          <rect x="10" y="470" width="980" height="130" fill="#fb8f7c"/>${VESSEL('M10 530 H990')}${V.map(villus).join('')}<g id="vDots"></g></g>
+        <rect x="10" y="10" width="980" height="580" rx="22" fill="none" stroke="#9fb2e8" stroke-width="2.5"/>
+        ${cl('Liquid food', 40, 60, 'start')}${cl('Wall of the small intestine', 700, 160, 'middle', 700, 168, 640, 250)}
+        ${cl('Blood vessel', 40, 578, 'start')}${cl('Blood carries nutrients away →', 970, 578, 'end')}
+        <g class="lab tl"><circle cx="800" cy="52" r="8" style="fill:#b3001b;stroke:#fff;stroke-width:2"/><text x="818" y="59">Nutrients</text></g>`;
+    },
+    frame(svg) {
+      const flow = svg.querySelector('#vFlow'), dots = svg.querySelector('#vDots');
+      return t => {
+        flow.innerHTML = Array.from({ length: 16 }, (_, i) =>
+          `<ellipse cx="${(rnd(i) * 1000 + t * 60) % 1000}" cy="${80 + rnd(i + 30) * 150}" rx="6" ry="4" fill="#e6c977" opacity=".7"/>`).join('');
+        dots.innerHTML = Array.from({ length: 21 }, (_, i) => {
+          const c = 130 + (i % 7) * 123, side = rnd(i + 50) > .5 ? 1 : -1, u = (t / 4.5 + rnd(i + 70)) % 1;
+          let x, y, o = 1;
+          if (u < .35) { const v = ease(u / .35); x = lerp(c + side * (60 + rnd(i + 90) * 50), c + side * 12, v); y = lerp(90 + rnd(i + 110) * 120, 282, v); }
+          else if (u < .7) { y = 282 + 238 * (u - .35) / .35; x = c + side * (12 + 6 * clamp01((y - 282) / 100)); }
+          else { const v = (u - .7) / .3; x = c + side * 18 + 260 * v; y = 530; o = 1 - v; }
+          return `<circle cx="${x}" cy="${y}" r="7" fill="#b3001b" stroke="#fff" stroke-width="2" opacity="${o}"/>`;
+        }).join('');
+      };
+    }
+  },
+  { id: 'water', name: 'Large intestine', title: 'Taking back water',
+    text: 'The waste moves slowly through the large intestine. <b>Water</b> passes through the wall and back into the blood. The waste gets drier and firmer, turning into <span class="term">faeces</span>.',
+    svg() {
+      return `<defs><linearGradient id="wGrad" x1="0" x2="1"><stop offset="0" stop-color="#cfe6ff"/><stop offset=".6" stop-color="#efe3d2"/><stop offset="1" stop-color="#f3e9dc"/></linearGradient>
+          <clipPath id="wClip"><rect x="10" y="200" width="980" height="200"/></clipPath></defs>
+        ${VESSEL('M10 110 H990')}${VESSEL('M10 490 H990')}
+        <rect x="10" y="160" width="980" height="40" fill="#86cf9f" stroke="#3f8f5d" stroke-width="2"/><rect x="10" y="400" width="980" height="40" fill="#86cf9f" stroke="#3f8f5d" stroke-width="2"/>
+        <rect x="10" y="200" width="980" height="200" fill="url(#wGrad)"/><g id="wBlobs" clip-path="url(#wClip)"></g><g id="wDrops"></g>
+        ${cl('Watery waste comes in', 30, 60, 'start', 110, 68, 110, 280)}${cl('Water goes back into the blood', 500, 60, 'middle', 500, 68, 500, 100)}
+        ${cl('Drier faeces move on →', 970, 60, 'end', 880, 68, 880, 290)}${cl('Wall of the large intestine', 500, 578, 'middle', 500, 556, 500, 432)}
+        <g class="lab tl"><path d="${DROP}" transform="translate(48 553)" fill="#0a5fd6" stroke="#fff" stroke-width="1.5"/><text x="66" y="563">Water</text></g>
+        ${cl('Blood vessels', 970, 563, 'end')}`;
+    },
+    frame(svg) {
+      const blobs = svg.querySelector('#wBlobs'), drops = svg.querySelector('#wDrops');
+      return t => {
+        blobs.innerHTML = Array.from({ length: 6 }, (_, i) => {
+          const x = (t * 80 + i * 200) % 1200 - 100, q = clamp01(x / 1000), col = mix('#ead8bd', '#6e4322', q);
+          // Watery on the left (big, pale, wobbly edge, wide halo); small, dark and firm on the right.
+          const rx = 80 - 40 * q, ry = 64 - 34 * q, wob = .12 * (1 - q) ** 2;
+          const d = Array.from({ length: 28 }, (_, k) => {
+            const a = k / 28 * Math.PI * 2, r = 1 + wob * Math.sin(3 * a + t * 3 + i) + wob * .6 * Math.sin(5 * a - t * 2 + i * 2);
+            return `${k ? 'L' : 'M'}${(x + rx * r * Math.cos(a)).toFixed(1)} ${(300 + ry * r * Math.sin(a)).toFixed(1)}`;
+          }).join('') + 'Z';
+          return (q < .7 ? `<ellipse cx="${x}" cy="300" rx="${rx + 38}" ry="${ry + 26}" fill="#e3cba8" opacity="${.5 * (1 - q / .7)}"/>` : '') +
+            `<path d="${d}" fill="${col}" stroke="${mix('#cdb08a', '#4a2c14', q)}" stroke-width="2" stroke-linejoin="round"/>`;
+        }).join('');
+        drops.innerHTML = Array.from({ length: 18 }, (_, j) => {
+          const x0 = 120 + rnd(j + 5) * 640, vy = j % 2 ? 110 : 490, u = (t / 3 + rnd(j + 25)) % 1;
+          let x, y, o = 1;
+          if (u < .5) { const v = ease(u / .5); x = x0 + 40 * v; y = lerp(vy === 110 ? 260 : 340, vy, v); }
+          else { const v = (u - .5) / .5; x = x0 + 40 + 200 * v; y = vy; o = 1 - v; }
+          return `<path d="${DROP}" transform="translate(${x} ${y})" fill="#0a5fd6" stroke="#fff" stroke-width="1.5" opacity="${o}"/>`;
+        }).join('');
+      };
+    }
+  }
+];
+const C = {
+  tok: 0,
+  mount() {
+    const sc = CLOSE[state.close], svg = $('#stage svg');
+    svg.innerHTML = '<rect class="frame" x="10" y="10" width="980" height="580" rx="22"/>' + sc.svg();
+    C.draw = sc.frame(svg);
+    C.t = 0;
+    let last = null;
+    const tok = ++C.tok;
+    const loop = now => {
+      if (tok !== C.tok || !svg.isConnected) return;
+      if (last !== null && !state.cpaused) C.t += Math.min(.1, (now - last) / 1000);
+      last = now;
+      C.draw(C.t);
+      requestAnimationFrame(loop);
+    };
+    C.draw(0);
+    requestAnimationFrame(loop);
+    state.seenClose.add(state.close);
+    emit('close');
+  }
+};
+
+// ================= Other animals =================
+// The same tube in the same order: mouth, oesophagus, stomach, small intestine, large intestine, anus.
+// Each animal sits in its own box: a pale silhouette with the tube drawn on top.
+const VPARTS = ['mouth', 'oesophagus', 'stomach', 'small-intestine', 'large-intestine', 'anus'];
+const VNAMES = { mouth: 'Mouth', oesophagus: 'Oesophagus', stomach: 'Stomach', 'small-intestine': 'Small intestine', 'large-intestine': 'Large intestine', anus: 'Anus' };
+// A coloured tube with a darker edge, plus a wide invisible copy so thin parts are easy to tap
+const vTube = (d, col, edge, w) => `<path d="${d}" fill="none" stroke="${edge}" stroke-width="${w + 4}" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="${d}" fill="none" stroke="${col}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="${d}" fill="none" stroke="transparent" stroke-width="26" stroke-linecap="round"/>`;
+const vBlob = (d, col = '#ffb062', edge = '#c06f22') => `<path d="${d}" fill="${col}" stroke="${edge}" stroke-width="2.5" stroke-linejoin="round"/>`;
+const vMouth = (d, x, y) => `<path d="${d}" fill="none" stroke="#b8455e" stroke-width="7" stroke-linecap="round"/><ellipse cx="${x}" cy="${y}" rx="22" ry="16" fill="transparent"/>`;
+const vAnus = (x, y) => `<circle cx="${x}" cy="${y}" r="6" fill="#2d4f8f" stroke="#fff" stroke-width="2"/><circle cx="${x}" cy="${y}" r="16" fill="transparent"/>`;
+// The silhouette: every shape drawn once with a thick edge, then again on top without it, so they join into one outline
+const vBody = (shapes, fill, edge) => `<g fill="${edge}" stroke="${edge}" stroke-width="7" stroke-linejoin="round">${shapes}</g><g fill="${fill}" stroke="${fill}" stroke-width="1">${shapes}</g>`;
+const OES = ['#f4a6bd', '#c25e7f', 8], SI = ['#fb8f7c', '#c2574a', 7], LI = ['#86cf9f', '#3f8f5d', 10];
+const ANIMALS = [
+  { id: 'human', name: 'Human', icon: '🧍',
+    body: vBody(`<circle cx="120" cy="70" r="38"/><rect x="106" y="100" width="28" height="34" rx="6"/>
+      <path d="M58 132 C80 126 160 126 182 132 C194 136 196 150 194 170 L184 300 C182 360 178 400 176 432 L64 432 C62 400 58 360 56 300 L46 170 C44 150 46 136 58 132 Z"/>
+      <rect x="22" y="140" width="28" height="230" rx="14"/><rect x="190" y="140" width="28" height="230" rx="14"/>
+      <rect x="66" y="410" width="50" height="140" rx="18"/><rect x="124" y="410" width="50" height="140" rx="18"/>`, '#fde9dd', '#e6ab98') +
+      '<circle cx="106" cy="64" r="4.5" fill="#1d2340"/><circle cx="134" cy="64" r="4.5" fill="#1d2340"/>',
+    parts: {
+      mouth: vMouth('M110 86 H130', 120, 86),
+      oesophagus: vTube('M120 92 V232 C120 244 126 250 136 252', ...OES),
+      stomach: vBlob('M132 244 C150 232 176 236 178 258 C180 282 160 298 136 296 C122 295 116 286 122 280 C132 284 150 280 152 266 C154 256 146 252 134 258 C126 262 124 250 132 244 Z'),
+      'small-intestine': vTube('M126 296 C104 300 92 316 104 326 C118 336 150 326 152 342 C154 358 100 350 96 364 C92 380 150 372 150 388 C150 400 110 402 96 398', ...SI),
+      'large-intestine': vTube('M96 398 C80 398 74 390 74 380 L72 326 C72 314 80 310 90 310 L150 310 C162 310 168 316 168 328 L166 384 C166 400 156 408 140 410 C126 412 120 416 120 428', ...LI),
+      anus: vAnus(120, 432) } },
+  { id: 'dog', name: 'Dog', icon: '🐕',
+    body: vBody(`<ellipse cx="255" cy="85" rx="130" ry="42"/><ellipse cx="150" cy="92" rx="48" ry="42"/><path d="M92 50 L140 52 L170 100 L118 110 Z"/>
+      <ellipse cx="88" cy="50" rx="36" ry="30"/><rect x="26" y="48" width="60" height="26" rx="13"/>
+      <rect x="128" y="110" width="24" height="66" rx="11"/><rect x="162" y="112" width="24" height="64" rx="11"/><rect x="318" y="100" width="26" height="76" rx="11"/><rect x="350" y="98" width="26" height="78" rx="11"/>
+      <path d="M376 70 Q420 52 436 20" fill="none" stroke-width="16" stroke-linecap="round"/>`, '#ecc9a0', '#a0703f') +
+      '<path d="M90 26 C112 22 122 48 112 76 C100 80 90 60 90 26 Z" fill="#b07a4a"/><circle cx="76" cy="42" r="4.5" fill="#1d2340"/><ellipse cx="30" cy="55" rx="6" ry="5" fill="#1d2340"/>',
+    parts: {
+      mouth: vMouth('M34 70 H70', 52, 68),
+      oesophagus: vTube('M70 70 C104 70 140 76 174 82', ...OES),
+      stomach: vBlob('M172 72 C190 60 216 64 218 84 C220 102 200 110 186 104 C176 100 168 90 172 72 Z'),
+      'small-intestine': vTube('M230 98 q11 14 22 0 t22 0 t22 0 t22 0 C330 98 332 112 316 114 q-11 -14 -22 0 t-22 0 t-22 0 t-22 0', ...SI),
+      'large-intestine': vTube('M228 114 C218 112 220 70 242 64 L330 64 C356 64 372 70 386 78', ...LI),
+      anus: vAnus(390, 80) } },
+  { id: 'pig', name: 'Pig', icon: '🐖',
+    body: vBody(`<ellipse cx="255" cy="88" rx="140" ry="55"/><ellipse cx="110" cy="86" rx="50" ry="42"/><ellipse cx="60" cy="96" rx="16" ry="21"/>
+      <rect x="150" y="124" width="28" height="50" rx="10"/><rect x="190" y="126" width="28" height="48" rx="10"/><rect x="312" y="124" width="28" height="50" rx="10"/><rect x="350" y="120" width="28" height="54" rx="10"/>
+      <path d="M392 80 c16 -6 24 8 14 16 c-9 7 -18 -4 -9 -10" fill="none" stroke-width="10" stroke-linecap="round"/>`, '#ffd6df', '#c77d92') +
+      '<path d="M104 52 L124 20 L144 58 Z" fill="#f7aebf" stroke="#c77d92" stroke-width="2.5" stroke-linejoin="round"/><ellipse cx="54" cy="94" rx="10" ry="15" fill="#f7aebf"/><ellipse cx="51" cy="88" rx="2.5" ry="4" fill="#9b4f62"/><ellipse cx="51" cy="100" rx="2.5" ry="4" fill="#9b4f62"/><circle cx="96" cy="72" r="4.5" fill="#1d2340"/>',
+    parts: {
+      mouth: vMouth('M62 118 Q78 120 94 112', 78, 116),
+      oesophagus: vTube('M94 112 C126 104 156 96 182 92', ...OES),
+      stomach: vBlob('M180 80 C198 62 230 68 230 92 C230 112 206 120 192 112 C182 106 176 96 180 80 Z'),
+      'small-intestine': vTube('M246 106 q11 14 22 0 t22 0 t22 0 t22 0 C348 106 350 120 334 122 q-11 -14 -22 0 t-22 0 t-22 0 t-22 0', ...SI),
+      'large-intestine': vTube('M244 122 C234 120 236 74 258 68 L340 68 C368 68 384 76 394 84', ...LI),
+      anus: vAnus(398, 88) } },
+  { id: 'cow', name: 'Cow', icon: '🐄', note: 'Its stomach has <b>4 parts</b>, to break down tough grass.',
+    body: vBody(`<rect x="140" y="36" width="272" height="96" rx="44"/><path d="M96 40 L162 36 L172 110 L84 98 Z"/>
+      <path d="M56 30 C76 20 104 22 110 36 C114 50 100 70 92 92 C86 110 70 120 50 120 C32 118 22 106 28 92 C36 72 42 40 56 30 Z"/>
+      <rect x="160" y="118" width="24" height="58" rx="10"/><rect x="194" y="118" width="24" height="58" rx="10"/><rect x="350" y="118" width="24" height="58" rx="10"/><rect x="382" y="114" width="24" height="62" rx="10"/>
+      <path d="M410 50 Q430 90 424 140" fill="none" stroke-width="6" stroke-linecap="round"/>`, '#ffffff', '#6f6f6f') +
+      `<ellipse cx="380" cy="56" rx="22" ry="13" fill="#3b3b3b"/><ellipse cx="424" cy="146" rx="6" ry="10" fill="#6f6f6f"/>
+      <path d="M66 26 q-4 -14 -18 -20 M98 26 q6 -14 20 -18" fill="none" stroke="#c9b27a" stroke-width="6" stroke-linecap="round"/>
+      <ellipse cx="122" cy="44" rx="16" ry="7" transform="rotate(20 122 44)" fill="#ffffff" stroke="#6f6f6f" stroke-width="2.5"/>
+      <ellipse cx="50" cy="104" rx="23" ry="15" fill="#ffc9cf" stroke="#6f6f6f" stroke-width="2.5"/><circle cx="74" cy="54" r="4.5" fill="#1d2340"/>`,
+    parts: {
+      mouth: vMouth('M38 114 Q50 120 64 114', 50, 116),
+      oesophagus: vTube('M64 112 C98 100 140 80 184 72', ...OES),
+      // Four parts, in different shades of the stomach's orange
+      stomach: vBlob('M190 70 C204 52 240 54 244 80 C248 104 222 112 204 106 C190 102 184 86 190 70 Z') + vBlob('M176 84 a12 12 0 1 0 24 0 a12 12 0 1 0 -24 0 Z', '#ffc27f')
+        + vBlob('M226 108 a14 11 0 1 0 28 0 a14 11 0 1 0 -28 0 Z', '#ffa54a') + vBlob('M244 96 a16 10 0 1 0 32 0 a16 10 0 1 0 -32 0 Z', '#ff9a3c'),
+      'small-intestine': vTube('M296 100 q10 14 20 0 t20 0 t20 0 C360 100 362 114 348 116 q-10 -14 -20 0 t-20 0 t-20 0', ...SI),
+      'large-intestine': vTube('M288 116 C280 114 282 62 304 56 L382 54 C398 54 406 60 410 70', ...LI),
+      anus: vAnus(412, 74) } }
+];
+// Each animal's box on the stage [x, y, width, height] and where its drawing starts inside it [dx, dy]
+const VSPOT = { human: [10, 10, 240, 600, 0, 50], dog: [262, 10, 728, 192, 250, 8], pig: [262, 219, 728, 192, 250, 8], cow: [262, 428, 728, 192, 250, 8] };
+// Intestines first, so the stomach, mouth and anus sit on top and win any taps near their edges
+const VDRAW = ['large-intestine', 'small-intestine', 'oesophagus', 'stomach', 'mouth', 'anus'];
+function animalsSvg() {
+  return `<svg viewBox="0 0 1000 620" role="img" aria-label="The digestive systems of a human, a dog, a pig and a cow" class="vmode">
+    ${ANIMALS.map(a => {
+      const [x, y, w, h, dx, dy] = VSPOT[a.id], tall = h > w;
+      return `<g transform="translate(${x} ${y})"><rect class="frame" width="${w}" height="${h}" rx="18"/>
+        <text class="vname" x="${tall ? w / 2 : 24}" y="${tall ? 40 : 54}" text-anchor="${tall ? 'middle' : 'start'}">${a.icon} ${a.name}</text>
+        ${a.note ? `<foreignObject x="20" y="72" width="${dx - 30}" height="110"><div class="vnote">${a.note}</div></foreignObject>` : ''}
+        <g transform="translate(${dx} ${dy})">${a.body}
+          ${VDRAW.map(p => `<g class="vpart" data-animal="${a.id}" data-part="${p}">${a.parts[p]}</g>`).join('')}</g></g>`;
+    }).join('')}</svg>`;
+}
+const V = {
+  mount() {
+    const svg = $('#stage svg');
+    V.show(state.vpart);
+    svg.addEventListener('click', e => {
+      const g = e.target.closest('.vpart');
+      if (!g) { V.show(null); return; }
+      const { animal, part } = g.dataset;
+      if (animal === 'dog') state.vdog.add(part);
+      V.show(part);
+      emit('vpart', { animal, part, dogFound: state.vdog.size });
+    });
+  },
+  // Light up one part in every animal at once, to show they all have it
+  show(part) {
+    state.vpart = part;
+    const svg = $('#stage svg');
+    svg.classList.toggle('picking', !!part);
+    svg.querySelectorAll('.vpart').forEach(g => g.classList.toggle('hl', g.dataset.part === part));
+    $('#drawer').innerHTML = VIEWS.animals.drawer();
+  }
+};
+
+// ================= Missions =================
+// Each mission sets up a view; activities call emit() when something happens, and on() says whether that completes it.
+const MISSIONS = [
+  { id: 'apple', icon: '🍎', title: 'Follow the apple', task: 'On the <b>Journey</b>, follow the apple slice all the way from the mouth to the anus.', hint: 'Press <b>Next ▶</b> to move the apple on one stop.',
+    setup() { state.view = 'journey'; state.step = 0; },
+    on: (ev, d) => ev === 'step' && d.walked && d.n === STOPS.length - 1,
+    win: () => 'The apple went through the mouth, oesophagus, stomach, small intestine, large intestine and rectum, then left through the anus. The whole journey can take <b>more than a day</b>!' },
+  { id: 'build', icon: '🧩', title: 'Build the body', task: 'Drag all <b>6 organs</b> into the right place in the body.', hint: 'The pale outlines show where each organ goes.',
+    setup() { state.view = 'organs'; state.outlines = true; },
+    on: ev => ev === 'placed',
+    win: () => 'Every organ is in place! Together they make one very long tube, from the mouth to the anus.' },
+  { id: 'order', icon: '🔢', title: 'Perfect order', task: 'Put the journey in order with <b>no wrong taps</b>.', hint: 'Food goes in at the mouth. Where is it swallowed to next?',
+    setup() { state.view = 'order'; },
+    on: (ev, d) => ev === 'ordered' && d.mistakes === 0,
+    win: () => 'Mouth → oesophagus → stomach → small intestine → large intestine → rectum → anus. Food only goes <b>one way</b>!' },
+  { id: 'jobs', icon: '❓', title: 'Job matcher', task: 'In <b>What happens here?</b>, get at least <b>6 of 7</b> right first time.', hint: 'Nutrients go into the blood in the <b>small</b> intestine. Water goes back into the body in the <b>large</b> intestine.',
+    setup() { state.view = 'quiz'; },
+    on: (ev, d) => ev === 'matched' && d.firstTry >= 6,
+    win: () => 'You know what each part does! The small intestine takes in <b>nutrients</b>, and the large intestine takes back <b>water</b>.' },
+  { id: 'grind', icon: '😬', title: 'Grinding teeth', task: 'In <b>Lion vs zebra</b>, show the <b>molars</b>, then make the animals chew.', hint: 'Tap <b>Molars</b>, then press <b>Chew!</b>',
+    setup() { state.view = 'teeth'; },
+    on: (ev, d) => ev === 'chew' && d.type === 'molar',
+    win: () => 'A zebra slides its jaw from side to side, so its flat molars <b>grind</b> tough grass. A lion chops up and down, so its jagged molars <b>slice</b> meat like scissors.' },
+  { id: 'lionzebra', icon: '🦓', title: 'Lion or zebra?', task: 'Get all <b>6 of 6</b> right in the <b>Lion or zebra?</b> quiz.', hint: 'Meat-eaters need teeth for gripping and slicing. Grass-eaters need teeth for cutting and grinding.',
+    setup() { state.view = 'teeth'; },
+    on: (ev, d) => ev === 'tquiz' && d.right === TQUIZ.length,
+    win: () => 'An animal\'s teeth suit the food it eats. A lion\'s teeth <b>grip and slice</b> meat. A zebra\'s teeth <b>nip and grind</b> grass.' },
+  { id: 'zoom', icon: '🔬', title: 'Zoom right in', task: 'Watch all <b>4 close-ups</b>.', hint: 'Tap each button at the top of the Close-ups card.',
+    setup() { state.view = 'close'; state.close = 0; state.cpaused = false; state.seenClose = new Set(); },
+    on: ev => ev === 'close' && state.seenClose.size === CLOSE.length,
+    win: () => 'Teeth chew, the stomach churns, nutrients pass into the blood in the small intestine, and the large intestine takes back water. Food is broken down so your body can use it.' },
+  { id: 'dog', icon: '🐕', title: 'Spot the same parts in a dog', task: 'In <b>Other animals</b>, tap all <b>6 parts</b> of the <b>dog\'s</b> digestive system.', hint: 'Start at the mouth and follow the tube all the way to the anus, under the tail.',
+    setup() { state.view = 'animals'; state.vpart = null; state.vdog = new Set(); },
+    on: (ev, d) => ev === 'vpart' && d.dogFound === VPARTS.length,
+    win: () => 'A dog has the same parts as you, in the same order: mouth, oesophagus, stomach, small intestine, large intestine and anus. Many <b>vertebrates</b> have a digestive system like ours!' },
+  { id: 'nopeek', icon: '🙈', title: 'No peeking!', task: 'Drag all <b>6 organs</b> into place with <b>no outlines</b>.', hint: 'The stomach is on the left side of the body. That is on the right as you look at the picture!',
+    setup() { state.view = 'organs'; state.outlines = false; },
+    on: (ev, d) => ev === 'placed' && !d.peeked,
+    win: () => 'You know where every organ goes, with no help at all. Brilliant!' }
+];
+function emit(ev, data = {}) {
+  if (state.mission == null) return;
+  const i = state.mission, m = MISSIONS[i];
+  if (!m.on(ev, data)) return;
+  stopMission();
+  if (!state.done.includes(m.id)) { state.done.push(m.id); store.set('dj-done', state.done); }
+  updateStars();
+  // Let the last animation play before the pop-up covers it
+  setTimeout(() => {
+    $('#winTitle').textContent = `${m.icon} Mission complete!`;
+    $('#winText').innerHTML = m.win(data);
+    $('#winNext').style.display = i < MISSIONS.length - 1 ? '' : 'none';
+    $('#winPractise').style.display = i < MISSIONS.length - 1 ? 'none' : '';
+    $('#winNext').dataset.i = i + 1;
+    $('#winModal').classList.remove('hidden'); confetti();
+  }, ev === 'step' ? 1800 : 900);
+}
+function startMission(i) {
+  closeModals();
+  state.mission = i; MISSIONS[i].setup();
+  location.hash = 'view=' + state.view;
+  const m = MISSIONS[i];
+  $('#bannerKicker').textContent = `Mission ${i + 1} of ${MISSIONS.length}: ${m.title}`;
+  $('#bannerText').innerHTML = m.task; $('#bannerHint').innerHTML = m.hint;
+  $('#bannerHint').classList.add('hidden'); $('#hintBtn').textContent = '💡 Show a hint';
+  $('#banner').classList.remove('hidden');
+  render();
+}
+function stopMission() { state.mission = null; $('#banner').classList.add('hidden'); fitBanner(); }
+// The banner sits over the top of the drawer, so the drawer's cards start below it
+function fitBanner() { $('#drawer').style.paddingTop = state.mission == null ? '' : `${$('#banner').offsetHeight + 18}px`; }
+function updateStars() { $('#starCount').textContent = `${state.done.length}/${MISSIONS.length} ⭐`; }
+function closeModals() { document.querySelectorAll('.modal').forEach(m => m.classList.add('hidden')); }
+function confetti() {
+  const em = ['⭐', '🌟', '🍎', '✨', '🎉'];
+  for (let i = 0; i < 36; i++) {
+    const s = document.createElement('span'); s.className = 'confetti'; s.textContent = em[i % em.length];
+    s.style.left = `${Math.random() * 100}vw`; s.style.animationDuration = `${2 + Math.random() * 2}s`; s.style.animationDelay = `${Math.random() * .6}s`;
+    document.body.appendChild(s); setTimeout(() => s.remove(), 5000);
+  }
+}
+
+// ================= Views =================
+const VIEWS = {
+  diagram: {
+    label: 'Diagram',
+    stage() { return $('#diagramSvg').innerHTML; },
+    after() { P.mount(); },
+    drawer() {
+      const key = [
+        ['Teeth', '#ffffff'], ['Salivary glands', '#ffd34d'], ['Oesophagus', '#f4a6bd'], ['Stomach', '#ffb062'],
+        ['Small intestine', '#fb8f7c'], ['Large intestine', '#86cf9f'], ['Rectum', '#86b2ee'], ['Anus', '#3f6fb8']
+      ].map(([n, c]) => `<li><span class="sw" style="background:${c}"></span>${n}</li>`).join('');
+      return `
+        <div class="card"><h2>The digestive system</h2>
+          <p>Food goes in at the mouth and travels all the way through these organs.</p>
+          <p><b>Hover over a part to find out what it does.</b> On a tablet or phone, tap it.</p>
+          <ul class="key">${key}</ul></div>
+        <div class="card"><p class="muted">The liver is drawn faintly so the body looks right, but it isn't part of this topic.</p></div>`;
+    }
+  },
+  journey: {
+    label: 'Journey',
+    stage() { return $('#diagramSvg').innerHTML; },
+    after() { J.mount(); },
+    drawer() {
+      const n = state.step, s = STOPS[n], last = n === STOPS.length - 1, pr = state.predict;
+      const chips = STOPS.map((x, i) =>
+        `<button class="opt${i === n ? ' on' : i < n ? ' done' : ''}" data-act="jgo" data-n="${i}">${i + 1}. ${x.name}</button>`).join('');
+      // Predict first: the times stay hidden until a guess is made, and the answer shows from the large intestine on
+      const longest = 'large-intestine', guess = pr && STOPS.find(x => x.id === pr).name;
+      const predict = !pr
+        ? `<div class="card predict"><h3>🤔 Predict first</h3><p>Where do you think food stays the <b>longest</b>?</p>
+            <div class="stops">${PREDICT.map(x => `<button class="opt" data-act="jpredict" data-id="${x.id}">${x.name}</button>`).join('')}</div>
+            <p class="muted">The times show once you have chosen.</p></div>`
+        : STOPS.findIndex(x => x.id === longest) <= n
+          ? `<div class="card"><h3>🤔 Your prediction</h3>
+              ${PREDICT.map(x => `<div class="trow${x.id === longest ? ' best' : ''}"><span>${x.name}${x.id === pr ? ' <b class="mine">🤔 you</b>' : ''}</span><span>${x.time.replace('About ', '')}</span></div>`).join('')}
+              <p>${pr === longest ? '🎉 Spot on! Food stays longest in the <b>large intestine</b>.' : `You guessed the ${guess.toLowerCase()}. Good thinking! But taking back water is slow, so food stays longest in the <b>large intestine</b>.`}</p></div>`
+          : `<div class="card"><p class="muted" style="margin:0">🤔 You guessed: <b>${guess}</b>. Keep going to find out!</p></div>`;
+      return `${pr ? '' : predict}
+        <div class="card"><div class="muted">Stop ${n + 1} of ${STOPS.length}</div>
+          <h2>${s.name}</h2>
+          <p>${s.text}</p>
+          <p><span class="time">⏱ ${pr ? s.time : '?'}</span></p>
+          <p class="muted">The apple is now: <b>${s.now}</b></p></div>
+        <div class="navrow">
+          <button class="btn" data-act="jback"${n === 0 ? ' disabled' : ''}>◀ Back</button>
+          <button class="btn go" data-act="jnext">${last ? 'Start again ↺' : 'Next ▶'}</button></div>
+        ${pr ? predict : ''}
+        <div class="card"><h3>The route</h3><div class="stops">${chips}</div></div>`;
+    }
+  },
+  organs: {
+    label: 'Drag the organs',
+    stage() { return $('#diagramSvg').innerHTML; },
+    after() { D.mount(); $('#drawer').innerHTML = this.drawer(); },
+    drawer() {
+      const n = state.placed ? state.placed.size : 0, done = n === PIECES.length;
+      return `
+        <div class="card"><h2>Drag the organs</h2>
+          <p>Drag each organ to the right place in the body. It will snap in when you get it right.</p>
+          <p><b>${n} of ${PIECES.length}</b> placed</p>
+          <div class="progress"><div style="width:${n / PIECES.length * 100}%"></div></div>
+          <p class="muted" id="dragMsg">${done ? '' : state.outlines ? 'Tip: the pale outlines show where each organ goes.' : 'No outlines this time. Use what you know!'}</p></div>
+        ${done ? `<div class="card"><h2>🎉 Well done!</h2><p>You put every organ in the right place${state.outlines ? '' : ' with no outlines to help'}.</p></div>` : ''}
+        <div class="card"><h3>Outlines</h3><div class="stops">
+          <button class="opt${state.outlines ? ' on' : ''}" data-act="outlines" data-on="1">Show outlines</button>
+          <button class="opt${state.outlines ? '' : ' on'}" data-act="outlines" data-on="">No outlines (harder)</button></div></div>
+        <div class="navrow"><button class="btn${done ? ' go' : ''}" data-act="restart">Start again ↺</button></div>`;
+    }
+  },
+  order: {
+    label: 'Journey order',
+    stage() { return $('#diagramSvg').innerHTML; },
+    after() { O.mount(); $('#drawer').innerHTML = this.drawer(); },
+    drawer() {
+      const o = state.order;
+      if (!o) return '';
+      const done = o.done === STOPS.length;
+      const seq = STOPS.map((s, i) => `<span class="${i < o.done ? 'done' : ''}">${i < o.done ? `${i + 1}. ${s.name}` : i + 1}</span>`).join('');
+      const choices = o.choices.map(i => `<button class="opt${i < o.done ? ' used' : ''}" data-act="opick" data-n="${i}">${STOPS[i].name}</button>`).join('');
+      return `
+        <div class="card"><h2>Put the journey in order</h2>
+          <p>Tap the parts in the order the food goes through them. Start where the food goes in!</p>
+          <div class="seq">${seq}</div>
+          <p class="muted" id="orderMsg"></p></div>
+        ${done ? `<div class="card"><h2>🎉 Well done!</h2><p>You put the whole journey in order${o.mistakes ? '' : ' with no mistakes'}!</p>
+            ${o.mistakes ? `<p class="muted">Wrong taps: ${o.mistakes}. Can you do it with none next time?</p>` : ''}</div>
+          <div class="navrow"><button class="btn go" data-act="view" data-view="journey">Watch the journey ▶</button></div>`
+          : `<div class="card"><div class="choices">${choices}</div></div>`}
+        <div class="navrow"><button class="btn" data-act="restart">Start again ↺</button></div>`;
+    }
+  },
+  quiz: {
+    label: 'What happens here?',
+    stage() { return $('#diagramSvg').innerHTML; },
+    after() { W.mount(); $('#drawer').innerHTML = this.drawer(); },
+    drawer() {
+      const q = state.quiz;
+      if (!q) return '';
+      const done = q.n === STOPS.length;
+      return `
+        <div class="card"><h2>What happens here?</h2>
+          ${done ? '' : `<div class="muted">Question ${q.n + 1} of ${STOPS.length}</div>
+          <p class="job">${JOBS[STOPS[q.order[q.n]].id].job}</p>
+          <p><b>Tap the part of the body that does this.</b></p>`}
+          <div class="progress"><div style="width:${q.n / STOPS.length * 100}%"></div></div>
+          <p class="muted" id="quizMsg"></p></div>
+        ${done ? `<div class="card"><h2>🎉 Well done!</h2><p>You matched every part to its job.</p>
+            <p><b>${q.firstTry} of ${STOPS.length}</b> right first time.</p></div>` : ''}
+        <div class="navrow"><button class="btn${done ? ' go' : ''}" data-act="restart">Start again ↺</button></div>`;
+    }
+  },
+  teeth: {
+    label: 'Lion vs zebra',
+    stage() { return teethSvg(); },
+    after() { T.mount(); $('#drawer').innerHTML = this.drawer(); },
+    drawer() {
+      const t = state.teeth;
+      if (!t) return '';
+      const types = Object.entries(TEETH).map(([k, x]) => `<button class="opt${t.type === k ? ' on' : ''}" data-act="tpick" data-type="${k}">${x.name}</button>`).join('');
+      const sel = t.type && TEETH[t.type];
+      const finished = t.q === TQUIZ.length, [say, who] = finished ? [] : TQUIZ[t.order[t.q]];
+      const quiz = finished
+        ? `<p><b>${t.right} of ${TQUIZ.length}</b> right! ${t.right === TQUIZ.length ? '🎉' : ''}</p><button class="btn" data-act="tquiz">Try again ↺</button>`
+        : `<div class="muted">Question ${t.q + 1} of ${TQUIZ.length}</div><p class="job">"${say}"</p>
+          <div class="choices">
+            ${['lion', 'zebra'].map(a => `<button class="opt${!t.answered ? '' : a === who ? ' done' : a === t.answered ? ' wrong' : ''}" data-act="tanswer" data-who="${a}">${a === 'lion' ? '🦁 Lion' : '🦓 Zebra'}</button>`).join('')}</div>
+          ${t.answered ? `<p>${t.answered === who ? 'Yes!' : 'Not quite.'} It's the <b>${who}</b>.</p>
+            <div class="navrow"><button class="btn go" data-act="tnext">${t.q === TQUIZ.length - 1 ? 'See my score' : 'Next ▶'}</button></div>` : ''}`;
+      return `
+        <div class="card"><h2>Lion vs zebra teeth</h2>
+          <p>A lion is a <span class="term">predator</span> that eats meat. A zebra is <span class="term">prey</span> that eats grass. Their teeth are made for their food!</p></div>
+        <div class="card"><h3>Tap a type of tooth</h3><div class="stops">${types}</div>
+          ${sel ? `<p>🦁 <b>Lion:</b> ${sel.lion}</p><p>🦓 <b>Zebra:</b> ${sel.zebra}</p>` : ''}
+          <p class="muted">You have all three types, because you eat plants and meat.</p></div>
+        <div class="card"><h3>See them chew</h3>
+          <p>Lions chop up and down like scissors. Zebras slide their jaws to grind grass.</p>
+          <button class="btn" data-act="tchew">Chew! 😬</button></div>
+        <div class="card"><h3>Lion or zebra?</h3>${quiz}</div>
+        <div class="card"><p style="margin:0">Find out how lions hunt zebras and how zebras escape in
+          <a href="../adaptation-studio/index.html#view=pp" target="_blank" rel="noopener"><b>Predator &amp; prey</b></a> in Adaptation Studio.</p></div>`;
+    }
+  },
+  close: {
+    label: 'Close-ups',
+    stage() { return '<svg viewBox="0 0 1000 600" role="img" aria-label="Close-up animation"></svg>'; },
+    after() { C.mount(); },
+    drawer() {
+      const sc = CLOSE[state.close];
+      const picks = CLOSE.map((x, i) => `<button class="opt${i === state.close ? ' on' : ''}" data-act="cpick" data-n="${i}">${x.name}</button>`).join('');
+      return `
+        <div class="card"><h2>Close-ups</h2><p>Zoom right in to see what happens inside.</p><div class="stops">${picks}</div></div>
+        <div class="card"><h2>${sc.title}</h2><p>${sc.text}</p></div>
+        <div class="navrow"><button class="btn" data-act="cpause">${state.cpaused ? '▶ Play' : '⏸ Pause'}</button></div>`;
+    }
+  },
+  animals: {
+    label: 'Other animals',
+    stage() { return animalsSvg(); },
+    after() { V.mount(); },
+    drawer() {
+      const p = state.vpart, m = MISSIONS[state.mission], found = state.vdog.size;
+      const chips = VPARTS.map(x => `<button class="opt${x === p ? ' on' : ''}" data-act="vpick" data-part="${x}">${VNAMES[x]}</button>`).join('');
+      return `
+        <div class="card"><h2>Other animals</h2>
+          <p>Many <span class="term">vertebrates</span> (animals with a backbone) have a digestive system like yours: one long tube from the mouth to the anus, with the <b>same parts in the same order</b>.</p></div>
+        <div class="card"><h3>Find a part in every animal</h3><p class="muted">Tap a part below, or in one of the animals.</p><div class="stops">${chips}</div>
+          ${p ? `<p class="job">${VNAMES[p]}: ${JOBS[p].job}</p>` : ''}
+          ${p === 'stomach' ? '<p>A cow\'s stomach has <b>4 parts</b>, because grass is so hard to break down. Similar, but not exactly the same!</p>' : ''}</div>
+        ${m && m.id === 'dog' ? `<div class="card"><p><b>🐕 Dog parts found: ${found} of ${VPARTS.length}</b></p><div class="progress"><div style="width:${found / VPARTS.length * 100}%"></div></div></div>` : ''}`;
+    }
+  },
+  help: {
+    label: 'Help',
+    stage() { return $('#diagramSvg').innerHTML; },
+    drawer() {
+      return `<div class="card"><h2>Help</h2>
+        <p><b>Diagram</b>: learn the parts of the digestive system.</p>
+        <p><b>Journey</b>: follow an apple slice from the mouth to the anus. Press <b>Next</b> to move it on one stop.</p>
+        <p><b>Drag the organs</b>: drag each organ into its place in the body.</p>
+        <p><b>Journey order</b>: tap the parts of the digestive system in the order food goes through them.</p>
+        <p><b>What happens here?</b>: read what a part of the body does, then tap that part.</p>
+        <p><b>Lion vs zebra</b>: compare a meat-eater's teeth with a grass-eater's.</p>
+        <p><b>Close-ups</b>: zoom in on chewing, the stomach, the small intestine and the large intestine.</p>
+        <p><b>Other animals</b>: compare your digestive system with a dog's, a pig's and a cow's.</p>
+        <p><b>🚀 Missions</b>: challenges that use all the tabs. Win a star for each one!</p>
+        <p><b>🤔 Real life?</b>: how this model is different from a real body.</p>
+        <p class="muted">Organ shapes based on a diagram by Mariana Ruiz Villarreal (public domain).</p></div>
+        <div class="card"><h3>🎯 What you are learning</h3>
+          <p><b>5Bs.04</b> Describe the human digestive system, including the functions of the organs involved (limited to mouth, oesophagus, stomach, small intestine, large intestine and anus), and know that many vertebrates have a similar digestive system.</p>
+          <p class="muted"><b>Also:</b> <b>5TWSm.01</b> Know that a model presents an object, process or idea in a way that shows some of the important features.
+            <b>5TWSp.03</b> Make predictions, referring to relevant scientific knowledge and understanding within familiar and unfamiliar contexts.</p></div>
+        <div class="navrow"><a class="btn go" href="../practice/index.html#digestion">✏️ Practise this</a></div>`;
+    }
+  }
+};
+
+function render() {
+  const v = VIEWS[state.view];
+  // Help is the ❓ button at the end of the top bar, like the other tools, so it isn't one of the tabs
+  $('#helpBtn').classList.toggle('active', state.view === 'help');
+  $('#tabs').innerHTML = Object.entries(VIEWS).filter(([id]) => id !== 'help').map(([id, x]) =>
+    `<button class="btn${id === state.view ? ' active' : ''}" data-act="view" data-view="${id}">${x.label}</button>`).join('');
+  $('#stage').innerHTML = v.stage();
+  $('#drawer').innerHTML = v.drawer();
+  if (v.after) v.after();
+  fitBanner();
+}
+
+// ================= Actions =================
+const ACTIONS = {
+  view(el) { state.view = el.dataset.view; location.hash = 'view=' + state.view; render(); },
+  jnext() { const n = state.step; if (n === STOPS.length - 1) setStep(0, false); else setStep(n + 1, true); },
+  restart() { render(); },
+  opick(el) { O.pick(+el.dataset.n); },
+  tpick(el) { T.pick(el.dataset.type); },
+  cpick(el) { state.close = +el.dataset.n; state.cpaused = false; render(); },
+  cpause() { state.cpaused = !state.cpaused; $('#drawer').innerHTML = VIEWS.close.drawer(); },
+  tchew() { T.chew(); },
+  tanswer(el) { T.answer(el.dataset.who); },
+  tnext() { T.next(); },
+  tquiz() { const t = state.teeth; t.q = 0; t.right = 0; t.answered = null; t.order.sort(() => Math.random() - .5); $('#drawer').innerHTML = VIEWS.teeth.drawer(); },
+  // Switching keeps the organs already placed; only the pale outlines come and go
+  outlines(el) {
+    state.outlines = !!el.dataset.on;
+    if (state.outlines) D.peeked = true;
+    D.svg.classList.toggle('nohints', !state.outlines); $('#drawer').innerHTML = VIEWS.organs.drawer();
+  },
+  missions() {
+    $('#missionList').innerHTML = MISSIONS.map((m, i) => `<button class="mission-item${state.done.includes(m.id) ? ' done' : ''}" data-act="startMission" data-i="${i}">
+      <span class="em">${m.icon}</span><span class="t">${i + 1}. ${m.title}</span><span class="star">⭐</span></button>`).join('');
+    $('#missionsModal').classList.remove('hidden');
+  },
+  startMission(el) { startMission(+el.dataset.i); },
+  nextMission(el) { startMission(+el.dataset.i); },
+  stopMission() { stopMission(); },
+  hint() {
+    const h = $('#bannerHint');
+    h.classList.toggle('hidden');
+    $('#hintBtn').textContent = h.classList.contains('hidden') ? '💡 Show a hint' : '💡 Hide the hint';
+    fitBanner();
+  },
+  closeModals() { closeModals(); },
+  resetStars() { state.done = []; store.set('dj-done', []); updateStars(); ACTIONS.missions(); },
+  // Going back (or to any stop already reached) replays the trip into that stop; the mouth has no trip, so it is a still picture
+  jback() { if (state.step > 0) setStep(state.step - 1, state.step > 1); },
+  jgo(el) { const n = +el.dataset.n; setStep(n, n > 0 && n <= state.step + 1); },
+  jpredict(el) { state.predict = el.dataset.id; $('#drawer').innerHTML = VIEWS.journey.drawer(); },
+  vpick(el) { V.show(state.vpart === el.dataset.part ? null : el.dataset.part); },
+  model() { $('#modelModal').classList.remove('hidden'); }
+};
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-act]');
+  if (el && ACTIONS[el.dataset.act]) ACTIONS[el.dataset.act](el);
+});
+// Tapping the dark background or pressing Escape closes a pop-up
+document.querySelectorAll('.modal').forEach(m => m.addEventListener('click', e => { if (e.target === m) closeModals(); }));
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModals(); });
+addEventListener('resize', fitBanner);
+
+// ================= Start =================
+// Test hooks: #view=journey&step=3 opens a stop; adding &t=0.5 freezes the trip into that stop halfway
+const hp = new URLSearchParams(location.hash.slice(1));
+if (VIEWS[hp.get('view')]) state.view = hp.get('view');
+if (hp.has('step')) state.step = Math.max(0, Math.min(STOPS.length - 1, +hp.get('step') || 0));
+updateStars();
+// #mission=3 starts a mission straight away
+if (MISSIONS[hp.get('mission')]) startMission(+hp.get('mission'));
+else render();
+// #view=organs&placed=3 places the first few organs, for screenshots
+if (state.view === 'organs' && hp.has('placed')) D.items.slice(0, +hp.get('placed')).forEach(D.place);
+// #view=order&done=3 puts the first few stops in order
+if (state.view === 'order' && hp.has('done')) for (let i = 0; i < +hp.get('done'); i++) O.pick(i);
+// #view=close&c=2&t=3 freezes close-up 2 at 3 seconds
+if (state.view === 'close' && hp.has('c')) { state.close = +hp.get('c') || 0; render(); }
+if (state.view === 'close' && hp.has('t')) { state.cpaused = true; C.t = +hp.get('t'); C.draw(C.t); $('#drawer').innerHTML = VIEWS.close.drawer(); }
+// #view=teeth&type=canine highlights one type of tooth
+if (state.view === 'teeth' && hp.has('type')) T.pick(hp.get('type'));
+// #view=quiz&q=3 answers the first few questions
+if (state.view === 'quiz' && hp.has('q')) for (let i = 0; i < +hp.get('q'); i++) W.tap(STOPS[state.quiz.order[i]].organs[0]);
+if (state.view === 'journey' && hp.has('t') && state.step > 0) { J.reset(); J.highlight(state.step); J.frame(state.step, +hp.get('t')); }
+</script>
+</body>
+</html>

@@ -1,0 +1,663 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Science Practice</title>
+<meta name="description" content="Practise Year 5 science: labelling, ordering, matching, sorting, Venn and Carroll diagrams, reading tables and more.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ================= Shared look (matches Seasons Explorer and Adaptation Studio) ================= */
+  :root {
+    --ink: #1d2340; --muted: #5b6386; --soft: #eef2ff; --line: #d3dbf7;
+    --yellow: #ffc83d; --blue: #3d7bff; --coral: #ff5f6d; --green: #22b07d; --orange: #f0892e;
+    --space: #070d24; --right: #d9f6ea; --rightLine: #22b07d; --wrong: #ffe0c7; --wrongLine: #f0892e;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; color: var(--ink); font-family: 'Fredoka', system-ui, sans-serif; font-size: 18px; line-height: 1.4;
+    background: radial-gradient(1200px 700px at 15% -10%, #1c2b6e 0%, transparent 60%), var(--space); background-attachment: fixed; -webkit-tap-highlight-color: transparent; }
+  body { overflow-x: hidden; }
+  button, input { font: inherit; color: inherit; }
+  b { font-weight: 700; }
+  .btn { border: 0; border-radius: 14px; padding: 10px 16px; min-height: 48px; cursor: pointer; background: #fff; color: var(--ink); font-weight: 600; font-size: 17px; box-shadow: 0 3px 0 rgba(0,0,0,.18); }
+  .btn:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,.18); }
+  a.btn { display: inline-flex; align-items: center; text-decoration: none; }
+  .btn.primary { background: var(--blue); color: #fff; }
+  .btn.go { background: var(--green); color: #fff; font-size: 19px; }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .btn:focus-visible, .tok:focus-visible, .slot:focus-visible, .choice:focus-visible { outline: 3px solid var(--yellow); outline-offset: 2px; }
+
+  .topbar { position: sticky; top: 0; z-index: 10; display: flex; gap: 8px; align-items: center; padding: 10px 12px; background: rgba(7,13,36,.94); }
+  .brand { color: #fff; font-size: 22px; font-weight: 700; margin-right: auto; }
+  .hub-link { flex: none; display: grid; place-items: center; width: 38px; height: 38px; border-radius: 12px; text-decoration: none; font-size: 20px; background: rgba(255,255,255,.14); box-shadow: 0 3px 0 rgba(0,0,0,.25); transition: background .15s, transform .08s; }
+  .hub-link:hover { background: rgba(255,255,255,.26); }
+  .hub-link:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,.25); }
+  main { max-width: 980px; margin: 0 auto; padding: 14px 12px 40px; }
+  .card { background: #fff; border-radius: 20px; padding: 16px 18px; box-shadow: 0 2px 0 rgba(30,40,90,.08); }
+  .white { color: #fff; }
+  h1 { color: #fff; font-size: 28px; margin: 6px 0 12px; }
+  h2 { margin: 0 0 8px; font-size: 23px; }
+  .muted { color: var(--muted); font-size: 15.5px; }
+
+  /* ---------- Home ---------- */
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+  .tile { display: flex; gap: 12px; align-items: flex-start; text-align: left; border: 3px solid transparent; background: #fff; border-radius: 20px; padding: 14px 16px; cursor: pointer; font: inherit; color: var(--ink); }
+  .tile:hover { border-color: var(--yellow); }
+  .tile .em { font-size: 34px; line-height: 1; }
+  .tile .t { font-weight: 700; font-size: 19px; }
+  .tile .d { color: var(--muted); font-size: 15px; }
+  .tile .stars { margin-top: 4px; font-size: 15px; letter-spacing: 2px; }
+  .tile.big { grid-column: 1 / -1; background: var(--yellow); }
+  .tile.big .d { color: #5a4300; }
+
+  /* ---------- Question: on wide screens the diagram/table sits in a fixed pane and only the question pane scrolls ---------- */
+  main.wide { max-width: 1500px; padding-bottom: 12px; }
+  .qlayout { display: grid; gap: 12px; height: calc(100vh - 120px); min-height: 420px; }
+  .qlayout.split { grid-template-columns: minmax(0, 1.4fr) minmax(330px, 1fr); }
+  .qlayout.split.t-table { grid-template-columns: fit-content(500px) minmax(330px, 1fr); }
+  .qlayout.single { max-width: 980px; margin: 0 auto; width: 100%; }
+  .media { display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: auto; min-height: 0; padding: 12px; }
+  .qside { display: flex; flex-direction: column; min-height: 0; padding: 14px 16px; }
+  .qscroll { flex: 1; min-height: 0; overflow-y: auto; padding-right: 4px; }
+  .qpool { flex: 0 1 auto; min-height: 76px; overflow-y: auto; margin-top: 8px; }
+  .qpool .pool { margin-top: 0; }
+  .qside .actions { margin-top: 10px; padding-top: 10px; border-top: 1px solid #e3e8f8; }
+  .figure.svgfig { width: min(100%, calc((100vh - 170px) * 1.667)); }
+  .figure.imgfig { display: inline-block; max-width: 100%; }
+  .figure.imgfig img { width: auto; max-width: 100%; max-height: calc(100vh - 175px); }
+  .venn { width: min(100%, calc((100vh - 190px) * 1.58)); }
+  /* Questions without a diagram only take the height they need (but still scroll if they are long) */
+  .qlayout.single { height: auto; min-height: 0; }
+  .qlayout.single .qside { max-height: calc(100vh - 120px); }
+  @media (min-width: 1000px) {
+    .qlayout.single:has(.qside.sidepool) { max-width: 1320px; }
+    .qside.sidepool { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(250px, 1fr); grid-template-rows: auto auto; column-gap: 16px; }
+    .qside.sidepool .qscroll, .qside.sidepool .qpool { max-height: calc(100vh - 220px); }
+    .qside.sidepool .rows { gap: 5px; }
+    .qside.sidepool .prompt, .qside.sidepool .hint { margin-bottom: 8px; }
+    .qside.sidepool .qpool { grid-column: 2; grid-row: 1; margin-top: 0; align-self: start; }
+    .qside.sidepool .qpool .pool { flex-direction: column; align-items: stretch; }
+    .qside.sidepool .actions { grid-column: 1 / -1; }
+  }
+  @media (max-width: 860px) {
+    .qlayout { height: auto; min-height: 0; }
+    .qlayout.split { grid-template-columns: 1fr; }
+    .media { position: sticky; top: 68px; z-index: 5; max-height: 48vh; }
+    .figure.svgfig { width: min(100%, calc(44vh * 1.667)); }
+    .figure.imgfig img { max-height: 42vh; }
+    .venn { width: min(100%, calc(42vh * 1.58)); }
+    .qscroll { overflow: visible; }
+  }
+  /* ---------- Question ---------- */
+  .progress { display: flex; gap: 5px; margin: 4px 0 12px; flex-wrap: wrap; }
+  .progress span { flex: 1; min-width: 14px; height: 10px; border-radius: 5px; background: rgba(255,255,255,.2); }
+  .progress span.done { background: var(--green); } .progress span.part { background: var(--yellow); } .progress span.miss { background: var(--orange); } .progress span.now { background: #fff; }
+  .qhead { display: flex; gap: 10px; align-items: center; margin-bottom: 6px; }
+  .qtype { background: var(--soft); border-radius: 999px; padding: 3px 12px; font-weight: 600; font-size: 14.5px; }
+  .prompt { font-size: 21px; font-weight: 600; margin: 4px 0 12px; }
+  .hint { color: var(--muted); font-size: 15px; margin: -6px 0 12px; }
+  .pool { display: flex; flex-wrap: wrap; gap: 8px; min-height: 56px; padding: 10px; background: var(--soft); border-radius: 16px; margin-top: 12px; }
+  .pool:empty::before { content: 'All placed!'; color: var(--muted); font-size: 15px; align-self: center; padding-left: 6px; }
+  .tok { border: 2px solid var(--line); background: #fff; border-radius: 12px; padding: 8px 12px; min-height: 46px; font-weight: 600; font-size: 16.5px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; color: var(--ink); }
+  .tok.sel { background: var(--yellow); border-color: #c99400; box-shadow: 0 0 0 3px rgba(255,200,61,.5); }
+  .tok.right { background: var(--right); border-color: var(--rightLine); }
+  .tok.wrong { background: var(--wrong); border-color: var(--wrongLine); }
+  .tok.shown { background: #e8ecfb; border-style: dashed; }
+  .tok .mark { font-weight: 700; }
+  .slot { border: 3px dashed #b8c4ee; border-radius: 12px; min-height: 46px; min-width: 110px; padding: 3px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; background: rgba(255,255,255,.92); color: var(--muted); font-weight: 600; }
+  .slot.ready { border-color: var(--yellow); background: #fffbe6; }
+  .slot.filled { border-style: solid; border-color: transparent; background: none; padding: 0; }
+  .slot .tok { margin: 0; }
+
+  /* label */
+  .figure { position: relative; margin: 0 auto; }
+  .figure img, .figure svg.dg { display: block; width: 100%; height: auto; border-radius: 16px; }
+  .figure svg.lines { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  .figure .slot { position: absolute; transform: translate(-50%, -50%); min-width: 96px; font-size: 15px; }
+  .credit { text-align: right; font-size: 12px; color: var(--muted); margin-top: 4px; }
+  /* order / match */
+  .rows { display: flex; flex-direction: column; gap: 8px; }
+  .row { display: flex; gap: 10px; align-items: center; }
+  .row .n { width: 34px; height: 34px; border-radius: 50%; background: var(--ink); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; flex: none; }
+  .row .slot { flex: 1; justify-content: flex-start; }
+  .row .meaning { flex: 1.3; background: var(--soft); border-radius: 12px; padding: 8px 12px; }
+  .ends { color: var(--muted); font-weight: 600; font-size: 15px; margin: 2px 0; }
+  /* cloze */
+  .cloze { font-size: 19px; line-height: 2.5; }
+  .cloze .slot { min-width: 104px; vertical-align: middle; line-height: 1.2; margin: 0 3px; }
+  .cloze .slot.filled { min-width: 0; }
+  /* sort */
+  .groups { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+  .groups:has(> .group:nth-child(4):last-child) { grid-template-columns: repeat(2, 1fr); }   /* four groups make a 2 × 2 grid, not 3 + 1 */
+  .group { border: 3px dashed #b8c4ee; border-radius: 16px; min-height: 140px; padding: 8px; cursor: pointer; background: #fafbff; }
+  .group.ready { border-color: var(--yellow); background: #fffbe6; }
+  .group h3 { margin: 0 0 6px; font-size: 17px; text-align: center; }
+  .group .in, .cell .in { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+  /* venn */
+  .venn { position: relative; margin: 0 auto; }
+  .venn svg { width: 100%; height: auto; display: block; }
+  .vreg { position: absolute; display: flex; flex-wrap: wrap; gap: 4px; align-content: center; justify-content: center; cursor: pointer; border-radius: 14px; }
+  .vreg.ready { background: rgba(255,200,61,.22); }
+  .vreg .tok { font-size: 14px; min-height: 36px; padding: 4px 8px; }
+  .vlab { position: absolute; font-weight: 700; font-size: 16px; text-align: center; transform: translateX(-50%); width: 44%; line-height: 1.15; }
+  /* carroll */
+  table.carroll { width: 100%; border-collapse: separate; border-spacing: 6px; table-layout: fixed; }
+  table.carroll th { background: var(--ink); color: #fff; border-radius: 12px; padding: 8px; font-size: 16px; }
+  table.carroll th.corner { background: none; }
+  table.carroll td.cell { background: #fafbff; border: 3px dashed #b8c4ee; border-radius: 14px; height: 120px; vertical-align: middle; cursor: pointer; padding: 6px; }
+  table.carroll td.cell.ready { border-color: var(--yellow); background: #fffbe6; }
+  /* choices (true/false, table, odd one out, sentence) */
+  .choice { border: 2px solid var(--line); background: #fff; border-radius: 12px; padding: 8px 14px; min-height: 46px; font-weight: 600; font-size: 16.5px; cursor: pointer; color: var(--ink); }
+  .choice.on { background: var(--yellow); border-color: #c99400; }
+  .choice.right { background: var(--right); border-color: var(--rightLine); }
+  .choice.wrong { background: var(--wrong); border-color: var(--wrongLine); }
+  .choices { display: flex; flex-wrap: wrap; gap: 8px; }
+  .stmt { padding: 6px 12px; background: var(--soft); border-radius: 14px; margin-bottom: 6px; display: flex; flex-wrap: wrap; align-items: center; column-gap: 12px; row-gap: 6px; }
+  .stmt .s { font-weight: 600; flex: 1 1 260px; }
+  .stmt .choices { flex: 0 1 auto; }
+  .stmt .why { flex-basis: 100%; margin-top: 0; }
+  .why { margin-top: 6px; font-size: 15.5px; }
+  table.data { border-collapse: collapse; margin: 0 auto 12px; font-size: 17px; }
+  table.data th, table.data td { border: 2px solid #c6d0f2; padding: 7px 12px; text-align: center; }
+  table.data th { background: var(--soft); }
+  table.data td:first-child { font-weight: 600; text-align: left; }
+  .caption { text-align: center; font-weight: 700; margin-bottom: 6px; }
+  .odd { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+  .odd .choice { min-height: 64px; display: flex; align-items: center; justify-content: center; gap: 6px; text-align: center; }
+  .sentence { font-size: 20px; line-height: 2.6; }
+  .sentence .opts { display: inline-flex; gap: 4px; vertical-align: middle; flex-wrap: wrap; }
+  .sentence .choice { font-size: 16.5px; padding: 4px 10px; min-height: 40px; }
+
+  /* ---------- Feedback & actions ---------- */
+  .feedback { margin-top: 14px; border-radius: 16px; padding: 12px 14px; font-size: 17px; }
+  .feedback.good { background: var(--right); } .feedback.ok { background: #fff3c4; } .feedback.bad { background: var(--wrong); }
+  .actions { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; margin-top: 14px; }
+  .summary-row { display: flex; gap: 10px; align-items: center; padding: 8px 0; border-bottom: 1px solid #e3e8f8; }
+  .score-big { font-size: 46px; font-weight: 700; }
+  .modal { position: fixed; inset: 0; background: rgba(5,10,30,.6); display: flex; align-items: center; justify-content: center; z-index: 20; padding: 16px; }
+  .modal.hidden { display: none; }
+  .modal-box { background: #fff; border-radius: 24px; padding: 22px; width: min(580px, 100%); max-height: calc(100vh - 32px); overflow-y: auto; }
+  ul.icons { padding: 0; list-style: none; } ul.icons li { display: flex; gap: 10px; padding: 6px 0; } ul.icons .em { font-size: 22px; width: 30px; text-align: center; flex: none; }
+  .confetti { position: fixed; top: -40px; font-size: 26px; z-index: 40; pointer-events: none; animation: fall linear forwards; }
+  @keyframes fall { to { transform: translateY(110vh) rotate(540deg); } }
+  @media (max-width: 640px) {
+    body { font-size: 16.5px; } .brand { font-size: 18px; } .prompt { font-size: 18.5px; }
+    .figure .slot { min-width: 70px; font-size: 13px; } .figure .slot .tok { font-size: 13px; padding: 4px 6px; min-height: 34px; }
+    .vreg .tok { font-size: 12px; min-height: 30px; padding: 2px 5px; } .vlab { font-size: 13px; }
+    table.carroll td.cell { height: 100px; } table.carroll th { font-size: 13.5px; padding: 6px 4px; }
+    .cloze { font-size: 17px; } .sentence { font-size: 17px; }
+  }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <a class="hub-link" href="../index.html" title="Back to the Science Hub" aria-label="Back to the Science Hub">🏠</a>
+  <div class="brand">🧠 Science Practice</div>
+  <button class="btn" data-act="home">🏠 <span>Topics</span></button>
+  <button class="btn" data-act="help" aria-label="How to use">❓</button>
+</header>
+<main id="app" aria-live="polite"></main>
+
+<div id="helpModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+  <div class="modal-box">
+    <h2 id="helpTitle">🧠 How to practise</h2>
+    <ul class="icons">
+      <li><span class="em">📚</span><span>Choose a <b>topic</b>, then <b>mixed practice</b> or one kind of activity.</span></li>
+      <li><span class="em">👆</span><span>To move a word: <b>tap it</b>, then <b>tap where it goes</b>. Tap it again to take it back.</span></li>
+      <li><span class="em">✔</span><span>Press <b>Check</b>. Green is right, orange needs another look.</span></li>
+      <li><span class="em">🔁</span><span>You get <b>one more try</b> at the ones you got wrong.</span></li>
+      <li><span class="em">⭐</span><span>Earn up to 3 stars for each activity. Stars are saved on this device only.</span></li>
+    </ul>
+    <div class="actions"><button class="btn primary" data-act="close-help">Let's go!</button></div>
+  </div>
+</div>
+
+<!-- Question banks: one file per topic. Add a new topic by adding a file and a line here. -->
+<script src="banks/adaptations.js"></script>
+<script src="banks/earth-space.js"></script>
+<script src="banks/digestion.js"></script>
+<script src="banks/forces.js"></script>
+<script src="banks/diet.js"></script>
+<script src="banks/air-water.js"></script>
+<script src="banks/particles.js"></script>
+<script src="banks/seeds.js"></script>
+<script>
+'use strict';
+/* =====================================================================
+   Science Practice – one engine, many question banks.
+   Sections: utilities · activity types · preparing a question · drawing ·
+   taps · checking · screens · start
+   ===================================================================== */
+
+// ================= Utilities =================
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} },
+};
+function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+const starsFor = f => f >= 0.9 ? 3 : f >= 0.7 ? 2 : f >= 0.4 ? 1 : 0;
+const starText = n => '⭐'.repeat(n) + '☆'.repeat(3 - n);
+
+// ================= Activity types =================
+const TYPES = {
+  label: { icon: '🏷️', name: 'Label the diagram', desc: 'Put the labels in the right places.' },
+  order: { icon: '🔢', name: 'Put in order', desc: 'Put things in the right order.' },
+  match: { icon: '🔗', name: 'Match up', desc: 'Match each word to its meaning.' },
+  cloze: { icon: '✏️', name: 'Fill the gaps', desc: 'Use the word bank to fill the gaps.' },
+  tf: { icon: '✅', name: 'True or false?', desc: 'Spot the mistakes people often make.' },
+  sort: { icon: '🗂️', name: 'Sort into groups', desc: 'Put each one in the right group.' },
+  venn: { icon: '⭕', name: 'Venn diagram', desc: 'Sort into two overlapping circles.' },
+  carroll: { icon: '▦', name: 'Carroll diagram', desc: 'Sort into a yes/no grid.' },
+  table: { icon: '📊', name: 'Read the table', desc: 'Use data to answer questions.' },
+  odd: { icon: '🔍', name: 'Odd one out', desc: 'Find the odd one out – and say why.' },
+  sentence: { icon: '💬', name: 'Build a sentence', desc: 'Choose the words that make it true.' },
+};
+const PLACE_TYPES = new Set(['label', 'order', 'match', 'cloze', 'sort', 'venn', 'carroll']);
+const HINTS = {
+  label: 'Tap a label, then tap the box where it goes.',
+  order: 'Tap an item, then tap the place in the list where it goes.',
+  match: 'Tap a word, then tap the box next to its meaning.',
+  cloze: 'Tap a word, then tap the gap where it goes. Not every word is needed.',
+  sort: 'Tap an item, then tap the group it belongs in.',
+  venn: 'Tap an item, then tap where it belongs. Things that fit both go in the middle. Things that fit neither go outside the circles.',
+  carroll: 'Tap an item, then tap the box where its row and column are both true.',
+};
+const SESSION_LEN = 10;
+
+// ================= State =================
+const S = { screen: 'home', bank: null, mode: null, queue: [], i: 0, results: [], q: null };
+const best = store.get('sp-best', {});
+
+// ================= Preparing a question =================
+// Turns a question from a bank into something that can be played: tokens to place and slots to place them in.
+function prepare(item) {
+  const q = { item, type: item.type, placed: {}, sel: null, picks: {}, checked: false, tries: 0, revealed: false };
+  if (!PLACE_TYPES.has(item.type)) {
+    if (item.type === 'sentence') q.order = item.parts.map(p => Array.isArray(p) ? shuffle(p.map((_, k) => k)) : null);
+    if (item.type === 'odd') q.itemOrder = shuffle(item.items.map((_, k) => k)), q.reasonOrder = shuffle(item.reasons.map((_, k) => k));
+    if (item.type === 'tf') q.stmts = shuffle(item.statements);
+    return q;
+  }
+  let tokens = [], slots = [];
+  const extras = (item.extra || []).map((t, k) => ({ id: 'x' + k, text: t, answer: null }));
+  switch (item.type) {
+    case 'label':
+      slots = item.labels.map((l, k) => ({ id: 's' + k, accept: l.text, x: l.x, y: l.y, px: l.px, py: l.py }));
+      tokens = item.labels.map((l, k) => ({ id: 't' + k, text: l.text })).concat(extras); break;
+    case 'order':
+      slots = item.items.map((t, k) => ({ id: 's' + k, accept: t }));
+      tokens = item.items.map((t, k) => ({ id: 't' + k, text: t })); break;
+    case 'match':
+      slots = item.pairs.map((p, k) => ({ id: 's' + k, accept: p[0], meaning: p[1] }));
+      tokens = item.pairs.map((p, k) => ({ id: 't' + k, text: p[0] })).concat(extras); break;
+    case 'cloze': {
+      const parts = item.text.split(/\{([^}]+)\}/);
+      q.parts = parts.map((p, k) => k % 2 ? { slot: 's' + k } : { text: p });
+      parts.forEach((p, k) => { if (k % 2) { slots.push({ id: 's' + k, accept: p }); tokens.push({ id: 't' + k, text: p }); } });
+      tokens = tokens.concat(extras); break;
+    }
+    case 'sort':
+      slots = item.groups.map((g, k) => ({ id: 'g' + k, name: g, many: true }));
+      tokens = item.items.map((it, k) => ({ id: 't' + k, text: it.t, em: it.em, answer: 'g' + it.g })); break;
+    case 'venn':
+      slots = ['a', 'ab', 'b', 'none'].map(id => ({ id, many: true }));
+      tokens = item.items.map((it, k) => ({ id: 't' + k, text: it.t, em: it.em, answer: it.in[0] && it.in[1] ? 'ab' : it.in[0] ? 'a' : it.in[1] ? 'b' : 'none' })); break;
+    case 'carroll':
+      item.rows.forEach((_, r) => item.cols.forEach((_, c) => slots.push({ id: `r${r}c${c}`, many: true })));
+      tokens = item.items.map((it, k) => ({ id: 't' + k, text: it.t, em: it.em, answer: `r${it.r}c${it.c}` })); break;
+  }
+  q.tokens = mixWell(tokens); q.slots = slots;
+  return q;
+}
+// Shuffle, but don't let items that belong together end up side by side in long runs (a plain shuffle
+// sometimes lists all of one group and then all of the other, which gives the answer away).
+function mixWell(tokens) {
+  const key = t => t.answer || t.text;
+  let best = shuffle(tokens), bestRun = Infinity;
+  for (let tries = 0; tries < 40; tries++) {
+    const order = tries ? shuffle(tokens) : best;
+    if (order.length > 2 && order.every((t, k) => t === tokens[k])) continue;   // never already in the right order
+    let run = 1, longest = 1;
+    for (let k = 1; k < order.length; k++) { run = key(order[k]) === key(order[k - 1]) ? run + 1 : 1; longest = Math.max(longest, run); }
+    if (longest < bestRun) { best = order; bestRun = longest; }
+    if (longest <= 1) break;
+  }
+  return best;
+}
+const tokById = (q, id) => q.tokens.find(t => t.id === id);
+const slotById = (q, id) => q.slots.find(s => s.id === id);
+const inSlot = (q, sid) => q.tokens.filter(t => q.placed[t.id] === sid);
+// A token is right if its slot accepts its words (so two identical words can go either way round)
+function tokenRight(q, t) {
+  const sid = q.placed[t.id]; if (!sid) return false;
+  const s = slotById(q, sid);
+  return s.accept != null ? s.accept === t.text : t.answer === sid;
+}
+
+// ================= Drawing a question =================
+function tokHTML(q, t) {
+  const st = q.checked && q.placed[t.id] ? (q.revealed ? 'shown' : tokenRight(q, t) ? 'right' : 'wrong') : q.sel === t.id ? 'sel' : '';
+  const mark = st === 'right' ? '<span class="mark">✔</span>' : st === 'wrong' ? '<span class="mark">✘</span>' : '';
+  return `<button class="tok ${st}" data-act="tok" data-id="${t.id}">${t.em ? `<span>${t.em}</span>` : ''}${esc(t.text)}${mark}</button>`;
+}
+const pool = q => `<div class="pool" aria-label="Words to place">${q.tokens.filter(t => !q.placed[t.id]).map(t => tokHTML(q, t)).join('')}</div>`;
+function slotHTML(q, s, extraCls = '', style = '') {
+  const t = inSlot(q, s.id)[0];
+  return `<div class="slot ${t ? 'filled' : q.sel ? 'ready' : ''} ${extraCls}" style="${style}" data-act="slot" data-id="${s.id}" role="button" tabindex="0">${t ? tokHTML(q, t) : '?'}</div>`;
+}
+function groupInner(q, sid) { return `<div class="in">${inSlot(q, sid).map(t => tokHTML(q, t)).join('')}</div>`; }
+
+const DRAW = {
+  label(q) {
+    const it = q.item;
+    const media = it.img ? `<img src="${esc(it.img)}" alt="${esc(it.alt || '')}">` : it.svg;
+    const lines = q.slots.map(s => `<line x1="${s.x}" y1="${s.y}" x2="${s.px}" y2="${s.py}" stroke="#fff" stroke-width="5" vector-effect="non-scaling-stroke"/><line x1="${s.x}" y1="${s.y}" x2="${s.px}" y2="${s.py}" stroke="#1d2340" stroke-width="2.5" vector-effect="non-scaling-stroke"/><circle cx="${s.px}" cy="${s.py}" r=".9" fill="#1d2340"/>`).join('');
+    return { media: `<div class="figure ${it.img ? 'imgfig' : 'svgfig'}">${media}<svg class="lines" viewBox="0 0 100 100" preserveAspectRatio="none">${lines}</svg>
+      ${q.slots.map(s => slotHTML(q, s, '', `left:${s.x}%;top:${s.y}%`)).join('')}</div>
+      ${it.credit ? `<div class="credit">${esc(it.credit)}</div>` : ''}`, side: '' };
+  },
+  order(q) {
+    const it = q.item;
+    return `${it.first ? `<div class="ends">⬆ ${esc(it.first)}</div>` : ''}<div class="rows">${q.slots.map((s, k) => `<div class="row"><span class="n">${k + 1}</span>${slotHTML(q, s)}</div>`).join('')}</div>
+      ${it.last ? `<div class="ends">⬇ ${esc(it.last)}</div>` : ''}`;
+  },
+  match(q) {
+    return `<div class="rows">${q.slots.map(s => `<div class="row">${slotHTML(q, s)}<span>=</span><div class="meaning">${esc(s.meaning)}</div></div>`).join('')}</div>`;
+  },
+  cloze(q) {
+    return `<div class="cloze">${q.parts.map(p => p.slot ? slotHTML(q, slotById(q, p.slot)) : esc(p.text)).join('')}</div>`;
+  },
+  sort(q) {
+    return `<div class="groups">${q.slots.map(s => `<div class="group ${q.sel ? 'ready' : ''}" data-act="slot" data-id="${s.id}" role="button" tabindex="0"><h3>${esc(s.name)}</h3>${groupInner(q, s.id)}</div>`).join('')}</div>`;
+  },
+  venn(q) {
+    const it = q.item, r = q.sel ? 'ready' : '';
+    const reg = (id, css) => `<div class="vreg ${r}" style="${css}" data-act="slot" data-id="${id}" role="button" tabindex="0" aria-label="${id === 'none' ? 'Neither' : id === 'ab' ? 'Both' : id === 'a' ? it.sets[0] + ' only' : it.sets[1] + ' only'}">${inSlot(q, id).map(t => tokHTML(q, t)).join('')}</div>`;
+    return { media: `<div class="venn"><svg viewBox="0 0 600 380" aria-hidden="true">
+        <rect x="3" y="3" width="594" height="374" rx="20" fill="#fafbff" stroke="#b8c4ee" stroke-width="3"/>
+        <circle cx="228" cy="180" r="138" fill="#3d7bff" fill-opacity=".14" stroke="#3d7bff" stroke-width="3"/>
+        <circle cx="372" cy="180" r="138" fill="#ff5f6d" fill-opacity=".14" stroke="#ff5f6d" stroke-width="3"/>
+        <text x="20" y="366" font-family="Fredoka" font-weight="700" font-size="15" fill="#5b6386">Neither</text></svg>
+      <div class="vlab" style="left:26%;top:1.5%;color:#2856c7">${esc(it.sets[0])}</div>
+      <div class="vlab" style="left:74%;top:1.5%;color:#c7303d">${esc(it.sets[1])}</div>
+      ${reg('a', 'left:16%;top:24%;width:21%;height:46%')}${reg('ab', 'left:40%;top:28%;width:20%;height:40%')}${reg('b', 'left:63%;top:24%;width:21%;height:46%')}
+      ${reg('none', 'left:12%;top:84%;width:84%;height:14%')}
+      </div><div class="ends" style="text-align:center">Middle = both · Outside the circles = neither</div>`, side: '' };
+  },
+  carroll(q) {
+    const it = q.item;
+    return { media: `<table class="carroll"><tr><th class="corner"></th>${it.cols.map(c => `<th>${esc(c)}</th>`).join('')}</tr>
+      ${it.rows.map((rw, r) => `<tr><th>${esc(rw)}</th>${it.cols.map((_, c) => `<td class="cell ${q.sel ? 'ready' : ''}" data-act="slot" data-id="r${r}c${c}" role="button" tabindex="0">${groupInner(q, `r${r}c${c}`)}</td>`).join('')}</tr>`).join('')}</table>`, side: '' };
+  },
+  tf(q) {
+    return q.stmts.map((st, k) => {
+      const pick = q.picks[k], right = pick === st.a;
+      const cls = v => q.checked ? (pick === v ? (right ? 'right' : 'wrong') : '') : pick === v ? 'on' : '';
+      return `<div class="stmt"><div class="s">${esc(st.s)}</div><div class="choices">
+        <button class="choice ${cls(true)}" data-act="pick" data-k="${k}" data-v="true">✅ True</button><button class="choice ${cls(false)}" data-act="pick" data-k="${k}" data-v="false">❌ False</button></div>
+        ${q.checked ? `<div class="why">${right ? '✔' : '✘'} <b>${st.a ? 'True' : 'False'}.</b> ${esc(st.why)}</div>` : ''}</div>`;
+    }).join('');
+  },
+  table(q) {
+    const it = q.item, tb = it.table;
+    return { media: `${it.caption ? `<div class="caption">${esc(it.caption)}</div>` : ''}<div style="overflow-x:auto;max-width:100%"><table class="data"><tr>${tb.head.map(h => `<th>${esc(h)}</th>`).join('')}</tr>${tb.rows.map(r => `<tr>${r.map(c => `<td>${esc(c)}</td>`).join('')}</tr>`).join('')}</table></div>`,
+      side: it.questions.map((qq, k) => {
+        const pick = q.picks[k];
+        return `<div class="stmt"><div class="s">${k + 1}. ${esc(qq.q)}</div><div class="choices">${qq.options.map((o, v) => `<button class="choice ${q.checked ? (v === qq.a ? (pick === v ? 'right' : '') : pick === v ? 'wrong' : '') : pick === v ? 'on' : ''}" data-act="pick" data-k="${k}" data-v="${v}">${esc(o)}</button>`).join('')}</div>
+          ${q.checked ? `<div class="why">${pick === qq.a ? '✔' : '✘ The answer is <b>' + esc(qq.options[qq.a]) + '</b>.'} ${esc(qq.why || '')}</div>` : ''}</div>`;
+      }).join('') };
+  },
+  odd(q) {
+    const it = q.item, pi = q.picks.item, pr = q.picks.reason;
+    const c = (kind, v, ans) => q.checked ? (v === ans ? (q.picks[kind] === v ? 'right' : '') : q.picks[kind] === v ? 'wrong' : '') : q.picks[kind] === v ? 'on' : '';
+    return `<div class="odd">${q.itemOrder.map(v => `<button class="choice ${c('item', v, it.odd)}" data-act="pick" data-k="item" data-v="${v}">${esc(it.items[v])}</button>`).join('')}</div>
+      <div class="prompt" style="font-size:18px;margin-top:14px">${pi == null ? 'Then choose the reason.' : 'Why is it the odd one out?'}</div>
+      <div class="rows">${q.reasonOrder.map(v => `<button class="choice ${c('reason', v, it.reason)}" style="text-align:left" data-act="pick" data-k="reason" data-v="${v}">${esc(it.reasons[v])}</button>`).join('')}</div>`;
+  },
+  sentence(q) {
+    const it = q.item, { gaps, combo } = bestCombo(q);
+    return `<div class="sentence">${it.parts.map((p, k) => {
+      if (!Array.isArray(p)) return esc(p);
+      const pick = q.picks[k], target = combo[gaps.indexOf(k)];
+      return `<span class="opts">${q.order[k].map(v => `<button class="choice ${q.checked ? (v === target ? (pick === v ? 'right' : '') : pick === v ? 'wrong' : '') : pick === v ? 'on' : ''}" data-act="pick" data-k="${k}" data-v="${v}">${esc(p[v])}</button>`).join('')}</span>`;
+    }).join(' ').replace(/ ([.,!?])$/, '$1')}</div>`;
+  },
+};
+
+// ================= Checking =================
+// A sentence can have more than one true version. "answers" lists each one as the option chosen for every gap;
+// without it, the first option in every gap is right. Marking compares against whichever version the child is closest to.
+function bestCombo(q) {
+  const it = q.item, gaps = it.parts.map((_, k) => k).filter(k => Array.isArray(it.parts[k]));
+  const combos = it.answers || [gaps.map(() => 0)];
+  let combo = combos[0], right = -1;
+  combos.forEach(c => { const n = gaps.filter((k, i) => q.picks[k] === c[i]).length; if (n > right) { right = n; combo = c; } });
+  return { gaps, combo, right };
+}
+function complete(q) {
+  const it = q.item;
+  if (PLACE_TYPES.has(q.type)) {
+    if (q.slots.some(s => s.accept != null)) return q.slots.every(s => inSlot(q, s.id).length);
+    return q.tokens.every(t => q.placed[t.id]);
+  }
+  if (q.type === 'tf') return q.stmts.every((_, k) => q.picks[k] != null);
+  if (q.type === 'table') return it.questions.every((_, k) => q.picks[k] != null);
+  if (q.type === 'odd') return q.picks.item != null && q.picks.reason != null;
+  if (q.type === 'sentence') return it.parts.every((p, k) => !Array.isArray(p) || q.picks[k] != null);
+}
+// How much of the question is right, from 0 to 1
+function score(q) {
+  const it = q.item;
+  if (PLACE_TYPES.has(q.type)) {
+    const needed = q.slots.some(s => s.accept != null) ? q.slots.length : q.tokens.length;
+    return q.tokens.filter(t => tokenRight(q, t)).length / needed;
+  }
+  if (q.type === 'tf') return q.stmts.filter((st, k) => q.picks[k] === st.a).length / q.stmts.length;
+  if (q.type === 'table') return it.questions.filter((qq, k) => q.picks[k] === qq.a).length / it.questions.length;
+  if (q.type === 'odd') return (q.picks.item === it.odd ? 0.5 : 0) + (q.picks.reason === it.reason ? 0.5 : 0);
+  if (q.type === 'sentence') { const b = bestCombo(q); return b.right / b.gaps.length; }
+}
+function check() {
+  const q = S.q; q.checked = true; q.tries++;
+  const f = score(q);
+  if (q.tries === 1) S.results[S.i] = f;
+  if (f === 1 && q.tries === 1) burst(8);
+  draw();
+}
+// Second try: take back the wrong answers, keep the right ones
+function retry() {
+  const q = S.q; q.checked = false;
+  if (PLACE_TYPES.has(q.type)) q.tokens.forEach(t => { if (q.placed[t.id] && !tokenRight(q, t)) delete q.placed[t.id]; });
+  else if (q.type === 'tf') q.stmts.forEach((st, k) => { if (q.picks[k] !== st.a) delete q.picks[k]; });
+  else if (q.type === 'table') q.item.questions.forEach((qq, k) => { if (q.picks[k] !== qq.a) delete q.picks[k]; });
+  else if (q.type === 'odd') { if (q.picks.item !== q.item.odd) delete q.picks.item; if (q.picks.reason !== q.item.reason) delete q.picks.reason; }
+  else if (q.type === 'sentence') { const b = bestCombo(q); b.gaps.forEach((k, i) => { if (q.picks[k] !== b.combo[i]) delete q.picks[k]; }); }
+  draw();
+}
+function reveal() {
+  const q = S.q;
+  if (PLACE_TYPES.has(q.type)) {
+    q.placed = {};
+    const used = new Set();
+    q.slots.forEach(s => {
+      if (s.accept != null) { const t = q.tokens.find(t => t.text === s.accept && !used.has(t.id)); used.add(t.id); q.placed[t.id] = s.id; }
+    });
+    q.tokens.forEach(t => { if (t.answer) q.placed[t.id] = t.answer; });
+  } else if (q.type === 'tf') q.stmts.forEach((st, k) => q.picks[k] = st.a);
+  else if (q.type === 'table') q.item.questions.forEach((qq, k) => q.picks[k] = qq.a);
+  else if (q.type === 'odd') { q.picks.item = q.item.odd; q.picks.reason = q.item.reason; }
+  else if (q.type === 'sentence') { const b = bestCombo(q), key = (q.item.answers || [b.gaps.map(() => 0)])[0]; b.gaps.forEach((k, i) => q.picks[k] = key[i]); }
+  q.revealed = true; q.checked = true; draw();
+}
+
+// ================= Screens =================
+// Redrawing replaces the page, so remember where each scrolling pane was and put it back –
+// otherwise every tap would jump the question back to the top. A new question starts at the top.
+let drawnQ = null;
+function draw() {
+  const app = $('#app');
+  const keep = S.screen === 'question' && S.q === drawnQ;
+  const scrolls = keep ? ['.qscroll', '.media', '.qpool'].map(sel => [sel, ($(sel) || {}).scrollTop || 0]) : [];
+  const pageY = window.scrollY;
+  app.classList.toggle('wide', S.screen === 'question');
+  if (S.screen === 'home') app.innerHTML = homeHTML();
+  else if (S.screen === 'topic') app.innerHTML = topicHTML();
+  else if (S.screen === 'question') app.innerHTML = questionHTML();
+  else app.innerHTML = summaryHTML();
+  drawnQ = S.screen === 'question' ? S.q : null;
+  if (keep) { scrolls.forEach(([sel, y]) => { const el = $(sel); if (el) el.scrollTop = y; }); window.scrollTo(0, pageY); }
+}
+function homeHTML() {
+  return `<h1>Choose a topic</h1><div class="grid">${window.BANKS.map(b => {
+    const st = Object.entries(best).filter(([k]) => k.startsWith(b.id + ':')).reduce((a, [, v]) => a + v, 0);
+    return `<button class="tile" data-act="bank" data-id="${b.id}"><span class="em">${b.icon}</span><span><span class="t">${esc(b.title)}</span><br><span class="d">${esc(b.intro)}</span><br><span class="d">${esc(b.objectives)}</span><div class="stars">⭐ ${st} stars</div></span></button>`;
+  }).join('')}</div>`;
+}
+function topicHTML() {
+  const b = S.bank, counts = {};
+  b.items.forEach(it => counts[it.type] = (counts[it.type] || 0) + 1);
+  const tile = (mode, em, name, desc, n) => `<button class="tile ${mode === 'mixed' ? 'big' : ''}" data-act="start" data-mode="${mode}"><span class="em">${em}</span><span><span class="t">${name}</span><br><span class="d">${desc}${n ? ` · ${n} question${n > 1 ? 's' : ''}` : ''}</span><div class="stars">${starText(best[`${b.id}:${mode}`] || 0)}</div></span></button>`;
+  return `<h1>${b.icon} ${esc(b.title)}</h1>
+    ${b.explorer ? `<p><a class="btn" href="${b.explorer.href}">${b.explorer.icon} Back to ${esc(b.explorer.name)}</a></p>` : ''}<div class="grid">
+    ${tile('mixed', '🎲', 'Mixed practice', `${SESSION_LEN} questions of all kinds, chosen at random`, 0)}
+    ${Object.keys(TYPES).filter(t => counts[t]).map(t => tile(t, TYPES[t].icon, TYPES[t].name, TYPES[t].desc, counts[t])).join('')}</div>`;
+}
+function questionHTML() {
+  const q = S.q, T = TYPES[q.type], it = q.item, f = q.checked ? score(q) : null;
+  const prog = S.queue.map((_, k) => `<span class="${k === S.i ? 'now' : S.results[k] == null ? '' : S.results[k] === 1 ? 'done' : S.results[k] >= 0.5 ? 'part' : 'miss'}"></span>`).join('');
+  let fb = '';
+  if (q.checked) {
+    const msg = q.revealed ? '👀 Here are the answers.' : f === 1 ? (q.tries === 1 ? '🎉 All correct!' : '👍 All correct now!') : f >= 0.5 ? '👌 Nearly – the orange ones need another look.' : '🤔 Not quite – have another look at the orange ones.';
+    fb = `<div class="feedback ${q.revealed ? 'ok' : f === 1 ? 'good' : f >= 0.5 ? 'ok' : 'bad'}"><b>${msg}</b>${it.explain ? `<div style="margin-top:4px">${esc(it.explain)}</div>` : ''}</div>`;
+  }
+  const last = S.i === S.queue.length - 1;
+  const actions = !q.checked
+    ? `<button class="btn go" data-act="check" ${complete(q) ? '' : 'disabled'}>✔ Check</button>`
+    : `${f < 1 && !q.revealed && q.tries < 2 ? '<button class="btn" data-act="retry">🔁 Try again</button>' : ''}${f < 1 && !q.revealed && q.tries >= 2 ? '<button class="btn" data-act="reveal">👀 Show the answers</button>' : ''}<button class="btn primary" data-act="next">${last ? 'See my score ▶' : 'Next ▶'}</button>`;
+  const d = DRAW[q.type](q), parts = typeof d === 'string' ? { side: d } : d;
+  return `<div class="progress" aria-label="Question ${S.i + 1} of ${S.queue.length}">${prog}</div>
+    <div class="qlayout ${parts.media ? 'split' : 'single'} t-${q.type}">
+      ${parts.media ? `<section class="card media">${parts.media}</section>` : ''}
+      <section class="card qside${!parts.media && PLACE_TYPES.has(q.type) && !q.revealed ? ' sidepool' : ''}"><div class="qscroll">
+        <div class="qhead"><span class="qtype">${T.icon} ${T.name}</span><span class="muted">Question ${S.i + 1} of ${S.queue.length}</span></div>
+        <div class="prompt">${esc(it.prompt)}</div>${HINTS[q.type] && !q.checked ? `<div class="hint">${HINTS[q.type]}</div>` : ''}
+        ${parts.side}${fb}</div>
+        ${PLACE_TYPES.has(q.type) && !q.revealed ? `<div class="qpool">${pool(q)}</div>` : ''}
+        <div class="actions">${actions}</div></section></div>`;
+}
+function summaryHTML() {
+  const total = S.results.reduce((a, b) => a + (b || 0), 0), f = total / S.queue.length, st = starsFor(f);
+  const key = `${S.bank.id}:${S.mode}`;
+  if (st > (best[key] || 0)) { best[key] = st; store.set('sp-best', best); }
+  const wrong = S.queue.filter((_, k) => (S.results[k] || 0) < 1).length;
+  return `<div class="card" style="text-align:center"><div class="score-big">${starText(st)}</div>
+    <h2>You scored ${Math.round(total * 10) / 10} out of ${S.queue.length}</h2>
+    <p class="muted">${st === 3 ? 'Brilliant – a science expert!' : st === 2 ? 'Great work! Try the ones you missed.' : st === 1 ? 'Good start – practice makes perfect.' : 'Keep going – have another try!'}</p></div>
+    <div class="card" style="margin-top:12px">${S.queue.map((it, k) => `<div class="summary-row"><span>${(S.results[k] || 0) === 1 ? '✅' : (S.results[k] || 0) >= 0.5 ? '🟡' : '🟠'}</span><span>${TYPES[it.type].icon}</span><span style="flex:1">${esc(it.prompt)}</span></div>`).join('')}
+    <div class="actions">${wrong ? '<button class="btn" data-act="again-wrong">🔁 Practise the ones I missed</button>' : ''}<button class="btn" data-act="topic">More activities</button><button class="btn primary" data-act="start" data-mode="${S.mode}">Play again</button></div></div>`;
+}
+function startSession(mode, items) {
+  const b = S.bank;
+  S.mode = mode;
+  S.queue = items || (mode === 'mixed' ? shuffle(b.items).slice(0, SESSION_LEN) : shuffle(b.items.filter(it => it.type === mode)));
+  S.i = 0; S.results = []; S.q = prepare(S.queue[0]); S.screen = 'question';
+  draw(); window.scrollTo({ top: 0 });
+}
+function burst(n) {
+  const em = ['⭐', '🌟', '✨', '🎉'];
+  for (let i = 0; i < n; i++) {
+    const s = document.createElement('span'); s.className = 'confetti'; s.textContent = em[i % em.length];
+    s.style.left = `${Math.random() * 100}vw`; s.style.animationDuration = `${1.6 + Math.random() * 1.4}s`;
+    document.body.appendChild(s); setTimeout(() => s.remove(), 3500);
+  }
+}
+
+// ================= Taps =================
+const ACTIONS = {
+  home: () => { S.screen = 'home'; draw(); },
+  topic: () => { S.screen = 'topic'; draw(); },
+  help: () => $('#helpModal').classList.remove('hidden'),
+  'close-help': () => { $('#helpModal').classList.add('hidden'); store.set('sp-help-seen', true); },
+  bank: el => { S.bank = window.BANKS.find(b => b.id === el.dataset.id); S.screen = 'topic'; draw(); },
+  start: el => startSession(el.dataset.mode),
+  'again-wrong': () => startSession(S.mode, S.queue.filter((_, k) => (S.results[k] || 0) < 1)),
+  check, retry, reveal,
+  next: () => {
+    if (S.results[S.i] == null) S.results[S.i] = score(S.q);
+    if (S.i < S.queue.length - 1) { S.i++; S.q = prepare(S.queue[S.i]); S.screen = 'question'; }
+    else { S.screen = 'summary'; if (S.results.reduce((a, b) => a + b, 0) / S.queue.length >= 0.9) burst(30); }
+    draw(); window.scrollTo({ top: 0 });
+  },
+  // Placing: tap a word, then tap where it goes. Tapping a placed word takes it back.
+  tok: el => {
+    const q = S.q; if (q.checked) return;
+    const id = el.dataset.id;
+    if (q.placed[id]) { delete q.placed[id]; q.sel = id; }
+    else q.sel = q.sel === id ? null : id;
+    draw();
+  },
+  slot: (el, e) => {
+    const q = S.q; if (q.checked) return;
+    if (e.target.closest('.tok')) return;   // the word inside handles itself
+    const sid = el.dataset.id, s = slotById(q, sid);
+    if (!q.sel) return;
+    if (!s.many) inSlot(q, sid).forEach(t => delete q.placed[t.id]);
+    q.placed[q.sel] = sid; q.sel = null; draw();
+  },
+  pick: el => {
+    const q = S.q; if (q.checked) return;
+    const k = el.dataset.k, v = el.dataset.v;
+    q.picks[k] = v === 'true' ? true : v === 'false' ? false : +v; draw();
+  },
+};
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-act]'); if (!el || el.disabled) return;
+  // A word inside a slot: let the word's own tap win
+  const tok = e.target.closest('[data-act="tok"]');
+  const target = tok || el;
+  const fn = ACTIONS[target.dataset.act]; if (fn) fn(target, e);
+});
+document.addEventListener('keydown', e => {
+  if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('[role="button"]')) { e.preventDefault(); e.target.click(); }
+  if (e.key === 'Escape') $('#helpModal').classList.add('hidden');
+});
+
+// ================= Start =================
+draw();
+if (!store.get('sp-help-seen', false)) $('#helpModal').classList.remove('hidden');
+// Self-check for question writers: #selftest answers every question in every bank and lists any that don't score 100%
+if (location.hash === '#selftest') {
+  const out = [];
+  for (const b of window.BANKS) b.items.forEach((it, n) => {
+    try {
+      // 1) The answer key must give full marks
+      let q = prepare(it); S.q = q; S.bank = b; S.queue = [it]; S.i = 0; S.results = [];
+      reveal(); const full = score(q);
+      // 2) Tapping: place every token in the first slot, check, retry – nothing should crash
+      q = prepare(it); S.q = q;
+      if (PLACE_TYPES.has(it.type)) { q.tokens.forEach(t => { if (!q.placed[t.id]) { const free = q.slots.find(s => s.many || !inSlot(q, s.id).length); if (free) { ACTIONS.tok({ dataset: { id: t.id } }); ACTIONS.slot({ dataset: { id: free.id } }, { target: { closest: () => null } }); } } }); }
+      check(); retry(); check();
+      out.push(`${full === 1 ? 'OK ' : 'BAD'} ${b.id} #${n + 1} ${it.type} – key ${full}, wrong-try ${score(q).toFixed(2)}`);
+    } catch (e) { out.push(`ERR ${b.id} #${n + 1} ${it.type} – ${e.message}`); }
+  });
+  document.body.innerHTML = `<pre id="selftest">${out.join('\n')}</pre>`;
+}
+// Links from the explorers: #digestion opens that topic straight away
+const linked = window.BANKS.find(b => location.hash === '#' + b.id);
+if (linked) { $('#helpModal').classList.add('hidden'); S.bank = linked; S.screen = 'topic'; draw(); }
+// Test hook: #bank=adaptations&type=venn opens a question straight away (used for checking screenshots)
+const hp = new URLSearchParams(location.hash.slice(1));
+if (hp.get('bank')) {
+  $('#helpModal').classList.add('hidden');
+  S.bank = window.BANKS.find(b => b.id === hp.get('bank'));
+  if (hp.get('item')) { const it = S.bank.items[+hp.get('item')]; startSession(it.type, [it]); if (hp.get('reveal')) reveal(); }
+  else if (hp.get('type')) { startSession(hp.get('type')); if (hp.get('n')) { S.i = +hp.get('n'); S.q = prepare(S.queue[S.i]); draw(); } if (hp.get('reveal')) reveal(); }
+  else { S.screen = 'topic'; draw(); }
+}
+</script>
+</body>
+</html>

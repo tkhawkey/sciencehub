@@ -1,0 +1,1118 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Seed Lab</title>
+<meta name="description" content="Plan a fair test to find out what bean seeds need to germinate: change one thing, keep the rest the same, predict, then fast forward 10 days – an interactive tool for Year 5.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ================= Shared look (matches Particle Playground) ================= */
+  :root {
+    --ink: #1d2340; --muted: #5b6386; --soft: #eef2ff;
+    --yellow: #ffc83d; --blue: #3d7bff; --coral: #ff5f6d; --green: #22b07d; --orange: #f0892e; --grey: #8a93ad;
+    --space: #070d24; --drawerW: 360px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: var(--space); color: var(--ink); font-family: 'Fredoka', system-ui, sans-serif; font-size: 17px; line-height: 1.35; -webkit-tap-highlight-color: transparent; }
+  body { display: flex; flex-direction: column; }
+  button, input, textarea { font: inherit; color: inherit; }
+  b { font-weight: 700; }
+  .btn { border: 0; border-radius: 14px; padding: 9px 14px; min-height: 44px; cursor: pointer; background: #fff; color: var(--ink); font-weight: 600; font-size: 16px; box-shadow: 0 3px 0 rgba(0,0,0,.18); }
+  .btn:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,.18); }
+  .btn.active { background: var(--yellow); }
+  .btn:focus-visible { outline: 3px solid var(--yellow); outline-offset: 2px; }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .btn.go { background: var(--green); color: #fff; font-size: 19px; flex: 1; }
+  .btn.primary { background: var(--green); color: #fff; }
+  a.btn { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
+  #drawer a.btn { color: #fff; }
+
+  /* ---------- Top bar ---------- */
+  .topbar { flex: none; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 8px 10px; background: rgba(7,13,36,.95); z-index: 15; }
+  .brand { color: #fff; font-size: 21px; font-weight: 700; margin-right: auto; white-space: nowrap; }
+  .hub-link { flex: none; display: grid; place-items: center; width: 38px; height: 38px; border-radius: 12px; text-decoration: none; font-size: 20px; background: rgba(255,255,255,.14); box-shadow: 0 3px 0 rgba(0,0,0,.25); transition: background .15s, transform .08s; }
+  .hub-link:hover { background: rgba(255,255,255,.26); }
+  .hub-link:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,.25); }
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+  .btn.missions { background: var(--blue); color: #fff; }
+  .tabs .btn { padding: 9px 11px; }
+  @media (max-width: 1399px) {
+    .topbar .long { display: none; }
+    .brand { font-size: 18px; }
+    .topbar, .tabs { gap: 4px; }
+    .tabs .btn { padding: 9px 8px; font-size: 14.5px; }
+  }
+
+  /* ---------- Main area: stage on the left, drawer on the right ---------- */
+  main { position: relative; flex: 1; min-height: 0; }
+  #stage { position: absolute; top: 0; bottom: 0; left: 0; right: var(--drawerW); overflow: hidden; background: #eef4fb; display: flex; align-items: center; justify-content: center; }
+  #stage > svg { width: 100%; height: 100%; display: block; touch-action: none; user-select: none; -webkit-user-select: none; }
+  #drawer { position: absolute; top: 0; right: 0; bottom: 0; width: var(--drawerW); background: #dfe6ff; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+  .card { background: #fff; border-radius: 16px; padding: 12px 14px; }
+  .card h2 { margin: 0 0 4px; font-size: 21px; line-height: 1.2; }
+  .card h3 { margin: 0 0 6px; font-size: 17px; }
+  .card p { margin: 4px 0; }
+  .muted { color: var(--muted); font-size: 14.5px; }
+  .term { background: #fff3c4; border-radius: 6px; padding: 0 4px; font-weight: 600; }
+  .navrow { display: flex; gap: 8px; flex-wrap: wrap; }
+  .opt { border: 2px solid #d3dbf7; background: #fff; border-radius: 12px; padding: 6px 10px; min-height: 44px; font-weight: 600; font-size: 15px; cursor: pointer; }
+  .opt.on { background: var(--yellow); border-color: #e0a800; }
+  .opt.wrong { background: #ffe0e3; border-color: var(--coral); }
+  .opt.done, .opt.done:disabled { background: #c9f2df; border-color: var(--green); opacity: 1; }
+  .opt:disabled { opacity: .45; cursor: default; }
+  .stops { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tick { color: var(--green); }
+  .spot { background: #fff3c4; border-radius: 12px; padding: 8px 10px; margin-top: 6px !important; }
+  .job { font-size: 16px; background: #c9f2df; border-radius: 12px; padding: 8px 10px; }
+  .says { border: 3px solid var(--yellow); }
+  .says.good { border-color: var(--green); background: #effbf5; }
+  .says ul { margin: 6px 0 0; padding-left: 20px; }
+  .says li { margin: 4px 0; }
+  .wq .opt { display: block; width: 100%; text-align: left; margin-top: 6px; }
+  /* Check stays in reach at the bottom of the drawer */
+  .checkbar { position: sticky; bottom: -10px; z-index: 2; display: flex; margin: 0 -10px; padding: 6px 10px 10px; background: #dfe6ff; }
+  .sw { width: 16px; height: 16px; border-radius: 50%; flex: none; display: inline-block; vertical-align: -2px; border: 1px solid rgba(0,0,0,.2); }
+  .facts { margin: 6px 0 0; padding-left: 20px; } .facts li { margin: 3px 0; }
+  .gtable { width: 100%; border-collapse: collapse; font-size: 15px; margin: 6px 0; }
+  .gtable th { text-align: left; font-size: 13.5px; color: var(--muted); padding: 2px 4px; }
+  .gtable td { border-top: 1px solid #e1e6f5; padding: 5px 4px; }
+  .numin { width: 90px; min-height: 44px; font-size: 20px; text-align: center; border: 2px solid #c3cdf2; border-radius: 12px; padding: 4px; background: #fff; }
+  .numin:focus { outline: 3px solid var(--yellow); border-color: #e0a800; }
+  .numin.ok { border-color: var(--green); background: #effbf5; }
+  .ansrow { display: flex; align-items: center; gap: 8px; margin: 8px 0 4px; font-weight: 600; flex-wrap: wrap; }
+  .slide { display: flex; align-items: center; gap: 8px; margin: 6px 0; }
+  .slide input[type=range] { flex: 1; min-height: 44px; accent-color: var(--coral); }
+  .bigtemp { font-size: 26px; font-weight: 700; text-align: center; margin: 0; }
+
+  /* ---------- Labels drawn on the pictures ---------- */
+  .glabel { font-family: 'Fredoka', system-ui, sans-serif; font-size: 18px; font-weight: 700; fill: var(--ink); }
+  .gsmall { font-family: 'Fredoka', system-ui, sans-serif; font-size: 14px; font-weight: 600; fill: var(--muted); }
+  .wsmall { font-family: 'Fredoka', system-ui, sans-serif; font-size: 13px; font-weight: 600; fill: var(--ink); paint-order: stroke; stroke: #fff; stroke-width: 4px; stroke-linejoin: round; }
+  .lay-top { position: absolute; top: 8px; left: 10px; right: 10px; display: flex; gap: 8px; align-items: flex-start; flex-wrap: wrap; pointer-events: none; z-index: 2; }
+  .scaletag { background: var(--blue); color: #fff; font-weight: 700; border-radius: 10px; padding: 5px 10px; font-size: 15px; white-space: nowrap; }
+  .readout { background: #fff; border-radius: 12px; padding: 5px 10px; font-size: 15px; line-height: 1.3; box-shadow: 0 3px 8px rgba(0,0,0,.12); }
+  .tapme { cursor: pointer; }
+  .drop { animation: drop 1.2s linear infinite; }
+  @keyframes drop { from { transform: translateY(0); opacity: 0; } 15% { opacity: 1; } to { transform: translateY(var(--d)); opacity: .2; } }
+  .rise { animation: rise 1.6s linear infinite; }
+  @keyframes rise { from { transform: translateY(0); opacity: .9; } to { transform: translateY(var(--d)); opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { .drop, .rise { animation: none; } }
+
+  /* ---------- Chips (tap, or drag onto the picture) ---------- */
+  .chip { display: inline-flex; align-items: center; justify-content: center; gap: 4px; border: 2px solid #d3dbf7; background: #fff; border-radius: 12px; padding: 4px 12px; min-height: 44px; font-weight: 600; font-size: 15px; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
+  .chip.sel { background: var(--yellow); border-color: #e0a800; }
+  .chip-ghost { position: fixed; z-index: 30; pointer-events: none; transform: translate(-50%, -50%) rotate(-3deg); box-shadow: 0 8px 18px rgba(0,0,0,.3); }
+
+  /* ---------- Missions and pop-ups ---------- */
+  .banner { position: absolute; top: 10px; right: 10px; width: calc(var(--drawerW) - 20px); z-index: 6; background: #fff; border: 3px solid var(--yellow); border-radius: 16px; padding: 9px 44px 9px 14px; box-shadow: 0 6px 16px rgba(0,0,0,.18); }
+  .banner.hidden { display: none; }
+  .banner .kicker { font-size: 12.5px; font-weight: 700; color: var(--blue); text-transform: uppercase; letter-spacing: .04em; }
+  .banner .close { position: absolute; top: 6px; right: 6px; border: 0; background: var(--soft); border-radius: 50%; width: 32px; height: 32px; cursor: pointer; }
+  .banner .hint { margin-top: 4px; color: var(--muted); font-size: 15px; }
+  .banner .hint.hidden { display: none; }
+  .linkbtn { border: 0; background: none; color: var(--blue); font-weight: 600; cursor: pointer; padding: 4px 0; font-size: 15px; min-height: 32px; }
+  .modal-box ul.icons { list-style: none; padding: 0; margin: 0 0 14px; }
+  .icons li { display: flex; gap: 10px; padding: 6px 0; line-height: 1.35; }
+  .icons .em { font-size: 24px; width: 32px; flex: none; text-align: center; }
+  .modal { position: fixed; inset: 0; background: rgba(5,10,30,.6); display: flex; align-items: center; justify-content: center; z-index: 20; padding: 16px; }
+  .modal.hidden { display: none; }
+  .modal-box { background: #fff; border-radius: 24px; padding: 20px; width: min(580px, 100%); max-height: calc(100vh - 32px); overflow-y: auto; }
+  .modal-box h2 { margin: 0 0 8px; font-size: 25px; }
+  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+  .mission-list { display: grid; gap: 8px; margin-bottom: 14px; }
+  .mission-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; min-height: 52px; border-radius: 16px; background: var(--soft); border: 0; text-align: left; cursor: pointer; font-size: 16px; }
+  .mission-item .em { font-size: 25px; } .mission-item .t { flex: 1; font-weight: 600; }
+  .mission-item .star { font-size: 21px; filter: grayscale(1); opacity: .35; }
+  .mission-item.done .star { filter: none; opacity: 1; }
+  .win-emoji { font-size: 56px; text-align: center; }
+  .win-text { font-size: 17.5px; line-height: 1.5; margin-bottom: 14px; }
+  .confetti { position: fixed; top: -40px; font-size: 26px; z-index: 40; pointer-events: none; animation: fall linear forwards; }
+  @keyframes fall { to { transform: translateY(110vh) rotate(540deg); } }
+
+  /* ---------- Narrow screens: stage on top, drawer below ---------- */
+  @media (max-width: 760px) {
+    :root { --drawerW: 0px; }
+    #stage { bottom: 42%; right: 0; }
+    #drawer { top: 58%; width: 100%; }
+    .banner { top: calc(58% + 8px); left: 8px; right: 8px; width: auto; }
+    .brand { font-size: 18px; }
+    .tl { display: none; }
+    .readout, .scaletag { font-size: 13px; padding: 3px 7px; }
+    .glabel { font-size: 14px; } .gsmall { font-size: 11px; } .wsmall { font-size: 11px; }
+  }
+
+  /* ---------- Seed Lab ---------- */
+  .steps { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
+  .steps span { font-size: 12.5px; font-weight: 700; padding: 3px 8px; border-radius: 10px; background: var(--soft); color: var(--muted); }
+  .steps span.now { background: var(--yellow); color: var(--ink); }
+  .steps span.done { background: #c9f2df; color: #147a55; }
+  .varrow { margin: 8px 0; }
+  .varrow > span { display: block; font-weight: 700; font-size: 14.5px; margin-bottom: 4px; }
+  .tag { background: var(--yellow); border-radius: 8px; padding: 1px 6px; font-size: 12px; }
+  .opt.sm { font-size: 14px; padding: 4px 8px; }
+  .keeps { display: grid; gap: 4px; margin-top: 6px; }
+  .keep { display: flex; align-items: center; gap: 10px; min-height: 40px; padding: 4px 8px; border-radius: 10px; background: var(--soft); font-size: 15px; cursor: pointer; }
+  .keep input { width: 22px; height: 22px; accent-color: var(--green); }
+  ul.spot { padding-left: 28px; }
+  .report p { margin: 6px 0; }
+  .report b.k { display: block; font-size: 13.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .03em; }
+  /* A page of flaps, like the paper one: tap to lift a flap and see what is under it */
+  .flaps { position: absolute; top: 54px; left: 8px; right: 8px; bottom: 8px; display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(2, 1fr); gap: 8px; }
+  .flap { position: relative; overflow: hidden; border: 0; border-radius: 16px; background: var(--fc); box-shadow: 0 4px 0 rgba(0,0,0,.15); cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 8px; color: var(--ink); }
+  .flap::after { content: ''; position: absolute; right: 0; bottom: 0; border-style: solid; border-width: 0 0 26px 26px; border-color: transparent transparent rgba(0,0,0,.14) transparent; }
+  .flap .ft { font-weight: 700; font-size: 17px; line-height: 1.15; }
+  .flap .em { font-size: 40px; }
+  .flap .tap { font-size: 13px; font-weight: 600; color: var(--muted); }
+  .flap.open { background: #fff; box-shadow: inset 0 0 0 4px var(--fc), 0 4px 0 rgba(0,0,0,.1); justify-content: space-evenly; }
+  .flap.open::after { display: none; }
+  .flap.sel { box-shadow: inset 0 0 0 4px var(--yellow), 0 4px 0 rgba(0,0,0,.1); }
+  .flap .pics { display: flex; flex-wrap: wrap; justify-content: center; gap: 2px 6px; }
+  .flap .pics span { display: flex; flex-direction: column; align-items: center; }
+  .flap .pics svg { width: clamp(36px, 6.2vw, 92px); height: auto; }
+  .flap .pics i { font-style: normal; font-size: 12px; font-weight: 600; }
+  .flap .why { font-size: 15px; line-height: 1.3; }
+  @media (max-width: 760px) {
+    .flaps { top: 44px; grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(4, 1fr); gap: 6px; }
+    .flap { flex-direction: row; gap: 6px; padding: 4px 6px; }
+    .flap .ft { font-size: 13.5px; } .flap .em { font-size: 24px; } .flap .tap { display: none; }
+    .flap.open { flex-direction: column; justify-content: center; gap: 2px; }
+    .flap .pics svg { width: 28px; } .flap .pics i { display: none; }
+    .flap .why { font-size: 11.5px; }
+  }
+  .seedcards { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 6px; }
+  .seedcard { display: flex; flex-direction: column; align-items: center; gap: 2px; border: 2px solid #d3dbf7; background: #fff; border-radius: 12px; padding: 6px 4px; min-height: 44px; font-weight: 600; font-size: 13.5px; line-height: 1.15; cursor: pointer; text-align: center; }
+  .seedcard.sel { background: var(--yellow); border-color: #e0a800; }
+  textarea.reason { width: 100%; min-height: 64px; border: 2px solid #c3cdf2; border-radius: 12px; padding: 6px 8px; font-size: 15.5px; resize: vertical; }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a class="hub-link" href="../index.html" title="Back to the Science Hub" aria-label="Back to the Science Hub">🏠</a>
+  <div class="brand">🌱 Seed Lab</div>
+  <div class="tabs" id="tabs"></div>
+  <button class="btn missions" data-act="missions" title="Missions">🚀 <span class="long">Missions </span><span id="starCount"></span></button>
+  <button class="btn" data-act="model" title="How is this model different from real life?">🤔<span class="long"> Real life?</span></button>
+  <button class="btn" id="helpBtn" data-act="view" data-view="help" aria-label="How to use">❓</button>
+</div>
+<main>
+  <div id="stage"></div>
+  <div id="drawer"></div>
+  <div id="banner" class="banner hidden" role="status">
+    <div class="kicker" id="bannerKicker"></div>
+    <div id="bannerText"></div>
+    <button class="linkbtn" data-act="hint" id="hintBtn">💡 Show a hint</button>
+    <div class="hint hidden" id="bannerHint"></div>
+    <button class="close" data-act="stopMission" aria-label="Stop this mission">✖</button>
+  </div>
+</main>
+<div id="missionsModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="missionsTitle">
+  <div class="modal-box">
+    <h2 id="missionsTitle">🚀 Missions</h2>
+    <div class="mission-list" id="missionList"></div>
+    <div class="modal-actions"><button class="btn" data-act="resetStars">Reset stars</button><button class="btn primary" data-act="closeModals">Close</button></div>
+  </div>
+</div>
+<div id="modelModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modelTitle">
+  <div class="modal-box">
+    <h2 id="modelTitle">🤔 How is this model different from real life?</h2>
+    <p style="margin-top:0">A <span class="term">model</span> shows some important features of something real – but not everything.</p>
+    <ul class="icons">
+      <li><span class="em">🫘</span><span>These are <b>bean</b> seeds. Beans germinate just as well in the dark. Some other seeds, like lettuce, <b>do</b> need light to germinate, so the result depends on the seed.</span></li>
+      <li><span class="em">❄️</span><span>In the cold (4 °C, like a fridge), most bean seeds wait. Given more time, or once they are warmed up, some may still germinate.</span></li>
+      <li><span class="em">🎲</span><span>Real seeds are not all the same: a few never germinate at all. The results here include some <b>dud</b> seeds, like real ones would.</span></li>
+      <li><span class="em">⏩</span><span>Real seeds take days to germinate, and you would check them every day. Here you jump straight to day 10.</span></li>
+      <li><span class="em">🌳</span><span>A few seedlings under a parent tree do survive. The numbers in <b>Spreading seeds</b> show the idea, not a real count.</span></li>
+      <li><span class="em">🌰</span><span>Many seeds travel in more than one way. Acorns and sweet chestnuts drop and roll, but squirrels and jays also carry them off and bury them. Shakers need the wind to sway them.</span></li>
+      <li><span class="em">☀️</span><span>Seedlings in the dark grow <b>taller and thinner</b>, searching for light. They stay <b>pale yellow</b>, because a plant needs light to make the green substance in its leaves (called <b>chlorophyll</b>). Once a seedling has used up the food stored in its seed, it <b>does</b> need light to keep growing. Germination is only the very start.</span></li>
+    </ul>
+    <div class="modal-actions"><button class="btn primary" data-act="closeModals">Got it!</button></div>
+  </div>
+</div>
+<div id="winModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="winTitle">
+  <div class="modal-box">
+    <div class="win-emoji">⭐</div>
+    <h2 id="winTitle" style="text-align:center">Mission complete!</h2>
+    <div class="win-text" id="winText"></div>
+    <div class="modal-actions"><button class="btn" data-act="closeModals">Keep exploring</button><a class="btn primary" id="winPractise" href="../practice/index.html#seeds">✏️ Practise this</a><button class="btn primary" id="winNext" data-act="nextMission">Next mission ▶</button></div>
+  </div>
+</div>
+
+<script>
+// ================= Utilities =================
+const $ = (s, r = document) => r.querySelector(s);
+// Saved progress; private windows can block storage, so failures are ignored
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+};
+// Lower-case the first letter only, so units like °C keep their capitals
+const lc = t => t[0].toLowerCase() + t.slice(1);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+const stageSize = () => { const st = $('#stage'), w = st.clientWidth || 900, h = st.clientHeight || 600; return { w, h, narrow: w < 560 }; };
+
+// ================= Variables =================
+// The four things that can be different for a pot. The first choice of each is how every pot starts.
+const VARS = {
+  // Each choice is [icon, label, how to say it in a sentence]
+  water: { name: 'Water', the: 'the water', opts: { wet: ['💧', 'Watered', 'with water'], dry: ['🚫', 'No water', 'with no water'] } },
+  temp:  { name: 'Temperature', the: 'the temperature', opts: { warm: ['🌡️', 'Warm (20 °C)', 'in the warm'], cold: ['❄️', 'Cold (4 °C)', 'in the cold'] } },
+  light: { name: 'Light', the: 'the light', opts: { light: ['☀️', 'Light', 'in the light'], dark: ['🌑', 'Dark', 'in the dark'] } },
+  soil:  { name: 'What it grows in', the: 'what the seeds grow in', opts: { soil: ['🟫', 'Soil', 'in soil'], cotton: ['☁️', 'Damp cotton wool', 'in damp cotton wool'] } }
+};
+const VORDER = ['water', 'temp', 'light', 'soil'];
+const startPot = () => ({ water: 'wet', temp: 'warm', light: 'light', soil: 'soil' });
+// Settings that stop bean seeds germinating. If one of these is kept the same for every pot, nothing germinates
+// anywhere, so the test can't show whether the thing being changed makes a difference.
+const BLOCKS = { water: ['dry', 'none of the pots had any <b>water</b>'], temp: ['cold', 'all the pots were <b>cold</b>'] };
+// What could be measured, and whether it fits a question about germination
+const MEASURES = [
+  ['germ', 'How many of the 10 seeds germinate (start to grow)', true, ''],
+  ['height', 'How tall the plants are after 10 days', false, 'That is a good thing to measure for <b>growth</b>, but our question is about <b>germination</b>: does the seed start to grow at all?'],
+  ['pot', 'The colour of the pots', false, 'The colour of the pot will not change, whatever you do. Measure something about the <b>seeds</b>.']
+];
+// How many pots in each group: the question that makes children decide to repeat
+const REPS = [
+  ['1', '1 pot', false, 'If that one pot had some <b>dud</b> seeds, you would never know! Use more than one pot, so you can see if the results <b>repeat</b>.'],
+  ['3', '3 pots', true, 'Good choice! If the 3 pots in a group give similar results, you can trust them more. If one is very different, you will spot it.'],
+  ['6', '6 pots', true, 'More repeats make results even more reliable. But that would be 12 pots and 120 seeds! There is room for 6 pots on the bench, so we will use <b>3 in each group</b>.']
+];
+const PER = 3;   // pots in each group on the bench
+// Things that should be kept the same (the control variables), plus two that should not be on the list
+const KEEPS = [
+  ['seed', 'The type of seed (all beans)', true], ['count', 'The number of seeds in each pot (10)', true], ['size', 'The size of the pots', true],
+  ['days', 'How long we wait (10 days)', true], ['result', 'How many seeds germinate', false, 'That is what you <b>measure</b>, so you can\'t keep it the same!']
+];
+
+// Analysing the results: what to do about an odd result
+const ACTS = [
+  ['ignore', 'Rub it out and leave it off the chart', false, 'Scientists never hide results they don\'t like! Keep it in your table, and find out more about it.'],
+  ['repeat', 'Repeat that pot with 10 new seeds, to check', true, ''],
+  ['change', 'Change your conclusion because of it', false, 'It is only one pot. The other pots in its group agree with each other, so one odd result is not enough to change the pattern. Find out more about it first.']
+];
+// The science behind each conclusion: [answer, right?, why not]
+const WHY = {
+  water: [['A seed takes in water, so it swells up, splits its coat and starts to grow.', true],
+    ['Water keeps the seed cool, so it can grow.', false, 'The seeds were warm in both groups. Think about what water does <b>inside</b> the seed.'],
+    ['Water washes the soil away, so the shoot can get out.', false, 'The soil stayed in the pot. Think about what water does <b>inside</b> the seed.']],
+  temp: [['At 4 °C, the seeds are frozen solid and die.', false, '4 °C is cold, but it is above freezing (0 °C), so the water does not freeze. The seeds are still alive.'],
+    ['Warmth lets the changes inside a seed happen. In the cold they are very slow, so the seed waits.', true],
+    ['Cold air has no water in it, so the seeds dry out.', false, 'Both groups were watered. Think about what the cold does to the changes <b>inside</b> the seed.']],
+  light: [['Seeds can get light through the soil.', false, 'Light can\'t get through soil, and the dark pots had no light at all.'],
+    ['Seeds only grow at night.', false, 'The seeds in the light germinated too.'],
+    ['A seed has its own store of food inside it, so it does not need light to germinate.', true]],
+  soil: [['A seed has its own store of food inside it. The damp cotton wool gave it water, so it did not need soil to germinate.', true],
+    ['Cotton wool has plant food in it.', false, 'Cotton wool has no plant food in it. So where does a seed get food from when it starts to grow?'],
+    ['Seeds don\'t need water to germinate.', false, 'The cotton wool was <b>damp</b>, so the seeds had water.']]
+};
+// Ways to improve the investigation: [idea, good idea?, why]
+const IMPROVE = [
+  ['Use more pots in each group', true, 'More repeats make it easier to spot odd results, so you can trust the pattern more.'],
+  ['Check the pots every day, not just on day 10', true, 'Then you would find out how <b>quickly</b> the seeds germinate, not just how many.'],
+  ['Test other kinds of seed too', true, 'Then you would know if your conclusion is true for other seeds, not just beans. (Lettuce seeds do need light!)'],
+  ['Change the water and the light at the same time', false, 'Then it would not be a fair test: you would not know which one made the difference.'],
+  ['Put fewer seeds in each pot', false, 'With fewer seeds, each dud seed matters more, so the results would be <b>less</b> reliable.']
+];
+
+// ================= State =================
+// The pots are set up a group at a time: every pot in a group is the same
+const freshLab = () => ({ step: 0, iv: null, dv: null, dvWrong: [], reps: null, repsWrong: [], groups: [startPot(), startPot()], sel: 0, said: null, keeps: {}, keepsSaid: null,
+  pred: null, reason: '', ran: false,
+  // Analysing: the bar chart children draw, the pattern, the odd result, the conclusion and an improvement
+  show: 'chart', bars: Array(6).fill(null), chartTries: 0, chartSaid: null, pat: null, patWrong: [], oddTap: null, oddFound: false,
+  act: null, actWrong: [], repeated: false, claim: null, claimWrong: [], why: null, whyWrong: [], imp: null, impTried: [],
+  get pots() { return this.groups.flatMap(gp => Array.from({ length: PER }, () => ({ ...gp }))); } });
+const GNAME = ['A', 'B'], groupOf = i => Math.floor(i / PER);
+const state = { view: 'bench', lab: freshLab(), mission: null, done: store.get('sl-done', []) };
+
+// ================= Germination =================
+// Beans need water and warmth to germinate. Light and soil make no difference (they need light later, to grow).
+// The results are always the same for the same set-up, with a few dud seeds so they are not perfectly neat.
+const LAB = {
+  germinated(pots) {
+    const good = p => p.water === 'wet' && p.temp === 'warm';
+    let goodSeen = 0;
+    return pots.map((p, i) => {
+      if (p.water === 'dry') return 0;
+      if (p.temp === 'cold') return [1, 0, 0, 1, 0, 0][i];
+      goodSeen++;
+      // The second pot with good conditions has a batch of duds: an odd result to spot later
+      if (goodSeen === 2 && pots.filter(good).length >= 3) return 4;
+      return [9, 10, 9, 8, 10, 9][i];
+    });
+  },
+  // Is the plan fair? Returns a list of problems (empty if fair)
+  problems() {
+    const L = state.lab, V = VARS[L.iv], [A, B] = L.groups, msgs = [];
+    VORDER.filter(k => k !== L.iv).forEach(k => {
+      if (A[k] !== B[k]) msgs.push(`Not fair: ${VARS[k].the} is different in the two groups. You are only testing <b>${V.the}</b>, so keep everything else the same.`);
+    });
+    if (A[L.iv] === B[L.iv]) msgs.push(`Both groups have the same ${V.name.toLowerCase()}. Change it for one of the groups.`);
+    return msgs;
+  },
+  // What actually happened: which group germinated more, or no real difference
+  effect() {
+    const L = state.lab, g = LAB.germinated(L.pots), vals = Object.keys(VARS[L.iv].opts);
+    const mean = v => { const xs = g.filter((_, i) => L.pots[i][L.iv] === v); return xs.reduce((a, b) => a + b, 0) / xs.length; };
+    const [a, b] = vals.map(mean);
+    // Hardly anything germinated in either group: the test can't tell us anything
+    if (Math.max(a, b) < 2) return 'none';
+    return Math.abs(a - b) < 3 ? 'same' : a > b ? vals[0] : vals[1];
+  },
+  // The things kept the same that stopped the seeds germinating
+  blockers() { const L = state.lab; return VORDER.filter(k => k !== L.iv && BLOCKS[k] && L.groups[0][k] === BLOCKS[k][0]); },
+  // Pictures: two groups, each a labelled row of three pots
+  geo() {
+    const { w, h, narrow } = stageSize(), gw = (w - 28) / PER, top = narrow ? 50 : 56, gh = (h - top - 4) / 2, hh = narrow ? 28 : 34;
+    return { w, h, narrow, gw, gh, hh, top, band: gi => top + gi * gh, cell: i => ({ x: 14 + (i % PER) * gw, y: top + groupOf(i) * gh + hh }) };
+  },
+  stage() {
+    if (state.lab.step >= 5 && state.lab.show === 'chart') return LAB.chart();
+    const L = state.lab, g = LAB.geo(), ran = L.ran, counts = ran ? LAB.germinated(L.pots) : null;
+    const setting = L.step === 1 && L.said !== 'fair';
+    let o = `<rect width="${g.w}" height="${g.h}" fill="#eef4fb"/>`;
+    // Each group's frame and label, with how it is set up
+    L.groups.forEach((gp, gi) => {
+      const y0 = g.band(gi), on = setting && L.sel === gi, iv = L.iv && VARS[L.iv].opts[gp[L.iv]];
+      o += `<g${setting ? ' class="tapme"' : ''} data-group="${gi}"><rect x="6" y="${y0}" width="${g.w - 12}" height="${g.gh - 6}" rx="16" fill="#fff" fill-opacity=".55" stroke="${on ? 'var(--yellow)' : 'rgba(0,0,0,.15)'}" stroke-width="${on ? 5 : 2}"/>`;
+      o += `<text x="18" y="${y0 + g.hh * .72}" style="font-size:${g.narrow ? 14 : 18}px;font-weight:700;fill:var(--ink)">Group ${GNAME[gi]}${iv ? ` · ${iv[0]} ${iv[1]}` : ''}</text>`;
+      o += `<text x="${g.w - 18}" y="${y0 + g.hh * .72}" text-anchor="end" style="font-size:${g.narrow ? 12 : 17}px">${VORDER.map(k => VARS[k].opts[gp[k]][0]).join(g.narrow ? '' : ' ')}</text></g>`;
+    });
+    L.pots.forEach((p, i) => {
+      const { x, y } = g.cell(i), cw = g.gw - 10, ch = g.gh - g.hh - 14, dark = p.light === 'dark', cold = p.temp === 'cold';
+      const bg = cold ? (dark ? '#3d4a66' : '#dcefff') : (dark ? '#4f5468' : '#fff4cf'), ink = dark ? '#fff' : 'var(--ink)';
+      o += `<g${setting ? ' class="tapme"' : ''} data-group="${groupOf(i)}"><rect x="${x}" y="${y}" width="${cw}" height="${ch}" rx="12" fill="${bg}" stroke="rgba(0,0,0,.12)" stroke-width="2"/>`;
+      o += `<text x="${x + 10}" y="${y + 20}" style="font-size:${g.narrow ? 12 : 15}px;font-weight:700;fill:${ink}">${g.narrow ? '' : 'Pot '}${i + 1}</text>`;
+      // The pot: soil or cotton wool, darker when wet
+      const pw = Math.min(cw * .62, ch * .78), ph = pw * .62, px = x + cw / 2, pb = y + ch - 12, rim = pb - ph;
+      const fill = p.soil === 'soil' ? (p.water === 'wet' ? '#5a3418' : '#a8875f') : (p.water === 'wet' ? '#dfe8f2' : '#fbfbf7');
+      o += `<path d="M${px - pw / 2} ${rim} L${px - pw * .38} ${pb} L${px + pw * .38} ${pb} L${px + pw / 2} ${rim} Z" fill="#c8673d" stroke="#8e4524" stroke-width="2"/>`;
+      o += `<path d="M${px - pw * .47} ${rim + 6} L${px - pw * .39} ${pb - 4} L${px + pw * .39} ${pb - 4} L${px + pw * .47} ${rim + 6} Z" fill="${fill}"/>`;
+      o += `<rect x="${px - pw / 2 - 4}" y="${rim - 6}" width="${pw + 8}" height="10" rx="3" fill="#b25a33"/>`;
+      if (p.water === 'wet') o += `<text x="${px + pw / 2 + 6}" y="${rim + 14}" style="font-size:${g.narrow ? 11 : 15}px">💧</text>`;
+      // Ten bean seeds near the top of the soil; after 10 days, the ones that germinated have a root and a shoot
+      const n = ran ? counts[i] : 0, sw = pw * .8 / 10;
+      for (let k = 0; k < 10; k++) {
+        const bx = px - pw * .4 + sw * (k + .5), by = rim + ph * (.3 + (k % 2) * .12);
+        // The seeds that germinated are spread along the pot, not bunched at one end
+        const pos = [0, 5, 2, 7, 4, 9, 1, 6, 3, 8].indexOf(k) < n;
+        if (pos && ran) {
+          o += `<path d="M${bx} ${by} q-3 ${ph * .15} 1 ${ph * .3}" stroke="#f3e7c9" stroke-width="2" fill="none"/>`;
+          // In the dark, seedlings grow taller and thinner, searching for light, and stay pale yellow with small leaves
+          // because they cannot make the green chlorophyll without light
+          const top = dark ? Math.max(y + 28, rim - ch * .34 - (k % 3) * 5) : rim - ch * .22 - (k % 3) * 4;
+          o += `<path d="M${bx} ${by} V${top}" stroke="${dark ? '#e3d36a' : '#4caf50'}" stroke-width="${dark ? 1.6 : 2.5}"/>`;
+          o += dark ? `<ellipse cx="${bx - 3}" cy="${top}" rx="3.5" ry="2" fill="#f0e27a"/><ellipse cx="${bx + 3}" cy="${top}" rx="3.5" ry="2" fill="#f0e27a"/>`
+            : `<ellipse cx="${bx - 5}" cy="${top}" rx="6" ry="3" fill="#5fbf4f"/><ellipse cx="${bx + 5}" cy="${top}" rx="6" ry="3" fill="#5fbf4f"/>`;
+        }
+        o += `<ellipse cx="${bx}" cy="${by}" rx="${Math.max(3, sw * .38)}" ry="${Math.max(2.2, sw * .26)}" fill="#e9d7a8" stroke="#a88b4e" stroke-width="1.2"/>`;
+      }
+      if (ran) o += `<g><rect x="${x + 8}" y="${y + ch - 40}" width="${g.narrow ? 46 : 58}" height="28" rx="10" fill="#fff" stroke="var(--green)" stroke-width="2"/><text x="${x + 8 + (g.narrow ? 23 : 29)}" y="${y + ch - 21}" text-anchor="middle" style="font-size:${g.narrow ? 13 : 16}px;font-weight:700;fill:var(--ink)">${n}/10</text></g>`;
+      o += `</g>`;
+    });
+    return `<div class="lay-top"><span class="scaletag">${ran ? '⏩ Day 10' : '🌱 Day 0'}</span><div class="readout">${ran ? 'How many seeds germinated in each pot?' : setting ? 'Tap a group to set it up.' : 'Two groups of 3 pots. Each pot has 10 bean seeds.'}</div></div>
+      <svg id="labSvg" viewBox="0 0 ${g.w} ${g.h}" aria-label="Two groups of three pots of bean seeds">${o}</svg>`;
+  },
+  // The pot whose result does not fit the pattern (the batch of dud seeds)
+  anomaly() { return LAB.germinated(state.lab.pots).indexOf(4); },
+  groupLabel(gi) { const L = state.lab, o = VARS[L.iv].opts[L.groups[gi][L.iv]]; return `Group ${GNAME[gi]} (${o[0]} ${lc(o[1]).replace(/ \((.+)\)/, ', $1')})`; },
+  patOpts() { return [['A', `${LAB.groupLabel(0)} had many more seeds germinate than ${LAB.groupLabel(1)}.`], ['B', `${LAB.groupLabel(1)} had many more seeds germinate than ${LAB.groupLabel(0)}.`], ['same', 'Both groups had about the same number of seeds germinate.']]; },
+  patAnswer() { const L = state.lab, e = LAB.effect(); return e === 'same' ? 'same' : L.groups[0][L.iv] === e ? 'A' : 'B'; },
+  claimOpts() { const V = VARS[state.lab.iv]; return [...Object.keys(V.opts).map(v => [v, `Bean seeds germinate much better ${V.opts[v][2]}.`]), ['same', `${V.name} makes no real difference to how many bean seeds germinate.`]]; },
+  // Bar chart: one bar per pot, the two groups side by side with a gap between them
+  chartGeo() {
+    const { w, h, narrow } = stageSize(), left = narrow ? 46 : 70, top = narrow ? 84 : 74, bottom = narrow ? 58 : 70;
+    const y0 = h - bottom, unit = (y0 - top) / 10, slot = (w - left - 16) / (PER * 2 + 1);
+    return { w, h, narrow, left, top, y0, unit, slot, cx: i => left + slot * (i + (i >= PER ? 1 : 0) + .5) };
+  },
+  chart() {
+    const L = state.lab, c = LAB.chartGeo(), g = LAB.germinated(L.pots), anom = LAB.anomaly();
+    const drawing = L.step === 5 && L.chartSaid !== 'ok' && L.chartSaid !== 'shown', spotting = L.step === 6 && L.pat === LAB.patAnswer() && !L.oddFound;
+    const vals = L.step === 5 ? L.bars : g, cols = ['#3d7bff', '#f0892e'], fs = c.narrow ? 12 : 15;
+    let o = `<rect width="${c.w}" height="${c.h}" fill="#fff"/>`;
+    for (let v = 0; v <= 10; v++) {
+      const y = c.y0 - v * c.unit;
+      o += `<line x1="${c.left}" x2="${c.w - 16}" y1="${y}" y2="${y}" stroke="${v ? '#e1e6f5' : 'var(--ink)'}" stroke-width="${v ? 1 : 2}"/>`;
+      if (!c.narrow || v % 2 === 0) o += `<text x="${c.left - 8}" y="${y + 5}" text-anchor="end" style="font-size:${fs}px;fill:var(--muted)">${v}</text>`;
+    }
+    o += `<line x1="${c.left}" x2="${c.left}" y1="${c.top - 6}" y2="${c.y0}" stroke="var(--ink)" stroke-width="2"/>`;
+    o += `<text transform="translate(${c.narrow ? 13 : 22} ${(c.top + c.y0) / 2}) rotate(-90)" text-anchor="middle" style="font-size:${fs}px;font-weight:700;fill:var(--ink)">Seeds germinated (out of 10)</text>`;
+    L.pots.forEach((p, i) => {
+      const x = c.cx(i), bw = c.slot * .62, v = vals[i], gi = groupOf(i), wrong = Array.isArray(L.chartSaid) && L.chartSaid.includes(i);
+      const tap = drawing ? ` class="tapme" data-col="${i}"` : spotting ? ` class="tapme" data-bar="${i}"` : '';
+      o += `<g${tap}><rect x="${x - c.slot / 2}" y="${c.top - 6}" width="${c.slot}" height="${c.y0 - c.top + 6}" fill="${drawing ? 'rgba(61,123,255,.05)' : 'transparent'}"/>`;
+      if (v != null) {
+        if (v > 0) o += `<rect x="${x - bw / 2}" y="${c.y0 - v * c.unit}" width="${bw}" height="${v * c.unit}" fill="${cols[gi]}" stroke="${wrong ? 'var(--coral)' : L.step === 6 && L.oddFound && i === anom ? 'var(--ink)' : 'none'}" stroke-width="4" stroke-dasharray="${wrong ? '6 4' : ''}"/>`;
+        o += `<text x="${x}" y="${c.y0 - v * c.unit - 7}" text-anchor="middle" style="font-size:${fs}px;font-weight:700;fill:${wrong ? 'var(--coral)' : 'var(--ink)'}">${v}</text>`;
+      }
+      o += `<text x="${x}" y="${c.y0 + 18}" text-anchor="middle" style="font-size:${fs}px;font-weight:600;fill:var(--ink)">${c.narrow ? '' : 'Pot '}${i + 1}</text></g>`;
+      // The repeat of the odd pot, drawn as a dashed bar beside the first try
+      if (L.repeated && i === anom) o += `<rect x="${x - bw / 2}" y="${c.y0 - 9 * c.unit}" width="${bw}" height="${9 * c.unit}" fill="none" stroke="var(--ink)" stroke-width="2.5" stroke-dasharray="7 5"/><text x="${x}" y="${c.y0 - 9 * c.unit - 7}" text-anchor="middle" style="font-size:${fs}px;font-weight:700;fill:var(--ink)">repeat: 9</text>`;
+    });
+    [0, 1].forEach(gi => {
+      const o2 = VARS[L.iv].opts[L.groups[gi][L.iv]];
+      o += `<text x="${c.cx(gi * PER + 1)}" y="${c.y0 + (c.narrow ? 38 : 44)}" text-anchor="middle" style="font-size:${fs}px;font-weight:700;fill:${cols[gi]}">Group ${GNAME[gi]}: ${o2[0]} ${o2[1]}</text>`;
+    });
+    const say = drawing ? 'Tap each column to make its bar the right height.' : spotting ? 'Tap the bar that does not fit the pattern.' : `How ${VARS[L.iv].the} affected germination`;
+    return `<div class="lay-top"><span class="scaletag">📊 Bar chart</span><div class="readout">${say}</div></div>
+      <svg id="labSvg" viewBox="0 0 ${c.w} ${c.h}" aria-label="Bar chart of how many seeds germinated in each pot">${o}</svg>`;
+  },
+  analyse(bar) {
+    const L = state.lab, V = VARS[L.iv], g = LAB.germinated(L.pots), anom = LAB.anomaly(), ag = groupOf(anom);
+    // Step 6: draw the bar chart from the table
+    if (L.step === 5) {
+      const done = L.chartSaid === 'ok' || L.chartSaid === 'shown', wrong = Array.isArray(L.chartSaid) ? L.chartSaid : null;
+      return `${L.chartSaid === 'ok' ? '<div class="card says good"><h3>✅ Your chart is right!</h3><p>Your bar chart matches the results. Now it is easy to compare the two groups.</p></div>'
+          : L.chartSaid === 'shown' ? '<div class="card says"><h3>📊 Here is the right chart</h3><p>Compare it with yours. Read each number from the table, then find it on the side of the chart.</p></div>'
+          : wrong ? `<div class="card says"><h3>🔎 Check your chart</h3><p>${wrong.length > 1 ? 'Pots' : 'Pot'} ${wrong.map(i => i + 1).join(', ')} ${wrong.length > 1 ? "don't" : "doesn't"} match the table. Find the number in the table, then tap that height on the chart.</p><p class="muted">Try ${L.chartTries} of 3</p></div>` : ''}
+        <div class="card">${bar}<h3>📊 Draw a bar chart</h3><p>A bar chart makes it easy to <b>compare</b> results. Tap each column on the chart to make its bar the right height. Use the table.</p>${showToggle()}</div>
+        <div class="card"><h3>📋 Results</h3>${resultsTable()}</div>
+        <div class="checkbar">${done ? '<button class="btn go" data-act="pnext">Next: what does it show? ▶</button>' : `<button class="btn go" data-act="pchart"${L.bars.every(b => b != null) ? '' : ' disabled'}>✔ Check my chart</button>`}</div>`;
+    }
+    // Step 7: the pattern, the odd result, and what to do about it
+    if (L.step === 6) {
+      const pa = LAB.patAnswer(), patOk = L.pat === pa, act = ACTS.find(a => a[0] === L.act);
+      const others = L.pots.map((_, i) => i).filter(i => groupOf(i) === ag && i !== anom).map(i => g[i]);
+      return `<div class="card wq">${bar}<h3>1. What <b>pattern</b> does your chart show?</h3>
+          ${choices('ppat', LAB.patOpts(), L.pat, L.patWrong, pa)}
+          ${L.pat && !patOk ? '<p class="spot">💡 Look at the chart again. Compare the heights of the blue bars (Group A) with the orange bars (Group B).</p>' : ''}
+          ${patOk ? '<p class="job">Yes! That is the pattern.</p>' : ''}</div>
+        ${patOk ? `<div class="card"><h3>2. Which result does <b>not</b> fit the pattern?</h3>
+          <p>Most pots in a group should be about the same. Tap the bar on the chart that is very different from the others in its group.</p>
+          ${L.oddTap != null && !L.oddFound ? `<p class="spot">💡 Pot ${L.oddTap + 1} (${g[L.oddTap]}) is close to the other pots in Group ${GNAME[groupOf(L.oddTap)]}. Look for one that is very different from the rest of its group.</p>` : ''}
+          ${L.oddFound ? `<p class="job">Yes! Pot ${anom + 1} had only <b>${g[anom]}</b>, but the other pots in Group ${GNAME[ag]} had ${others.join(' and ')}.</p>
+            <p>A result that does not fit the pattern is called an <span class="term">anomalous result</span>.</p>` : ''}</div>` : ''}
+        ${L.oddFound ? `<div class="card wq"><h3>3. What should you do about it?</h3>
+          ${choices('pact', ACTS.map(a => [a[0], a[1]]), L.act, L.actWrong, 'repeat')}
+          ${act && !act[2] ? `<p class="spot">💡 ${act[3]}</p>` : ''}
+          ${L.repeated ? `<p class="job">🔁 You repeated pot ${anom + 1}: <b>9</b> out of 10 germinated this time. That fits the pattern! So the 4 was probably a batch of <b>dud</b> seeds, not because of ${V.the}.</p>
+            <p>Repeating a measurement helps you check whether an odd result is real.</p>` : ''}</div>` : ''}
+        <div class="card">${showToggle()}</div>
+        <div class="checkbar"><button class="btn go" data-act="pnext"${L.repeated ? '' : ' disabled'}>Next: conclusion ▶</button></div>`;
+    }
+    // Step 8: conclusion, the science behind it, and how to improve the investigation
+    if (L.step === 7) {
+      const eff = LAB.effect(), claimOk = L.claim === eff, why = WHY[L.iv], whyRight = String(why.findIndex(w => w[1])), whyOk = L.why === whyRight;
+      const imp = IMPROVE[L.imp], impOk = imp && imp[1];
+      return `<div class="card wq">${bar}<h3>1. What is your <b>conclusion</b>?</h3><p class="muted">A conclusion says what you found out, using your results.</p>
+          ${choices('pclaim', LAB.claimOpts(), L.claim, L.claimWrong, eff)}
+          ${L.claim && !claimOk ? '<p class="spot">💡 Check that against your bar chart. Which group had more seeds germinate, or were they about the same?</p>' : ''}</div>
+        ${claimOk ? `<div class="card wq"><h3>2. Use <b>science</b> to explain it</h3><p class="muted">Why did this happen?</p>
+          ${choices('pwhy', why.map((w, k) => [String(k), w[0]]), L.why, L.whyWrong, whyRight)}
+          ${L.why != null && !whyOk ? `<p class="spot">💡 ${why[+L.why][2]}</p>` : ''}</div>` : ''}
+        ${whyOk ? `<div class="card wq"><h3>3. How could you <b>improve</b> your investigation?</h3><p class="muted">Choose one idea.</p>
+          ${IMPROVE.map(([t, ok], k) => `<button class="opt${L.imp === k && ok ? ' done' : L.impTried.includes(k) && !ok ? ' wrong' : ''}" data-act="pimp" data-v="${k}"${L.impTried.includes(k) && !ok ? ' disabled' : ''}>${t}</button>`).join('')}
+          ${imp ? `<p class="${impOk ? 'job' : 'spot'}">${impOk ? '✅ Good idea! ' : '💡 '}${imp[2]}</p>` : ''}</div>` : ''}
+        <div class="checkbar"><button class="btn go" data-act="pfinish"${claimOk && whyOk && impOk ? '' : ' disabled'}>🏁 Finish my write-up</button></div>`;
+    }
+    // The write-up of the whole investigation
+    const pred = LAB.predOpts().find(o => o[0] === L.pred)[1], eff = LAB.effect(), keep = VORDER.filter(k => k !== L.iv).map(k => lc(VARS[k].opts[L.groups[0][k]][1]));
+    const mean = gi => { const xs = g.map((n, i) => i === anom ? 9 : n).filter((_, i) => groupOf(i) === gi); return xs.reduce((a, b) => a + b, 0) / xs.length; };
+    return `<div class="card says good report">${bar}<h3>🏁 My investigation</h3>
+        <p><b class="k">Question</b>Does ${V.the} affect how many bean seeds germinate?</p>
+        <p><b class="k">Variables</b>I changed ${V.the}. I measured how many of the 10 seeds germinated. I kept the same: ${keep.join(', ')}, the type of seed, the number of seeds, the size of the pots and how long we waited.</p>
+        <p><b class="k">Prediction</b>${pred} ${eff === L.pred ? '✅ This was right.' : '❌ This was not right.'}</p>
+        <p><b class="k">Results</b>${LAB.groupLabel(0)}: about <b>${Math.round(mean(0))}</b> out of 10 in each pot. ${LAB.groupLabel(1)}: about <b>${Math.round(mean(1))}</b> out of 10 in each pot.</p>
+        <p><b class="k">Odd result</b>Pot ${anom + 1} had only ${g[anom]}. I repeated it and got 9, so it was probably dud seeds.</p>
+        <p><b class="k">Conclusion</b>${LAB.claimOpts().find(o => o[0] === eff)[1]} ${WHY[L.iv].find(w => w[1])[0]}</p>
+        <p><b class="k">Improvement</b>${IMPROVE[L.imp][0]}. ${IMPROVE[L.imp][2]}</p></div>
+      <div class="card">${showToggle()}<div class="navrow" style="margin-top:8px"><button class="btn" data-act="preset">↺ Plan a new test</button></div></div>`;
+  },
+  // Each prediction option for the variable being tested
+  predOpts() { const L = state.lab, V = VARS[L.iv], vals = Object.keys(V.opts); return [...vals.map(v => [v, `Pots that are <b>${lc(V.opts[v][1])}</b> will have more seeds germinate.`]), ['same', 'It will make <b>no difference</b>.']]; }
+};
+
+// ================= Missions =================
+// Each mission sets up the lab; the lab calls emit() when something happens, and on() says whether that completes it.
+const MISSIONS = [
+  { id: 'water', icon: '💧', title: 'Do seeds need water?', task: 'Plan a <b>fair test</b> to find out if bean seeds need water to germinate. Predict, then run it.',
+    hint: 'Change only the water. Water Group A, and give Group B no water.',
+    setup() { state.view = 'bench'; state.lab = freshLab(); },
+    on: (ev, d) => ev === 'ran' && d.iv === 'water' && d.eff !== 'none',
+    win: () => 'The seeds with no water did not germinate at all. Seeds need <b>water</b> to germinate.' },
+  { id: 'temp', icon: '❄️', title: 'Too cold?', task: 'Find out if temperature affects germination, with a fair test.',
+    hint: 'Change only the temperature. Put one group somewhere cold (4 °C) and keep the other warm.',
+    setup() { state.view = 'bench'; state.lab = freshLab(); },
+    on: (ev, d) => ev === 'ran' && d.iv === 'temp' && d.eff !== 'none',
+    win: () => 'Hardly any seeds germinated in the cold. Seeds need a <b>suitable temperature</b> to germinate.' },
+  { id: 'light', icon: '🌑', title: 'Does light matter?', task: 'Test whether bean seeds need <b>light</b> to germinate. Make a prediction first!',
+    hint: 'Change only the light. Put one group in the dark.',
+    setup() { state.view = 'bench'; state.lab = freshLab(); },
+    on: (ev, d) => ev === 'ran' && d.iv === 'light' && d.eff !== 'none',
+    win: () => 'Surprise! The seeds germinated just as well in the dark. Bean seeds <b>don\'t need light</b> to germinate. But look at the seedlings: the ones in the dark are <b>taller, thinner and yellow</b>. They are searching for light, and they need light to turn green and keep growing.' },
+  { id: 'odd', icon: '🔍', title: 'The odd one out', task: 'Run any fair test, draw a <b>bar chart</b> of your results, then find the result that does not fit the pattern and decide what to do about it.',
+    hint: 'After the results, press Next to draw the chart. Look for a pot that is very different from the other pots in its group.',
+    setup() { state.view = 'bench'; state.lab = freshLab(); },
+    on: ev => ev === 'repeated',
+    win: () => 'You found the <b>anomalous result</b> and repeated it to check. Repeating measurements makes your results more <b>reliable</b>.' },
+  { id: 'report', icon: '📝', title: 'Write it up', task: 'Finish a whole investigation: a <b>conclusion</b>, the <b>science</b> that explains it, and a way to <b>improve</b> it.',
+    hint: 'Keep going after the bar chart and the odd result. Check your conclusion against your chart.',
+    setup() { state.view = 'bench'; state.lab = freshLab(); },
+    on: ev => ev === 'finished',
+    win: () => 'A complete investigation, from question to conclusion! That is exactly how scientists work.' },
+  { id: 'whyspread', icon: '🌳', title: 'Why spread out?', task: 'Find out what happens to seeds that fall right under their parent tree, and <b>why</b>.',
+    hint: 'Click Next to see the seedlings a few weeks later. Look at the shade under the tree.',
+    setup() { state.view = 'spread'; state.sp = freshSp(); },
+    on: ev => ev === 'whyspread',
+    win: () => 'Seedlings under the parent tree compete for <b>light</b>, <b>water</b> and <b>space</b>. That is why plants spread their seeds.' },
+  { id: 'flaps', icon: '📖', title: 'Open every flap', task: 'Open all 8 flaps to find the <b>7 ways</b> seeds travel.',
+    hint: 'Tap each flap on the page. The first one tells you why seeds travel at all.',
+    setup() { state.view = 'spread'; state.sp = freshSp(); state.sp.part = 'flaps'; },
+    on: ev => ev === 'flaps',
+    win: () => 'Wind, water, hitching a ride, seeds as food, bursting, drop and roll, and shakers: <b>7 ways</b> seeds travel!' },
+  { id: 'sorted', icon: '🔍', title: 'Seed detective', task: 'Sort all 19 seeds into the 7 ways seeds travel. There are two rounds.',
+    hint: 'Look at the shape of each seed. Wings? Hooks? Juicy fruit? Holes like a pepper pot?',
+    setup() { state.view = 'spread'; state.sp = freshSp(); state.sp.part = 'sort'; },
+    on: ev => ev === 'sorted',
+    win: () => 'You can read the clues in a seed\'s shape, just like a botanist (a plant scientist)!' },
+  { id: 'fitted', icon: '🗺️', title: 'Seed for the place', task: 'Choose the best kind of seed for each of the 4 places.',
+    hint: 'Think about what is around each plant: wind, water, furry animals or hungry birds?',
+    setup() { state.view = 'spread'; state.sp = freshSp(); state.sp.part = 'fit'; },
+    on: ev => ev === 'fitted',
+    win: () => 'Each plant\'s seeds are suited to where it grows, so they can travel somewhere new.' }
+];
+function emit(ev, data = {}) {
+  if (state.mission == null) return;
+  const i = state.mission, m = MISSIONS[i];
+  if (!m.on(ev, data)) return;
+  stopMission();
+  if (!state.done.includes(m.id)) { state.done.push(m.id); store.set('sl-done', state.done); }
+  updateStars();
+  setTimeout(() => {
+    $('#winTitle').textContent = `${m.icon} Mission complete!`;
+    $('#winText').innerHTML = m.win(data);
+    $('#winNext').style.display = i < MISSIONS.length - 1 ? '' : 'none';
+    $('#winPractise').style.display = i < MISSIONS.length - 1 ? 'none' : '';
+    $('#winNext').dataset.i = i + 1;
+    $('#winModal').classList.remove('hidden'); confetti();
+  }, 1200);
+}
+function startMission(i) {
+  closeModals();
+  state.mission = i; MISSIONS[i].setup();
+  location.hash = 'view=' + state.view;
+  const m = MISSIONS[i];
+  $('#bannerKicker').textContent = `Mission ${i + 1} of ${MISSIONS.length}: ${m.title}`;
+  $('#bannerText').innerHTML = m.task; $('#bannerHint').innerHTML = m.hint;
+  $('#bannerHint').classList.add('hidden'); $('#hintBtn').textContent = '💡 Show a hint';
+  $('#banner').classList.remove('hidden');
+  render();
+}
+function stopMission() { state.mission = null; $('#banner').classList.add('hidden'); fitBanner(); }
+// The banner sits over the top of the drawer, so the drawer's cards start below it
+function fitBanner() { $('#drawer').style.paddingTop = state.mission == null ? '' : `${$('#banner').offsetHeight + 18}px`; }
+function updateStars() { $('#starCount').textContent = `${state.done.filter(id => MISSIONS.some(m => m.id === id)).length}/${MISSIONS.length} ⭐`; }
+function closeModals() { document.querySelectorAll('.modal').forEach(m => m.classList.add('hidden')); }
+function confetti() {
+  const em = ['⭐', '🌟', '🌱', '🫘', '🎉'];
+  for (let i = 0; i < 30; i++) {
+    const s = document.createElement('span'); s.className = 'confetti'; s.textContent = em[i % em.length];
+    s.style.left = `${Math.random() * 100}vw`; s.style.animationDuration = `${2 + Math.random() * 2}s`; s.style.animationDelay = `${Math.random() * .6}s`;
+    document.body.appendChild(s); setTimeout(() => s.remove(), 5000);
+  }
+}
+
+// ================= Spreading seeds =================
+// Tiny hooks around a round seed (burdock, cleavers)
+const HOOKS = (cx, cy, r, n, col) => { let o = ''; for (let a = 0; a < 360; a += 360 / n) { const t = a * Math.PI / 180, x1 = cx + r * Math.cos(t), y1 = cy + r * Math.sin(t), x2 = cx + (r + 3.5) * Math.cos(t), y2 = cy + (r + 3.5) * Math.sin(t);
+    o += `<path d="M${x1.toFixed(1)} ${y1.toFixed(1)} L${x2.toFixed(1)} ${y2.toFixed(1)} l${(1.4 * Math.cos(t + 1.6)).toFixed(1)} ${(1.4 * Math.sin(t + 1.6)).toFixed(1)}" stroke="${col}" stroke-width="1.2" fill="none"/>`; } return o; };
+// Pictures of each seed, drawn so the clue to how it travels can be seen
+const SEEDPIC = {
+  dandelion: () => { let o = '<line x1="20" y1="37" x2="20" y2="17" stroke="#8a6a3a" stroke-width="1.5"/><ellipse cx="20" cy="35" rx="1.8" ry="3.5" fill="#6b4b22"/>';
+    for (let a = -75; a <= 75; a += 15) { const r = a * Math.PI / 180, x = 20 + 14 * Math.sin(r), y = 17 - 13 * Math.cos(r); o += `<line x1="20" y1="17" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="#9aa3b5" stroke-width="1"/><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="1.6" fill="#c9cfdc"/>`; }
+    return o; },
+  sycamore: () => '<path d="M19 27 C13 19 6 11 3 4 C10 5 18 13 21 25 Z" fill="#d6b77a" stroke="#8a6a3a"/><path d="M21 27 C27 19 34 11 37 4 C30 5 22 13 19 25 Z" fill="#d6b77a" stroke="#8a6a3a"/><circle cx="17" cy="28" r="4" fill="#8a6a3a"/><circle cx="23" cy="28" r="4" fill="#8a6a3a"/>',
+  lime: () => '<path d="M24 3 C33 8 33 22 26 30 C21 22 19 10 24 3 Z" fill="#d4e6a2" stroke="#8fae55"/><path d="M25 16 Q18 24 14 30" stroke="#7d9a4a" stroke-width="1.5" fill="none"/><circle cx="14" cy="32" r="3" fill="#9b7a4a"/><circle cx="9" cy="30" r="3" fill="#9b7a4a"/><circle cx="17" cy="36" r="3" fill="#9b7a4a"/>',
+  cherry: () => '<path d="M21 3 Q14 13 12 24" stroke="#5c7a2e" stroke-width="2" fill="none"/><path d="M21 3 Q27 13 28 22" stroke="#5c7a2e" stroke-width="2" fill="none"/><path d="M21 4 Q29 1 33 6 Q26 8 21 4Z" fill="#5fbf4f"/><circle cx="12" cy="29" r="7.5" fill="#d6283a"/><circle cx="28" cy="27" r="7.5" fill="#c41d30"/><circle cx="9" cy="26" r="2" fill="#fff" opacity=".6"/>',
+  burdock: () => { let o = '<circle cx="20" cy="20" r="9" fill="#8a6a3a"/>';
+    for (let a = 0; a < 360; a += 30) { const r = a * Math.PI / 180, x1 = 20 + 9 * Math.cos(r), y1 = 20 + 9 * Math.sin(r), x2 = 20 + 16 * Math.cos(r), y2 = 20 + 16 * Math.sin(r);
+      o += `<path d="M${x1.toFixed(1)} ${y1.toFixed(1)} L${x2.toFixed(1)} ${y2.toFixed(1)} q${(2 * Math.cos(r + 1.6)).toFixed(1)} ${(2 * Math.sin(r + 1.6)).toFixed(1)} ${(-1.5 * Math.cos(r)).toFixed(1)} ${(-1.5 * Math.sin(r)).toFixed(1)}" stroke="#6b4b22" stroke-width="1.5" fill="none"/>`; }
+    return o; },
+  acorn: () => '<line x1="20" y1="3" x2="20" y2="10" stroke="#6b4b22" stroke-width="2"/><ellipse cx="20" cy="25" rx="8.5" ry="11" fill="#c58b3f"/><path d="M10 20 Q20 6 30 20 Z" fill="#7a5a2e"/><path d="M13 17 L27 17 M15 13 L25 13" stroke="#5a4020"/>',
+  coconut: () => '<ellipse cx="20" cy="21" rx="13" ry="15" fill="#7a4f2a"/><path d="M11 12 Q14 22 12 32 M18 7 Q21 20 18 35 M27 10 Q25 21 28 31" stroke="#a87a4a" fill="none"/><circle cx="17" cy="13" r="1.6" fill="#3a2410"/><circle cx="22" cy="12" r="1.6" fill="#3a2410"/><circle cx="20" cy="16" r="1.6" fill="#3a2410"/>',
+  alder: () => '<ellipse cx="13" cy="17" rx="7" ry="10" fill="#5b3d22"/><path d="M7 13 L19 13 M6 18 L20 18 M8 23 L18 23" stroke="#3a2410"/><line x1="13" y1="7" x2="13" y2="2" stroke="#5b3d22" stroke-width="2"/><ellipse cx="29" cy="26" rx="6" ry="4.5" fill="#e6d3a8" stroke="#a07d4c"/><circle cx="29" cy="26" r="2" fill="#8a6a3a"/><ellipse cx="31" cy="35" rx="5" ry="3.8" fill="#e6d3a8" stroke="#a07d4c"/><circle cx="31" cy="35" r="1.7" fill="#8a6a3a"/>',
+  pea: () => '<path d="M3 31 Q20 40 37 21 Q23 31 3 31 Z" fill="#6cbf4a" stroke="#3f8a2a"/><path d="M5 29 Q20 18 35 19" stroke="#3f8a2a" stroke-width="3" fill="none"/><circle cx="13" cy="31" r="3.5" fill="#a3e27f"/><circle cx="20" cy="30" r="3.5" fill="#a3e27f"/><circle cx="27" cy="27" r="3.5" fill="#a3e27f"/><circle cx="10" cy="12" r="3" fill="#a3e27f"/><path d="M14 10 l5 -2 M14 14 l5 0" stroke="#9aa3b5"/>',
+  iris: () => '<path d="M8 4 Q3 16 12 23 Q21 16 16 4 Z" fill="#7fae4a" stroke="#4f7d2a"/><path d="M12 5 V22" stroke="#4f7d2a"/><ellipse cx="24" cy="29" rx="5.5" ry="3.6" fill="#a8743f" stroke="#6b4b22"/><ellipse cx="33.5" cy="27" rx="4.5" ry="3.2" fill="#a8743f" stroke="#6b4b22"/><path d="M15 33 q4 -3 8 0 t8 0 t8 0" stroke="#4a90d9" stroke-width="2" fill="none"/><path d="M13 38 q4 -3 8 0 t8 0 t8 0" stroke="#4a90d9" stroke-width="2" fill="none"/>',
+  cleavers: () => '<path d="M20 14 V4" stroke="#6b8a3a" stroke-width="1.5"/><circle cx="14.5" cy="22" r="7.5" fill="#a9c27a" stroke="#6b8a3a"/><circle cx="25.5" cy="22" r="7.5" fill="#a9c27a" stroke="#6b8a3a"/>' + HOOKS(14.5, 22, 7.5, 10, '#55702a') + HOOKS(25.5, 22, 7.5, 10, '#55702a'),
+  blackberry: () => '<path d="M20 9 l-6 -5 M20 9 l6 -5 M20 9 V2" stroke="#4f9e3a" stroke-width="2"/>' + [[16, 13], [24, 13], [12, 18], [20, 18], [28, 18], [14, 24], [22, 24], [30, 23], [17, 30], [25, 29], [21, 35]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="4.3" fill="#3b1d4a"/><circle cx="${x - 1.2}" cy="${y - 1.4}" r="1.1" fill="#fff" opacity=".45"/>`).join(''),
+  gorse: () => '<path d="M5 31 Q13 23 21 27 Q29 31 35 21" stroke="#2b2b2b" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M8 36 Q16 31 22 35 Q28 39 34 31" stroke="#4a4a4a" stroke-width="3.5" fill="none" stroke-linecap="round"/><circle cx="12" cy="13" r="2.6" fill="#6b4b22"/><circle cx="22" cy="8" r="2.6" fill="#6b4b22"/><circle cx="31" cy="12" r="2.6" fill="#6b4b22"/><path d="M14 17 l-2 4 M22 12 l0 5 M29 16 l2 4" stroke="#9aa3b5"/>',
+  conker: () => '<path d="M3 21 Q3 37 18 38 Q11 30 11 21 Z" fill="#7fbf4a" stroke="#4f8a2a"/><path d="M37 21 Q37 37 22 38 Q29 30 29 21 Z" fill="#7fbf4a" stroke="#4f8a2a"/><path d="M4 27 l-3 0 M6 33 l-3 2 M36 27 l3 0 M34 33 l3 2 M11 37 l-1 3 M29 37 l1 3" stroke="#4f8a2a" stroke-width="1.5"/><circle cx="20" cy="20" r="10" fill="#8a3f1a"/><ellipse cx="20" cy="27" rx="6" ry="3" fill="#dcc08f"/><ellipse cx="16" cy="15" rx="3" ry="2" fill="#fff" opacity=".45"/>',
+  chestnut: () => { let o = '<path d="M4 26 Q20 42 36 26 Q20 33 4 26 Z" fill="#b5c95a" stroke="#8aa03a"/>';
+    for (let a = 15; a <= 165; a += 15) { const t = a * Math.PI / 180, x = 20 + 15 * Math.cos(t), y = 29 + 9 * Math.sin(t); o += `<line x1="${x.toFixed(1)}" y1="${y.toFixed(1)}" x2="${(x + 4 * Math.cos(t)).toFixed(1)}" y2="${(y + 4 * Math.sin(t)).toFixed(1)}" stroke="#8aa03a" stroke-width="1.2"/>`; }
+    return o + '<path d="M9 27 Q9 15 16 9 Q21 16 20 27 Z" fill="#7a4520"/><path d="M20 27 Q20 15 26 9 Q32 16 31 27 Z" fill="#8a5028"/><path d="M16 9 l-1 -4 M16 9 l2 -4 M26 9 l-1 -4 M26 9 l2 -4" stroke="#c9b68a"/>'; },
+  poppy: () => '<path d="M20 38 V24" stroke="#6b8a3a" stroke-width="2"/><path d="M12 12 Q11 25 20 26 Q29 25 28 12 Z" fill="#a9b493" stroke="#6b7a5a"/><path d="M11 12 Q20 5 29 12 Q20 9 11 12 Z" fill="#7a8a6a"/><circle cx="14.5" cy="14.5" r="1.3" fill="#2b2b2b"/><circle cx="18.5" cy="15" r="1.3" fill="#2b2b2b"/><circle cx="22.5" cy="15" r="1.3" fill="#2b2b2b"/><circle cx="26" cy="14.5" r="1.3" fill="#2b2b2b"/><circle cx="31" cy="18" r="1" fill="#2b2b2b"/><circle cx="33" cy="23" r="1" fill="#2b2b2b"/><circle cx="8" cy="19" r="1" fill="#2b2b2b"/><circle cx="6.5" cy="24" r="1" fill="#2b2b2b"/><path d="M32 4 q3 3 0 6 M35 6 q3 3 0 6" stroke="#9aa3b5" fill="none"/>',
+  nigella: () => '<path d="M20 38 V32" stroke="#6b8a3a" stroke-width="2"/><ellipse cx="20" cy="22" rx="9" ry="11" fill="#d6c79a" stroke="#8a7a50"/><path d="M14 13 Q11 22 14 31 M20 11 V33 M26 13 Q29 22 26 31" stroke="#8a5a8a" fill="none"/><path d="M16 12 l-3 -8 M20 11 V2 M24 12 l3 -8" stroke="#8a7a50" stroke-width="1.5"/><circle cx="30" cy="9" r="1.1" fill="#2b2b2b"/><circle cx="33" cy="14" r="1.1" fill="#2b2b2b"/><circle cx="9" cy="10" r="1.1" fill="#2b2b2b"/>',
+  snapdragon: () => '<path d="M20 38 V30" stroke="#6b8a3a" stroke-width="2"/><ellipse cx="20" cy="18" rx="10" ry="12" fill="#b8925f" stroke="#7a5a30"/><ellipse cx="16" cy="15" rx="2.7" ry="3.2" fill="#3a2410"/><ellipse cx="24" cy="15" rx="2.7" ry="3.2" fill="#3a2410"/><ellipse cx="20" cy="23.5" rx="2" ry="2.8" fill="#3a2410"/><circle cx="32" cy="22" r="1" fill="#2b2b2b"/><circle cx="34" cy="27" r="1" fill="#2b2b2b"/><circle cx="31" cy="31" r="1" fill="#2b2b2b"/>',
+  balsam: () => '<path d="M8 37 Q4 22 16 20 Q26 20 23 29 Q20 33 17 29" stroke="#4f9e3a" stroke-width="3.5" fill="none"/><path d="M12 37 Q14 24 26 24" stroke="#6cbf4a" stroke-width="3" fill="none"/><circle cx="30" cy="10" r="2.6" fill="#5a4020"/><circle cx="35" cy="17" r="2.6" fill="#5a4020"/><circle cx="24" cy="6" r="2.6" fill="#5a4020"/><path d="M27 13 l-4 4 M32 20 l-4 3 M22 9 l-3 4" stroke="#9aa3b5"/>'
+};
+const seedSvg = (id, s = 46) => `<svg viewBox="0 0 40 40" width="${s}" height="${s}" aria-hidden="true">${SEEDPIC[id]()}</svg>`;
+// The seven ways seeds travel: [icon, name, how it works, flap colour, clue in the seed, label in the sorting box]
+const TYPES = {
+  wind: ['🌬️', 'Wind', 'Light seeds with <b>wings</b> or <b>parachutes</b> are blown far away by the wind.', '#cfe6ff', 'wings or parachutes', 'Blown far away'],
+  water: ['🌊', 'Water', 'Seeds with <b>air inside</b> float. Rivers and seas carry them to new places.', '#bfe3f2', 'air inside, so they float', 'Float away'],
+  hitch: ['🐕', 'Hitching a ride', 'Seeds with tiny <b>hooks</b> catch on animals\' fur (or your socks!) and fall off somewhere else.', '#e3d9c6', 'tiny hooks', 'Hooks catch on fur'],
+  food: ['🐦', 'Seeds as food', 'Animals <b>eat</b> juicy fruit and drop the seeds in their poo, or <b>bury</b> nuts and forget some.', '#f7d0d6', 'juicy fruit, or nuts to store', 'Eaten or buried'],
+  burst: ['💥', 'Bursting', 'Pods <b>dry out</b>, twist and burst open, flinging the seeds away.', '#d6efc4', 'pods that dry and twist', 'Pods burst open'],
+  roll: ['🌰', 'Drop and roll', '<b>Heavy</b> seeds fall to the ground and roll or bounce away. They don\'t go very far!', '#ead1b4', 'heavy and round', 'Fall and roll'],
+  shake: ['🧂', 'Shakers', 'The wind sways the seed head, and tiny seeds <b>shake out</b> of holes, like pepper from a pepper pot.', '#e6dcf3', 'a pepper-pot head with holes', 'Shaken out']
+};
+const TORDER = ['wind', 'water', 'hitch', 'food', 'burst', 'roll', 'shake'];
+// Seven boxes is a lot at once, so the sort is done in two rounds
+const ROUNDS = [['wind', 'water', 'hitch', 'food'], ['burst', 'roll', 'shake']];
+// [name, how it travels, why (shown when sorted), clue (shown after a wrong try)]
+const SEEDS = {
+  dandelion: ['Dandelion', 'wind', 'Its fluffy <b>parachute</b> catches the wind and carries the seed far away.', 'Look at the fluffy top. What could lift it up?'],
+  sycamore: ['Sycamore', 'wind', 'Its two <b>wings</b> make it spin like a helicopter, so the wind can carry it away from the tree.', 'Look at its wings. What happens when it falls from a tall tree on a windy day?'],
+  lime: ['Lime tree (linden)', 'wind', 'The seeds hang under a leafy <b>wing</b>, which the wind catches. The lime tree (lipa) is Slovakia\'s national tree!', 'Look at the big leafy wing above the seeds.'],
+  coconut: ['Coconut palm', 'water', 'It has air inside, so it <b>floats</b>. The sea can carry it to another beach, far away.', 'Coconut palms grow on beaches. What is right next to them?'],
+  alder: ['Alder', 'water', 'Alder trees grow along rivers like the Danube. Their small seeds have <b>air pockets</b>, so they float down the river.', 'Alder trees grow on riverbanks. Look at the little air-filled edges on the seeds.'],
+  iris: ['Yellow flag iris', 'water', 'It grows on riverbanks, like along the Danube. Its flat seeds have a corky coat that <b>floats</b>, so the river carries them away.', 'It grows right at the water\'s edge. Could its seeds float?'],
+  burdock: ['Burdock', 'hitch', 'Its tiny <b>hooks</b> catch on the fur of passing animals. The seeds fall off somewhere else.', 'Look at the hooks. What could they catch on?'],
+  cleavers: ['Cleavers (sticky weed)', 'hitch', 'Its little round seeds are covered in tiny <b>hooks</b>. They stick to fur, and to your jumper!', 'Have you ever had these stuck to your clothes?'],
+  cherry: ['Cherry', 'food', 'Birds <b>eat</b> the juicy fruit, fly away, and drop the stone (the seed) in their poo, far from the tree.', 'Juicy and red… who would want to eat it?'],
+  blackberry: ['Blackberry', 'food', 'Birds and foxes <b>eat</b> the juicy berries, then drop the tiny seeds in their poo, far away.', 'Juicy and sweet… who would want to eat it?'],
+  acorn: ['Oak (acorn)', 'food', 'Squirrels and jays <b>bury</b> acorns to eat in winter. They forget some, and those can grow into new oak trees.', 'Which animals collect nuts to eat in winter?'],
+  pea: ['Pea', 'burst', 'When the pod dries, it <b>twists</b> and bursts open, flinging the peas away from the plant.', 'Look at the pod. What happens to it when it dries out?'],
+  balsam: ['Himalayan balsam', 'burst', 'It grows along the Danube. Touch a ripe pod and it <b>bursts</b>, flinging its seeds several metres away!', 'Look at the curled-up pod and the flying seeds.'],
+  gorse: ['Gorse', 'burst', 'On hot summer days, the black pods dry out and <b>burst</b> with a crack, flinging the seeds out.', 'Look at the twisted pod. What happens when it dries out?'],
+  conker: ['Horse chestnut (conker)', 'roll', 'The heavy conker <b>drops</b> from the tree, the spiky case splits, and it rolls or bounces away. Conkers are poisonous to most animals, so few animals carry them off.', 'It is big and heavy. What happens when it falls from the tree?'],
+  chestnut: ['Sweet chestnut', 'roll', 'The prickly case <b>drops</b> to the ground and splits, and the heavy nuts roll out.', 'Heavy nuts in a prickly case. What happens when it falls from the tree?'],
+  poppy: ['Poppy', 'shake', 'Its seed head is like a <b>pepper pot</b>, with holes around the top. When the wind sways the stem, tiny seeds shake out.', 'Look at the holes around the top of the seed head.'],
+  nigella: ['Love-in-a-mist', 'shake', 'Its seed head is a little balloon. When it sways, tiny black seeds <b>shake out</b> of the top.', 'Look at the opening at the top. What happens when it sways?'],
+  snapdragon: ['Snapdragon', 'shake', 'Its seed pod looks like a tiny skull! When the wind sways it, seeds <b>shake out</b> of the holes.', 'Look at the holes in the pod. What happens when it sways?']
+};
+// The order the seed cards are shown in, mixed up so each type isn't together
+const SORDER = ['dandelion', 'cherry', 'coconut', 'burdock', 'sycamore', 'iris', 'blackberry', 'cleavers', 'alder', 'acorn', 'lime',
+  'pea', 'conker', 'poppy', 'gorse', 'snapdragon', 'chestnut', 'balsam', 'nigella'];
+const roundSeeds = r => SORDER.filter(id => ROUNDS[r].includes(SEEDS[id][1]));
+// Which seed would spread best from this place? [title, what it is like, answer, why]
+const FEATS = { wings: ['sycamore', 'Wings or a parachute', 'Is there much wind there?'], hooks: ['burdock', 'Hooks', 'Are there furry animals brushing past?'],
+  floats: ['coconut', 'Floats on water', 'Is there any water near the plant?'], fruit: ['cherry', 'Juicy fruit', 'Are there animals that would eat fruit?'] };
+const PLACES = [
+  ['hill', 'A windy hilltop', 'The wind blows over this hill almost every day. There is no water nearby, and few animals.', 'wings', 'The wind can carry seeds with wings or parachutes far across the hillside.'],
+  ['river', 'The bank of the Danube', 'This plant grows right at the edge of the river. The water flows past all the time.', 'floats', 'Seeds that float are carried away by the river. They can land on a new bank, far downstream.'],
+  ['wood', 'A woodland path', 'Foxes and dogs brush past this plant every day. There is hardly any wind under the trees.', 'hooks', 'Hooked seeds catch on fur, and fall off somewhere else along the path.'],
+  ['hedge', 'A hedge full of birds', 'Blackbirds and thrushes visit this hedge every day, looking for food.', 'fruit', 'Birds eat the juicy fruit, fly off, and drop the seeds in their poo, far from the plant.']
+];
+const WHYS = [['light', 'The big tree blocks their light', true], ['water', 'They all share the same water', true], ['space', 'They are squashed together, with no space to grow', true],
+  ['germ', 'The seeds under the tree did not germinate', false, 'Look back: all the seeds germinated. The problem came later, as they tried to grow.']];
+const freshSp = () => ({ part: 'why', frame: 0, ticks: {}, whySaid: null, open: {}, done: {}, flap: null, round: 0, sel: null, placed: {}, last: null, place: 0, pick: null, picksWrong: [], fitDone: [] });
+const FLAPS = ['title', ...TORDER];
+state.sp = freshSp();
+
+const SP = {
+  // A simple tree with its seeds below; spread = the seeds were carried away from it
+  scene(x, y, w, h, spread, frame, narrow) {
+    const gy = y + h * .74, tx = x + w * .22, cr = Math.min(w * .2, h * .24), cy = y + h * .32;
+    let o = `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="14" fill="#dff1ff"/><rect x="${x}" y="${gy}" width="${w}" height="${y + h - gy}" fill="#9bd06a"/>`;
+    // The sun, and the shade the tree casts below it
+    o += `<circle cx="${x + w - 34}" cy="${y + 52}" r="16" fill="#ffd23d"/>`;
+    o += `<path d="M${tx - cr} ${cy} L${tx + cr} ${cy} L${tx + cr * 1.3} ${gy + 8} L${tx - cr * 1.3} ${gy + 8} Z" fill="rgba(20,30,60,.13)"/><rect x="${tx - cr * 1.3}" y="${gy}" width="${cr * 2.6}" height="${Math.min(14, h * .05)}" fill="rgba(20,30,60,.22)"/>`;
+    o += `<rect x="${tx - cr * .16}" y="${cy}" width="${cr * .32}" height="${gy - cy + 4}" fill="#8a5a33"/><circle cx="${tx}" cy="${cy}" r="${cr}" fill="#3f9d4a"/><circle cx="${tx - cr * .45}" cy="${cy + cr * .25}" r="${cr * .6}" fill="#4caf50"/>`;
+    o += `<text x="${x + w - 10}" y="${y + 22}" text-anchor="end" style="font-size:${narrow ? 13 : 16}px;font-weight:700;fill:var(--ink)">${spread ? 'Seeds spread far away' : 'Seeds stay under the tree'}</text>`;
+    // Twelve seeds: bunched in the shade, or spread out in the sun
+    const xs = Array.from({ length: 12 }, (_, k) => spread ? x + w * .42 + k * (w * .55 / 11) : tx - cr * 1.1 + k * (cr * 2.2 / 11) + ((k * 7) % 3 - 1) * 2);
+    const tall = h * .27;
+    xs.forEach((sx, k) => {
+      if (frame === 0) o += spread ? `<path d="M${tx + cr * .5} ${cy} Q${(tx + sx) / 2} ${cy - h * .15} ${sx} ${gy}" stroke="#8a6a3a" stroke-dasharray="3 4" fill="none" opacity=".6"/>`
+        : `<line x1="${sx}" y1="${cy + cr * .7}" x2="${sx}" y2="${gy}" stroke="#8a6a3a" stroke-dasharray="3 4" opacity=".6"/>`;
+      if (frame === 1) o += `<path d="M${sx} ${gy} v-8" stroke="#4caf50" stroke-width="2"/><ellipse cx="${sx - 3}" cy="${gy - 8}" rx="3" ry="1.6" fill="#5fbf4f"/><ellipse cx="${sx + 3}" cy="${gy - 8}" rx="3" ry="1.6" fill="#5fbf4f"/>`;
+      if (frame === 2) {
+        // Weeks later: in the shade, most are thin, pale and dying; out in the sun, most grow well (a couple of seeds were eaten)
+        const kind = spread ? (k === 3 || k === 9 ? 'gone' : 'good') : (k === 0 ? 'good' : k % 2 ? 'dead' : 'weak');
+        const ht = kind === 'good' ? tall * (.85 + (k % 3) * .1) : kind === 'weak' ? tall * .9 : tall * .45;
+        if (kind === 'good') o += `<path d="M${sx} ${gy} V${gy - ht}" stroke="#3f9d4a" stroke-width="3"/>` + [.35, .6, .85].map((f, j) => `<ellipse cx="${sx + (j % 2 ? 6 : -6)}" cy="${gy - ht * f}" rx="7" ry="3.2" fill="#4caf50" transform="rotate(${j % 2 ? -25 : 25} ${sx + (j % 2 ? 6 : -6)} ${gy - ht * f})"/>`).join('');
+        if (kind === 'weak') o += `<path d="M${sx} ${gy} V${gy - ht}" stroke="#e3d36a" stroke-width="1.4"/><ellipse cx="${sx - 2.5}" cy="${gy - ht}" rx="3" ry="1.5" fill="#f0e27a"/><ellipse cx="${sx + 2.5}" cy="${gy - ht}" rx="3" ry="1.5" fill="#f0e27a"/>`;
+        if (kind === 'dead') o += `<path d="M${sx} ${gy} Q${sx} ${gy - ht} ${sx + 6} ${gy - ht * .6}" stroke="#a07d4c" stroke-width="1.4" fill="none"/>`;
+      }
+      o += `<ellipse cx="${sx}" cy="${gy + 2}" rx="3" ry="2" fill="#8a6a3a"/>`;
+    });
+    if (frame === 2) o += `<g><rect x="${x + w / 2 - 82}" y="${y + h - 34}" width="164" height="26" rx="10" fill="#fff" stroke="${spread ? 'var(--green)' : 'var(--coral)'}" stroke-width="2"/><text x="${x + w / 2}" y="${y + h - 16}" text-anchor="middle" style="font-size:14px;font-weight:700;fill:var(--ink)">Still growing: ${spread ? 10 : 1} of 12</text></g>`;
+    return o;
+  },
+  // A place where a plant grows, for choosing which seed would spread best from it
+  place(id, w, h, narrow) {
+    const gy = h * .72, px = w * .5;
+    let o = `<rect width="${w}" height="${h}" fill="#dff1ff"/>`;
+    const emo = (t, x, y, s) => `<text x="${x}" y="${y}" text-anchor="middle" style="font-size:${s}px">${t}</text>`;
+    if (id === 'hill') {
+      o += `<ellipse cx="${w * .5}" cy="${h * 1.05}" rx="${w * .75}" ry="${h * .5}" fill="#8cc75c"/>`;
+      for (let k = 0; k < 4; k++) { const y = h * (.18 + k * .09), x = w * (.08 + (k % 2) * .1); o += `<path d="M${x} ${y} q${w * .15} -14 ${w * .3} 0 t${w * .3} 0" stroke="#9aa3b5" stroke-width="3" fill="none" stroke-linecap="round"/>`; }
+    }
+    if (id === 'river') {
+      o += `<rect y="${gy - 10}" width="${w}" height="${h - gy + 10}" fill="#9bd06a"/><path d="M0 ${gy + 18} Q${w * .5} ${gy + 4} ${w} ${gy + 18} V${h} H0 Z" fill="#4a90d9"/>`;
+      for (let k = 0; k < 5; k++) o += `<path d="M${w * (.08 + k * .2)} ${gy + 40 + (k % 2) * 16} q12 -6 24 0 t24 0" stroke="#bfe0ff" stroke-width="2.5" fill="none"/>`;
+      o += emo('➡️', w * .85, gy + 70, narrow ? 18 : 24);
+    }
+    if (id === 'wood') {
+      o += `<rect y="${gy - 10}" width="${w}" height="${h - gy + 10}" fill="#6fae4a"/><path d="M${w * .05} ${h} Q${w * .4} ${gy + 10} ${w * .95} ${gy + 4} L${w} ${gy + 30} Q${w * .5} ${gy + 40} ${w * .3} ${h} Z" fill="#c9a26b"/>`;
+      [.1, .26, .78, .92].forEach((f, k) => { o += `<rect x="${w * f - 7}" y="${h * .25}" width="14" height="${gy - h * .25}" fill="#7a4f2a"/><circle cx="${w * f}" cy="${h * .25}" r="${h * .14}" fill="${k % 2 ? '#2f7d3a' : '#3f9d4a'}"/>`; });
+      o += emo('🦊', w * .35, h - 22, narrow ? 26 : 38) + emo('🐕', w * .72, gy + 38, narrow ? 24 : 34);
+    }
+    if (id === 'hedge') {
+      o += `<rect y="${gy - 10}" width="${w}" height="${h - gy + 10}" fill="#9bd06a"/>`;
+      [.12, .3, .7, .88].forEach(f => { o += `<ellipse cx="${w * f}" cy="${gy - 20}" rx="${w * .1}" ry="${h * .12}" fill="#3f8a3a"/>`; });
+      o += emo('🐦', w * .22, h * .25, narrow ? 24 : 34) + emo('🐦', w * .75, h * .18, narrow ? 22 : 30) + emo('🐦', w * .82, gy - 52, narrow ? 20 : 28);
+    }
+    // The plant, with a question mark: what kind of seeds should it have?
+    o += `<path d="M${px} ${gy} V${gy - h * .22}" stroke="#3f9d4a" stroke-width="4"/><ellipse cx="${px - 12}" cy="${gy - h * .1}" rx="12" ry="5" fill="#4caf50"/><ellipse cx="${px + 12}" cy="${gy - h * .15}" rx="12" ry="5" fill="#4caf50"/>`;
+    o += `<circle cx="${px}" cy="${gy - h * .22 - 12}" r="${narrow ? 15 : 20}" fill="#fff" stroke="var(--ink)" stroke-width="2"/><text x="${px}" y="${gy - h * .22 - 12 + (narrow ? 6 : 8)}" text-anchor="middle" style="font-size:${narrow ? 18 : 24}px;font-weight:700;fill:var(--ink)">?</text>`;
+    return o;
+  },
+  stage() {
+    const sp = state.sp, { w, h, narrow } = stageSize(), top = narrow ? 72 : 54;
+    let o = '', say = '';
+    if (sp.part === 'why') {
+      say = ['The seeds fall from the tree.', 'The seeds germinate.', 'A few weeks later…'][sp.frame];
+      if (narrow) { const ph = (h - top - 16) / 2; o = SP.scene(8, top, w - 16, ph, false, sp.frame, true) + SP.scene(8, top + ph + 8, w - 16, ph, true, sp.frame, true); }
+      else { const pw = (w - 24) / 2; o = SP.scene(8, top, pw, h - top - 8, false, sp.frame, false) + SP.scene(16 + pw, top, pw, h - top - 8, true, sp.frame, false); }
+      o = `<rect width="${w}" height="${h}" fill="#eef4fb"/>` + o;
+    }
+    if (sp.part === 'flaps') {
+      const n = FLAPS.filter(f => sp.done?.[f]).length;
+      return `<div class="lay-top"><span class="scaletag">${n} of 8 opened</span><div class="readout">Tap a flap to open it.</div></div>
+        <div class="flaps">${FLAPS.map(f => {
+          const T = TYPES[f], col = T ? T[3] : '#ffe08a', open = sp.open[f];
+          const inside = f === 'title' ? '<div class="why">Plants spread their seeds so the new plants get enough <b>light</b>, <b>water</b> and <b>space</b> to grow.</div>'
+            : `<div class="pics">${SORDER.filter(id => SEEDS[id][1] === f).map(id => `<span>${seedSvg(id)}<i>${SEEDS[id][0].split(' (')[0]}</i></span>`).join('')}</div>`;
+          return `<button class="flap${open ? ' open' : ''}${sp.flap === f ? ' sel' : ''}" style="--fc:${col}" data-act="sflap" data-v="${f}">
+            <span class="ft">${open ? (T ? T[0] + ' ' : '🌱 ') : ''}${T ? T[1] : 'Seed dispersal'}</span>${open ? inside : `<span class="em">${T ? T[0] : '🌱'}</span><span class="tap">Tap to open</span>`}</button>`;
+        }).join('')}</div>`;
+    }
+    if (sp.part === 'sort') {
+      say = sp.sel ? `Tap where the ${SEEDS[sp.sel][0].split(' (')[0].toLowerCase()} seed belongs.` : 'Choose a seed, then tap where it belongs.';
+      const bins = ROUNDS[sp.round], cols = narrow ? 2 : bins.length, rows = Math.ceil(bins.length / cols), bw = (w - 16 - (cols - 1) * 8) / cols, bh = (h - top - 8 - (rows - 1) * 8) / rows;
+      o = `<rect width="${w}" height="${h}" fill="#eef4fb"/>`;
+      bins.forEach((b, k) => {
+        const x = 8 + (k % cols) * (bw + 8), y = top + Math.floor(k / cols) * (bh + 8), here = SORDER.filter(id => sp.placed[id]  && SEEDS[id][1] === b);
+        o += `<g class="tapme" data-bin="${b}"><rect x="${x}" y="${y}" width="${bw}" height="${bh}" rx="16" fill="#fff" stroke="${sp.sel ? 'var(--yellow)' : 'rgba(0,0,0,.15)'}" stroke-width="${sp.sel ? 4 : 2}" stroke-dasharray="${sp.sel ? '8 5' : ''}"/>`;
+        o += `<text x="${x + bw / 2}" y="${y + (narrow ? 30 : 40)}" text-anchor="middle" style="font-size:${narrow ? 22 : 30}px">${TYPES[b][0]}</text>`;
+        o += `<text x="${x + bw / 2}" y="${y + (narrow ? 52 : 68)}" text-anchor="middle" style="font-size:${narrow ? 14 : 19}px;font-weight:700;fill:var(--ink)">${TYPES[b][1]}</text>`;
+        o += `<text x="${x + bw / 2}" y="${y + (narrow ? 68 : 88)}" text-anchor="middle" style="font-size:${narrow ? 11.5 : 14}px;fill:var(--muted)">${TYPES[b][5]}</text>`;
+        // The seeds sorted into this box, three to a row
+        const cell = (bw - 12) / 3, s = Math.min(narrow ? 40 : 70, cell - 8, (bh - (narrow ? 76 : 100)) - 18);
+        here.forEach((id, j) => { const cx = x + 6 + cell * (j + .5), sy = y + (narrow ? 74 : 100);
+          o += `<svg x="${cx - s / 2}" y="${sy}" width="${s}" height="${s}" viewBox="0 0 40 40">${SEEDPIC[id]()}</svg><text x="${cx}" y="${sy + s + 13}" text-anchor="middle" style="font-size:${narrow ? 10 : 13}px;font-weight:600;fill:var(--ink)">${SEEDS[id][0].split(' (')[0].replace('Himalayan b', 'B')}</text>`; });
+        o += '</g>';
+      });
+    }
+    if (sp.part === 'fit') {
+      const P = PLACES[sp.place]; say = P[1];
+      o = SP.place(P[0], w, h, narrow);
+    }
+    return `<div class="lay-top"><span class="scaletag">${sp.part === 'why' ? `Picture ${sp.frame + 1} of 3` : sp.part === 'sort' ? `Round ${sp.round + 1} of 2: ${roundSeeds(sp.round).filter(id => sp.placed[id]).length} of ${roundSeeds(sp.round).length} sorted` : `Place ${sp.place + 1} of ${PLACES.length}`}</span><div class="readout">${say}</div></div>
+      <svg id="spSvg" viewBox="0 0 ${w} ${h}" aria-label="Seed dispersal">${o}</svg>`;
+  },
+  drawer() {
+    const sp = state.sp, parts = [['why', '1 Why spread?'], ['flaps', '2 Ways to travel'], ['sort', '3 Sort the seeds'], ['fit', '4 Seed for the place']];
+    const nav = `<div class="stops">${parts.map(([id, t]) => `<button class="opt sm${sp.part === id ? ' on' : ''}" data-act="spart" data-v="${id}">${t}</button>`).join('')}</div>`;
+    if (sp.part === 'why') {
+      const caps = ['On the left, all the seeds fall straight down, under the tree. On the right, they are carried far away from it.',
+        'All the seeds <b>germinate</b>. They all had water and warmth.',
+        'Under the tree, only <b>1</b> seedling is still growing. The rest are thin, pale and dying. Far away from the tree, <b>10</b> are growing well.'];
+      const right = sp.whySaid === 'ok';
+      return `<div class="card">${nav}<h2 style="margin-top:8px">🌳 Why do seeds spread out?</h2><p>A plant can't move. But its seeds can travel! What happens if they don't?</p></div>
+        <div class="card"><h3>Picture ${sp.frame + 1}</h3><p>${caps[sp.frame]}</p>
+          <div class="navrow"><button class="btn" data-act="sframe" data-d="-1"${sp.frame ? '' : ' disabled'}>◀ Back</button>${sp.frame < 2 ? '<button class="btn go" data-act="sframe" data-d="1">Next ▶</button>' : ''}</div></div>
+        ${sp.frame === 2 ? `<div class="card${right ? ' says good' : ''}"><h3>Why did the seedlings under the tree struggle?</h3><p class="muted">Tick all the reasons.</p>
+          <div class="keeps">${WHYS.map(([id, t]) => `<label class="keep"><input type="checkbox" data-why="${id}"${sp.ticks[id] ? ' checked' : ''}${right ? ' disabled' : ''}> ${t}</label>`).join('')}</div>
+          ${Array.isArray(sp.whySaid) ? `<ul class="spot">${sp.whySaid.map(m => `<li>${m}</li>`).join('')}</ul>` : ''}
+          ${right ? `<p class="job">Yes! The seedlings are competing with the big tree, and with each other, for <b>light</b>, <b>water</b> and <b>space</b>.</p>
+            <p><span class="term">Seed dispersal</span> means seeds being carried away from the parent plant. Then the new plants have a better chance to grow.</p>` : ''}</div>
+          ${right ? '<div class="checkbar"><button class="btn go" data-act="spart" data-v="flaps">Next: ways seeds travel ▶</button></div>' : '<div class="checkbar"><button class="btn go" data-act="swhy">✔ Check</button></div>'}` : ''}`;
+    }
+    if (sp.part === 'flaps') {
+      const f = sp.flap, T = TYPES[f], n = FLAPS.filter(x => sp.done?.[x]).length;
+      const detail = !f ? '' : f === 'title' ? `<div class="card says good"><h3>🌱 Seed dispersal</h3><p><span class="term">Seed dispersal</span> means seeds being carried away from the parent plant.</p>
+          <p>Plants spread their seeds so the new plants are not competing with the parent plant, or with each other, for <b>light</b>, <b>water</b> and <b>space</b>.</p></div>`
+        : `<div class="card says good"><h3>${T[0]} ${T[1]}</h3><p>${T[2]}</p><ul class="icons" style="margin:0">${SORDER.filter(id => SEEDS[id][1] === f).map(id => `<li><span class="em">${seedSvg(id, 34)}</span><span><b>${SEEDS[id][0]}</b>: ${SEEDS[id][2]}</span></li>`).join('')}</ul></div>`;
+      return `${detail}<div class="card">${nav}<h2 style="margin-top:8px">📖 Ways seeds travel</h2><p>There are <b>7</b> ways seeds travel. Tap each flap to open it, and find out how.</p><p class="muted">${n} of 8 flaps opened</p></div>
+        ${n === 8 ? '<div class="checkbar"><button class="btn go" data-act="spart" data-v="sort">Next: sort the seeds ▶</button></div>' : ''}`;
+    }
+    if (sp.part === 'sort') {
+      const left = roundSeeds(sp.round).filter(id => !sp.placed[id]), L = sp.last, allDone = SORDER.every(id => sp.placed[id]);
+      const said = L ? (L.ok ? `<div class="card says good"><h3>✅ ${SEEDS[L.id][0]}: ${TYPES[SEEDS[L.id][1]][1].toLowerCase()}</h3><p>${SEEDS[L.id][2]}</p></div>`
+        : `<div class="card says"><h3>💡 Not ${TYPES[L.bin][1].toLowerCase()}</h3><p>${SEEDS[L.id][3]}</p></div>`) : '';
+      return `${said}<div class="card">${nav}<h2 style="margin-top:8px">🔍 Sort the seeds</h2><p>The <b>shape</b> of a seed gives you a clue! Choose a seed, then tap where it belongs.</p></div>
+        ${left.length ? `<div class="card"><div class="seedcards">${left.map(id => `<button class="seedcard${sp.sel === id ? ' sel' : ''}" data-act="spick" data-v="${id}">${seedSvg(id)}<span>${SEEDS[id][0]}</span></button>`).join('')}</div></div>`
+          : !allDone ? `<div class="card says good"><h3>✅ Round 1 done!</h3><p>Now sort the seeds that burst, drop and roll, or shake.</p></div><div class="checkbar"><button class="btn go" data-act="sround">Next: round 2 ▶</button></div>`
+          : `<div class="card says good"><h3>🎉 You sorted all ${SORDER.length} seeds!</h3><p>Look for the clue:</p><ul class="icons" style="margin:0">${TORDER.map(t => `<li><span class="em">${TYPES[t][0]}</span><span><b>${TYPES[t][1]}</b>: ${TYPES[t][4]}</span></li>`).join('')}</ul></div>
+          <div class="checkbar"><button class="btn go" data-act="spart" data-v="fit">Next: seed for the place ▶</button></div>`}
+        ${Object.keys(sp.placed).length ? '<div class="card"><button class="btn" data-act="sreset">↺ Start the sort again</button></div>' : ''}`;
+    }
+    const P = PLACES[sp.place], done = sp.pick === P[3], allDone = sp.fitDone.length === PLACES.length;
+    return `<div class="card">${nav}<h2 style="margin-top:8px">🗺️ ${P[1]}</h2><p>${P[2]}</p></div>
+      <div class="card wq"><h3>Which kind of seed would spread best from here?</h3>
+        ${Object.entries(FEATS).map(([f, [pic, t]]) => `<button class="opt${sp.pick === f && done ? ' done' : sp.picksWrong.includes(f) ? ' wrong' : ''}" data-act="sfit" data-v="${f}"${sp.picksWrong.includes(f) || done ? ' disabled' : ''} style="display:flex;align-items:center;gap:10px">${seedSvg(pic, 34)}${t}</button>`).join('')}
+        ${sp.pick && !done ? `<p class="spot">💡 ${FEATS[sp.pick][2]}</p>` : ''}
+        ${done ? `<p class="job">✅ ${P[4]}</p>` : ''}</div>
+      ${done ? `<div class="checkbar">${sp.place < PLACES.length - 1 ? '<button class="btn go" data-act="snext">Next place ▶</button>' : allDone ? '<button class="btn" data-act="sfitreset">↺ Start again</button>' : ''}</div>` : ''}
+      ${done && allDone ? '<div class="card says good"><h3>🎉 Well done!</h3><p>A plant\'s seeds suit the place where it grows, so they can travel to a new place with enough <b>light</b>, <b>water</b> and <b>space</b>.</p></div>' : ''}`;
+  }
+};
+
+// ================= Views =================
+const said = (msgs, good) => msgs ? `<div class="card says${good ? ' good' : ''}"><h3>${good ? '✅ That is a fair test!' : '🔎 Check your plan'}</h3>${Array.isArray(msgs) ? `<ul>${msgs.map(m => `<li>${m}</li>`).join('')}</ul>` : `<p>${msgs}</p>`}</div>` : '';
+const STEPS = ['Plan', 'Set up', 'Predict', 'Run', 'Results', 'Chart', 'Analyse', 'Conclude'];
+// Results table, used while drawing the chart too
+const resultsTable = () => { const L = state.lab, V = VARS[L.iv], g = LAB.germinated(L.pots);
+  return `<table class="gtable"><tr><th>Group</th><th>Pot</th><th>${V.name}</th><th>Seeds germinated</th></tr>
+    ${L.pots.map((p, i) => `<tr><td>${GNAME[groupOf(i)]}</td><td>${i + 1}</td><td>${V.opts[p[L.iv]][0]} ${V.opts[p[L.iv]][1]}</td><td><b>${g[i]}</b> out of 10${L.repeated && i === LAB.anomaly() ? ' <span class="muted">(repeat: 9)</span>' : ''}</td></tr>`).join('')}</table>`; };
+const showToggle = () => `<div class="stops" style="margin-top:6px">${[['chart', '📊 Bar chart'], ['pots', '🪴 Pots']].map(([v, t]) => `<button class="opt sm${state.lab.show === v ? ' on' : ''}" data-act="pshow" data-v="${v}">${t}</button>`).join('')}</div>`;
+// A question with choices: wrong ones turn red and stay disabled, the right one turns green
+const choices = (act, opts, chosen, wrongs, right) => opts.map(([v, t]) => `<button class="opt${chosen === v && v === right ? ' done' : wrongs.includes(v) ? ' wrong' : ''}" data-act="${act}" data-v="${v}"${wrongs.includes(v) || chosen === right ? ' disabled' : ''}>${t}</button>`).join('');
+const VIEWS = {
+  bench: {
+    label: '🌱 <span class="tl">Germination test</span>',
+    stage: () => LAB.stage(),
+    drawer() {
+      const L = state.lab, V = VARS[L.iv];
+      const bar = `<div class="steps">${STEPS.map((s, k) => `<span class="${k === L.step ? 'now' : k < L.step ? 'done' : ''}">${k < L.step ? '✔' : k + 1} ${s}</span>`).join('')}</div>`;
+      // Step 1: what to change and what to measure
+      if (L.step === 0) {
+        const dvOk = L.dv === 'germ', dvBad = MEASURES.find(m => m[0] === L.dv && !m[2]);
+        return `<div class="card">${bar}<h2>🌱 Germination test</h2><p>Do bean seeds need water, warmth, light or soil to <b>germinate</b> (start to grow)? Plan a <b>fair test</b>.</p></div>
+          <div class="card"><h3>1. What will you <b>change</b>?</h3><p class="muted">This is the <span class="term">independent variable</span>. Change only one thing.</p>
+            <div class="stops">${VORDER.map(k => `<button class="opt${L.iv === k ? ' on' : ''}" data-act="piv" data-k="${k}">${VARS[k].opts[Object.keys(VARS[k].opts)[0]][0]} ${VARS[k].name}</button>`).join('')}</div></div>
+          <div class="card wq"><h3>2. What will you <b>measure</b>?</h3><p class="muted">This is the <span class="term">dependent variable</span>: what you think will change.</p>
+            ${MEASURES.map(([id, t]) => `<button class="opt${L.dv === id && dvOk ? ' done' : L.dvWrong.includes(id) ? ' wrong' : ''}" data-act="pdv" data-k="${id}"${L.dvWrong.includes(id) ? ' disabled' : ''}>${t}</button>`).join('')}
+            ${dvBad ? `<p class="spot">💡 ${dvBad[3]}</p>` : ''}</div>
+          <div class="card wq"><h3>3. How many pots in each <b>group</b>?</h3><p class="muted">You will compare two groups of pots. Each pot has 10 bean seeds.</p>
+            ${REPS.map(([id, t, ok]) => `<button class="opt${L.reps === id && ok ? ' done' : L.repsWrong.includes(id) ? ' wrong' : ''}" data-act="preps" data-k="${id}"${L.repsWrong.includes(id) ? ' disabled' : ''}>${t}</button>`).join('')}
+            ${L.reps ? `<p class="spot">💡 ${REPS.find(r => r[0] === L.reps)[3]}</p>` : ''}</div>
+          <div class="checkbar"><button class="btn go" data-act="pnext"${L.iv && dvOk && L.reps && L.reps !== '1' ? '' : ' disabled'}>Next: set up the pots ▶</button></div>`;
+      }
+      // Step 2: set up the pots, check the plan, then name the control variables
+      if (L.step === 1) {
+        const p = L.groups[L.sel], fair = L.said === 'fair';
+        const controls = VORDER.map(k => `<div class="varrow"><span>${VARS[k].name}${k === L.iv ? ' <b class="tag">changing</b>' : ''}</span><div class="stops">${Object.entries(VARS[k].opts).map(([v, [em, t]]) =>
+          `<button class="opt sm${p[k] === v ? ' on' : ''}" data-act="pset" data-k="${k}" data-v="${v}"${fair ? ' disabled' : ''}>${em} ${t}</button>`).join('')}</div></div>`).join('');
+        const keepList = [...VORDER.filter(k => k !== L.iv).map(k => [k, `${VARS[k].name}`, true]), ...KEEPS, [L.iv, `${V.name}`, false, `${V.name} is what you are <b>changing</b>, so it can\'t stay the same!`]];
+        const keepCard = fair ? `<div class="card says${L.keepsSaid === 'ok' ? ' good' : ''}"><h3>3. What must you keep the <b>same</b>?</h3><p class="muted">These are the <span class="term">control variables</span>. Tick every one.</p>
+            <div class="keeps">${keepList.map(([id, t]) => `<label class="keep"><input type="checkbox" data-keep="${id}"${L.keeps[id] ? ' checked' : ''}${L.keepsSaid === 'ok' ? ' disabled' : ''}> ${t}</label>`).join('')}</div>
+            ${L.keepsSaid && L.keepsSaid !== 'ok' ? `<ul class="spot">${L.keepsSaid.map(m => `<li>${m}</li>`).join('')}</ul>` : ''}
+            ${L.keepsSaid === 'ok' ? '<p class="job">Yes! Keeping all of these the same makes it a fair test.</p>' : ''}</div>` : '';
+        return `${fair ? said('Only ' + V.the + ' is different between the two groups. Everything else is the same in every pot.', true) : said(L.said)}
+          <div class="card">${bar}<h3>Set up the two groups</h3><p>You are changing <b>${V.the}</b>. Make it different for the two groups. Keep everything else the same.</p>
+            <div class="stops">${GNAME.map((n, gi) => `<button class="opt${L.sel === gi ? ' on' : ''}" data-act="pgroup" data-g="${gi}"${fair ? ' disabled' : ''}>Group ${n}</button>`).join('')}</div></div>
+          <div class="card"><h3>Group ${GNAME[L.sel]} <span class="muted">(pots ${L.sel * PER + 1} to ${L.sel * PER + PER})</span></h3><p class="muted">Every pot in the group changes together.</p>${controls}</div>
+          ${keepCard}
+          <div class="checkbar">${!fair ? '<button class="btn go" data-act="pcheck">✔ Check my plan</button>' : L.keepsSaid === 'ok' ? '<button class="btn go" data-act="pnext">Next: predict ▶</button>' : '<button class="btn go" data-act="pkeeps">✔ Check</button>'}</div>`;
+      }
+      // Step 3: predict, with a reason
+      if (L.step === 2) return `<div class="card">${bar}<h3>🤔 Predict</h3><p>What do you think will happen?</p>
+          <div class="wq">${LAB.predOpts().map(([v, t]) => `<button class="opt${L.pred === v ? ' on' : ''}" data-act="ppred" data-v="${v}">${t.replace(/<\/?b>/g, '')}</button>`).join('')}</div>
+          <p style="margin-top:8px"><b>Why?</b> Use what you know about seeds.</p>
+          <textarea class="reason" id="reason" placeholder="I think this because…">${esc(L.reason)}</textarea></div>
+        <div class="checkbar"><button class="btn go" data-act="pnext"${L.pred && L.reason.trim() ? '' : ' disabled'}>Next ▶</button></div>`;
+      // Step 4: run it
+      if (L.step === 3) return `<div class="card">${bar}<h3>⏩ Run the test</h3><p>Leave the pots for <b>10 days</b>, then count how many seeds in each pot have germinated.</p>
+          <p class="muted">Your prediction: ${LAB.predOpts().find(o => o[0] === L.pred)[1]}</p>
+          <div class="navrow"><button class="btn go" data-act="prun">⏩ Fast forward 10 days</button></div></div>`;
+      if (L.step >= 5) return LAB.analyse(bar);
+      // Step 5: results, and how accurate the prediction was
+      const g = LAB.germinated(L.pots), eff = LAB.effect(), right = eff === L.pred;
+      const yours = `<p class="muted">You predicted: ${LAB.predOpts().find(o => o[0] === L.pred)[1]}${L.reason ? `<br>Your reason: “${esc(L.reason)}”` : ''}</p>`;
+      // Nothing germinated in either group, because of something that was kept the same: the test can't answer the question
+      const bl = LAB.blockers();
+      const verdict = eff === 'none' ? `<div class="card says"><h3>🤔 Your test can't answer the question</h3>
+          <p>Hardly any seeds germinated in <b>either</b> group. So you can't tell whether ${V.the} makes a difference.</p>
+          ${bl.length ? `<p>Something else stopped the seeds: ${bl.map(k => BLOCKS[k][1]).join(', and ')}.</p>` : ''}
+          <p>The things you keep the same must still give the seeds a <b>chance</b> to germinate. Keep them the same in every pot, but make them suitable for seeds.</p>
+          ${yours}<p class="muted">You can't check your prediction yet.</p>
+          <div class="navrow"><button class="btn go" data-act="pfix">🔧 Change the set-up and try again</button></div></div>`
+        : `<div class="card says${right ? ' good' : ''}"><h3>${right ? '✅ Your prediction was right!' : '❌ Your prediction was not right'}</h3>
+          <p>${eff === 'same' ? `In this test, ${V.the} made <b>no real difference</b>.` : `Pots that were <b>${lc(V.opts[eff][1])}</b> had many more seeds germinate.`}</p>${yours}
+          ${right ? '' : '<p>That is fine! Scientists often find their predictions were wrong. That is how we learn something new.</p>'}
+          ${L.iv === 'light' ? '<p>🔎 <b>Look closely</b> at the seedlings. The ones in the dark germinated, but they are <b>taller, thinner and pale yellow</b>. They are growing fast to search for light, and they can\'t make the green <span class="term">chlorophyll</span> without it.</p>' : ''}</div>`;
+      return `${verdict}
+        <div class="card">${bar}<h3>📋 Results</h3>${resultsTable()}
+          <p class="muted">Everything else was the same: ${VORDER.filter(k => k !== L.iv).map(k => lc(VARS[k].opts[L.pots[0][k]][1])).join(', ')}.</p></div>
+        <div class="card"><div class="navrow"><button class="btn" data-act="preset">↺ Plan a new test</button></div></div>
+        ${eff === 'none' ? '' : '<div class="checkbar"><button class="btn go" data-act="pnext">Next: draw a bar chart ▶</button></div>'}`;
+    }
+  },
+  spread: {
+    label: '🌬️ <span class="tl">Spreading seeds</span>',
+    stage: () => SP.stage(),
+    drawer: () => SP.drawer()
+  },
+  help: {
+    label: 'Help',
+    stage: () => LAB.stage(),
+    drawer() {
+      return `<div class="card"><h2>Help</h2>
+        <p><b>🌱 Germination test</b>: plan a fair test to find out what bean seeds need to germinate. Choose what to change, what to measure and how many pots to use, set up two groups of pots, check your plan is fair, predict, then fast forward 10 days.</p>
+        <p><b>🚀 Missions</b>: challenges to try. <b>🤔 Real life?</b>: how this model is different from real seeds.</p>
+        <p>Then draw a <b>bar chart</b> of your results, find the result that does not fit the pattern, and write a conclusion.</p>
+        <p><b>🌬️ Spreading seeds</b>: see why seeds need to travel away from the parent plant, open the flaps to find the 7 ways seeds travel, sort the seeds, and choose the best seed for a place.</p></div>
+        <div class="card"><h3>🎯 What you are learning</h3>
+          <p><b>5Bp.03</b> Describe how flowering plants reproduce by pollination, fruit and seed production, and seed dispersal. <span class="muted">(Here: seed dispersal.)</span></p>
+          <p><b>5Bp.04</b> Describe seed germination and know that seeds, in general, require water and an appropriate temperature to germinate.</p>
+          <p><b>5TWSp.03</b> Make predictions, referring to relevant scientific knowledge and understanding within familiar and unfamiliar contexts.</p>
+          <p><b>5TWSp.04</b> Plan fair test investigations, identifying the independent, dependent and control variables.</p>
+          <p><b>5TWSc.04</b> Decide when observations and measurements need to be repeated to give more reliable data.</p>
+          <p><b>5TWSc.08</b> Collect and record observations and/or measurements in tables and diagrams appropriate to the type of scientific enquiry.</p>
+          <p><b>5TWSa.01</b> Describe the accuracy of predictions, based on results.</p>
+          <p><b>5TWSa.02</b> Describe patterns in results, including identifying any anomalous results.</p>
+          <p><b>5TWSa.03</b> Make a conclusion from results informed by scientific understanding.</p>
+          <p><b>5TWSa.04</b> Suggest how an investigation could be improved and explain any proposed changes.</p>
+          <p><b>5TWSa.05</b> Present and interpret results using tables, bar charts, dot plots and line graphs.</p></div>
+        <div class="navrow"><a class="btn go" href="../practice/index.html#seeds">✏️ Practise this</a></div>`;
+    }
+  }
+};
+
+function renderStage() { const v = VIEWS[state.view]; $('#stage').innerHTML = v.stage(); }
+function render() {
+  const v = VIEWS[state.view];
+  // Help is the ❓ button at the end of the top bar, like the other tools, so it isn't one of the tabs
+  $('#helpBtn').classList.toggle('active', state.view === 'help');
+  $('#tabs').innerHTML = Object.entries(VIEWS).filter(([id]) => id !== 'help').map(([id, x]) =>
+    `<button class="btn${id === state.view ? ' active' : ''}" data-act="view" data-view="${id}" aria-label="${x.label.replace(/<[^>]+>/g, '').replace(/^\S+ /, '')}">${x.label}</button>`).join('');
+  const keep = $('#drawer').scrollTop, same = render.last === state.view;
+  $('#drawer').innerHTML = v.drawer();
+  renderStage();
+  // Staying on the same tab keeps the drawer where it was scrolled to
+  if (same) $('#drawer').scrollTop = keep;
+  render.last = state.view;
+  fitBanner();
+}
+
+// ================= Actions =================
+const ACTIONS = {
+  view(el) { state.view = el.dataset.view; location.hash = 'view=' + state.view; render(); },
+  piv(el) { state.lab.iv = el.dataset.k; render(); },
+  pdv(el) { const L = state.lab, m = MEASURES.find(x => x[0] === el.dataset.k); L.dv = m[0]; if (!m[2] && !L.dvWrong.includes(m[0])) L.dvWrong.push(m[0]); render(); },
+  pnext() { const L = state.lab; L.step++; render(); $('#drawer').scrollTop = 0; },
+  preps(el) { const L = state.lab, r = REPS.find(x => x[0] === el.dataset.k); L.reps = r[0]; if (!r[2] && !L.repsWrong.includes(r[0])) L.repsWrong.push(r[0]); render(); },
+  pgroup(el) { state.lab.sel = +el.dataset.g; render(); },
+  pset(el) { const L = state.lab; L.groups[L.sel][el.dataset.k] = el.dataset.v; L.said = null; render(); },
+  pcheck() { const L = state.lab, p = LAB.problems(); L.said = p.length ? p : 'fair'; render(); $('#drawer').scrollTop = 0; },
+  pkeeps() {
+    const L = state.lab, msgs = [], all = [...VORDER.filter(k => k !== L.iv).map(k => [k, VARS[k].name, true]), ...KEEPS, [L.iv, VARS[L.iv].name, false, `${VARS[L.iv].name} is what you are <b>changing</b>, so it can't stay the same!`]];
+    all.forEach(([id, t, yes, why]) => { if (yes && !L.keeps[id]) msgs.push(`You also need to keep <b>${t.toLowerCase()}</b> the same.`); if (!yes && L.keeps[id]) msgs.push(why); });
+    L.keepsSaid = msgs.length ? msgs.slice(0, 3) : 'ok'; render();
+  },
+  ppred(el) { state.lab.pred = el.dataset.v; render(); },
+  prun() { const L = state.lab; L.ran = true; L.step = 4; render(); $('#drawer').scrollTop = 0; emit('ran', { iv: L.iv, eff: LAB.effect() }); },
+  // Back to setting up, keeping the plan and the prediction
+  pfix() { const L = state.lab; Object.assign(L, { ran: false, step: 1, said: null, keepsSaid: null }); render(); $('#drawer').scrollTop = 0; },
+  preset() { state.lab = freshLab(); render(); },
+  spart(el) { state.sp.part = el.dataset.v; render(); $('#drawer').scrollTop = 0; },
+  sframe(el) { const sp = state.sp; sp.frame = Math.max(0, Math.min(2, sp.frame + +el.dataset.d)); render(); },
+  swhy() {
+    const sp = state.sp, msgs = [];
+    WHYS.forEach(([id, t, yes, why]) => { if (yes && !sp.ticks[id]) msgs.push(`There is another reason. Look at the picture again.`); if (!yes && sp.ticks[id]) msgs.push(why); });
+    sp.whySaid = msgs.length ? [...new Set(msgs)] : 'ok'; render();
+    if (!msgs.length) emit('whyspread');
+  },
+  spick(el) { const sp = state.sp; sp.sel = sp.sel === el.dataset.v ? null : el.dataset.v; render(); },
+  sreset() { Object.assign(state.sp, { round: 0, sel: null, placed: {}, last: null }); render(); },
+  sround() { Object.assign(state.sp, { round: 1, sel: null, last: null }); render(); $('#drawer').scrollTop = 0; },
+  // Opening a flap shows what is under it; tapping the chosen flap again closes it
+  sflap(el) {
+    const sp = state.sp, f = el.dataset.v;
+    if (sp.flap === f && sp.open[f]) { sp.open[f] = false; sp.flap = null; }
+    else { const was = FLAPS.every(x => sp.done?.[x]); sp.open[f] = true; sp.flap = f; (sp.done = sp.done || {})[f] = true; if (!was && FLAPS.every(x => sp.done[x])) emit('flaps'); }
+    render(); $('#drawer').scrollTop = 0;
+  },
+  sfit(el) {
+    const sp = state.sp, P = PLACES[sp.place], f = el.dataset.v; sp.pick = f;
+    if (f === P[3]) { if (!sp.fitDone.includes(P[0])) sp.fitDone.push(P[0]); if (sp.fitDone.length === PLACES.length) emit('fitted'); }
+    else if (!sp.picksWrong.includes(f)) sp.picksWrong.push(f);
+    render();
+  },
+  snext() { Object.assign(state.sp, { place: state.sp.place + 1, pick: null, picksWrong: [] }); render(); $('#drawer').scrollTop = 0; },
+  sfitreset() { Object.assign(state.sp, { place: 0, pick: null, picksWrong: [], fitDone: [] }); render(); },
+  pshow(el) { state.lab.show = el.dataset.v; render(); },
+  pchart() {
+    const L = state.lab, g = LAB.germinated(L.pots), wrong = L.bars.map((b, i) => b === g[i] ? -1 : i).filter(i => i >= 0);
+    if (!wrong.length) { L.chartSaid = 'ok'; emit('charted'); }
+    // After three tries, show the right chart
+    else if (++L.chartTries >= 3) { L.bars = g.slice(); L.chartSaid = 'shown'; }
+    else L.chartSaid = wrong;
+    render(); $('#drawer').scrollTop = 0;
+  },
+  ppat(el) { const L = state.lab; L.pat = el.dataset.v; if (L.pat !== LAB.patAnswer() && !L.patWrong.includes(L.pat)) L.patWrong.push(L.pat); L.show = 'chart'; render(); },
+  pact(el) { const L = state.lab; L.act = el.dataset.v; if (L.act === 'repeat') { L.repeated = true; emit('repeated'); } else if (!L.actWrong.includes(L.act)) L.actWrong.push(L.act); render(); },
+  pclaim(el) { const L = state.lab; L.claim = el.dataset.v; if (L.claim !== LAB.effect() && !L.claimWrong.includes(L.claim)) L.claimWrong.push(L.claim); render(); },
+  pwhy(el) { const L = state.lab; L.why = el.dataset.v; if (!WHY[L.iv][+L.why][1] && !L.whyWrong.includes(L.why)) L.whyWrong.push(L.why); render(); },
+  pimp(el) { const L = state.lab; L.imp = +el.dataset.v; if (!L.impTried.includes(L.imp)) L.impTried.push(L.imp); render(); },
+  pfinish() { const L = state.lab; L.step = 8; render(); $('#drawer').scrollTop = 0; emit('finished', { iv: L.iv }); },
+  missions() {
+    $('#missionList').innerHTML = MISSIONS.map((m, i) => `<button class="mission-item${state.done.includes(m.id) ? ' done' : ''}" data-act="startMission" data-i="${i}">
+      <span class="em">${m.icon}</span><span class="t">${i + 1}. ${m.title}</span><span class="star">⭐</span></button>`).join('');
+    $('#missionsModal').classList.remove('hidden');
+  },
+  startMission(el) { startMission(+el.dataset.i); },
+  nextMission(el) { startMission(+el.dataset.i); },
+  stopMission() { stopMission(); },
+  hint() {
+    const h = $('#bannerHint');
+    h.classList.toggle('hidden');
+    $('#hintBtn').textContent = h.classList.contains('hidden') ? '💡 Show a hint' : '💡 Hide the hint';
+    fitBanner();
+  },
+  resetStars() { state.done = []; store.set('sl-done', []); updateStars(); ACTIONS.missions(); },
+  closeModals() { closeModals(); },
+  model() { $('#modelModal').classList.remove('hidden'); }
+};
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-act]');
+  if (el && ACTIONS[el.dataset.act]) ACTIONS[el.dataset.act](el);
+});
+// Typed and ticked answers are kept, so they survive the drawer being redrawn
+document.addEventListener('input', e => { if (e.target.id === 'reason') { state.lab.reason = e.target.value; const b = $('[data-act=pnext]'); if (b) b.disabled = !(state.lab.pred && state.lab.reason.trim()); } });
+document.addEventListener('change', e => { const w = e.target.dataset.why; if (w) { state.sp.ticks[w] = e.target.checked; state.sp.whySaid = null; } });
+document.addEventListener('change', e => { const k = e.target.dataset.keep; if (k) { state.lab.keeps[k] = e.target.checked; state.lab.keepsSaid = null; } });
+// Tapping a group (or one of its pots) chooses it, while setting up
+$('#stage').addEventListener('click', e => {
+  // Spreading seeds: tapping a box puts the chosen seed in it, if that is how it travels
+  if (state.view === 'spread') {
+    const sp = state.sp, bin = e.target.closest('[data-bin]')?.dataset.bin;
+    if (!bin || !sp.sel) return;
+    const ok = SEEDS[sp.sel][1] === bin; sp.last = { id: sp.sel, bin, ok };
+    if (ok) { sp.placed[sp.sel] = true; sp.sel = null; if (SORDER.every(id => sp.placed[id])) emit('sorted'); }
+    render(); $('#drawer').scrollTop = 0; return;
+  }
+  const L = state.lab, col = e.target.closest('[data-col]'), bar = e.target.closest('[data-bar]');
+  if (col) {
+    // The height tapped, in the chart's own units, rounded to a whole number of seeds
+    const svg = $('#labSvg'), pt = svg.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY;
+    const y = pt.matrixTransform(svg.getScreenCTM().inverse()).y, c = LAB.chartGeo();
+    L.bars[+col.dataset.col] = Math.max(0, Math.min(10, Math.round((c.y0 - y) / c.unit))); L.chartSaid = null; render(); return;
+  }
+  if (bar) { L.oddTap = +bar.dataset.bar; if (L.oddTap === LAB.anomaly()) L.oddFound = true; render(); return; }
+  const gi = e.target.closest('[data-group]')?.dataset.group;
+  if (gi != null && state.lab.step === 1 && state.lab.said !== 'fair') { state.lab.sel = +gi; render(); }
+});
+// Tapping the dark background or pressing Escape closes a pop-up
+document.querySelectorAll('.modal').forEach(m => m.addEventListener('click', e => { if (e.target === m) closeModals(); }));
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModals(); });
+let resizeT;
+addEventListener('resize', () => { fitBanner(); clearTimeout(resizeT); resizeT = setTimeout(renderStage, 120); });
+
+// ================= Start =================
+// Test hooks: #iv=water&step=1&groups=wet,dry  ·  …&fair=1&pred=wet&run=1  ·  …&step=5 (chart)  ·  …&chart=1&step=6  ·  #mission=0
+const hp = new URLSearchParams(location.hash.slice(1));
+{
+  const L = state.lab;
+  if (VARS[hp.get('iv')]) { L.iv = hp.get('iv'); L.dv = 'germ'; L.reps = '3'; L.step = 1; }
+  if (hp.has('groups') && L.iv) hp.get('groups').split(',').forEach((v, i) => { if (L.groups[i] && VARS[L.iv].opts[v]) L.groups[i][L.iv] = v; });
+  if (hp.has('fair')) { L.said = 'fair'; L.keepsSaid = 'ok'; }
+  if (hp.has('pred')) { L.pred = hp.get('pred'); L.reason = 'Test reason'; L.step = 3; }
+  if (hp.has('run')) { L.ran = true; L.step = 4; }
+  if (hp.has('step')) L.step = +hp.get('step');
+  if (hp.has('chart')) { L.bars = LAB.germinated(L.pots); L.chartSaid = 'ok'; }
+}
+if (VIEWS[hp.get('view')]) state.view = hp.get('view');
+if (['why', 'flaps', 'sort', 'fit'].includes(hp.get('part'))) state.sp.part = hp.get('part');
+updateStars();
+if (MISSIONS[hp.get('mission')]) startMission(+hp.get('mission'));
+else render();
+</script>
+</body>
+</html>
