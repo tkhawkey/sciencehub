@@ -51,6 +51,8 @@
   .tile .stars { margin-top: 4px; font-size: 15px; letter-spacing: 2px; }
   .tile.big { grid-column: 1 / -1; background: var(--yellow); }
   .tile.big .d { color: #5a4300; }
+  .tile.is-hidden { opacity: .55; border: 3px dashed var(--muted); }
+  .tile .hidden-tag { display: inline-block; margin-bottom: 4px; font-size: 13px; font-weight: 700; background: var(--ink); color: #fff; padding: 2px 9px; border-radius: 999px; }
 
   /* ---------- Question: on wide screens the diagram/table sits in a fixed pane and only the question pane scrolls ---------- */
   main.wide { max-width: 1500px; padding-bottom: 12px; }
@@ -511,10 +513,20 @@ function draw() {
   drawnQ = S.screen === 'question' ? S.q : null;
   if (keep) { scrolls.forEach(([sel, y]) => { const el = $(sel); if (el) el.scrollTop = y; }); window.scrollTo(0, pageY); }
 }
+// Topics the class has reached, in teaching order. To add a topic, add its bank id here.
+// The rest are hidden from the topic list, but links such as #forces still open them,
+// and ?all in the address shows every topic (hidden ones are marked) for the teacher.
+const SHOWN = ['earth-space', 'digestion', 'diet', 'adaptations'];
+const SHOW_ALL = new URLSearchParams(location.search).has('all');
+function homeBanks() {
+  const shown = SHOWN.map(id => window.BANKS.find(b => b.id === id)).filter(Boolean);
+  return SHOW_ALL ? shown.concat(window.BANKS.filter(b => !SHOWN.includes(b.id))) : shown;
+}
 function homeHTML() {
-  return `<h1>Choose a topic</h1><div class="grid">${window.BANKS.map(b => {
+  return `<h1>Choose a topic</h1><div class="grid">${homeBanks().map(b => {
+    const hidden = !SHOWN.includes(b.id);
     const st = Object.entries(best).filter(([k]) => k.startsWith(b.id + ':')).reduce((a, [, v]) => a + v, 0);
-    return `<button class="tile" data-act="bank" data-id="${b.id}"><span class="em">${b.icon}</span><span><span class="t">${esc(b.title)}</span><br><span class="d">${esc(b.intro)}</span><br><span class="d">${esc(b.objectives)}</span><div class="stars">⭐ ${st} stars</div></span></button>`;
+    return `<button class="tile${hidden ? ' is-hidden' : ''}" data-act="bank" data-id="${b.id}"><span class="em">${b.icon}</span><span>${hidden ? '<span class="hidden-tag">Hidden from pupils</span><br>' : ''}<span class="t">${esc(b.title)}</span><br><span class="d">${esc(b.intro)}</span><br><span class="d">${esc(b.objectives)}</span><div class="stars">⭐ ${st} stars</div></span></button>`;
   }).join('')}</div>`;
 }
 function topicHTML() {

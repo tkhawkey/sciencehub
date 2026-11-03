@@ -97,6 +97,10 @@
     box-shadow: 0 6px 0 var(--line), 0 14px 30px rgba(0, 33, 153, .08);
     transition: transform .18s ease-out, box-shadow .18s ease-out, border-color .18s;
   }
+  .tile[hidden] { display: none; }
+  /* ?all shows hidden tiles to the teacher, marked */
+  .tile.is-hidden { opacity: .55; border-style: dashed; border-color: var(--muted); }
+  .tile.is-hidden::before { content: "Hidden from pupils"; position: absolute; top: -12px; left: 18px; z-index: 3; font-size: 13px; font-weight: 700; background: var(--ink); color: #fff; padding: 3px 10px; border-radius: 999px; }
   .tile:hover { transform: translateY(-6px) rotate(-.6deg); border-color: var(--accent); box-shadow: 0 10px 0 var(--accent), 0 22px 36px rgba(0, 33, 153, .14); }
   .tile:nth-child(even):hover { transform: translateY(-6px) rotate(.6deg); }
   .tile:active { transform: translateY(-2px); }
@@ -189,10 +193,10 @@
   <img class="lion" src="hub/mascot-white.svg" alt="">
   <div class="bubbles" aria-hidden="true">
     <div class="bubble" style="left: 40px; top: 10px; animation-delay: -1s">🌍</div>
-    <div class="bubble sm" style="left: 160px; top: 90px; animation-delay: -3s">🫧</div>
+    <div class="bubble sm" style="left: 160px; top: 90px; animation-delay: -3s">🍽️</div>
     <div class="bubble" style="left: 260px; top: 0; animation-delay: -2s">🦊</div>
-    <div class="bubble sm" style="left: 360px; top: 110px; animation-delay: -4.5s">🛝</div>
-    <div class="bubble sm" style="left: 60px; top: 150px; animation-delay: -5s">🌱</div>
+    <div class="bubble sm" style="left: 360px; top: 110px; animation-delay: -4.5s">🦷</div>
+    <div class="bubble sm" style="left: 60px; top: 150px; animation-delay: -5s">🥦</div>
     <div class="bubble" style="left: 230px; top: 170px; animation-delay: -.5s">🍎</div>
   </div>
   <div class="hero-inner">
@@ -214,6 +218,7 @@
 
 <main>
   <ul class="grid">
+    <!-- Units the class has reached, in teaching order. To add a unit, move its tile up here and delete "hidden". -->
     <li class="tile" style="--accent: var(--blue)">
       <div class="head">
         <div class="shot"><img src="hub/thumbs/earth-seasons.jpg" alt="The Earth travelling around the Sun in Seasons Explorer"></div>
@@ -227,108 +232,6 @@
         <div class="meta">
           <span class="explore" aria-hidden="true">Explore ▶</span>
           <a class="btn" href="practice/index.html#earth-space">✏️ Practise</a>
-        </div>
-      </div>
-    </li>
-
-    <li class="tile" style="--accent: var(--orange)">
-      <div class="head">
-        <div class="shot"><img src="hub/thumbs/forces-playground.jpg" alt="A parachute about to drop in Forces Playground"></div>
-        <span class="icon" aria-hidden="true">🛝</span>
-        <span class="strand phys">Physics</span>
-      </div>
-      <div class="body">
-        <h2><a href="forces-playground/index.html">Forces Playground</a></h2>
-        <p class="codes">🚀 8 missions · 5Pf.01–03</p>
-        <p class="desc">Draw force arrows, drop parachutes and test friction on a ramp.</p>
-        <div class="meta">
-          <span class="explore" aria-hidden="true">Explore ▶</span>
-          <a class="btn" href="practice/index.html#forces">✏️ Practise</a>
-        </div>
-      </div>
-    </li>
-
-    <li class="tile" style="--accent: var(--purple)">
-      <div class="head">
-        <div class="shot"><img src="hub/thumbs/particle-playground.jpg" alt="Water particles spreading out as a gas in Particle Playground"></div>
-        <span class="icon" aria-hidden="true">🫧</span>
-        <span class="strand chem">Chemistry</span>
-      </div>
-      <div class="body">
-        <h2><a href="particle-playground/index.html">Particle Playground</a></h2>
-        <p class="codes">🚀 10 missions · 5Cm.01 · 5Cm.02 · 5Cc.01 · 5Cp.02</p>
-        <p class="desc">Heat it up, cool it down and watch the particles in solids, liquids and gases.</p>
-        <div class="meta">
-          <span class="explore" aria-hidden="true">Explore ▶</span>
-          <a class="btn" href="practice/index.html#particles">✏️ Practise</a>
-        </div>
-      </div>
-    </li>
-
-    <li class="tile" style="--accent: #4aa8e8">
-      <div class="head">
-        <div class="shot"><img src="hub/thumbs/air-and-water.jpg" alt="100 particles of air, coloured by gas, in Air and Water"></div>
-        <span class="icon" aria-hidden="true">💨</span>
-        <span class="strand earth">Earth and space</span>
-      </div>
-      <div class="body">
-        <h2><a href="air-and-water/index.html">Air and Water</a></h2>
-        <p class="codes">🚀 12 missions · 5ESp.01–03 · 5Cm.02 · 5ESc.01</p>
-        <p class="desc">Count the gases in air, climb through the atmosphere and follow the water cycle.</p>
-        <div class="meta">
-          <span class="explore" aria-hidden="true">Explore ▶</span>
-          <a class="btn" href="practice/index.html#air-water">✏️ Practise</a>
-        </div>
-      </div>
-    </li>
-
-    <li class="tile" style="--accent: var(--coral)">
-      <div class="head">
-        <div class="shot"><img src="hub/thumbs/adaptation-studio.jpg" alt="Designing a desert creature in Adaptation Studio"></div>
-        <span class="icon" aria-hidden="true">🦊</span>
-        <span class="strand bio">Biology</span>
-      </div>
-      <div class="body">
-        <h2><a href="adaptation-studio/index.html">Adaptation Studio</a></h2>
-        <p class="codes">🚀 11 missions · 5Be.01 · 5Be.03</p>
-        <p class="desc">Design a creature for the desert, the Arctic or the rainforest. Will it survive?</p>
-        <div class="meta">
-          <span class="explore" aria-hidden="true">Explore ▶</span>
-          <a class="btn" href="practice/index.html#adaptations">✏️ Practise</a>
-        </div>
-      </div>
-    </li>
-
-    <li class="tile" style="--accent: var(--green)">
-      <div class="head">
-        <div class="shot"><img src="hub/thumbs/seed-lab.jpg" alt="Seeds falling under a tree and spreading far away in Seed Lab"></div>
-        <span class="icon" aria-hidden="true">🌱</span>
-        <span class="strand bio">Biology</span>
-      </div>
-      <div class="body">
-        <h2><a href="seed-lab/index.html">Seed Lab</a></h2>
-        <p class="codes">🚀 9 missions · 5Bp.03 · 5Bp.04</p>
-        <p class="desc">Plan a fair test with bean seeds and find out how seeds travel.</p>
-        <div class="meta">
-          <span class="explore" aria-hidden="true">Explore ▶</span>
-          <a class="btn" href="practice/index.html#seeds">✏️ Practise</a>
-        </div>
-      </div>
-    </li>
-
-    <li class="tile" style="--accent: var(--yellow)">
-      <div class="head">
-        <div class="shot"><img src="hub/thumbs/balanced-plate.jpg" alt="Breakfast foods sorted onto a food-group plate in Balanced Plate"></div>
-        <span class="icon" aria-hidden="true">🍽️</span>
-        <span class="strand bio">Biology</span>
-      </div>
-      <div class="body">
-        <h2><a href="balanced-plate/index.html">Balanced Plate</a></h2>
-        <p class="codes">🚀 10 missions · 5Bp.01</p>
-        <p class="desc">Fill Sam's plate, pack a lunchbox, read food labels and feed the zoo.</p>
-        <div class="meta">
-          <span class="explore" aria-hidden="true">Explore ▶</span>
-          <a class="btn" href="practice/index.html#diet">✏️ Practise</a>
         </div>
       </div>
     </li>
@@ -350,6 +253,109 @@
       </div>
     </li>
 
+    <li class="tile" style="--accent: var(--yellow)">
+      <div class="head">
+        <div class="shot"><img src="hub/thumbs/balanced-plate.jpg" alt="Breakfast foods sorted onto a food-group plate in Balanced Plate"></div>
+        <span class="icon" aria-hidden="true">🍽️</span>
+        <span class="strand bio">Biology</span>
+      </div>
+      <div class="body">
+        <h2><a href="balanced-plate/index.html">Balanced Plate</a></h2>
+        <p class="codes">🚀 10 missions · 5Bp.01</p>
+        <p class="desc">Fill Sam's plate, pack a lunchbox, read food labels and feed the zoo.</p>
+        <div class="meta">
+          <span class="explore" aria-hidden="true">Explore ▶</span>
+          <a class="btn" href="practice/index.html#diet">✏️ Practise</a>
+        </div>
+      </div>
+    </li>
+
+    <li class="tile" style="--accent: var(--coral)">
+      <div class="head">
+        <div class="shot"><img src="hub/thumbs/adaptation-studio.jpg" alt="Designing a desert creature in Adaptation Studio"></div>
+        <span class="icon" aria-hidden="true">🦊</span>
+        <span class="strand bio">Biology</span>
+      </div>
+      <div class="body">
+        <h2><a href="adaptation-studio/index.html">Adaptation Studio</a></h2>
+        <p class="codes">🚀 11 missions · 5Be.01 · 5Be.03</p>
+        <p class="desc">Design a creature for the desert, the Arctic or the rainforest. Will it survive?</p>
+        <div class="meta">
+          <span class="explore" aria-hidden="true">Explore ▶</span>
+          <a class="btn" href="practice/index.html#adaptations">✏️ Practise</a>
+        </div>
+      </div>
+    </li>
+
+    <!-- Not taught yet: hidden from pupils. Add ?all to the address to see them. -->
+    <li class="tile" hidden style="--accent: var(--orange)">
+      <div class="head">
+        <div class="shot"><img src="hub/thumbs/forces-playground.jpg" alt="A parachute about to drop in Forces Playground"></div>
+        <span class="icon" aria-hidden="true">🛝</span>
+        <span class="strand phys">Physics</span>
+      </div>
+      <div class="body">
+        <h2><a href="forces-playground/index.html">Forces Playground</a></h2>
+        <p class="codes">🚀 8 missions · 5Pf.01–03</p>
+        <p class="desc">Draw force arrows, drop parachutes and test friction on a ramp.</p>
+        <div class="meta">
+          <span class="explore" aria-hidden="true">Explore ▶</span>
+          <a class="btn" href="practice/index.html#forces">✏️ Practise</a>
+        </div>
+      </div>
+    </li>
+
+    <li class="tile" hidden style="--accent: var(--purple)">
+      <div class="head">
+        <div class="shot"><img src="hub/thumbs/particle-playground.jpg" alt="Water particles spreading out as a gas in Particle Playground"></div>
+        <span class="icon" aria-hidden="true">🫧</span>
+        <span class="strand chem">Chemistry</span>
+      </div>
+      <div class="body">
+        <h2><a href="particle-playground/index.html">Particle Playground</a></h2>
+        <p class="codes">🚀 10 missions · 5Cm.01 · 5Cm.02 · 5Cc.01 · 5Cp.02</p>
+        <p class="desc">Heat it up, cool it down and watch the particles in solids, liquids and gases.</p>
+        <div class="meta">
+          <span class="explore" aria-hidden="true">Explore ▶</span>
+          <a class="btn" href="practice/index.html#particles">✏️ Practise</a>
+        </div>
+      </div>
+    </li>
+
+    <li class="tile" hidden style="--accent: #4aa8e8">
+      <div class="head">
+        <div class="shot"><img src="hub/thumbs/air-and-water.jpg" alt="100 particles of air, coloured by gas, in Air and Water"></div>
+        <span class="icon" aria-hidden="true">💨</span>
+        <span class="strand earth">Earth and space</span>
+      </div>
+      <div class="body">
+        <h2><a href="air-and-water/index.html">Air and Water</a></h2>
+        <p class="codes">🚀 12 missions · 5ESp.01–03 · 5Cm.02 · 5ESc.01</p>
+        <p class="desc">Count the gases in air, climb through the atmosphere and follow the water cycle.</p>
+        <div class="meta">
+          <span class="explore" aria-hidden="true">Explore ▶</span>
+          <a class="btn" href="practice/index.html#air-water">✏️ Practise</a>
+        </div>
+      </div>
+    </li>
+
+    <li class="tile" hidden style="--accent: var(--green)">
+      <div class="head">
+        <div class="shot"><img src="hub/thumbs/seed-lab.jpg" alt="Seeds falling under a tree and spreading far away in Seed Lab"></div>
+        <span class="icon" aria-hidden="true">🌱</span>
+        <span class="strand bio">Biology</span>
+      </div>
+      <div class="body">
+        <h2><a href="seed-lab/index.html">Seed Lab</a></h2>
+        <p class="codes">🚀 9 missions · 5Bp.03 · 5Bp.04</p>
+        <p class="desc">Plan a fair test with bean seeds and find out how seeds travel.</p>
+        <div class="meta">
+          <span class="explore" aria-hidden="true">Explore ▶</span>
+          <a class="btn" href="practice/index.html#seeds">✏️ Practise</a>
+        </div>
+      </div>
+    </li>
+
     <li class="tile practice" style="--accent: var(--yellow)">
       <div class="head">
         <div class="shot"><img src="hub/thumbs/practice.jpg" alt="The topic list in Science Practice"></div>
@@ -360,7 +366,7 @@
         <h2><a href="practice/index.html">Science Practice</a></h2>
         <p class="desc">Label, sort, match and order. Practise every topic and collect stars.</p>
         <div class="meta">
-          <span class="chip">⭐ 8 topics</span>
+          <span class="chip">⭐ 4 topics</span>
           <span class="explore" aria-hidden="true">Let's go ▶</span>
         </div>
       </div>
@@ -372,6 +378,12 @@
   <img src="hub/mascot.svg" alt="">
   <p><b>Cambridge International School Bratislava</b>Year 5 Science. Works on tablets and laptops.</p>
 </footer>
+
+<script>
+  // Teacher view: add ?all to the address to see the hidden tiles too
+  if (new URLSearchParams(location.search).has('all'))
+    document.querySelectorAll('.tile[hidden]').forEach(t => { t.hidden = false; t.classList.add('is-hidden'); });
+</script>
 
 </body>
 </html>
