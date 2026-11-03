@@ -188,6 +188,30 @@
   .win-text { font-size: 17.5px; line-height: 1.5; margin-bottom: 14px; }
   .confetti { position: fixed; top: -40px; font-size: 26px; z-index: 40; pointer-events: none; animation: fall linear forwards; }
   @keyframes fall { to { transform: translateY(110vh) rotate(540deg); } }
+  /* Big round close button on every pop-up */
+  .modal-box { position: relative; }
+  .modal-x {
+    position: sticky; top: 0; float: right; z-index: 2;
+    width: 52px; height: 52px; margin: -6px -6px 6px 12px; padding: 0;
+    border: 0; border-radius: 50%; cursor: pointer;
+    background: var(--coral); color: #fff; font-size: 26px; font-weight: 700; line-height: 1;
+    display: grid; place-items: center; box-shadow: 0 3px 0 rgba(0,0,0,.2);
+    transition: transform .08s, filter .15s;
+  }
+  .modal-x:hover { filter: brightness(1.08); }
+  .modal-x:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,.2); }
+  .modal-x:focus-visible { outline: 3px solid var(--yellow); outline-offset: 2px; }
+  /* Help pop-up for the current tab */
+  .help-sec { margin: 10px 0 4px; font-size: 17px; }
+  .help-q { font-size: 17.5px; margin: 0 0 4px; }
+  .help-steps { margin: 4px 0 8px; padding-left: 24px; line-height: 1.4; }
+  .help-steps li { margin: 3px 0; }
+  .teach { margin: 10px 0 14px; font-size: 13.5px; color: var(--muted); }
+  .teach summary { cursor: pointer; font-weight: 600; }
+  .teach p { margin: 6px 0; }
+  /* "The science" statements */
+  .science { background: #fff6d6; border: 3px solid var(--yellow); border-radius: 16px; padding: 10px 14px; margin: 8px 0; }
+  .science > b:first-child { display: block; font-size: 14px; text-transform: uppercase; letter-spacing: .04em; color: #8a5a00; margin-bottom: 2px; }
 
   /* ---------- Narrow screens: stage on top, drawer below ---------- */
   @media (max-width: 760px) {
@@ -214,7 +238,7 @@
   <div class="tabs" id="tabs"></div>
   <button class="btn missions" data-act="missions" title="Missions">🚀 <span class="long">Missions </span><span id="starCount"></span></button>
   <button class="btn" data-act="model" title="How is this model different from real life?">🤔<span class="long"> Real life?</span></button>
-  <button class="btn" id="helpBtn" data-act="view" data-view="help" aria-label="How to use">❓</button>
+  <button class="btn" id="helpBtn" data-act="help" aria-label="How to use">❓</button>
 </div>
 <main>
   <div id="stage"></div>
@@ -230,6 +254,7 @@
 </main>
 <div id="missionsModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="missionsTitle">
   <div class="modal-box">
+    <button class="modal-x" data-act="closeModals" aria-label="Close">✕</button>
     <h2 id="missionsTitle">🚀 Missions</h2>
     <div class="mission-list" id="missionList"></div>
     <div class="modal-actions"><button class="btn" data-act="resetStars">Reset stars</button><button class="btn primary" data-act="closeModals">Close</button></div>
@@ -237,29 +262,24 @@
 </div>
 <div id="modelModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modelTitle">
   <div class="modal-box">
+    <button class="modal-x" data-act="closeModals" aria-label="Close">✕</button>
     <h2 id="modelTitle">🤔 How is this model different from real life?</h2>
+    <p class="muted" id="modelTab" style="margin:0 0 6px"></p>
     <p style="margin-top:0">A <span class="term">model</span> shows some important features of something real – but not everything.</p>
-    <ul class="icons">
-      <li><span class="em">🔬</span><span>Real air particles are <b>far too small to see</b>, even with a microscope. One breath of air holds billions and billions of them, not 100 or 10,000.</span></li>
-      <li><span class="em">💨</span><span>Real air particles are <b>always moving</b> very fast, bumping into each other, with lots of <b>empty space</b> between them. Here they stand still in neat rows so that you can count them.</span></li>
-      <li><span class="em">🎨</span><span>Real particles have <b>no colours</b>. Air is see-through! The colours are only here to show which gas is which.</span></li>
-      <li><span class="em">💧</span><span>Real air also has some <b>water vapour</b> in it. The amount changes with the weather, so it isn't shown here. This is <b>dry</b> air.</span></li>
-      <li><span class="em">📏</span><span>In the <b>Not to scale</b> view of the layers, each layer is stretched or squashed so that they all fit, and the Earth is drawn much more curved than it really is. Switch to <b>To scale</b> to see how thin the lower layers really are, and how gently the real Earth curves.</span></li>
-      <li><span class="em">🌐</span><span>The layers have no sharp edges, and their heights change from place to place. The troposphere is about 16 km deep over the equator, but only about 8 km over the poles. The heights here are typical values.</span></li>
-      <li><span class="em">🌫️</span><span>The atmosphere has <b>no sharp top</b>: the air just gets thinner and thinner until it fades into space.</span></li>
-      <li><span class="em">🌡️</span><span>The temperatures are typical too. Real ones change with the place, the season and the Sun.</span></li>
-      <li><span class="em">🌧️</span><span>In the <b>water cycle</b> picture, real <b>water vapour</b> is invisible, so it is only shown by faint arrows. The real water cycle is much slower: water can stay in the sea, in ice or underground for a very long time.</span></li>
-      <li><span class="em">🥤</span><span>The <b>water cycle in a cup</b> is a model of a model! In a real cup, the drops take a few minutes to form. Ask an adult to pour the warm water.</span></li>
-      <li><span class="em">⛰️</span><span>The mountain, the clouds and the sea are <b>not to scale</b>. Real clouds can form anywhere that air rises and cools, and rain falls on the sea and the lowlands too. Plants also give off water vapour, which isn't shown.</span></li>
-      <li><span class="em">🧪</span><span>In <b>Is it pure?</b>, the amounts are for <b>1 litre</b> of each water. In a classroom you would only evaporate a small amount, so there would be much less left. Real amounts change from place to place, and from one brand of mineral water to another.</span></li>
-      <li><span class="em">🏰</span><span><b>Devín</b> is a real place, but the farm, factory and rubbish tip in the picture are <b>made up</b>. Real towns on the Danube have water treatment works and laws that limit pollution. Real pollution is often <b>invisible</b>, and fixing it takes time and money. Fixes reduce pollution a lot, but rarely stop all of it.</span></li>
-      <li><span class="em">📈</span><span>The numbers are rounded. The amount of <b>carbon dioxide</b> in the air is slowly going up, because people burn fuels like coal, oil and gas.</span></li>
-    </ul>
+    <ul class="icons" id="modelList"></ul>
     <div class="modal-actions"><button class="btn primary" data-act="closeModals">Got it!</button></div>
+  </div>
+</div>
+<div id="helpModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+  <div class="modal-box">
+    <button class="modal-x" data-act="closeModals" aria-label="Close">✕</button>
+    <div id="helpBody"></div>
+    <div class="modal-actions"><a class="btn" href="../practice/index.html#air-water">✏️ Practise this</a><button class="btn primary" data-act="closeModals">Let's go! 🚀</button></div>
   </div>
 </div>
 <div id="winModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="winTitle">
   <div class="modal-box">
+    <button class="modal-x" data-act="closeModals" aria-label="Close">✕</button>
     <div class="win-emoji">⭐</div>
     <h2 id="winTitle" style="text-align:center">Mission complete!</h2>
     <div class="win-text" id="winText"></div>
@@ -1210,6 +1230,94 @@ function stopMission() { state.mission = null; $('#banner').classList.add('hidde
 function fitBanner() { $('#drawer').style.paddingTop = state.mission == null ? '' : `${$('#banner').offsetHeight + 18}px`; }
 function updateStars() { $('#starCount').textContent = `${state.done.filter(id => MISSIONS.some(m => m.id === id)).length}/${MISSIONS.length} ⭐`; }
 function closeModals() { document.querySelectorAll('.modal').forEach(m => m.classList.add('hidden')); }
+
+// ================= Help and "Real life?" pop-ups, one per tab =================
+// Curriculum statements, shown to teachers inside each tab's help
+const LEARN = {
+  '5ESp.01': 'Know that the Earth is surrounded by a layer of air called the atmosphere, which is a mixture of different gases (including nitrogen, carbon dioxide and oxygen).',
+  '5Cm.02': 'Understand that substances can be gaseous and know the common gases at room temperature (limited to oxygen, carbon dioxide, water vapour, nitrogen and hydrogen).',
+  '5ESp.02': 'Understand that most water on Earth is not pure and has dissolved substances in it.',
+  '5ESp.03': 'Understand that pollution is the introduction of substances by humans that harm the environment and identify examples of pollution.',
+  '5SIC.05': 'Discuss how the use of science and technology can have positive and negative environmental effects on their local area.',
+  '5ESc.01': 'Describe the water cycle (limited to evaporation, condensation and precipitation).',
+  '5TWSm.01': 'Know that a model presents an object, process or idea in a way that shows some of the important features.'
+};
+// Help for each tab: [big question, steps, look out for, curriculum codes]
+const HELP = {
+  air: ['Which gas is there most of in the air?',
+    ['Predict which gas there is most of, and say why.', 'Count the 100 particles of each gas.', 'Check your counts and look at the bar chart.', 'Zoom out to 10,000 and hunt for <b>carbon dioxide</b>.'],
+    'Press <b>Sort them</b> to put the colours in neat rows.', ['5ESp.01', '5Cm.02']],
+  earth: ['What are the layers of air all around the Earth?',
+    ['Point at a layer, or tap it.', 'Read about what happens in that layer.', 'Explore all five layers.'],
+    'The layers are drawn much thicker than they really are.', ['5ESp.01']],
+  layers: ['How high is each layer, and how does the temperature change as you go up?',
+    ['Tap a layer to read about it.', 'Drag the 🌡️ up and down the graph.', 'Put the 9 things in the sky at the right height.', 'Press <b>Check</b>.'],
+    'Switch to <b>To scale</b> to see how thin the lower layers really are.', ['5ESp.01']],
+  water: ['How does water go round and round between the sea, the air and the land?',
+    ['<b>Step by step</b>: answer each "What happens next?" question.', '<b>Build it</b>: put the three key words in place.', '<b>Cup model</b>: make a water cycle in a cup.'],
+    'Try a ❄️ <b>Cold day</b> to see what falls on the mountain.', ['5ESc.01', '5TWSm.01']],
+  pure: ['Is clear water always <b>pure</b> water?',
+    ['Choose <b>Pure</b> or <b>Not pure</b> for each water.', 'Write why you think that.', 'Press <b>Evaporate</b> and look in the dishes.', 'Answer the questions.'],
+    '<b>Pure</b> water is only water, with nothing else in it.', ['5ESp.02']],
+  town: ['What is <b>pollution</b>, and how can science and technology help?',
+    ['<b>Spot the pollution</b>: tap each numbered circle.', 'Decide: is it pollution? Yes or no.', '<b>Make it better</b>: choose a fix for each place.', 'Watch the river and the air get cleaner.'],
+    'Check both parts of what <b>pollution</b> means.', ['5ESp.03', '5SIC.05']]
+};
+// Real life: how each tab's model is different, as [emoji, text]
+const PICS = ['🖼️', 'The pictures are simple drawings, <b>not to scale</b>.'];
+const REAL = {
+  air: [
+    ['🔬', 'Real air particles are <b>far too small to see</b>, even with a microscope. One breath of air holds billions and billions of them, not 100 or 10,000.'],
+    ['💨', 'Real air particles are <b>always moving</b> very fast, bumping into each other, with lots of <b>empty space</b> between them. Here they stand still in neat rows so that you can count them.'],
+    ['🎨', 'Real particles have <b>no colours</b>. Air is see-through! The colours are only here to show which gas is which.'],
+    ['💧', 'Real air also has some <b>water vapour</b> in it. The amount changes with the weather, so it isn\'t shown here. This is <b>dry</b> air.'],
+    ['📈', 'The numbers are rounded. The amount of <b>carbon dioxide</b> in the air is slowly going up, because people burn fuels like coal, oil and gas.']],
+  earth: [
+    ['📏', 'The layers are drawn much <b>thicker</b> than they really are, and the Earth is drawn much more curved than it really is. In <b>Heights and temperature</b>, switch to <b>To scale</b> to see how thin the lower layers really are.'],
+    ['🌐', 'The layers have no sharp edges, and their heights change from place to place. The troposphere is about 16 km deep over the equator, but only about 8 km over the poles.'],
+    ['🌫️', 'The atmosphere has <b>no sharp top</b>: the air just gets thinner and thinner until it fades into space.']],
+  layers: [
+    ['📏', 'In the <b>Not to scale</b> view, each layer is stretched or squashed so that they all fit. Switch to <b>To scale</b> to see how thin the lower layers really are.'],
+    ['🌐', 'The layers have no sharp edges, and their heights change from place to place. The troposphere is about 16 km deep over the equator, but only about 8 km over the poles. The heights here are typical values.'],
+    ['🌫️', 'The atmosphere has <b>no sharp top</b>: the air just gets thinner and thinner until it fades into space.'],
+    ['🌡️', 'The temperatures are typical too. Real ones change with the place, the season and the Sun.']],
+  water: [
+    ['🌧️', 'Real <b>water vapour</b> is invisible, so it is only shown by faint arrows. The real water cycle is much slower: water can stay in the sea, in ice or underground for a very long time.'],
+    ['⛰️', 'The mountain, the clouds and the sea are <b>not to scale</b>. Real clouds can form anywhere that air rises and cools, and rain falls on the sea and the lowlands too. Plants also give off water vapour, which isn\'t shown.'],
+    ['🥤', 'The <b>water cycle in a cup</b> is a model of a model! In a real cup, the drops take a few minutes to form. Ask an adult to pour the warm water.']],
+  pure: [
+    ['🧪', 'The amounts are for <b>1 litre</b> of each water. In a classroom you would only evaporate a small amount, so there would be much less left. Real amounts change from place to place, and from one brand of mineral water to another.'],
+    PICS],
+  town: [
+    ['🏰', '<b>Devín</b> is a real place, but the farm, factory and rubbish tip in the picture are <b>made up</b>. Real towns on the Danube have water treatment works and laws that limit pollution.'],
+    ['👀', 'Real pollution is often <b>invisible</b>, and fixing it takes time and money. Fixes reduce pollution a lot, but rarely stop all of it.'],
+    PICS]
+};
+const tabName = id => VIEWS[id].label.replace(/<[^>]+>/g, '');
+// Help pops up by itself the first time each tab is opened in this visit (#nohelp=1 turns that off)
+const helpSeen = new Set(), NOHELP = new URLSearchParams(location.hash.slice(1)).get('nohelp') === '1';
+function showHelp() {
+  const [q, steps, look, codes] = HELP[state.view];
+  $('#helpBody').innerHTML = `<h2 id="helpTitle">${tabName(state.view)}</h2>
+    ${helpSeen.size ? '' : '<p style="margin:0 0 6px"><b>Welcome to Air and Water! 👋</b></p>'}
+    <h3 class="help-sec">🔬 The big question</h3><p class="help-q">${q}</p>
+    <h3 class="help-sec">👆 What to do</h3><ol class="help-steps">${steps.map(t => `<li>${t}</li>`).join('')}</ol>
+    ${look ? `<h3 class="help-sec">💡 Look out for</h3><p style="margin:4px 0">${look}</p>` : ''}
+    <p style="margin:10px 0 0">🚀 Try the <b>Missions</b> to win stars!</p>
+    <details class="teach"><summary>For teachers</summary>${codes.map(c => `<p><b>${c}</b> ${LEARN[c]}</p>`).join('')}</details>`;
+  helpSeen.add(state.view);
+  $('#helpModal').classList.remove('hidden');
+}
+// Never on top of another pop-up: then it waits until the tab is next drawn
+function autoHelp() {
+  if (NOHELP || helpSeen.has(state.view) || document.querySelector('.modal:not(.hidden)')) return;
+  showHelp();
+}
+function showModel() {
+  $('#modelTab').textContent = tabName(state.view);
+  $('#modelList').innerHTML = REAL[state.view].map(([em, t]) => `<li><span class="em">${em}</span><span>${t}</span></li>`).join('');
+  $('#modelModal').classList.remove('hidden');
+}
 function confetti() {
   const em = ['⭐', '🌟', '💨', '🎈', '🎉'];
   for (let i = 0; i < 30; i++) {
@@ -1236,7 +1344,8 @@ const VIEWS = {
       if (a.level === 100) {
         const says = a.msg ? `<div class="card says${a.msg.ok ? ' good' : ''}"><h3>🔎 Check</h3>${a.msg.ok ? `<p>${a.msg.text}</p>` : `<ul>${a.msg.msgs.slice(0, 3).map(t => `<li>${t}</li>`).join('')}</ul>`}</div>` : '';
         const intro = `<div class="card"><h2>What is air?</h2>
-          <p>Air is a <b>mixture</b> of different gases. The picture zooms in on <b>100 particles</b> of air. Each dot is one particle, and each colour is a different gas.</p></div>`;
+          <p>Air is a <b>mixture</b> of different gases. The picture zooms in on <b>100 particles</b> of air. Each dot is one particle, and each colour is a different gas.</p>
+          ${a.counted ? '<div class="science"><b>🔬 The science</b>Most of the air is <b>nitrogen</b>. Next comes <b>oxygen</b>.</div>' : a.predSaved ? '<p><b>🔬 Which gas is there most of in the air?</b> Count them to find out.</p>' : ''}</div>`;
         if (!a.predSaved) return `${intro}
           <div class="card"><h3>🤔 Predict first</h3>
             <p>Which gas do you think there is <b>most</b> of in air?</p>
@@ -1248,12 +1357,11 @@ const VIEWS = {
           <input class="numin${a.counted ? ' ok' : ''}" id="c-${g}" data-g="${g}" type="number" inputmode="numeric" min="0" max="100" value="${a.counts[g]}"${a.counted ? ' readonly' : ''}></div>`).join('');
         const result = a.counted ? `
           <div class="card"><h3>📊 Air in 100 particles</h3>${AIR.barChart()}
-            <p>Most of the air is <b>nitrogen</b>. Next comes <b>oxygen</b>.</p>
             <p class="spot">You predicted <b>${PRED[a.pred].toLowerCase()}</b>. ${a.pred === 'n' ? 'You were right!' : 'Lots of people think that, but there is much more nitrogen!'}${a.reason ? `<br><span class="muted">Your reason: “${esc(a.reason)}”</span>` : ''}</p></div>
           <div class="card"><h3>❓ Where is the carbon dioxide?</h3>
             <p>Carbon dioxide is in air too, but there is so little that 100 particles isn't enough to find any. It is hiding in the 1 for "other gases".</p>
             <div class="navrow"><button class="btn go" data-act="alevel" data-l="10000">🔍 Zoom out to 10,000</button></div></div>` : '';
-        return `${says}${intro}
+        return `${intro}${says}
           <div class="card"><h3>🔢 Count the particles</h3>
             <p>How many particles of each gas are there? Type your answers.</p>${rows}${arrangeRow}</div>
           ${a.counted ? '' : '<div class="checkbar"><button class="btn go" data-act="acheck">✔ Check my counts</button></div>'}
@@ -1277,7 +1385,8 @@ const VIEWS = {
           <p>Now there are <b>10,000</b> particles. Carbon dioxide is the <b>dark</b> colour. There are only <b>4</b>!</p>
           <p>Tap or drag on the big grid to move the <b>close-up</b>. Then tap the carbon dioxide particle in the close-up.</p>
           <p class="found" aria-label="${a.found.length} of 4 found">${stars}</p>
-          <p class="muted">${a.found.length} of 4 found${a.sorted ? ' (sorted, so they are all at the end!)' : ''}</p>${arrangeRow}</div>
+          <p class="muted">${a.found.length} of 4 found${a.sorted ? ' (sorted, so they are all at the end!)' : ''}</p>${arrangeRow}
+          ${a.pct ? '<div class="science"><b>🔬 The science</b>Air is a mixture of gases: about <b>78% nitrogen</b> and <b>21% oxygen</b>. There is only a tiny amount of <b>carbon dioxide</b>: 0.04%.</div>' : ''}</div>
         ${quiz}${table}${zoom}`;
     }
   },
@@ -1287,7 +1396,7 @@ const VIEWS = {
     drawer() {
       const e = state.earth, L = LAYERS.find(x => x.id === e.sel);
       return `<div class="card"><h2>Layers of the atmosphere</h2>
-          <p>The <b>atmosphere</b> is the layer of air all around the Earth. It has <b>five</b> layers.</p>
+          <div class="science"><b>🔬 The science</b>The <b>atmosphere</b> is the layer of air all around the Earth. It has <b>five</b> layers.</div>
           <p>Point at a layer in the picture, or tap it, to find out about it. You can use these buttons too.</p>
           <div class="stops layerbtns" style="margin-top:6px">${LAYERS.map(x => `<button class="opt${x.id === e.sel ? ' on' : ''}" data-act="elayer" data-l="${x.id}">${x.name}${e.seen.includes(x.id) ? ' <span class="tick">✔</span>' : ''}</button>`).join('')}</div>
           <p class="muted">You have explored ${e.seen.length} of 5 layers.</p></div>
@@ -1304,11 +1413,12 @@ const VIEWS = {
       const says = s.said ? `<div class="card says${s.said.ok ? ' good' : ''}"><h3>🔎 Check</h3>${s.said.ok ? `<p>${s.said.text}</p>` : `<ul>${s.said.msgs.slice(0, 3).map(t => `<li>${t}</li>`).join('')}</ul>`}</div>` : '';
       const chips = SKYORDER.map(id => `<button class="chip${s.chip === id ? ' sel' : s.placed[id] != null ? ' on' : ''}" data-kind="sky" data-id="${id}"><span class="em">${picHTML(SKY[id][0])}</span>${SKY[id][1]}</button>`).join('');
       const placed = Object.keys(s.placed).length;
-      return `${says}
-        <div class="card"><h2>Layers of the atmosphere</h2>
+      return `<div class="card"><h2>Heights and temperature</h2>
+          <div class="science"><b>🔬 The science</b>The <b>atmosphere</b> has five layers, one above the other. As you go up, the <b>temperature</b> changes in a different way in each layer.</div>
           <p>Here the five layers are stacked up from the ground. Drag the 🌡️ up and down the graph to see the temperature.</p>
           <div class="stops"><button class="opt${s.scale ? '' : ' on'}" data-act="lscale" data-v="0">↕ Not to scale</button><button class="opt${s.scale ? ' on' : ''}" data-act="lscale" data-v="1">📏 To scale</button></div>
           ${s.scale ? '<p class="muted">To scale, the troposphere is a very thin strip at the bottom, even though almost all the air and all the weather are in it!</p>' : ''}</div>
+        ${says}
         <div class="card"><div class="stops layerbtns">${LAYERS.map(x => `<button class="opt${x.id === s.sel ? ' on' : ''}" data-act="llayer" data-l="${x.id}">${x.name}</button>`).join('')}</div>
           <h3 style="margin-top:8px">${L.name}: ${L.id === 'exo' ? 'from about 600 km up' : `${L.lo} to about ${fmt(L.hi)} km up`}</h3>
           <p>🌡️ ${L.trend}</p><ul class="facts">${L.facts.map(f => `<li>${f}</li>`).join('')}</ul></div>
@@ -1347,7 +1457,7 @@ const VIEWS = {
             <div class="navrow" style="margin-top:8px"><button class="btn" data-act="wideas"${both ? '' : ' disabled'}>💡 Show some ideas</button><button class="btn" data-act="wrestart">↺ Start again</button></div>
             ${a.ideas ? `<p style="margin-top:8px"><b>It shows well:</b></p><ul class="facts"><li>Evaporation, condensation and precipitation, in the right order.</li><li>Warmth makes water evaporate, and cold makes water vapour condense.</li><li>The same water goes round and round.</li></ul>
               <p><b>It is different because:</b></p><ul class="facts"><li>It is much smaller and faster.</li><li>The warmth comes from warm water, not from the Sun.</li><li>The drops fall back into the same place. There is no land, no rivers and no wind.</li><li>The cup is closed, but the real atmosphere is open.</li></ul>` : ''}</div>`;
-        return `${step}${model}${sofar}${top}`;
+        return `${top}${step}${model}${sofar}`;
       }
       if (a.mode === 'step') {
         const S = WC.STEPS[a.step];
@@ -1355,12 +1465,12 @@ const VIEWS = {
         const ask = S ? `<div class="card says wq"><h3>${a.step + 1} of 4: What happens next?</h3><p>${S.q}</p>
             ${S.opts.map((t, k) => `<button class="opt${a.wrong.includes(k) ? ' wrong' : ''}" data-act="wans" data-k="${k}"${a.wrong.includes(k) ? ' disabled' : ''}>${t.replace(/<\/?b>/g, '')}</button>`).join('')}
             ${a.wrong.length ? `<p class="spot">💡 Not quite. ${S.hint}</p>` : ''}</div>`
-          : `<div class="card says good"><h3>🔄 Round and round!</h3><p>That is the water cycle. It never stops: the same water goes round again and again.</p><div class="navrow"><button class="btn" data-act="wrestart">↺ Start again</button></div></div>`;
-        return `${ask}${top}${done ? `<div class="card"><h3>So far</h3><ul class="wdone">${done}</ul></div>` : ''}`;
+          : `<div class="card says good"><h3>🔄 Round and round!</h3><div class="science"><b>🔬 The science</b>Water <b>evaporates</b> from the sea, <b>condenses</b> into clouds and falls as <b>precipitation</b>. Then it goes round again and again.</div><div class="navrow"><button class="btn" data-act="wrestart">↺ Start again</button></div></div>`;
+        return `${top}${ask}${done ? `<div class="card"><h3>So far</h3><ul class="wdone">${done}</ul></div>` : ''}`;
       }
       const left = Object.keys(WC.WORDS).filter(id => !Object.values(a.placed).includes(id));
-      const says = a.said ? `<div class="card says${a.said.ok ? ' good' : ''}"><h3>${a.said.ok ? '🎉 Well done!' : '🔎 Not quite'}</h3><p>${a.said.text}</p></div>` : '';
-      return `${says}${top}
+      const says = a.said ? `<div class="card says${a.said.ok ? ' good' : ''}"><h3>${a.said.ok ? '🎉 Well done!' : '🔎 Not quite'}</h3>${a.said.ok ? `<div class="science"><b>🔬 The science</b>${a.said.text}</div>` : `<p>${a.said.text}</p>`}</div>` : '';
+      return `${top}${says}
         <div class="card"><h3>🧩 Put the key words in place</h3>
           <p class="muted">Drag each word to a space on the picture. Or tap a word, then tap a space.</p>
           ${left.length ? `<div class="stops">${left.map(id => `<button class="chip${a.chip === id ? ' sel' : ''}" data-kind="wword" data-id="${id}" style="min-height:44px;padding:4px 12px;font-size:15px">${WC.WORDS[id][0]}</button>`).join('')}</div>` : '<p class="job">🎉 All three are in place!</p>'}
@@ -1386,10 +1496,10 @@ const VIEWS = {
         ${u.wrong[i] && !u.ans[i] ? `<p class="spot">💡 ${Q.hint}</p>` : ''}</div>`).join('');
       const finished = PU.QUESTIONS.every((_, i) => u.ans[i]);
       const right = PU.ORDER.filter(id => u.pred[id] === PU.SAMPLES[id][5]).length;
-      return `${finished ? `<div class="card says good"><h3>🌍 What did you find out?</h3>
-          <p><b>Most water on Earth is not pure.</b> It has substances <b>dissolved</b> in it, even when it looks clear.</p>
+      return `${finished ? `<div class="card says good"><h2>Is it pure?</h2>
+          <div class="science"><b>🔬 The science</b>Most water on Earth is <b>not pure</b>. It has substances <b>dissolved</b> in it, even when it looks clear.</div>
           <p>Rain is nearly pure because it comes from water that <b>evaporated</b>: when water evaporates, the dissolved substances are left behind, just like in the dishes.</p></div>` : ''}
-        <div class="card says${finished ? '' : ' wq'}"><h3>❓ What do the dishes show?</h3>${qs}</div>
+        <div class="card says${finished ? '' : ' wq'}">${finished ? '' : '<h2>Is it pure?</h2>'}<h3>❓ What do the dishes show?</h3>${qs}</div>
         <div class="card"><h3>📋 What was left from 1 litre</h3>
           <table class="gtable ptable"><tr><th>Water</th><th>Left behind</th><th>You said</th></tr>
           ${PU.ORDER.map(id => { const S = PU.SAMPLES[id], p = u.pred[id]; return `<tr><td>${S[0]}</td><td>${S[3]}</td><td>${p ? 'pure' : 'not pure'} ${p === S[5] ? '✅' : '❌'}</td></tr>`; }).join('')}</table>
@@ -1405,6 +1515,7 @@ const VIEWS = {
       const t = state.town, P = RT.PLACES;
       const top = `<div class="card"><h2>Devín, on the Danube</h2>
           <p><b>Devín</b> is by the <b>River Danube</b>, in Slovakia, under its castle. The farm, factory and rubbish tip in this picture are <b>made up</b>.</p>
+          <p><b>🔬 What is pollution, and how can science and technology help?</b></p>
           <div class="stops"><button class="opt${t.mode === 'spot' ? ' on' : ''}" data-act="tmode2" data-m="spot">🔍 Spot the pollution</button><button class="opt${t.mode === 'fix' ? ' on' : ''}" data-act="tmode2" data-m="fix">🛠️ Make it better</button></div></div>`;
       const defn = `<div class="card"><h3>📖 What is pollution?</h3>
           <p><b>Pollution</b> is when <b>harmful substances</b> are added to the environment <b>by humans</b>.</p>
@@ -1417,45 +1528,20 @@ const VIEWS = {
               : `<p><b>Is this pollution?</b></p><div class="navrow"><button class="btn" data-act="tans" data-v="1">✅ Yes</button><button class="btn" data-act="tans" data-v="0">❌ No</button></div>
                  ${t.wrong[t.open] ? `<p class="spot">💡 Not quite. Check both parts: 1. Was it caused by <b>humans</b>? 2. Does it <b>contaminate</b> the environment: make the air, water or land dirty and harmful?</p>` : ''}`}</div>`
           : `<div class="card says"><h3>👆 Tap a numbered circle</h3><p>Look at each place in the town. Is it causing <b>pollution</b>?</p></div>`;
-        return `${ask}${defn}${top}<div class="card"><p class="muted">You have looked at ${found} of 6 places.</p>
+        return `${top}${ask}${defn}<div class="card"><p class="muted">You have looked at ${found} of 6 places.</p>
           ${found === 6 ? '<p class="job">🎉 You found all 5 kinds of pollution, and spotted that the falling leaves are natural. Now try <b>Make it better</b>!</p>' : ''}</div>`;
       }
       const ids = RT.ORDER.filter(id => P[id].pol), n = ids.filter(id => t.fixed[id]).length;
-      return `${n === ids.length ? `<div class="card says good"><h3>🌍 Science and technology: good and bad</h3>
+      return `${top}${n === ids.length ? `<div class="card says good"><h3>🌍 Science and technology: good and bad</h3>
+          <div class="science"><b>🔬 The science</b>Science and technology can have <b>good</b> and <b>bad</b> effects on our local area.</div>
           <p>Some science and technology <b>caused</b> the pollution: the factory, the cars and lorries, and farm chemicals.</p>
-          <p>Other science and technology <b>helped</b>: filters, water treatment, electric buses and recycling.</p>
-          <p>Science and technology can have <b>good</b> and <b>bad</b> effects on our local area.</p></div>` : ''}
-        ${top}${defn}
+          <p>Other science and technology <b>helped</b>: filters, water treatment, electric buses and recycling.</p></div>` : ''}
+        ${defn}
         <div class="card"><h3>🛠️ Use science and technology to help</h3><p class="muted">Choose what to do in each place. Watch the river and the air.</p>
           ${ids.map(id => { const [em, what, how] = P[id].fix; return `<div class="fixrow"><span class="em">${em}</span><div><b>${P[id].name}</b><br>${what}
             ${t.fixed[id] ? `<p class="muted" style="margin:4px 0 0">✔ ${how}</p>` : ''}
             <div><button class="btn${t.fixed[id] ? ' active' : ''}" data-act="tfix" data-id="${id}">${t.fixed[id] ? '✔ Done (tap to undo)' : 'Do it'}</button></div></div></div>`; }).join('')}
           <p class="muted">${n} of ${ids.length} done.</p></div>`;
-    }
-  },
-  help: {
-    label: 'Help',
-    stage: () => AIR.stage(),
-    after: () => AIR.drawLens(),
-    drawer() {
-      return `<div class="card"><h2>Help</h2>
-        <p><b>🫧 What is air?</b>: predict which gas there is most of, count 100 particles of air and make a bar chart. Then zoom out to 10,000 particles and hunt for carbon dioxide.</p>
-        <p><b>🌍 Around the Earth</b>: see the five layers of the atmosphere all around the Earth. Point at a layer, or tap it, to read about it.</p>
-        <p><b>🌡️ Heights and temperature</b>: explore the five layers of the atmosphere. Read about each one, watch the temperature change as you move the thermometer, and put things in the sky at the right height. Switch between <b>Not to scale</b> and <b>To scale</b>.</p>
-        <p><b>🌧️ Water cycle</b>: go through the water cycle step by step, answering "What happens next?". Then build it yourself by putting the key words in the right places, and make a model of it in a cup.</p>
-        <p><b>🧪 Is it pure?</b>: predict which kinds of water are pure, then evaporate them and see what is left behind.</p>
-        <p><b>🏰 Devín</b>: spot the pollution in Devín, by the River Danube, then use science and technology to clean it up.</p>
-        <p><b>🚀 Missions</b>: challenges to try. Win a star for each one!</p>
-        <p><b>🤔 Real life?</b>: how this model is different from real air.</p></div>
-        <div class="card"><h3>🎯 What you are learning</h3>
-          <p><b>5ESp.01</b> Know that the Earth is surrounded by a layer of air called the atmosphere, which is a mixture of different gases (including nitrogen, carbon dioxide and oxygen).</p>
-          <p><b>5Cm.02</b> Understand that substances can be gaseous and know the common gases at room temperature (limited to oxygen, carbon dioxide, water vapour, nitrogen and hydrogen).</p>
-          <p><b>5ESp.02</b> Understand that most water on Earth is not pure and has dissolved substances in it.</p>
-          <p><b>5ESp.03</b> Understand that pollution is the introduction of substances by humans that harm the environment and identify examples of pollution.</p>
-          <p><b>5SIC.05</b> Discuss how the use of science and technology can have positive and negative environmental effects on their local area.</p>
-          <p><b>5ESc.01</b> Describe the water cycle (limited to evaporation, condensation and precipitation).</p>
-          <p class="muted"><b>Also:</b> <b>5TWSm.01</b> Know that a model presents an object, process or idea in a way that shows some of the important features.</p></div>
-        <div class="navrow"><a class="btn go" href="../practice/index.html#air-water">✏️ Practise this</a></div>`;
     }
   }
 };
@@ -1464,9 +1550,7 @@ const esc = s => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&
 function renderStage() { const v = VIEWS[state.view]; $('#stage').innerHTML = v.stage(); if (v.after) v.after(); }
 function render() {
   const v = VIEWS[state.view];
-  // Help is the ❓ button at the end of the top bar, like the other tools, so it isn't one of the tabs
-  $('#helpBtn').classList.toggle('active', state.view === 'help');
-  $('#tabs').innerHTML = Object.entries(VIEWS).filter(([id]) => id !== 'help').map(([id, x]) =>
+  $('#tabs').innerHTML = Object.entries(VIEWS).map(([id, x]) =>
     `<button class="btn${id === state.view ? ' active' : ''}" data-act="view" data-view="${id}" aria-label="${x.label.replace(/<[^>]+>/g, '').replace(/^\S+ /, '')}">${x.label}</button>`).join('');
   const keep = $('#drawer').scrollTop, same = render.last === state.view;
   $('#drawer').innerHTML = v.drawer();
@@ -1475,6 +1559,7 @@ function render() {
   if (same) $('#drawer').scrollTop = keep;
   render.last = state.view;
   fitBanner();
+  autoHelp();
 }
 
 // ================= Actions =================
@@ -1521,7 +1606,8 @@ const ACTIONS = {
   },
   resetStars() { state.done = []; store.set('aw-done', []); updateStars(); ACTIONS.missions(); },
   closeModals() { closeModals(); },
-  model() { $('#modelModal').classList.remove('hidden'); }
+  model() { showModel(); },
+  help() { showHelp(); }
 };
 document.addEventListener('click', e => {
   const el = e.target.closest('[data-act]');
@@ -1621,7 +1707,7 @@ addEventListener('resize', () => { fitBanner(); clearTimeout(resizeT); resizeT =
 
 // ================= Start =================
 // Test hooks: #level=10000&sorted=1&pred=o&counted=1&found=0,1,2,3&pct=0.04&lens=40,40&seed=5&wrong=4 sets up the air grid;
-// #view=help opens help; #mission=1 starts a mission
+// #mission=1 starts a mission; #nohelp=1 stops the help popping up by itself
 const hp = new URLSearchParams(location.hash.slice(1));
 if (VIEWS[hp.get('view')]) state.view = hp.get('view');
 {

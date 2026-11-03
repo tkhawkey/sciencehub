@@ -188,6 +188,31 @@
   .modal-actions { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
   #toast { position: fixed; left: 50%; top: 70px; transform: translateX(-50%); background: rgba(10,20,60,.92); color: #fff; padding: 9px 16px; border-radius: 14px; opacity: 0; transition: opacity .3s; pointer-events: none; z-index: 30; }
   #toast.show { opacity: 1; }
+  .modal-box { position: relative; }
+  .modal-x {
+    position: sticky; top: 0; float: right; z-index: 2;
+    width: 52px; height: 52px; margin: -6px -6px 6px 12px; padding: 0;
+    border: 0; border-radius: 50%; cursor: pointer;
+    background: var(--coral); color: #fff; font-size: 26px; font-weight: 700; line-height: 1;
+    display: grid; place-items: center; box-shadow: 0 3px 0 rgba(0,0,0,.2);
+    transition: transform .08s, filter .15s;
+  }
+  .modal-x:hover { filter: brightness(1.08); }
+  .modal-x:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,.2); }
+  .modal-x:focus-visible { outline: 3px solid var(--yellow); outline-offset: 2px; }
+  .science { background: #fff6d6; border: 3px solid var(--yellow); border-radius: 16px; padding: 10px 14px; margin: 8px 0; }
+  .science > b:first-child { display: block; font-size: 14px; text-transform: uppercase; letter-spacing: .04em; color: #8a5a00; margin-bottom: 2px; }
+  /* Per-tab help pop-up */
+  .help-sec { margin: 10px 0; font-size: 16.5px; line-height: 1.45; }
+  .help-sec h3 { margin: 0 0 4px; font-size: 17px; }
+  .help-sec p { margin: 0; }
+  .help-sec ol { margin: 0; padding-left: 24px; }
+  .help-sec ol li { padding: 2px 0; }
+  .help-welcome { margin: 0 0 4px; font-weight: 600; color: var(--blue); }
+  .help-sub { margin: -4px 0 8px; color: var(--muted); font-weight: 600; }
+  details.teachers { margin: 12px 0; font-size: 13.5px; color: var(--muted); }
+  details.teachers summary { cursor: pointer; font-weight: 600; }
+  details.teachers p { margin: 4px 0; }
   .confetti { position: fixed; top: -40px; font-size: 26px; z-index: 40; pointer-events: none; animation: fall linear forwards; }
   @keyframes fall { to { transform: translateY(110vh) rotate(540deg); } }
 
@@ -257,40 +282,24 @@
 
 <div id="helpModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
   <div class="modal-box">
-    <h2 id="helpTitle">🦊 Welcome to Adaptation Studio!</h2>
-    <p style="margin-top:0">Animals and plants are <span class="term">adapted</span> to their <span class="term">habitat</span>: they have features that help them live there.</p>
-    <ul class="icons">
-      <li><span class="em">🌍</span><span><b>Habitats:</b> tap the circles on real animals and plants.</span></li>
-      <li><span class="em">🛠️</span><span><b>Design:</b> build a creature and watch the gauges.</span></li>
-      <li><span class="em">🌡️</span><span><b>Gauges</b> show how the creature is coping. Tap a gauge to see why.</span></li>
-      <li><span class="em">🚚</span><span><b>Move it:</b> predict, then move a living thing to a new habitat.</span></li>
-      <li><span class="em">👀</span><span><b>Eyes</b> and <b>Camouflage:</b> predators and prey.</span></li>
-      <li><span class="em">🔄</span><span>Drag the 3D creature to turn it round. Pinch or scroll to zoom.</span></li>
-    </ul>
-    <div class="objectives"><h3>🎯 What you are learning</h3>
-      <p><b>5Be.01</b> Describe how plants and animals are adapted to environments that are hot, cold, wet and/or dry.</p>
-      <p><b>5Be.03</b> Describe the common adaptations of predator and prey animals.</p>
-      <p class="muted"><b>Also:</b> <b>5TWSm.01</b> Know that a model presents an object, process or idea in a way that shows some of the important features.</p></div>
-    <div class="modal-actions"><a class="btn" href="../practice/index.html#adaptations">✏️ Practise this</a><button class="btn primary" data-act="close-modal">Let's explore! 🚀</button></div>
+    <button class="modal-x" data-act="close-modal" aria-label="Close">✕</button>
+    <div id="helpBody"></div>
+    <div class="modal-actions"><a class="btn" href="../practice/index.html#adaptations">✏️ Practise this</a><button class="btn primary" data-act="close-modal">Let's go! 🚀</button></div>
   </div>
 </div>
 <div id="modelModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modelTitle">
   <div class="modal-box">
+    <button class="modal-x" data-act="close-modal" aria-label="Close">✕</button>
     <h2 id="modelTitle">🤔 How is this model different from real life?</h2>
+    <p class="help-sub" id="modelTab"></p>
     <p style="margin-top:0">A <span class="term">model</span> shows some important features of something real – but not everything.</p>
-    <ul class="icons">
-      <li><span class="em">🧸</span><span>The 3D creature is a toy-like model. Real animals have many more features that work together.</span></li>
-      <li><span class="em">🌡️</span><span>The gauges are simple. In real life, how much a feature helps depends on the season, the weather and what the animal is doing.</span></li>
-      <li><span class="em">🚚</span><span>In <b>Move it</b>, the animal's body does <b>not</b> change. We only look at which features would stop helping.</span></li>
-      <li><span class="em">🏜️</span><span>Real habitats vary. Not every desert is sandy, and some are cold in winter.</span></li>
-      <li><span class="em">🍽️</span><span>Surviving also depends on food, shelter and other animals. The model only looks at body features.</span></li>
-      <li><span class="em">👀</span><span>Real animals see in different ways. Many hunt using smell or hearing too.</span></li>
-    </ul>
+    <ul class="icons" id="modelList"></ul>
     <div class="modal-actions"><button class="btn primary" data-act="close-modal">Got it!</button></div>
   </div>
 </div>
 <div id="missionsModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="missionsTitle">
   <div class="modal-box">
+    <button class="modal-x" data-act="close-modal" aria-label="Close">✕</button>
     <h2 id="missionsTitle">🚀 Missions</h2>
     <div class="mission-list" id="missionList"></div>
     <div class="modal-actions"><button class="btn small" data-act="reset-stars">Reset stars</button><button class="btn primary" data-act="close-modal">Close</button></div>
@@ -298,6 +307,7 @@
 </div>
 <div id="winModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="winTitle">
   <div class="modal-box">
+    <button class="modal-x" data-act="close-modal" aria-label="Close">✕</button>
     <div class="win-emoji">⭐</div>
     <h2 id="winTitle" style="text-align:center">Mission complete!</h2>
     <div class="win-text" id="winText"></div>
@@ -1291,6 +1301,7 @@ function render() {
   if (PP_VIEWS.includes(state.view)) state.ppLast = state.view;
   ({ habitats: viewHabitats, design: viewDesign, move: viewMove, faceoff: viewFaceoff, hunt: viewHunt, eyes: viewEyes, camo: viewCamo })[state.view]();
   if (afterRender) afterRender();
+  maybeAutoHelp();
 }
 
 // ---------- 1. Habitat explorer (photos) ----------
@@ -1306,7 +1317,7 @@ function viewHabitats() {
       const n = o.features.filter(f => state.seen.has(`${o.id}:${f.id}`)).length;
       return `<button class="thumb" data-act="org" data-id="${o.id}"><img src="photos/${o.photo}" alt="" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'em',textContent:'${o.em}'}))"><span>${esc(o.name)}</span><small>${n ? `✓ ${n} of ${o.features.length}` : `${o.features.length} features`}</small></button>`;
     }).join('')}</div>`;
-    $('#drawer').innerHTML = `<div class="card"><h2>${HABITATS[h].icon} ${HABITATS[h].name}</h2>${HABITATS[h].facts.map(f => `<p>${f}</p>`).join('')}</div>
+    $('#drawer').innerHTML = `<div class="card"><h2>${HABITATS[h].icon} ${HABITATS[h].name}</h2><div class="science"><b>🔬 The science</b>Living things are <span class="term">adapted</span> to their <span class="term">habitat</span>. They have features that help them live there.</div>${HABITATS[h].facts.map(f => `<p>${f}</p>`).join('')}</div>
       <div class="card"><p>Tap a living thing. Each one is <span class="term">adapted</span> to ${HABITATS[h].the}.</p></div>`;
     return;
   }
@@ -1346,7 +1357,7 @@ function viewDesign() {
   showLiving(kind, t, D.hab);
   const traits = TRAITS[kind];
   $('#tray').innerHTML = traits.map(tr => { const [st] = traitStatus(kind, tr.key, t[tr.key], D.hab); return `<button class="chip ${st}" data-act="dchip" data-k="${tr.key}">${tr.icon} ${tr.options[t[tr.key]].label}<small>${STATUS[st].icon} ${tr.name}</small></button>`; }).join('');
-  $('#drawer').innerHTML = `<div class="card"><div class="opts"><button class="opt ${kind === 'animal' ? 'on' : ''}" data-act="dkind" data-kind="animal">🦊 Animal</button><button class="opt ${kind === 'plant' ? 'on' : ''}" data-act="dkind" data-kind="plant">🌱 Plant</button></div></div>
+  $('#drawer').innerHTML = `<div class="card"><h2>🛠️ Design a survivor</h2><div class="science"><b>🔬 The science</b>Each habitat needs different features. A feature that helps in one habitat can be a problem in another.</div><div class="opts"><button class="opt ${kind === 'animal' ? 'on' : ''}" data-act="dkind" data-kind="animal">🦊 Animal</button><button class="opt ${kind === 'plant' ? 'on' : ''}" data-act="dkind" data-kind="plant">🌱 Plant</button></div></div>
     <div class="card">${traits.map(tr => `<div class="gname">${tr.icon} ${tr.name}</div><div class="opts">${Object.entries(tr.options).map(([k, o]) => `<button class="opt ${t[tr.key] === k ? 'on' : ''}" data-act="dopt" data-key="${tr.key}" data-val="${k}">${o.label}</button>`).join('')}</div>`).join('')}</div>
     <div class="card"><p style="margin-top:0" class="muted">Watch the gauges change. Tap a gauge to see why.</p><button class="btn primary" data-act="dsave" style="width:100%">🚚 Move my design to a new habitat</button></div>`;
   checkDesignMission();
@@ -1385,7 +1396,7 @@ function viewMove() {
   if (!org) {
     setStage({ mode: 'flat' }); $('#flat').classList.add('full');
     $('#flat').innerHTML = `<div class="nophoto"><div class="em">🚚</div><p><b>Move a living thing to a new habitat.</b></p><p class="muted">Choose one, predict what will happen, then move it!</p></div>`;
-    $('#drawer').innerHTML = chooser;
+    $('#drawer').innerHTML = `<div class="card"><h2>🚚 Move it</h2><p>Will its features still help in a new <b>habitat</b>?</p></div>` + chooser;
     return;
   }
   const hab = M.result ? M.to : org.home;
@@ -1399,6 +1410,7 @@ function viewMove() {
     const sub = r ? `<span class="res">${r.correct ? '✔' : '✘'} ${r.now[0] === 'help' ? 'Still helps' : 'Stops helping'}</span>` : p ? (p === 'help' ? '👍 You: still helps' : '👎 You: stops helping') : 'Predict →';
     return `<button class="chip ${cls}" data-act="mchipfeat" data-id="${f.id}">${esc(f.label)}<small>${sub}</small></button>`;
   }).join('');
+  const top = `<div class="card"><h2>🚚 Move it</h2><p>Will its features still help in a new <b>habitat</b>?</p></div>`;
   let side = '';
   if (!M.to) side = `<div class="card"><h3>2. Where will it go?</h3><div class="opts">${HAB_ORDER.map(h => `<button class="opt" data-act="mto" data-hab="${h}" ${h === org.home ? 'disabled' : ''}>${HABITATS[h].icon} ${HABITATS[h].name}</button>`).join('')}</div></div>`;
   else if (!M.result) {
@@ -1414,12 +1426,12 @@ function viewMove() {
     side = `<div class="card"><h3>Results ${HABITATS[M.to].icon}</h3><p class="score">${right} of ${M.result.length} predictions right</p>
       ${M.chips.length || M.reason ? `<p class="note"><b>Your reasons:</b> ${esc([...M.chips.map(i => REASONS[i]), M.reason].filter(Boolean).join(' · '))}</p>` : ''}
       <p class="muted">Tap a feature below, or a gauge, to see why.</p></div>
+      <div class="science"><b>🔬 The science</b>The ${esc(org.name.toLowerCase())}'s body does <b>not</b> change. It is <b>adapted</b> to ${HABITATS[org.home].the}, so some features may stop helping somewhere else.</div>
       <div class="card"><h3>How close was your prediction?</h3><div class="opts">${['🎯 Spot on', '👌 Quite close', '🤏 Not very close'].map((t, i) => `<button class="opt ${M.rating === i ? 'on' : ''}" data-act="mrate" data-i="${i}">${t}</button>`).join('')}</div>
       ${M.rating !== null ? `<p>${['Brilliant – you used what you know about habitats!', 'Good thinking! Check the ones marked ✘.', 'That\'s fine – scientists often get surprises. Check the ones marked ✘.'][M.rating]}</p>` : ''}</div>
-      <div class="note">🧠 The ${esc(org.name.toLowerCase())}'s body does <b>not</b> change. It is adapted to ${HABITATS[org.home].the}.</div>
       <button class="btn" data-act="mreset">🔁 Try another habitat</button>`;
   }
-  $('#drawer').innerHTML = side + chooser;
+  $('#drawer').innerHTML = top + side + chooser;
 }
 function runMove() {
   const M = state.move, org = findOrg(M.orgId);
@@ -1457,11 +1469,11 @@ function viewEyes() {
   $('#flat').innerHTML = eyesSVG(state.eyeAngle).svg;
   const Q = state.quiz;
   const q = (id, text, ans) => `<div class="gname">${text}</div><div class="opts">${[['front', 'At the front'], ['sides', 'On the sides']].map(([v, t]) => `<button class="opt ${Q[id] === v ? 'on' : ''}" data-act="quiz" data-id="${id}" data-val="${v}">${t}</button>`).join('')}</div>${Q[id] ? `<p>${Q[id] === ans ? '✅ Yes!' : '❌ Not quite.'}</p>` : ''}`;
-  $('#drawer').innerHTML = `<div class="card"><h3>👀 Move the eyes</h3><input type="range" id="eyeSlider" min="10" max="90" step="1" value="${state.eyeAngle}" aria-label="Where are the eyes?">
+  $('#drawer').innerHTML = `<div class="card"><h2>👀 Eyes</h2><p>Why do <b>predators</b> and <b>prey</b> have eyes in different places?</p><h3 style="margin-top:8px">Move the eyes</h3><input type="range" id="eyeSlider" min="10" max="90" step="1" value="${state.eyeAngle}" aria-label="Where are the eyes?">
     <div class="range-ends"><span>◀ At the front</span><span>On the sides ▶</span></div>
     <div class="opts" style="margin-top:10px"><button class="opt" data-act="eyepreset" data-val="15">🦉 Owl</button><button class="opt" data-act="eyepreset" data-val="80">🐇 Rabbit</button></div></div>
     <div class="card" id="eyeReadout">${eyeReadout(state.eyeAngle)}</div>
-    <div class="card"><p style="margin-top:0"><b>Prey</b> need a <b>wide view</b> to spot danger.</p><p><b>Predators</b> use <b>both eyes</b> to judge distance before they pounce.</p></div>
+    <div class="science"><b>🔬 The science</b><b>Prey</b> need a <b>wide view</b> to spot danger. <b>Predators</b> use <b>both eyes</b> to judge distance before they pounce.</div>
     <div class="card"><h3>✏️ Check</h3>${q('rabbit', 'Rabbits are prey. Where are their eyes?', 'sides')}${q('owl', 'Owls are predators. Where are their eyes?', 'front')}</div>`;
   afterRender = () => $('#eyeSlider').addEventListener('input', e => {
     state.eyeAngle = +e.target.value; $('#eyeSvg').outerHTML = eyesSVG(state.eyeAngle).svg; $('#eyeReadout').innerHTML = eyeReadout(state.eyeAngle);
@@ -1486,13 +1498,15 @@ function viewCamo() {
     <div class="camo-hud"><span id="camoFound">Found: 0 / ${PREY_N}</span><span id="camoTime">⏱️ ${HUNT_TIME} s</span></div>
     ${C.running ? '' : `<div class="camo-cover">Find the ${PREY_N} hidden bugs!<br>Press Start when ready.</div>`}</div>`;
   const fmt = v => ({ harder: 'Harder', easier: 'Easier', same: 'About the same' })[v];
-  $('#drawer').innerHTML = `<div class="card"><h3>1. Place</h3><div class="opts">${Object.entries(SCENES).map(([k, s]) => `<button class="opt ${C.scene === k ? 'on' : ''}" data-act="cscene" data-val="${k}">${s.icon} ${s.name}</button>`).join('')}</div></div>
+  const camoDone = C.hunts.some(h => h.camo) && C.hunts.some(h => !h.camo);
+  $('#drawer').innerHTML = `<div class="card"><h2>🦎 Camouflage</h2><p>Does a bug's colour change how easy it is to find?</p><h3 style="margin-top:8px">1. Place</h3><div class="opts">${Object.entries(SCENES).map(([k, s]) => `<button class="opt ${C.scene === k ? 'on' : ''}" data-act="cscene" data-val="${k}">${s.icon} ${s.name}</button>`).join('')}</div></div>
     <div class="card"><h3>2. Bug colour: ${PREY_COLOURS[C.colour][0]}</h3><div class="opts">${Object.entries(PREY_COLOURS).map(([k, [n, hex]]) => `<button class="swatch ${C.colour === k ? 'on' : ''}" style="background:${hex}" data-act="ccolour" data-val="${k}" aria-label="${n}"></button>`).join('')}</div></div>
     ${C.hunts.length ? `<div class="card"><h3>3. Predict 🤔</h3><p class="muted" style="margin-top:0">Compared with last time (${PREY_COLOURS[last.colour][0].toLowerCase()} on ${SCENES[last.scene].name.toLowerCase()}):</p><div class="opts">${['easier', 'harder', 'same'].map(v => `<button class="opt ${C.pred === v ? 'on' : ''}" data-act="cpred" data-val="${v}">${fmt(v)}</button>`).join('')}</div></div>` : ''}
     <button class="btn go" data-act="cstart" ${C.running || needPred ? 'disabled' : ''}>🔍 Start the hunt</button>
     ${C.msg ? `<div class="card"><p style="margin:0">${C.msg}</p></div>` : ''}
+    ${camoDone ? `<div class="science"><b>🔬 The science</b>Bugs that match the background are harder to find. This is <span class="term">camouflage</span>: colours that match the surroundings, so predators can't see you.</div>` : ''}
     ${C.hunts.length ? `<div class="card"><table class="results"><tr><th>#</th><th>Colour</th><th>Found</th><th>Time</th></tr>${C.hunts.map((h, i) => `<tr><td>${i + 1} ${SCENES[h.scene].icon}</td><td>${PREY_COLOURS[h.colour][0]}</td><td>${h.found}/${PREY_N}</td><td>${h.time} s</td></tr>`).join('')}</table></div>` : ''}
-    <div class="card"><p style="margin:0">🦎 <span class="term">Camouflage</span>: colours that match the surroundings, so predators can't see you.</p></div>`;
+`;
   afterRender = setupCamoCanvas;
 }
 function makeCamoScene(key) {
@@ -1668,11 +1682,11 @@ function viewFaceoff() {
     <div class="fo-hab">${F.hab} · ${esc(F.intro)}</div>
     <div class="fo-rows"><div class="fo-col-h">Helps it hunt</div><span></span><div class="fo-col-h">Helps it stay safe</div>
       ${F.rows.map((r, k) => `${tool(r[0], 'pred', k)}<span class="fo-link">⇄</span>${tool(r[1], 'prey', k)}`).join('')}</div></div>`;
-  $('#drawer').innerHTML = `<div class="card"><h3>⚔️ Choose a face-off</h3><div class="fo-pick">${FACEOFFS.map(f => `<button class="opt ${f.id === F.id ? 'on' : ''}" data-act="fopick" data-id="${f.id}">${f.pred[0]} vs ${f.prey[0]}${state.fo.seen.has(f.id) ? ' ✓' : ''}</button>`).join('')}</div>
+  $('#drawer').innerHTML = `<div class="card"><h2>⚔️ Face-offs</h2><div class="science"><b>🔬 The science</b><b>Predators</b> are adapted to <b>catch</b> food. <b>Prey</b> are adapted to <b>stay safe</b>. Each predator adaptation ⇄ is answered by a prey adaptation.</div><h3 style="margin-top:8px">Choose a face-off</h3><div class="fo-pick">${FACEOFFS.map(f => `<button class="opt ${f.id === F.id ? 'on' : ''}" data-act="fopick" data-id="${f.id}">${f.pred[0]} vs ${f.prey[0]}${state.fo.seen.has(f.id) ? ' ✓' : ''}</button>`).join('')}</div>
       <p class="muted" style="margin-bottom:0">${state.fo.seen.size} of ${FACEOFFS.length} explored. Tap any adaptation to find out more.</p></div>
     <div class="card"><h3>🔎 Find an adaptation</h3><div class="opts">${Object.entries(FO_TAGS).map(([k, t]) => `<button class="opt ${tag === k ? 'on' : ''}" data-act="fotag" data-v="${k}">${t}</button>`).join('')}</div>
       ${tag ? `<p class="muted" style="margin-bottom:0">Found in: ${FACEOFFS.filter(f => f.rows.some(r => r.some(x => x && x.tag === tag))).map(f => `${f.pred[0]} vs ${f.prey[0]}`).join(' · ')}</p>` : ''}</div>
-    <div class="card"><p style="margin:0">Each <b>predator</b> adaptation on the left is answered by a <b>prey</b> adaptation on the right ⇄. Some adaptations, like camouflage, help <b>both</b> sides!</p></div>`;
+    <div class="card"><p style="margin:0">Some adaptations, like camouflage, help <b>both</b> sides!</p></div>`;
   emit('faceoff', { id: F.id });
 }
 
@@ -1760,14 +1774,14 @@ function viewHunt() {
   $('#flat').innerHTML = `<div class="camo-wrap"><canvas id="huntCanvas" aria-label="A lion creeping up on zebras, seen from above"></canvas>
     <div class="camo-hud"><span id="huntMsg">${huntRun ? 'The lion is creeping closer…' : 'Press ▶ Watch a hunt'}</span></div></div>`;
   const fmt = { more: 'More escapes', fewer: 'Fewer escapes', same: 'About the same' };
-  $('#drawer').innerHTML = `<div class="card"><h3>🦓 Set up the hunt</h3>${HUNT_SETTINGS.map(([k, name, opts]) => `<div class="gname">${name}</div><div class="opts">${opts.map(([v, t]) => `<button class="opt ${H.set[k] === v ? 'on' : ''}" data-act="hset" data-k="${k}" data-v="${v}">${t}</button>`).join('')}</div>`).join('')}</div>
+  $('#drawer').innerHTML = `<div class="card"><h2>🦓 Hunt simulator</h2><p>What helps zebras escape from a lion?</p><p class="muted">A lion must get very close before it pounces. If a zebra <b>spots</b> it in time, the herd runs away.</p></div>
+    <div class="card"><h3>Set up the hunt</h3>${HUNT_SETTINGS.map(([k, name, opts]) => `<div class="gname">${name}</div><div class="opts">${opts.map(([v, t]) => `<button class="opt ${H.set[k] === v ? 'on' : ''}" data-act="hset" data-k="${k}" data-v="${v}">${t}</button>`).join('')}</div>`).join('')}</div>
     <div class="card"><button class="btn primary" data-act="hwatch" style="width:100%">▶ Watch a hunt</button>
       ${H.batches.length ? `<h3 style="margin-top:10px">Predict 🤔</h3><p class="muted" style="margin-top:0">Compared with your last 10 hunts, will these settings give…</p><div class="opts">${Object.entries(fmt).map(([v, t]) => `<button class="opt ${H.pred === v ? 'on' : ''}" data-act="hpred" data-v="${v}">${t}</button>`).join('')}</div>` : ''}
       <button class="btn go" data-act="hbatch" style="margin-top:8px" ${needPred ? 'disabled' : ''}>⏩ Run 10 hunts</button>
       ${needPred ? '<p class="muted" style="margin-bottom:0">Make your prediction first!</p>' : ''}</div>
     ${H.msg ? `<div class="card"><p style="margin:0">${H.msg}</p></div>` : ''}
-    ${H.batches.length ? `<div class="card"><h3>📊 Results: zebras that escaped</h3><table class="results">${H.batches.map((b, i) => `<tr><td>${i + 1}</td><td>${huntSummary(b.set)}</td><td><b>${b.escaped}/10</b></td></tr><tr><td></td><td colspan="2"><div class="bar" style="width:${Math.max(3, b.escaped * 10)}%"></div></td></tr>`).join('')}</table></div>` : ''}
-    <div class="card"><p style="margin:0">A lion has to get very close before it pounces – it can only sprint a short way. If a zebra <b>spots</b> it in time, the herd runs and gets away.</p></div>`;
+    ${H.batches.length ? `<div class="card"><h3>📊 Results: zebras that escaped</h3><table class="results">${H.batches.map((b, i) => `<tr><td>${i + 1}</td><td>${huntSummary(b.set)}</td><td><b>${b.escaped}/10</b></td></tr><tr><td></td><td colspan="2"><div class="bar" style="width:${Math.max(3, b.escaped * 10)}%"></div></td></tr>`).join('')}</table></div>` : ''}`;
   afterRender = () => { drawHunt(huntRun || state.hunt.preview || (state.hunt.preview = newHunt(state.hunt.set))); if (huntRun) tickHuntSim(); };
 }
 const huntSummary = s => `${s.herd}🦓 · eyes ${s.eyes === 'sides' ? '↔' : '↑'} · lion ${s.camo === 'on' ? 'hidden' : 'seen'} · ${s.pride === 'pride' ? '3🦁' : '1🦁'} · ${s.speed}`;
@@ -1941,7 +1955,85 @@ function confetti() {
   }
 }
 function openModal(sel) { $(sel).classList.remove('hidden'); }
-function closeModals() { $$('.modal').forEach(m => m.classList.add('hidden')); store.set('as2-help-seen', true); }
+function closeModals() {
+  $$('.modal').forEach(m => m.classList.add('hidden'));
+  // A tab opened while another pop-up was showing: show its help now that the pop-up has gone
+  if (helpPending) { helpPending = false; setTimeout(maybeAutoHelp, 0); }
+}
+
+// ================= Help and "Real life?": one pop-up for the tab you are on =================
+const LO = {
+  be01: '<p><b>5Be.01</b> Describe how plants and animals are adapted to environments that are hot, cold, wet and/or dry.</p>',
+  be03: '<p><b>5Be.03</b> Describe the common adaptations of predator and prey animals.</p>',
+  m01: '<p><b>5TWSm.01</b> Know that a model presents an object, process or idea in a way that shows some of the important features.</p>',
+};
+const HELP = {
+  habitats: { title: '🌍 Habitats', q: 'How are living things <b>adapted</b> to hot, cold, wet and dry habitats?',
+    steps: ['Choose a habitat at the top.', 'Tap a living thing.', 'Tap the numbered circles to find its features.'],
+    look: 'Each feature helps it live in its <b>habitat</b>.', lo: ['be01'] },
+  design: { title: '🛠️ Design', q: 'Can you design a creature or plant that is <b>adapted</b> to its habitat?',
+    steps: ['Choose an animal or a plant.', 'Choose a habitat at the top.', 'Change the features and watch the gauges.', 'Tap a gauge to see why.'],
+    look: 'Drag the 3D model to turn it round. Pinch or scroll to zoom.', lo: ['be01', 'm01'] },
+  move: { title: '🚚 Move it', q: 'Will a living thing\'s features still help in a new <b>habitat</b>?',
+    steps: ['Choose a living thing.', 'Choose where it will go.', 'Predict each feature, and say why.', 'Press Move it! and check the results.'],
+    lo: ['be01'] },
+  faceoff: { title: '⚔️ Face-offs', q: 'How are <b>predators</b> adapted to catch food, and <b>prey</b> adapted to stay safe?',
+    steps: ['Choose a face-off.', 'Tap an adaptation to find out more.', 'Use Find an adaptation to spot it in other face-offs.'],
+    look: 'Each predator adaptation is matched by a prey adaptation ⇄.', lo: ['be03'] },
+  hunt: { title: '🦓 Hunt simulator', q: 'What helps zebras escape from a lion?',
+    steps: ['Choose the settings.', 'Press ▶ Watch a hunt.', 'Change one setting and predict.', 'Press ⏩ Run 10 hunts to test it.'],
+    look: 'Change just one setting at a time, so it is a fair test.', lo: ['be03', 'm01'] },
+  eyes: { title: '👀 Eyes', q: 'Why do <b>predators</b> and <b>prey</b> have eyes in different places?',
+    steps: ['Slide the eyes to the front, then to the sides.', 'Count the foxes it can spot.', 'Check how easy it is to judge the distance to the mouse.', 'Answer the questions.'],
+    lo: ['be03'] },
+  camo: { title: '🦎 Camouflage', q: 'Does a bug\'s colour change how easy it is to find?',
+    steps: ['Choose a place and a bug colour.', 'Press Start and tap every bug you can find.', 'Change the colour, predict, then hunt again.'],
+    lo: ['be03'] },
+};
+const REAL = {
+  toy: ['🧸', 'The 3D creature is a toy-like model. Real animals have many more features that work together.'],
+  gauges: ['🌡️', 'The gauges are simple. In real life, how much a feature helps depends on the season, the weather and what the animal is doing.'],
+  body: ['🚚', 'The animal\'s body does <b>not</b> change when it moves. We only look at which features would stop helping.'],
+  habs: ['🏜️', 'Real habitats vary. Not every desert is sandy, and some are cold in winter.'],
+  food: ['🍽️', 'Surviving also depends on food, shelter and other animals. The model only looks at body features.'],
+  senses: ['👀', 'Real animals see in different ways. Many hunt using smell or hearing too.'],
+  photos: ['📷', 'Each living thing has many more adaptations than the few we show.'],
+  pairs: ['⚔️', 'Each face-off shows one predator and one prey. Real predators hunt many kinds of animals, and prey have many enemies.'],
+  rules: ['🦁', 'The lions and zebras follow a few simple rules. Real animals also use the wind, sounds and hiding places.'],
+  above: ['🗺️', 'The drawing is flat and seen from above. Real eyes can also look up and down.'],
+  bugs: ['🐞', 'The bugs keep still and you hunt with your eyes. Real prey can move and hide, and real predators also use smell.'],
+  drawn: ['✏️', 'The pictures are simple drawings, not to scale.'],
+};
+const REAL_TAB = {
+  habitats: ['photos', 'habs'], design: ['toy', 'gauges', 'habs', 'food'], move: ['body', 'gauges', 'food'],
+  faceoff: ['pairs', 'drawn'], hunt: ['rules', 'senses', 'drawn'], eyes: ['above', 'senses'], camo: ['bugs', 'drawn'],
+};
+const seenHelp = new Set();
+let helpReady = false, helpPending = false, helpWelcomed = false;
+const NOHELP = new URLSearchParams(location.hash.slice(1)).get('nohelp') === '1';
+function showHelp(view = state.view) {
+  const h = HELP[view]; seenHelp.add(view);
+  $('#helpBody').innerHTML = `<h2 id="helpTitle">${h.title}</h2>
+    ${helpWelcomed ? '' : '<p class="help-welcome">🦊 Welcome to Adaptation Studio!</p>'}
+    <div class="help-sec"><h3>🔬 The big question</h3><p>${h.q}</p></div>
+    <div class="help-sec"><h3>👆 What to do</h3><ol>${h.steps.map(s => `<li>${s}</li>`).join('')}</ol></div>
+    ${h.look ? `<div class="help-sec"><h3>💡 Look out for</h3><p>${h.look}</p></div>` : ''}
+    <p class="help-sec">🚀 Try the Missions to win stars!</p>
+    <details class="teachers"><summary>For teachers</summary>${h.lo.map(k => LO[k]).join('')}</details>`;
+  helpWelcomed = true;
+  openModal('#helpModal');
+}
+// The first time each tab is seen in this visit, its help pops up (never on top of another pop-up)
+function maybeAutoHelp() {
+  if (!helpReady || NOHELP || seenHelp.has(state.view)) return;
+  if ($$('.modal').some(m => !m.classList.contains('hidden'))) { helpPending = true; return; }
+  showHelp();
+}
+function showModel(view = state.view) {
+  $('#modelTab').textContent = HELP[view].title;
+  $('#modelList').innerHTML = REAL_TAB[view].map(k => `<li><span class="em">${REAL[k][0]}</span><span>${REAL[k][1]}</span></li>`).join('');
+  openModal('#modelModal');
+}
 
 // ================= Taps on the creature and plants =================
 function onCreatureTap(key, point) {
@@ -1978,7 +2070,7 @@ const ACTIONS = {
   hwatch: () => startHuntWatch(),
   hpred: el => { state.hunt.pred = el.dataset.v; render(); },
   hbatch: () => huntBatch(),
-  help: () => openModal('#helpModal'), model: () => openModal('#modelModal'),
+  help: () => showHelp(), model: () => showModel(),
   missions: () => { $('#missionList').innerHTML = MISSIONS.map((m, i) => `<button class="mission-item ${state.done.includes(m.id) ? 'done' : ''}" data-act="start-mission" data-i="${i}"><span class="em">${m.icon}</span><span class="t">${i + 1}. ${m.title}</span><span class="star">⭐</span></button>`).join(''); openModal('#missionsModal'); },
   'close-modal': closeModals,
   'reset-stars': () => { state.done = []; store.set('as2-done', []); updateStars(); ACTIONS.missions(); },
@@ -2049,7 +2141,6 @@ $('#bannerClose').onclick = () => { state.mission = null; $('#banner').classList
 updateStars();
 render();
 if (can3D) loop();
-if (!store.get('as2-help-seen', false)) openModal('#helpModal');
 // Test hook: #view=design etc. opens straight on a view (used for checking screenshots)
 const hv = new URLSearchParams(location.hash.slice(1));
 if (hv.get('view')) {
@@ -2065,6 +2156,8 @@ if (hv.get('view')) {
   }
   if (hv.get('predict')) { const M = state.move, org = findOrg(M.orgId); org.features.forEach((f, i) => M.preds[f.id] = i % 2 ? 'help' : 'stop'); M.chips = [0, 2]; runMove(); }
 }
+// Help for the starting tab (add nohelp=1 to the hash to skip it, e.g. #view=design&nohelp=1)
+helpReady = true; maybeAutoHelp();
 // Test hook: #huntstats runs 200 hunts for each setting and lists how often the zebras escaped (used to tune the simulator)
 if (location.hash === '#huntstats') {
   const base = { herd: 5, eyes: 'sides', camo: 'on', pride: 'one', speed: 'fast' };

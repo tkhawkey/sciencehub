@@ -186,6 +186,31 @@
   .seedcard { display: flex; flex-direction: column; align-items: center; gap: 2px; border: 2px solid #d3dbf7; background: #fff; border-radius: 12px; padding: 6px 4px; min-height: 44px; font-weight: 600; font-size: 13.5px; line-height: 1.15; cursor: pointer; text-align: center; }
   .seedcard.sel { background: var(--yellow); border-color: #e0a800; }
   textarea.reason { width: 100%; min-height: 64px; border: 2px solid #c3cdf2; border-radius: 12px; padding: 6px 8px; font-size: 15.5px; resize: vertical; }
+
+  /* ---------- Per-tab help, close buttons and "the science" boxes ---------- */
+  .modal-box { position: relative; }
+  .modal-x {
+    position: sticky; top: 0; float: right; z-index: 2;
+    width: 52px; height: 52px; margin: -6px -6px 6px 12px; padding: 0;
+    border: 0; border-radius: 50%; cursor: pointer;
+    background: var(--coral); color: #fff; font-size: 26px; font-weight: 700; line-height: 1;
+    display: grid; place-items: center; box-shadow: 0 3px 0 rgba(0,0,0,.2);
+    transition: transform .08s, filter .15s;
+  }
+  .modal-x:hover { filter: brightness(1.08); }
+  .modal-x:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,.2); }
+  .modal-x:focus-visible { outline: 3px solid var(--yellow); outline-offset: 2px; }
+  .science { background: #fff6d6; border: 3px solid var(--yellow); border-radius: 16px; padding: 10px 14px; margin: 8px 0; }
+  .science > b:first-child { display: block; font-size: 14px; text-transform: uppercase; letter-spacing: .04em; color: #8a5a00; margin-bottom: 2px; }
+  .help-body h3 { margin: 12px 0 4px; font-size: 17px; }
+  .help-body p { margin: 4px 0; line-height: 1.4; }
+  .help-body ol { margin: 4px 0; padding-left: 24px; line-height: 1.4; }
+  .help-body ol li { margin: 3px 0; }
+  .help-body .welcome { font-weight: 700; color: var(--blue); }
+  .help-body .subtab { margin: -4px 0 8px; color: var(--muted); font-weight: 600; }
+  details.teach { margin: 12px 0; font-size: 13px; color: var(--muted); }
+  details.teach summary { cursor: pointer; font-weight: 600; min-height: 32px; }
+  details.teach p { margin: 4px 0; }
 </style>
 </head>
 <body>
@@ -195,7 +220,7 @@
   <div class="tabs" id="tabs"></div>
   <button class="btn missions" data-act="missions" title="Missions">🚀 <span class="long">Missions </span><span id="starCount"></span></button>
   <button class="btn" data-act="model" title="How is this model different from real life?">🤔<span class="long"> Real life?</span></button>
-  <button class="btn" id="helpBtn" data-act="view" data-view="help" aria-label="How to use">❓</button>
+  <button class="btn" id="helpBtn" data-act="help" aria-label="How to use">❓</button>
 </div>
 <main>
   <div id="stage"></div>
@@ -210,6 +235,7 @@
 </main>
 <div id="missionsModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="missionsTitle">
   <div class="modal-box">
+    <button class="modal-x" data-act="closeModals" aria-label="Close">✕</button>
     <h2 id="missionsTitle">🚀 Missions</h2>
     <div class="mission-list" id="missionList"></div>
     <div class="modal-actions"><button class="btn" data-act="resetStars">Reset stars</button><button class="btn primary" data-act="closeModals">Close</button></div>
@@ -217,26 +243,28 @@
 </div>
 <div id="modelModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modelTitle">
   <div class="modal-box">
+    <button class="modal-x" data-act="closeModals" aria-label="Close">✕</button>
     <h2 id="modelTitle">🤔 How is this model different from real life?</h2>
+    <p class="muted" id="modelTab" style="margin:-4px 0 8px;font-weight:600"></p>
     <p style="margin-top:0">A <span class="term">model</span> shows some important features of something real – but not everything.</p>
-    <ul class="icons">
-      <li><span class="em">🫘</span><span>These are <b>bean</b> seeds. Beans germinate just as well in the dark. Some other seeds, like lettuce, <b>do</b> need light to germinate, so the result depends on the seed.</span></li>
-      <li><span class="em">❄️</span><span>In the cold (4 °C, like a fridge), most bean seeds wait. Given more time, or once they are warmed up, some may still germinate.</span></li>
-      <li><span class="em">🎲</span><span>Real seeds are not all the same: a few never germinate at all. The results here include some <b>dud</b> seeds, like real ones would.</span></li>
-      <li><span class="em">⏩</span><span>Real seeds take days to germinate, and you would check them every day. Here you jump straight to day 10.</span></li>
-      <li><span class="em">🌳</span><span>A few seedlings under a parent tree do survive. The numbers in <b>Spreading seeds</b> show the idea, not a real count.</span></li>
-      <li><span class="em">🌰</span><span>Many seeds travel in more than one way. Acorns and sweet chestnuts drop and roll, but squirrels and jays also carry them off and bury them. Shakers need the wind to sway them.</span></li>
-      <li><span class="em">☀️</span><span>Seedlings in the dark grow <b>taller and thinner</b>, searching for light. They stay <b>pale yellow</b>, because a plant needs light to make the green substance in its leaves (called <b>chlorophyll</b>). Once a seedling has used up the food stored in its seed, it <b>does</b> need light to keep growing. Germination is only the very start.</span></li>
-    </ul>
+    <ul class="icons" id="modelList"></ul>
     <div class="modal-actions"><button class="btn primary" data-act="closeModals">Got it!</button></div>
   </div>
 </div>
 <div id="winModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="winTitle">
   <div class="modal-box">
+    <button class="modal-x" data-act="closeModals" aria-label="Close">✕</button>
     <div class="win-emoji">⭐</div>
     <h2 id="winTitle" style="text-align:center">Mission complete!</h2>
     <div class="win-text" id="winText"></div>
     <div class="modal-actions"><button class="btn" data-act="closeModals">Keep exploring</button><a class="btn primary" id="winPractise" href="../practice/index.html#seeds">✏️ Practise this</a><button class="btn primary" id="winNext" data-act="nextMission">Next mission ▶</button></div>
+  </div>
+</div>
+<div id="helpModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+  <div class="modal-box">
+    <button class="modal-x" data-act="closeModals" aria-label="Close">✕</button>
+    <div class="help-body" id="helpBody"></div>
+    <div class="modal-actions"><a class="btn" href="../practice/index.html#seeds">✏️ Practise this</a><button class="btn primary" data-act="closeModals">Let's go! 🚀</button></div>
   </div>
 </div>
 
@@ -502,6 +530,7 @@ const LAB = {
         ${claimOk ? `<div class="card wq"><h3>2. Use <b>science</b> to explain it</h3><p class="muted">Why did this happen?</p>
           ${choices('pwhy', why.map((w, k) => [String(k), w[0]]), L.why, L.whyWrong, whyRight)}
           ${L.why != null && !whyOk ? `<p class="spot">💡 ${why[+L.why][2]}</p>` : ''}</div>` : ''}
+        ${whyOk ? `<div class="science"><b>🔬 The science</b>${LAB.claimOpts().find(o => o[0] === eff)[1]} ${why[+whyRight][0]}</div>` : ''}
         ${whyOk ? `<div class="card wq"><h3>3. How could you <b>improve</b> your investigation?</h3><p class="muted">Choose one idea.</p>
           ${IMPROVE.map(([t, ok], k) => `<button class="opt${L.imp === k && ok ? ' done' : L.impTried.includes(k) && !ok ? ' wrong' : ''}" data-act="pimp" data-v="${k}"${L.impTried.includes(k) && !ok ? ' disabled' : ''}>${t}</button>`).join('')}
           ${imp ? `<p class="${impOk ? 'job' : 'spot'}">${impOk ? '✅ Good idea! ' : '💡 '}${imp[2]}</p>` : ''}</div>` : ''}
@@ -510,7 +539,8 @@ const LAB = {
     // The write-up of the whole investigation
     const pred = LAB.predOpts().find(o => o[0] === L.pred)[1], eff = LAB.effect(), keep = VORDER.filter(k => k !== L.iv).map(k => lc(VARS[k].opts[L.groups[0][k]][1]));
     const mean = gi => { const xs = g.map((n, i) => i === anom ? 9 : n).filter((_, i) => groupOf(i) === gi); return xs.reduce((a, b) => a + b, 0) / xs.length; };
-    return `<div class="card says good report">${bar}<h3>🏁 My investigation</h3>
+    return `<div class="science"><b>🔬 The science</b>${LAB.claimOpts().find(o => o[0] === eff)[1]} ${WHY[L.iv].find(w => w[1])[0]}</div>
+      <div class="card says good report">${bar}<h3>🏁 My investigation</h3>
         <p><b class="k">Question</b>Does ${V.the} affect how many bean seeds germinate?</p>
         <p><b class="k">Variables</b>I changed ${V.the}. I measured how many of the 10 seeds germinated. I kept the same: ${keep.join(', ')}, the type of seed, the number of seeds, the size of the pots and how long we waited.</p>
         <p><b class="k">Prediction</b>${pred} ${eff === L.pred ? '✅ This was right.' : '❌ This was not right.'}</p>
@@ -605,6 +635,8 @@ function stopMission() { state.mission = null; $('#banner').classList.add('hidde
 function fitBanner() { $('#drawer').style.paddingTop = state.mission == null ? '' : `${$('#banner').offsetHeight + 18}px`; }
 function updateStars() { $('#starCount').textContent = `${state.done.filter(id => MISSIONS.some(m => m.id === id)).length}/${MISSIONS.length} ⭐`; }
 function closeModals() { document.querySelectorAll('.modal').forEach(m => m.classList.add('hidden')); }
+// Closing a pop-up by hand (button, ✕, Esc, tapping outside) can let a waiting help pop-up show
+function closeAll() { closeModals(); maybeHelp(); }
 function confetti() {
   const em = ['⭐', '🌟', '🌱', '🫘', '🎉'];
   for (let i = 0; i < 30; i++) {
@@ -820,7 +852,7 @@ const SP = {
           <div class="keeps">${WHYS.map(([id, t]) => `<label class="keep"><input type="checkbox" data-why="${id}"${sp.ticks[id] ? ' checked' : ''}${right ? ' disabled' : ''}> ${t}</label>`).join('')}</div>
           ${Array.isArray(sp.whySaid) ? `<ul class="spot">${sp.whySaid.map(m => `<li>${m}</li>`).join('')}</ul>` : ''}
           ${right ? `<p class="job">Yes! The seedlings are competing with the big tree, and with each other, for <b>light</b>, <b>water</b> and <b>space</b>.</p>
-            <p><span class="term">Seed dispersal</span> means seeds being carried away from the parent plant. Then the new plants have a better chance to grow.</p>` : ''}</div>
+            <div class="science"><b>🔬 The science</b><span class="term">Seed dispersal</span> means seeds being carried away from the parent plant. Then the new plants have a better chance to grow.</div>` : ''}</div>
           ${right ? '<div class="checkbar"><button class="btn go" data-act="spart" data-v="flaps">Next: ways seeds travel ▶</button></div>' : '<div class="checkbar"><button class="btn go" data-act="swhy">✔ Check</button></div>'}` : ''}`;
     }
     if (sp.part === 'flaps') {
@@ -847,9 +879,9 @@ const SP = {
       <div class="card wq"><h3>Which kind of seed would spread best from here?</h3>
         ${Object.entries(FEATS).map(([f, [pic, t]]) => `<button class="opt${sp.pick === f && done ? ' done' : sp.picksWrong.includes(f) ? ' wrong' : ''}" data-act="sfit" data-v="${f}"${sp.picksWrong.includes(f) || done ? ' disabled' : ''} style="display:flex;align-items:center;gap:10px">${seedSvg(pic, 34)}${t}</button>`).join('')}
         ${sp.pick && !done ? `<p class="spot">💡 ${FEATS[sp.pick][2]}</p>` : ''}
-        ${done ? `<p class="job">✅ ${P[4]}</p>` : ''}</div>
-      ${done ? `<div class="checkbar">${sp.place < PLACES.length - 1 ? '<button class="btn go" data-act="snext">Next place ▶</button>' : allDone ? '<button class="btn" data-act="sfitreset">↺ Start again</button>' : ''}</div>` : ''}
-      ${done && allDone ? '<div class="card says good"><h3>🎉 Well done!</h3><p>A plant\'s seeds suit the place where it grows, so they can travel to a new place with enough <b>light</b>, <b>water</b> and <b>space</b>.</p></div>' : ''}`;
+        ${done ? `<p class="job">✅ ${P[4]}</p>` : ''}
+        ${done && allDone ? '<div class="science"><b>🔬 The science</b>🎉 Well done! A plant\'s seeds suit the place where it grows, so they can travel to a new place with enough <b>light</b>, <b>water</b> and <b>space</b>.</div>' : ''}</div>
+      ${done ? `<div class="checkbar">${sp.place < PLACES.length - 1 ? '<button class="btn go" data-act="snext">Next place ▶</button>' : allDone ? '<button class="btn" data-act="sfitreset">↺ Start again</button>' : ''}</div>` : ''}`;
   }
 };
 
@@ -938,39 +970,75 @@ const VIEWS = {
     label: '🌬️ <span class="tl">Spreading seeds</span>',
     stage: () => SP.stage(),
     drawer: () => SP.drawer()
-  },
-  help: {
-    label: 'Help',
-    stage: () => LAB.stage(),
-    drawer() {
-      return `<div class="card"><h2>Help</h2>
-        <p><b>🌱 Germination test</b>: plan a fair test to find out what bean seeds need to germinate. Choose what to change, what to measure and how many pots to use, set up two groups of pots, check your plan is fair, predict, then fast forward 10 days.</p>
-        <p><b>🚀 Missions</b>: challenges to try. <b>🤔 Real life?</b>: how this model is different from real seeds.</p>
-        <p>Then draw a <b>bar chart</b> of your results, find the result that does not fit the pattern, and write a conclusion.</p>
-        <p><b>🌬️ Spreading seeds</b>: see why seeds need to travel away from the parent plant, open the flaps to find the 7 ways seeds travel, sort the seeds, and choose the best seed for a place.</p></div>
-        <div class="card"><h3>🎯 What you are learning</h3>
-          <p><b>5Bp.03</b> Describe how flowering plants reproduce by pollination, fruit and seed production, and seed dispersal. <span class="muted">(Here: seed dispersal.)</span></p>
-          <p><b>5Bp.04</b> Describe seed germination and know that seeds, in general, require water and an appropriate temperature to germinate.</p>
-          <p><b>5TWSp.03</b> Make predictions, referring to relevant scientific knowledge and understanding within familiar and unfamiliar contexts.</p>
-          <p><b>5TWSp.04</b> Plan fair test investigations, identifying the independent, dependent and control variables.</p>
-          <p><b>5TWSc.04</b> Decide when observations and measurements need to be repeated to give more reliable data.</p>
-          <p><b>5TWSc.08</b> Collect and record observations and/or measurements in tables and diagrams appropriate to the type of scientific enquiry.</p>
-          <p><b>5TWSa.01</b> Describe the accuracy of predictions, based on results.</p>
-          <p><b>5TWSa.02</b> Describe patterns in results, including identifying any anomalous results.</p>
-          <p><b>5TWSa.03</b> Make a conclusion from results informed by scientific understanding.</p>
-          <p><b>5TWSa.04</b> Suggest how an investigation could be improved and explain any proposed changes.</p>
-          <p><b>5TWSa.05</b> Present and interpret results using tables, bar charts, dot plots and line graphs.</p></div>
-        <div class="navrow"><a class="btn go" href="../practice/index.html#seeds">✏️ Practise this</a></div>`;
-    }
   }
 };
+
+// ================= Help and Real life: one pop-up each, about the tab you are on =================
+const HELP = {
+  bench: {
+    title: '🌱 Germination test',
+    q: 'What do bean seeds need to <b>germinate</b> (start to grow)?',
+    steps: ['Choose one thing to <b>change</b>, and what to <b>measure</b>.', 'Set up two groups of pots. Make it a <b>fair test</b>.',
+      '<b>Predict</b>, then fast forward 10 days.', 'Follow the step bar to draw a <b>bar chart</b> and write a <b>conclusion</b>.'],
+    look: 'Change only <b>one</b> thing. Keep everything else the same.',
+    codes: [['5Bp.04', 'Describe seed germination and know that seeds, in general, require water and an appropriate temperature to germinate.'],
+      ['5TWSp.03', 'Make predictions, referring to relevant scientific knowledge and understanding within familiar and unfamiliar contexts.'],
+      ['5TWSp.04', 'Plan fair test investigations, identifying the independent, dependent and control variables.'],
+      ['5TWSc.04', 'Decide when observations and measurements need to be repeated to give more reliable data.'],
+      ['5TWSc.08', 'Collect and record observations and/or measurements in tables and diagrams appropriate to the type of scientific enquiry.'],
+      ['5TWSa.01', 'Describe the accuracy of predictions, based on results.'],
+      ['5TWSa.02', 'Describe patterns in results, including identifying any anomalous results.'],
+      ['5TWSa.03', 'Make a conclusion from results informed by scientific understanding.'],
+      ['5TWSa.04', 'Suggest how an investigation could be improved and explain any proposed changes.'],
+      ['5TWSa.05', 'Present and interpret results using tables, bar charts, dot plots and line graphs.']]
+  },
+  spread: {
+    title: '🌬️ Spreading seeds',
+    q: 'Why do seeds travel away from the parent plant, and how do they do it?',
+    steps: ['<b>Why spread?</b> Look at the pictures, then answer.', '<b>Ways to travel:</b> open all 8 flaps.',
+      '<b>Sort the seeds</b> into the ways they travel.', '<b>Seed for the place:</b> choose the best seed for each place.'],
+    look: 'The <b>shape</b> of a seed is a clue to how it travels.',
+    codes: [['5Bp.03', 'Describe how flowering plants reproduce by pollination, fruit and seed production, and seed dispersal. <span class="muted">(Here: seed dispersal.)</span>']]
+  }
+};
+// Real life: the differences for each tab, plus one that is true for both
+const MODEL = {
+  bench: [['🫘', 'These are <b>bean</b> seeds. Beans germinate just as well in the dark. Some other seeds, like lettuce, <b>do</b> need light to germinate, so the result depends on the seed.'],
+    ['❄️', 'In the cold (4 °C, like a fridge), most bean seeds wait. Given more time, or once they are warmed up, some may still germinate.'],
+    ['🎲', 'Real seeds are not all the same: a few never germinate at all. The results here include some <b>dud</b> seeds, like real ones would.'],
+    ['⏩', 'Real seeds take days to germinate, and you would check them every day. Here you jump straight to day 10.'],
+    ['☀️', 'Seedlings in the dark grow <b>taller and thinner</b>, searching for light. They stay <b>pale yellow</b>, because a plant needs light to make the green substance in its leaves (called <b>chlorophyll</b>). Once a seedling has used up the food stored in its seed, it <b>does</b> need light to keep growing. Germination is only the very start.']],
+  spread: [['🌳', 'A few seedlings under a parent tree do survive. The numbers here show the idea, not a real count.'],
+    ['🌰', 'Many seeds travel in more than one way. Acorns and sweet chestnuts drop and roll, but squirrels and jays also carry them off and bury them. Shakers need the wind to sway them.']],
+  all: [['🖍️', 'The pictures are simple drawings, not to scale.']]
+};
+const tabName = id => VIEWS[id].label.replace(/<[^>]+>/g, '');
+// Help pops up the first time each tab is opened in this visit (not saved, so a new class sees it again)
+const helpSeen = new Set();
+let autoHelp = true, welcomed = false;
+function showHelp() {
+  const H = HELP[state.view];
+  helpSeen.add(state.view);
+  $('#helpBody').innerHTML = `<h2 id="helpTitle">${H.title}</h2>
+    ${welcomed ? '' : '<p class="welcome">Welcome to Seed Lab!</p>'}
+    <h3>🔬 The big question</h3><p>${H.q}</p>
+    <h3>👆 What to do</h3><ol>${H.steps.map(s => `<li>${s}</li>`).join('')}</ol>
+    <p><b>💡 Look out for:</b> ${H.look}</p>
+    <p>🚀 Try the <b>Missions</b> to win stars!</p>
+    <details class="teach"><summary>For teachers</summary>${H.codes.map(([c, t]) => `<p><b>${c}</b> ${t}</p>`).join('')}</details>`;
+  welcomed = true;
+  $('#helpModal').classList.remove('hidden');
+}
+// Never on top of another pop-up: it waits until that one closes
+function maybeHelp() {
+  if (!autoHelp || helpSeen.has(state.view) || document.querySelector('.modal:not(.hidden)')) return;
+  showHelp();
+}
 
 function renderStage() { const v = VIEWS[state.view]; $('#stage').innerHTML = v.stage(); }
 function render() {
   const v = VIEWS[state.view];
-  // Help is the ❓ button at the end of the top bar, like the other tools, so it isn't one of the tabs
-  $('#helpBtn').classList.toggle('active', state.view === 'help');
-  $('#tabs').innerHTML = Object.entries(VIEWS).filter(([id]) => id !== 'help').map(([id, x]) =>
+  $('#tabs').innerHTML = Object.entries(VIEWS).map(([id, x]) =>
     `<button class="btn${id === state.view ? ' active' : ''}" data-act="view" data-view="${id}" aria-label="${x.label.replace(/<[^>]+>/g, '').replace(/^\S+ /, '')}">${x.label}</button>`).join('');
   const keep = $('#drawer').scrollTop, same = render.last === state.view;
   $('#drawer').innerHTML = v.drawer();
@@ -979,6 +1047,7 @@ function render() {
   if (same) $('#drawer').scrollTop = keep;
   render.last = state.view;
   fitBanner();
+  maybeHelp();
 }
 
 // ================= Actions =================
@@ -1057,8 +1126,13 @@ const ACTIONS = {
     fitBanner();
   },
   resetStars() { state.done = []; store.set('sl-done', []); updateStars(); ACTIONS.missions(); },
-  closeModals() { closeModals(); },
-  model() { $('#modelModal').classList.remove('hidden'); }
+  closeModals() { closeAll(); },
+  help() { closeModals(); showHelp(); },
+  model() {
+    $('#modelTab').textContent = tabName(state.view);
+    $('#modelList').innerHTML = [...MODEL[state.view], ...MODEL.all].map(([em, t]) => `<li><span class="em">${em}</span><span>${t}</span></li>`).join('');
+    $('#modelModal').classList.remove('hidden');
+  }
 };
 document.addEventListener('click', e => {
   const el = e.target.closest('[data-act]');
@@ -1090,13 +1164,13 @@ $('#stage').addEventListener('click', e => {
   if (gi != null && state.lab.step === 1 && state.lab.said !== 'fair') { state.lab.sel = +gi; render(); }
 });
 // Tapping the dark background or pressing Escape closes a pop-up
-document.querySelectorAll('.modal').forEach(m => m.addEventListener('click', e => { if (e.target === m) closeModals(); }));
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModals(); });
+document.querySelectorAll('.modal').forEach(m => m.addEventListener('click', e => { if (e.target === m) closeAll(); }));
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeAll(); });
 let resizeT;
 addEventListener('resize', () => { fitBanner(); clearTimeout(resizeT); resizeT = setTimeout(renderStage, 120); });
 
 // ================= Start =================
-// Test hooks: #iv=water&step=1&groups=wet,dry  ·  …&fair=1&pred=wet&run=1  ·  …&step=5 (chart)  ·  …&chart=1&step=6  ·  #mission=0
+// Test hooks: #iv=water&step=1&groups=wet,dry  ·  …&fair=1&pred=wet&run=1  ·  …&step=5 (chart)  ·  …&chart=1&step=6  ·  #mission=0  ·  …&nohelp=1 (no help pop-up)
 const hp = new URLSearchParams(location.hash.slice(1));
 {
   const L = state.lab;
@@ -1109,6 +1183,7 @@ const hp = new URLSearchParams(location.hash.slice(1));
   if (hp.has('chart')) { L.bars = LAB.germinated(L.pots); L.chartSaid = 'ok'; }
 }
 if (VIEWS[hp.get('view')]) state.view = hp.get('view');
+if (hp.has('nohelp')) autoHelp = false;
 if (['why', 'flaps', 'sort', 'fit'].includes(hp.get('part'))) state.sp.part = hp.get('part');
 updateStars();
 if (MISSIONS[hp.get('mission')]) startMission(+hp.get('mission'));

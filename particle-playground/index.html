@@ -132,6 +132,37 @@
   .confetti { position: fixed; top: -40px; font-size: 26px; z-index: 40; pointer-events: none; animation: fall linear forwards; }
   @keyframes fall { to { transform: translateY(110vh) rotate(540deg); } }
 
+  /* ---------- Big close button on every pop-up ---------- */
+  .modal-box { position: relative; }
+  .modal-x {
+    position: sticky; top: 0; float: right; z-index: 2;
+    width: 52px; height: 52px; margin: -6px -6px 6px 12px; padding: 0;
+    border: 0; border-radius: 50%; cursor: pointer;
+    background: var(--coral); color: #fff; font-size: 26px; font-weight: 700; line-height: 1;
+    display: grid; place-items: center; box-shadow: 0 3px 0 rgba(0,0,0,.2);
+    transition: transform .08s, filter .15s;
+  }
+  .modal-x:hover { filter: brightness(1.08); }
+  .modal-x:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,.2); }
+  .modal-x:focus-visible { outline: 3px solid var(--yellow); outline-offset: 2px; }
+
+  /* ---------- Help pop-up (one tab at a time) ---------- */
+  .help-welcome { margin: 0 0 6px; font-weight: 600; color: var(--blue); }
+  .help-sec { margin: 10px 0 2px; font-size: 17px; }
+  .help-q { margin: 0 0 4px; font-size: 18px; }
+  .help-steps { margin: 2px 0 6px; padding-left: 24px; } .help-steps li { margin: 3px 0; }
+  .help-look { margin: 4px 0 10px; }
+  .teachers { margin: 8px 0 14px; font-size: 13.5px; color: var(--muted); }
+  .teachers summary { cursor: pointer; font-weight: 600; padding: 4px 0; }
+  .teachers p { margin: 4px 0; }
+  .model-tab { margin: -4px 0 8px; color: var(--muted); font-weight: 600; }
+
+  /* ---------- "The science" highlight ---------- */
+  .science { background: #fff6d6; border: 3px solid var(--yellow); border-radius: 16px; padding: 10px 14px; margin: 8px 0; }
+  .science > b:first-child { display: block; font-size: 14px; text-transform: uppercase; letter-spacing: .04em; color: #8a5a00; margin-bottom: 2px; }
+  .science p { margin: 4px 0; }
+  .bigq { font-weight: 600; margin: 4px 0 8px !important; }
+
   /* ---------- Narrow screens: stage on top, drawer below ---------- */
   @media (max-width: 760px) {
     :root { --drawerW: 0px; }
@@ -152,7 +183,7 @@
   <div class="tabs" id="tabs"></div>
   <button class="btn missions" data-act="missions" title="Missions">🚀 <span class="long">Missions </span><span id="starCount"></span></button>
   <button class="btn" data-act="model" title="How is this model different from real life?">🤔<span class="long"> Real life?</span></button>
-  <button class="btn" id="helpBtn" data-act="view" data-view="help" aria-label="How to use">❓</button>
+  <button class="btn" id="helpBtn" data-act="help" aria-label="How to use">❓</button>
 </div>
 <main>
   <div id="stage"></div>
@@ -167,6 +198,7 @@
 </main>
 <div id="missionsModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="missionsTitle">
   <div class="modal-box">
+    <button class="modal-x" data-act="closeModals" aria-label="Close">✕</button>
     <h2 id="missionsTitle">🚀 Missions</h2>
     <div class="mission-list" id="missionList"></div>
     <div class="modal-actions"><button class="btn" data-act="resetStars">Reset stars</button><button class="btn primary" data-act="closeModals">Close</button></div>
@@ -174,26 +206,28 @@
 </div>
 <div id="modelModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modelTitle">
   <div class="modal-box">
+    <button class="modal-x" data-act="closeModals" aria-label="Close">✕</button>
     <h2 id="modelTitle">🤔 How is this model different from real life?</h2>
+    <p class="model-tab" id="modelTab"></p>
     <p style="margin-top:0">A <span class="term">model</span> shows some important features of something real – but not everything.</p>
-    <ul class="icons">
-      <li><span class="em">🔬</span><span>Real particles are <b>far too small to see</b>, even with a microscope. A single drop of water has billions and billions of them, not 30.</span></li>
-      <li><span class="em">⚪</span><span>Particles are drawn as <b>circles</b> so that you can see how they are arranged. Real particles have their own shapes, and different substances have different particles.</span></li>
-      <li><span class="em">💨</span><span>In a real gas, the particles are <b>much further apart</b> and move <b>much faster</b> than in the picture: hundreds of metres every second!</span></li>
-      <li><span class="em">🕯️</span><span>There are many kinds of <b>wax</b>. Most melt somewhere between about 45 °C and 70 °C. This tool uses <b>about 60 °C</b>.</span></li>
-      <li><span class="em">📏</span><span>The volumes, the water lost from the jugs and the results of dissolving are <b>typical</b> results. Real ones depend on the room, the container and how long you wait.</span></li>
-      <li><span class="em">🎈</span><span>Hydrogen burns very easily, so party balloons that float are filled with <b>helium</b> instead.</span></li>
-      <li><span class="em">⚠️</span><span>Hot wax and boiling water can burn. Only try these with an adult.</span></li>
-    </ul>
+    <ul class="icons" id="modelList"></ul>
     <div class="modal-actions"><button class="btn primary" data-act="closeModals">Got it!</button></div>
   </div>
 </div>
 <div id="winModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="winTitle">
   <div class="modal-box">
+    <button class="modal-x" data-act="closeModals" aria-label="Close">✕</button>
     <div class="win-emoji">⭐</div>
     <h2 id="winTitle" style="text-align:center">Mission complete!</h2>
     <div class="win-text" id="winText"></div>
     <div class="modal-actions"><button class="btn" data-act="closeModals">Keep exploring</button><a class="btn primary" id="winPractise" href="../practice/index.html#particles">✏️ Practise this</a><button class="btn primary" id="winNext" data-act="nextMission">Next mission ▶</button></div>
+  </div>
+</div>
+<div id="helpModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+  <div class="modal-box">
+    <button class="modal-x" data-act="closeModals" aria-label="Close">✕</button>
+    <div id="helpBody"></div>
+    <div class="modal-actions"><a class="btn" href="../practice/index.html#particles">✏️ Practise this</a><button class="btn primary" data-act="closeModals">Let's go! 🚀</button></div>
   </div>
 </div>
 
@@ -713,6 +747,7 @@ function emit(ev, data = {}) {
     $('#winNext').style.display = i < MISSIONS.length - 1 ? '' : 'none';
     $('#winPractise').style.display = i < MISSIONS.length - 1 ? 'none' : '';
     $('#winNext').dataset.i = i + 1;
+    closeModals(); // never two pop-ups at once
     $('#winModal').classList.remove('hidden'); confetti();
   }, 1200);
 }
@@ -756,6 +791,7 @@ const VIEWS = {
       const b = state.box, S = SUBS[b.sub];
       const presets = [[-18, '❄️ Freezer'], [20, '🏫 Room'], b.sub === 'water' ? [100, '♨️ 100 °C'] : [80, '🔥 80 °C']];
       return `<div class="card"><h2>Particle box</h2>
+          <p class="bigq">🔬 What happens to the particles when something melts or boils?</p>
           <p>Everything is made of tiny <b>particles</b>. Change the temperature and watch how the particles behave.</p>
           <div class="stops">${Object.entries(SUBS).map(([id, x]) => `<button class="opt${id === b.sub ? ' on' : ''}" data-act="bsub" data-s="${id}">${x.em} ${x.name}</button>`).join('')}</div>
           <div class="slide"><span>❄️</span><input type="range" id="tempSlider" min="-20" max="120" step="1" value="${b.temp}" aria-label="Temperature"><span>🔥</span></div>
@@ -772,6 +808,7 @@ const VIEWS = {
     drawer() {
       const o2 = state.odd;
       const top = `<div class="card"><h2>Water is odd</h2>
+          <p class="bigq">🔬 ${o2.mode === 'float' ? 'Does a solid float or sink in its own liquid?' : 'What happens to the volume of water and wax when they turn solid?'}</p>
           <p>Water does not always behave like other substances.</p>
           <div class="stops"><button class="opt${o2.mode === 'float' ? ' on' : ''}" data-act="omode" data-m="float">🧊 Float test</button><button class="opt${o2.mode === 'freeze' ? ' on' : ''}" data-act="omode" data-m="freeze">📏 Freeze and measure</button></div></div>`;
       const props = `<div class="card"><h3>💧 Water's special properties</h3><ul class="facts"><li><b>Melts</b> at 0 °C and <b>boils</b> at 100 °C.</li><li><b>Expands</b> (gets bigger) when it freezes, so ice floats.</li><li>Can <b>dissolve</b> lots of different substances (see <b>Dissolving</b>).</li></ul></div>`;
@@ -779,8 +816,8 @@ const VIEWS = {
         const both = o2.dropped.water && o2.dropped.wax;
         const ask = both ? `<div class="card says${o2.why != null ? ' good' : ''} wq"><h3>❓ Why does ice float, but solid wax sinks?</h3><p class="muted">Look at the close-ups of the particles.</p>${mcq(WO.WHY, o2.why, o2.whyWrong, 'owhy')}
             ${o2.whyWrong.length && o2.why == null ? '<p class="spot">💡 Not quite. Compare how close the particles are in the solid and in the liquid.</p>' : ''}
-            ${o2.why != null ? '<p class="job">Most substances, like wax, shrink when they turn solid, so the solid sinks in its own liquid. Water is <b>odd</b>: it <b>expands</b> when it freezes, so ice floats.</p>' : ''}</div>` : '';
-        return `${ask}${top}
+            ${o2.why != null ? '<div class="science"><b>🔬 The science</b>Most substances, like wax, shrink when they turn solid, so the solid sinks in its own liquid. Water is <b>odd</b>: it <b>expands</b> when it freezes, so ice floats.</div>' : ''}</div>` : '';
+        return `${top}${ask}
           <div class="card"><h3>🧊 Float test</h3>
             <div class="navrow"><button class="btn${o2.dropped.water ? ' active' : ''}" data-act="odrop" data-id="water"${o2.dropped.water ? ' disabled' : ''}>🧊 Drop ice into water</button>
             <button class="btn" data-act="odrop" data-id="wax">🕯️ ${o2.dropped.wax ? 'Try again with a different piece of wax' : 'Drop solid wax into melted wax'}</button></div>
@@ -788,7 +825,7 @@ const VIEWS = {
       }
       const all = o2.ok.water && o2.ok.wax;
       const row = (id, name) => `<div class="ansrow"><label for="v-${id}">${name}:</label><input class="numin${o2.ok[id] ? ' ok' : ''}" id="v-${id}" data-id="${id}" type="text" inputmode="decimal" value="${esc(o2.read[id])}"${o2.ok[id] ? ' readonly' : ''}> ml ${o2.ok[id] === 'right' ? '✅' : ''}</div>`;
-      return `${said(o2.said)}${all ? '<div class="card says good"><h3>🧊 Water expands!</h3><p>100 ml of water froze into about <b>109 ml</b> of ice: it got <b>bigger</b>. That is why frozen water pipes and bottles can burst.</p><p>100 ml of melted wax became about <b>90 ml</b> of solid wax: it got <b>smaller</b>, like most substances do. Water is odd!</p></div>' : ''}${top}
+      return `${top}${said(o2.said)}${all ? '<div class="science"><b>🔬 The science: water expands!</b><p>100 ml of water froze into about <b>109 ml</b> of ice: it got <b>bigger</b>. That is why frozen water pipes and bottles can burst.</p><p>100 ml of melted wax became about <b>90 ml</b> of solid wax: it got <b>smaller</b>, like most substances do. Water is odd!</p></div>' : ''}
         <div class="card"><h3>📏 Freeze and measure</h3>
           <p>Both cylinders hold <b>100 ml</b>. What happens when they turn solid?</p>
           ${o2.frozen ? `<p>Read the new volumes in the <b>close-ups</b>. Each small mark is <b>1 ml</b>.</p>${row('water', '🧊 Ice')}${row('wax', '🕯️ Solid wax')}`
@@ -802,11 +839,12 @@ const VIEWS = {
     drawer() {
       const e = state.evap;
       const top = `<div class="card"><h2>Evaporate &amp; condense</h2>
+          <p class="bigq">🔬 ${e.mode === 'evap' ? 'Does the temperature change how fast water evaporates?' : 'Where do the drops on a cold can come from?'}</p>
           <div class="stops"><button class="opt${e.mode === 'evap' ? ' on' : ''}" data-act="emode" data-m="evap">☀️ Evaporation</button><button class="opt${e.mode === 'cond' ? ' on' : ''}" data-act="emode" data-m="cond">🥫 Condensation</button></div></div>`;
       if (e.mode === 'evap') {
         const result = e.ok ? `<div class="card says good"><h3>💨 Evaporation</h3><p>The warmest jug lost <b>50 ml</b>, the classroom jug lost 20 ml and the fridge jug lost only 10 ml.</p>
-            <p>The particles in a liquid are always moving. Some at the surface move fast enough to <b>escape</b> into the air as water vapour: this is <b>evaporation</b>.</p>
-            <p>When it is <b>warmer</b>, the particles move <b>faster</b>, so more escape. Look at the close-ups!</p>
+            <div class="science"><b>🔬 The science</b><p>The particles in a liquid are always moving. Some at the surface move fast enough to <b>escape</b> into the air as water vapour: this is <b>evaporation</b>.</p>
+            <p>When it is <b>warmer</b>, the particles move <b>faster</b>, so more escape. Look at the close-ups!</p></div>
             ${e.pred != null ? `<p class="muted">You predicted the ${EC.JUGS[e.pred][1].toLowerCase()} jug would have the least left. ${e.pred === 2 ? '✅ Right!' : '❌ It was the jug on the sunny windowsill.'}</p>` : ''}</div>` : '';
         const step = !e.left
           ? `<div class="card says wq"><h3>🤔 Predict</h3><p>Each jug has 100 ml of water. Some of it will evaporate. After a day, which jug will have the <b>least water left</b> in it?</p>
@@ -815,14 +853,14 @@ const VIEWS = {
           : e.ok ? '' : `<div class="card says"><h3>📏 Read the jugs</h3><p>How much water <b>evaporated</b> from the jug on the <b>sunny windowsill</b>?</p>
               <div class="ansrow"><input class="numin" id="evapAns" type="text" inputmode="decimal" value="${esc(e.ans)}"> ml</div>
               ${e.said ? `<p class="spot">💡 ${e.said}</p>` : ''}</div><div class="checkbar"><button class="btn go" data-act="echeck">✔ Check</button></div>`;
-        return `${result}${step}${top}`;
+        return `${top}${result}${step}`;
       }
       const qs = e.waited ? `<div class="card says${e.q2 != null ? ' good' : ''} wq"><h3>❓ Where did the drops on the cold can come from?</h3>${mcq(EC.Q1, e.q1, e.q1w, 'eq1')}
           ${e.q1w.length && e.q1 == null ? '<p class="spot">💡 The can is sealed. What is in the air, even though you can\'t see it?</p>' : ''}
           ${e.q1 != null ? `<h3 style="margin-top:10px">❓ Why did the can at room temperature stay dry?</h3>${mcq(EC.Q2, e.q2, e.q2w, 'eq2')}${e.q2w.length && e.q2 == null ? '<p class="spot">💡 What is different about the two cans?</p>' : ''}` : ''}
-          ${e.q2 != null ? '<p class="job">When water vapour particles touch something <b>cold</b>, they slow down and come close together: they <b>condense</b> into liquid water. Condensation is the opposite of evaporation.</p>' : ''}</div>`
+          ${e.q2 != null ? '<div class="science"><b>🔬 The science</b>When water vapour particles touch something <b>cold</b>, they slow down and come close together: they <b>condense</b> into liquid water. Condensation is the opposite of evaporation.</div>' : ''}</div>`
         : `<div class="card says"><h3>🥫 A fair test</h3><p>One can is cold from the fridge. The other is at room temperature. Everything else is the same.</p><div class="navrow"><button class="btn go" data-act="ewait">⏱️ Wait 5 minutes</button></div></div>`;
-      return `${qs}${top}`;
+      return `${top}${qs}`;
     }
   },
   dis: {
@@ -830,18 +868,18 @@ const VIEWS = {
     stage: () => DS.stage(),
     drawer() {
       const d = state.dis, id = d.pick, D = DIS[id], tested = DORDER.filter(x => d.stirred[x]).length;
-      const chooser = `<div class="card"><h2>Dissolving</h2><p>Water can <b>dissolve</b> lots of substances. Which of these dissolve?</p>
+      const chooser = `<div class="card"><h2>Dissolving</h2><p class="bigq">🔬 Which substances dissolve in water, and where do they go?</p><p>Pick one, predict, then stir it into the water.</p>
           <div class="stops">${DORDER.map(x => `<button class="opt${x === id ? ' on' : ''}" data-act="dpick" data-id="${x}"><span class="sw" style="background:${DIS[x][2]}"></span> ${DIS[x][0]}${d.stirred[x] ? ' <span class="tick">✔</span>' : ''}</button>`).join('')}</div></div>`;
       let step = '';
       if (id && !d.stirred[id]) step = `<div class="card says"><h3>🤔 Will ${D[0].toLowerCase()} dissolve in water?</h3>
           <div class="navrow"><button class="btn${d.pred[id] === true ? ' active' : ''}" data-act="dpred" data-v="1">✅ Yes</button><button class="btn${d.pred[id] === false ? ' active' : ''}" data-act="dpred" data-v="0">❌ No</button></div>
           <div class="navrow" style="margin-top:8px"><button class="btn go" data-act="dstir"${d.pred[id] == null ? ' disabled' : ''}>🥄 Stir it in</button></div></div>`;
-      else if (id) step = `<div class="card says${D[1] ? ' good' : ''}"><h3>${D[1] ? '✅ It dissolves' : '❌ It does not dissolve'}</h3><p>${D[3]}</p><p class="muted">You predicted: ${d.pred[id] ? 'yes' : 'no'} ${d.pred[id] === D[1] ? '✅' : '❌'}</p></div>`;
-      else step = `<div class="card says"><h3>👆 Choose a substance</h3><p>Pick one of the six below, predict, then stir it into the water.</p></div>`;
+      else if (id) step = `<div class="card says${D[1] ? ' good' : ''}" id="disStep"><h3>${D[1] ? '✅ It dissolves' : '❌ It does not dissolve'}</h3><p>${D[3]}</p><p class="muted">You predicted: ${d.pred[id] ? 'yes' : 'no'} ${d.pred[id] === D[1] ? '✅' : '❌'}</p></div>`;
+      else step = `<div class="card says"><h3>👆 Choose a substance</h3><p>Pick one of the six above, predict, then stir it into the water.</p></div>`;
       const table = tested ? `<div class="card"><h3>📋 Results</h3><table class="gtable"><tr><th>Substance</th><th>You predicted</th><th>Dissolved?</th></tr>
           ${DORDER.filter(x => d.stirred[x]).map(x => `<tr><td>${DIS[x][0]}</td><td>${d.pred[x] ? 'yes' : 'no'}</td><td>${DIS[x][1] ? '✅ yes' : '❌ no'}</td></tr>`).join('')}</table><p class="muted">${tested} of 6 tested.</p></div>` : '';
-      const end = tested === 6 ? `<div class="card says good"><h3>🌍 What did you find out?</h3><p>Salt, sugar and instant coffee <b>dissolve</b> in water. Their particles spread out between the water particles to make a <b>solution</b>. A solution is a liquid: you can see through it, with no bits.</p><p>Sand, oil and pepper do <b>not</b> dissolve. Water can dissolve a <b>range</b> of substances, but not everything.</p></div>` : '';
-      return `${step}${end}${chooser}${table}`;
+      const end = tested === 6 ? `<div class="science"><b>🔬 The science</b><p>Salt, sugar and instant coffee <b>dissolve</b> in water. Their particles spread out between the water particles to make a <b>solution</b>. A solution is a liquid: you can see through it, with no bits.</p><p>Sand, oil and pepper do <b>not</b> dissolve. Water can dissolve a <b>range</b> of substances, but not everything.</p></div>` : '';
+      return `${chooser}${end}${step}${table}`;
     }
   },
   gas: {
@@ -849,52 +887,100 @@ const VIEWS = {
     stage: () => GS.stage(),
     drawer() {
       const s = state.gas;
-      const top = `<div class="card"><h2>Gases</h2><p>Some substances are <b>gases</b> at room temperature (about 20 °C).</p>
+      const top = `<div class="card"><h2>Gases</h2><p class="bigq">🔬 Which substances are gases at room temperature?</p><p>Room temperature is about 20 °C.</p>
           <div class="stops"><button class="opt${s.mode === 'balloons' ? ' on' : ''}" data-act="gmode" data-m="balloons">🎈 Five gases</button><button class="opt${s.mode === 'sort' ? ' on' : ''}" data-act="gmode" data-m="sort">🗂️ Sort them</button></div></div>`;
       if (s.mode === 'balloons') {
         const G = GASES[s.open];
-        const card = G ? `<div class="card says good"><h3><span class="sw" style="background:${G.col}"></span> ${G.name}</h3><p><b>A gas at room temperature</b> ✔</p><ul class="facts">${G.facts.map(f => `<li>${f}</li>`).join('')}</ul></div>`
+        const card = G ? `<div class="card says good" id="gasCard"><h3><span class="sw" style="background:${G.col}"></span> ${G.name}</h3><p><b>A gas at room temperature</b> ✔</p><ul class="facts">${G.facts.map(f => `<li>${f}</li>`).join('')}</ul></div>`
           : `<div class="card says"><h3>👆 Tap a balloon</h3><p>Each balloon holds a different gas. Tap one to find out about it. Don't forget the cup of water!</p></div>`;
-        return `${card}${top}<div class="card"><h3>💨 Gas particles</h3><p>In a gas, the particles are <b>far apart</b> and move <b>quickly</b> in all directions. That is why a gas spreads out to fill its container.</p>
-          <p class="muted">You have looked at ${s.seen.length} of 5 gases.</p></div>`;
+        return `${top}<div class="science"><b>🔬 The science</b>In a gas, the particles are <b>far apart</b> and move <b>quickly</b> in all directions. That is why a gas spreads out to fill its container.</div>
+          ${card}<p class="muted" style="margin:0 4px">You have looked at ${s.seen.length} of 5 gases.</p>`;
       }
       const left = SORDER.filter(id => s.placed[id] == null), right = SORDER.filter(id => s.placed[id] === SORTS[id][1]).length, placed = SORDER.length - left.length;
-      const fb = s.checked ? (right === 12 ? said('All 12 are right! At room temperature, these five gases are all gases.', true) : said([`${right} of ${placed} placed ones are right. Move the ones with ❌.`, 'Think about what each one is like in a room at 20 °C.'])) : '';
-      return `${fb}${top}<div class="card"><h3>🗂️ Solid, liquid or gas?</h3><p class="muted">Is each one a solid, a liquid or a gas at room temperature? Drag it to a box, or tap it, then tap a box. To move something, tap it in its box to send it back here.</p>
+      const fb = s.checked ? (right === 12 ? `<div class="science"><b>🔬 The science</b>All 12 are right! At room temperature, salt, iron, wood and wax are <b>solids</b>, water, milk and oil are <b>liquids</b>, and oxygen, nitrogen, carbon dioxide, hydrogen and water vapour are <b>gases</b>.</div>` : said([`${right} of ${placed} placed ones are right. Move the ones with ❌.`, 'Think about what each one is like in a room at 20 °C.'])) : '';
+      return `${top}${fb}<div class="card"><h3>🗂️ Solid, liquid or gas?</h3><p class="muted">Is each one a solid, a liquid or a gas at room temperature? Drag it to a box, or tap it, then tap a box. To move something, tap it in its box to send it back here.</p>
           ${left.length ? `<div class="stops">${left.map(id => `<button class="chip${s.chip === id ? ' sel' : ''}" data-kind="sort" data-id="${id}">${SORTS[id][0]}</button>`).join('')}</div>` : '<p class="job">Everything is in a box.</p>'}
           <div class="navrow" style="margin-top:8px"><button class="btn" data-act="greset">↺ Start again</button></div></div>
         <div class="checkbar"><button class="btn go" data-act="gcheck"${placed ? '' : ' disabled'}>✔ Check (${placed} of 12 placed)</button></div>`;
     }
-  },
-  help: {
-    label: 'Help',
-    stage: () => PB.stage(),
-    after: () => PB.start(),
-    drawer() {
-      return `<div class="card"><h2>Help</h2>
-        <p><b>🫧 Particle box</b>: heat and cool water or wax, and watch the particles in a solid, a liquid and a gas.</p>
-        <p><b>🧊 Water is odd</b>: see why ice floats but solid wax sinks, then freeze water and wax and measure what happens.</p>
-        <p><b>💨 Evaporate &amp; condense</b>: leave jugs of water in three places, and find out where the drops on a cold can come from.</p>
-        <p><b>🧂 Dissolving</b>: test which substances dissolve in water.</p>
-        <p><b>🎈 Gases</b>: find out about five gases, then sort things into solids, liquids and gases.</p>
-        <p><b>🚀 Missions</b>: challenges to try. <b>🤔 Real life?</b>: how this model is different from real particles.</p></div>
-        <div class="card"><h3>🎯 What you are learning</h3>
-          <p><b>5Cm.01</b> Use the particle model to describe solid, liquids (including solutions) and gases.</p>
-          <p><b>5Cm.02</b> Understand that substances can be gaseous and know the common gases at room temperature (limited to oxygen, carbon dioxide, water vapour, nitrogen and hydrogen).</p>
-          <p><b>5Cc.01</b> Describe the processes of evaporation and condensation, using the particle model and relating the processes to changes in temperature.</p>
-          <p><b>5Cp.02</b> Know the main properties of water (limited to boiling point, melting point, expands when it solidifies, and its ability to dissolve a range of substances) and know that water acts differently from many other substances.</p>
-          <p class="muted"><b>Also:</b> <b>5TWSm.01</b> Know that a model presents an object, process or idea in a way that shows some of the important features.</p></div>
-        <div class="navrow"><a class="btn go" href="../practice/index.html#particles">✏️ Practise this</a></div>`;
-    }
   }
 };
+
+// ================= Help and "Real life?" pop-ups: one tab at a time =================
+// Curriculum statements, exactly as worded in the teacher's objectives
+const CODES = {
+  '5Cm.01': 'Use the particle model to describe solid, liquids (including solutions) and gases.',
+  '5Cm.02': 'Understand that substances can be gaseous and know the common gases at room temperature (limited to oxygen, carbon dioxide, water vapour, nitrogen and hydrogen).',
+  '5Cc.01': 'Describe the processes of evaporation and condensation, using the particle model and relating the processes to changes in temperature.',
+  '5Cp.02': 'Know the main properties of water (limited to boiling point, melting point, expands when it solidifies, and its ability to dissolve a range of substances) and know that water acts differently from many other substances.',
+  '5TWSm.01': 'Know that a model presents an object, process or idea in a way that shows some of the important features.'
+};
+const HELP = {
+  box: { q: 'What happens to the particles when something melts or boils?',
+    steps: ['Choose <b>water</b> or <b>wax</b>.', 'Slide the temperature up and down.', 'Watch how the particles move in a <b>solid</b>, a <b>liquid</b> and a <b>gas</b>.'],
+    look: 'Find the temperature where each one <b>melts</b>. Is it the same?',
+    codes: ['5Cm.01', '5Cp.02'] },
+  odd: { q: 'How is water different from other substances when it freezes?',
+    steps: ['<b>Float test</b>: drop ice into water, then solid wax into melted wax.', 'Answer the question about why.', '<b>Freeze and measure</b>: read the new volumes in the close-ups.'],
+    look: 'Compare how far apart the particles are in each close-up.',
+    codes: ['5Cp.02', '5Cm.01'] },
+  evap: { q: 'How does temperature change evaporation and condensation?',
+    steps: ['<b>Evaporation</b>: predict, then leave three jugs for a day.', 'Read the jugs and work out how much water <b>evaporated</b>.', '<b>Condensation</b>: wait 5 minutes, then explain the drops on the cold can.'],
+    look: 'Watch the close-ups: particles escape from the water\'s surface.',
+    codes: ['5Cc.01', '5Cm.01'] },
+  dis: { q: 'Which substances dissolve in water, and where do they go?',
+    steps: ['Choose a substance.', 'Predict: will it <b>dissolve</b>?', 'Stir it in and look at the close-up of the particles.', 'Test all six.'],
+    look: 'In a <b>solution</b>, every water particle is still there.',
+    codes: ['5Cm.01', '5Cp.02'] },
+  gas: { q: 'Which substances are gases at room temperature?',
+    steps: ['Tap each balloon, and the cup of water.', 'Read about each <b>gas</b>.', 'Choose <b>Sort them</b>: put 12 things into solid, liquid or gas.'],
+    codes: ['5Cm.02', '5Cm.01'] }
+};
+// "Real life?" bullets: two that are true for every tab, then each tab's own
+const REAL_ALL = [
+  ['🔬', 'Real particles are <b>far too small to see</b>, even with a microscope. A single drop of water has billions and billions of them, not 30.'],
+  ['⚪', 'Particles are drawn as <b>circles</b> so that you can see how they are arranged. Real particles have their own shapes, and different substances have different particles.']
+];
+const REAL_GAS = ['💨', 'In a real gas, the particles are <b>much further apart</b> and move <b>much faster</b> than in the picture: hundreds of metres every second!'];
+const REAL_WAX = ['🕯️', 'There are many kinds of <b>wax</b>. Most melt somewhere between about 45 °C and 70 °C. This tool uses <b>about 60 °C</b>.'];
+const REAL_HOT = ['⚠️', 'Hot wax and boiling water can burn. Only try these with an adult.'];
+const REAL = {
+  box: [REAL_GAS, REAL_WAX, REAL_HOT],
+  odd: [['📏', 'The volumes (109 ml of ice and 90 ml of wax) are <b>typical</b> results. Real ones depend on the container and how carefully you measure.'], REAL_WAX, REAL_HOT],
+  evap: [['📏', 'The water lost from the jugs is a <b>typical</b> result. Real results depend on the room, the container and how long you wait.'], REAL_GAS],
+  dis: [['📏', 'The results of dissolving are <b>typical</b>. Real results depend on how much you add and how warm the water is.']],
+  gas: [REAL_GAS, ['🎈', 'Hydrogen burns very easily, so party balloons that float are filled with <b>helium</b> instead.']]
+};
+const tabName = id => VIEWS[id].label.replace(/<[^>]+>/g, '').replace('&amp;', '&');
+// Help pops up by itself the first time each tab is opened in this visit (not saved, so a new class sees it again)
+const helpSeen = new Set();
+let helpFirst = true, noHelp = false;
+function showHelp() {
+  const id = state.view, H = HELP[id]; if (!H) return;
+  helpSeen.add(id);
+  $('#helpBody').innerHTML = `<h2 id="helpTitle">${esc(tabName(id))}</h2>
+    ${helpFirst ? '<p class="help-welcome">👋 Welcome to Particle Playground!</p>' : ''}
+    <h3 class="help-sec">🔬 The big question</h3><p class="help-q">${H.q}</p>
+    <h3 class="help-sec">👆 What to do</h3><ol class="help-steps">${H.steps.map(s => `<li>${s}</li>`).join('')}</ol>
+    ${H.look ? `<p class="help-look"><b>💡 Look out for:</b> ${H.look}</p>` : ''}
+    <p class="muted" style="margin:4px 0">🚀 Try the <b>Missions</b> to win stars!</p>
+    <details class="teachers"><summary>For teachers</summary>${H.codes.map(c => `<p><b>${c}</b> ${CODES[c]}</p>`).join('')}
+      <p><b>Also: 5TWSm.01</b> ${CODES['5TWSm.01']}</p></details>`;
+  helpFirst = false;
+  $('#helpModal').classList.remove('hidden');
+}
+// Never on top of another pop-up: if one is open, this runs again when it closes
+function helpIfNew() {
+  if (noHelp || helpSeen.has(state.view) || document.querySelector('.modal:not(.hidden)')) return;
+  showHelp();
+}
+// Bring a card that has just changed into view in the drawer
+function showCard(sel) { const c = $(sel); if (c) c.scrollIntoView({ block: 'nearest' }); }
 
 function renderStage() { const v = VIEWS[state.view]; $('#stage').innerHTML = v.stage(); if (v.after) v.after(); }
 function render() {
   const v = VIEWS[state.view];
-  // Help is the ❓ button at the end of the top bar, like the other tools, so it isn't one of the tabs
-  $('#helpBtn').classList.toggle('active', state.view === 'help');
-  $('#tabs').innerHTML = Object.entries(VIEWS).filter(([id]) => id !== 'help').map(([id, x]) =>
+  $('#tabs').innerHTML = Object.entries(VIEWS).map(([id, x]) =>
     `<button class="btn${id === state.view ? ' active' : ''}" data-act="view" data-view="${id}" aria-label="${x.label.replace(/<[^>]+>/g, '').replace(/^\S+ /, '').replace('&amp;', '&')}">${x.label}</button>`).join('');
   const keep = $('#drawer').scrollTop, same = render.last === state.view;
   $('#drawer').innerHTML = v.drawer();
@@ -903,6 +989,7 @@ function render() {
   if (same) $('#drawer').scrollTop = keep;
   render.last = state.view;
   fitBanner();
+  helpIfNew();
 }
 
 // ================= Actions =================
@@ -924,7 +1011,7 @@ const ACTIONS = {
   eq2(el) { const e = state.evap, k = +el.dataset.k; if (EC.Q2[k][1]) { e.q2 = k; render(); emit('cond'); } else { e.q2w.push(k); render(); } },
   dpick(el) { state.dis.pick = el.dataset.id; render(); },
   dpred(el) { const d = state.dis; d.pred[d.pick] = el.dataset.v === '1'; render(); },
-  dstir() { const d = state.dis; if (d.pick && d.pred[d.pick] != null) { d.stirred[d.pick] = true; render(); $('#drawer').scrollTop = 0; if (DORDER.every(x => d.stirred[x])) emit('dissolve'); } },
+  dstir() { const d = state.dis; if (d.pick && d.pred[d.pick] != null) { d.stirred[d.pick] = true; render(); showCard('#disStep'); if (DORDER.every(x => d.stirred[x])) emit('dissolve'); } },
   gmode(el) { state.gas.mode = el.dataset.m; state.gas.chip = null; render(); },
   gcheck() { GS.check(); },
   greset() { state.gas = Object.assign(freshGas(), { mode: 'sort', seen: state.gas.seen }); render(); },
@@ -943,8 +1030,14 @@ const ACTIONS = {
     fitBanner();
   },
   resetStars() { state.done = []; store.set('pp-done', []); updateStars(); ACTIONS.missions(); },
-  closeModals() { closeModals(); },
-  model() { $('#modelModal').classList.remove('hidden'); }
+  // Closing a pop-up (button, ✕, Esc or tapping outside) may let a waiting help pop-up appear
+  closeModals() { closeModals(); helpIfNew(); },
+  help() { closeModals(); showHelp(); },
+  model() {
+    $('#modelTab').textContent = tabName(state.view);
+    $('#modelList').innerHTML = [...REAL_ALL, ...(REAL[state.view] || [])].map(([em, t]) => `<li><span class="em">${em}</span><span>${t}</span></li>`).join('');
+    $('#modelModal').classList.remove('hidden');
+  }
 };
 document.addEventListener('click', e => {
   const el = e.target.closest('[data-act]');
@@ -964,7 +1057,7 @@ document.addEventListener('keydown', e => {
 // Taps on the pictures: a balloon to read about it; a box to put the chosen word in (or take things back out)
 $('#stage').addEventListener('click', e => {
   const gas = e.target.closest('[data-gas]')?.dataset.gas;
-  if (gas) { const s = state.gas; s.open = gas; if (!s.seen.includes(gas)) s.seen.push(gas); render(); $('#drawer').scrollTop = 0; emit('gases', { n: s.seen.length }); return; }
+  if (gas) { const s = state.gas; s.open = gas; if (!s.seen.includes(gas)) s.seen.push(gas); render(); showCard('#gasCard'); emit('gases', { n: s.seen.length }); return; }
   const bin = e.target.closest('[data-bin]')?.dataset.bin;
   if (bin != null) {
     const s = state.gas;
@@ -974,15 +1067,17 @@ $('#stage').addEventListener('click', e => {
   }
 });
 // Tapping the dark background or pressing Escape closes a pop-up
-document.querySelectorAll('.modal').forEach(m => m.addEventListener('click', e => { if (e.target === m) closeModals(); }));
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModals(); });
+document.querySelectorAll('.modal').forEach(m => m.addEventListener('click', e => { if (e.target === m) ACTIONS.closeModals(); }));
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.querySelector('.modal:not(.hidden)')) ACTIONS.closeModals(); });
 let resizeT;
 addEventListener('resize', () => { fitBanner(); clearTimeout(resizeT); resizeT = setTimeout(renderStage, 120); });
 
 // ================= Start =================
 // Test hooks: #view=box&sub=wax&temp=70 · #view=odd&mode=freeze&frozen=1 · #view=odd&dropped=1 · #view=evap&left=1 · #view=evap&mode=cond&waited=1
 // #view=dis&pick=salt&stirred=salt · #view=gas&open=co2 · #view=gas&mode=sort&placed=all · #mission=3
+// #nohelp=1 stops the help popping up by itself (for screenshots and tests)
 const hp = new URLSearchParams(location.hash.slice(1));
+noHelp = hp.get('nohelp') === '1';
 if (VIEWS[hp.get('view')]) state.view = hp.get('view');
 if (SUBS[hp.get('sub')]) state.box.sub = hp.get('sub');
 if (hp.has('temp')) state.box.temp = Math.max(-20, Math.min(120, +hp.get('temp')));

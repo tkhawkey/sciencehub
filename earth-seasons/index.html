@@ -159,9 +159,6 @@
   .modal.hidden { display: none; }
   .modal-box { background: #fff; border-radius: 24px; padding: 22px; width: min(560px, 100%); max-height: calc(100vh - 32px); overflow-y: auto; box-shadow: 0 16px 40px rgba(0,0,0,.4); }
   .modal-box h2 { margin: 0 0 10px; font-size: 26px; }
-  .objectives { background: #f3f5ff; border-radius: 14px; padding: 10px 14px; margin: 0 0 14px; font-size: 15px; line-height: 1.4; }
-  .objectives h3 { margin: 0 0 4px; font-size: 17px; }
-  .objectives p { margin: 4px 0; }
   .modal-box ul { padding-left: 0; list-style: none; margin: 0 0 16px; }
   .modal-box li { display: flex; gap: 10px; padding: 7px 0; font-size: 16px; line-height: 1.35; }
   .modal-box li .em { font-size: 24px; width: 32px; flex: none; text-align: center; }
@@ -175,6 +172,32 @@
   .win-emoji { font-size: 60px; text-align: center; }
   .win-text { font-size: 18px; line-height: 1.45; margin-bottom: 16px; }
   .modal-actions { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+  .modal-box { position: relative; }
+  .modal-x {
+    position: sticky; top: 0; float: right; z-index: 2;
+    width: 52px; height: 52px; margin: -6px -6px 6px 12px; padding: 0;
+    border: 0; border-radius: 50%; cursor: pointer;
+    background: var(--coral); color: #fff; font-size: 26px; font-weight: 700; line-height: 1;
+    display: grid; place-items: center; box-shadow: 0 3px 0 rgba(0,0,0,.2);
+    transition: transform .08s, filter .15s;
+  }
+  .modal-x:hover { filter: brightness(1.08); }
+  .modal-x:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,.2); }
+  .modal-x:focus-visible { outline: 3px solid var(--yellow); outline-offset: 2px; }
+  .science { background: #fff6d6; border: 3px solid var(--yellow); border-radius: 16px; padding: 10px 14px; margin: 8px 0; }
+  .science > b:first-child { display: block; font-size: 14px; text-transform: uppercase; letter-spacing: .04em; color: #8a5a00; margin-bottom: 2px; }
+  #viewCard .science { margin-bottom: 0; font-size: 15px; line-height: 1.4; }
+  .help-welcome { font-size: 17px; font-weight: 700; color: var(--blue); margin: 0 0 6px; }
+  .help-sec { margin: 10px 0 4px; font-size: 17px; }
+  .help-q { margin: 0 0 8px; font-size: 17px; line-height: 1.4; }
+  .help-steps { margin: 0 0 8px; padding-left: 26px; font-size: 16px; line-height: 1.4; }
+  .modal-box .help-steps li { display: list-item; margin: 3px 0; padding: 0; font-size: 16px; }
+  .help-look { margin: 6px 0 8px; font-size: 16px; line-height: 1.4; }
+  .help-mission { margin: 6px 0 10px; font-size: 15px; color: var(--muted); }
+  details.teachers { margin: 8px 0 14px; font-size: 13px; color: var(--muted); line-height: 1.4; }
+  details.teachers summary { cursor: pointer; font-weight: 600; }
+  details.teachers p { margin: 4px 0; }
+  .model-view { margin: -4px 0 8px; font-weight: 600; color: var(--muted); }
 
   #toast { position: fixed; left: 50%; bottom: 150px; transform: translateX(-50%); background: rgba(10,20,60,.9); color: #fff; padding: 10px 16px; border-radius: 14px; font-size: 15px; opacity: 0; transition: opacity .3s; pointer-events: none; z-index: 15; text-align: center; max-width: 90vw; }
   #toast.show { opacity: 1; }
@@ -285,6 +308,10 @@
 
 <aside id="panel" aria-label="Information">
   <button class="btn small panel-close" id="panelClose">✖ Close</button>
+  <div class="card" id="viewCard">
+    <div class="card-title" id="viewTitle">🌌 Space view: the Earth's orbit</div>
+    <div class="science" id="viewScience"></div>
+  </div>
   <div class="card">
     <div class="card-title">📍 Your pin</div>
     <select id="placeSelect" aria-label="Choose a place"></select>
@@ -339,39 +366,26 @@
 
 <div id="helpModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
   <div class="modal-box">
-    <h2 id="helpTitle">🌍 Welcome to Seasons Explorer!</h2>
-    <ul>
-      <li><span class="em">☀️</span><span>The Earth travels all the way around the Sun once every <b>year</b>.</span></li>
-      <li><span class="em">👆</span><span><b>Grab the Earth</b> to stop it, then drag it around the Sun to change the date.</span></li>
-      <li><span class="em">📐</span><span>The Earth is <b>tilted</b>. Watch the red stick (the axis) – it always points the same way!</span></li>
-      <li><span class="em">📍</span><span>Your <b>pin</b> shows a place on Earth. Choose a place in the info panel, or tap the Earth.</span></li>
-      <li><span class="em">🔍</span><span><b>Zoom to Earth</b> to see day and night. Pinch or scroll to zoom, drag to look around.</span></li>
-      <li><span class="em">🚀</span><span>Try the <b>Missions</b> to become a seasons expert!</span></li>
-    </ul>
-    <div class="objectives"><h3>🎯 What you are learning</h3>
-      <p><b>5ESs.01</b> Describe the orbit of the Earth around the Sun (limited to slight ellipse, anticlockwise direction and the duration).</p>
-      <p><b>5ESs.02</b> Describe how the tilt of the Earth can create different seasons in different places.</p>
-      <p class="muted"><b>Also:</b> <b>5TWSm.01</b> Know that a model presents an object, process or idea in a way that shows some of the important features.</p></div>
-    <div class="modal-actions"><a class="btn" href="../practice/index.html#earth-space">✏️ Practise this</a><button class="btn primary" id="helpClose">Let's explore! 🚀</button></div>
+    <button class="modal-x" data-act="close" aria-label="Close">✕</button>
+    <div id="helpBody"></div>
+    <div class="modal-actions"><a class="btn" href="../practice/index.html#earth-space">✏️ Practise this</a><button class="btn primary" id="helpClose">Let's go! 🚀</button></div>
   </div>
 </div>
 
 <div id="modelModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modelTitle">
   <div class="modal-box">
+    <button class="modal-x" data-act="close" aria-label="Close">✕</button>
     <h2 id="modelTitle">🤔 How is this model different from real life?</h2>
+    <div class="model-view" id="modelView"></div>
     <p style="margin-top:0">A <b>model</b> shows some important features of something real – but not everything.</p>
-    <ul>
-      <li><span class="em">📏</span><span>The Sun and the Earth are <b>not to scale</b>. In real life, the Earth would be a tiny dot, very far away from the Sun.</span></li>
-      <li><span class="em">⭕</span><span>The orbit is drawn more stretched than it really is. The real orbit is very nearly a <b>circle</b>.</span></li>
-      <li><span class="em">🌙</span><span>The Moon and the other planets are left out.</span></li>
-      <li><span class="em">☁️</span><span>Real sunlight and temperatures also depend on the weather, clouds, and the land and sea.</span></li>
-    </ul>
+    <ul id="modelList"></ul>
     <div class="modal-actions"><button class="btn primary" id="modelClose">Got it!</button></div>
   </div>
 </div>
 
 <div id="missionsModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="missionsTitle">
   <div class="modal-box">
+    <button class="modal-x" data-act="close" aria-label="Close">✕</button>
     <h2 id="missionsTitle">🚀 Missions</h2>
     <p class="muted" style="margin-top:0">Complete each mission to earn a star ⭐</p>
     <div class="mission-list" id="missionList"></div>
@@ -384,6 +398,7 @@
 
 <div id="winModal" class="modal hidden" role="dialog" aria-modal="true">
   <div class="modal-box">
+    <button class="modal-x" data-act="close" aria-label="Close">✕</button>
     <div class="win-emoji">⭐</div>
     <h2 id="winTitle" style="text-align:center">Mission complete!</h2>
     <div class="win-text" id="winText"></div>
@@ -776,6 +791,7 @@ function goView(v) {
   controls.minDistance = 0; controls.maxDistance = Infinity;
   document.querySelectorAll('[data-view]').forEach(b => b.classList.toggle('active', b.dataset.view === v));
   beamGroup.visible = v === 'earth';
+  onViewChanged(v);
 }
 
 // ================= Pointer: drag the Earth, pick a spot =================
@@ -1336,10 +1352,108 @@ function openPanelMobile() { panel.classList.add('open'); refreshUI(true); }
 function closePanelMobile() { panel.classList.remove('open'); }
 $('#panelToggle').onclick = () => panel.classList.contains('open') ? closePanelMobile() : openPanelMobile();
 $('#panelClose').onclick = closePanelMobile;
-$('#helpBtn').onclick = () => $('#helpModal').classList.remove('hidden');
-$('#helpClose').onclick = () => { $('#helpModal').classList.add('hidden'); store.set('se-help-seen', true); };
-$('#modelBtn').onclick = () => $('#modelModal').classList.remove('hidden');
+// ================= Help, real life and "the science" for each camera view =================
+const TEACHERS_ALSO = '<p><b>Also:</b> <b>5TWSm.01</b> Know that a model presents an object, process or idea in a way that shows some of the important features.</p>';
+const HELP = {
+  space: {
+    title: '🌌 Space view',
+    question: 'How does the Earth travel around the Sun in one year?',
+    steps: [
+      'Press <b>▶ Play</b> and watch the Earth go round the Sun.',
+      '<b>Grab the Earth</b> and drag it to change the date.',
+      'Watch the red stick (the <b>axis</b>). Which way does it point?',
+      'Open the info panel to see the <b>season</b> at your pin.',
+    ],
+    look: 'Which way does the Earth go round: clockwise or anticlockwise?',
+    teachers: '<p><b>5ESs.01</b> Describe the orbit of the Earth around the Sun (limited to slight ellipse, anticlockwise direction and the duration).</p>',
+    card: '🌌 Space view: the Earth\'s orbit',
+    science: 'The Earth travels <b>anticlockwise</b> around the Sun. One trip takes one <b>year</b> (365 days). Its path is called an <b>orbit</b>. It is a slightly squashed circle: an <b>ellipse</b>.',
+    real: [
+      ['⭕', 'The orbit is drawn more stretched than it really is. The real orbit is very nearly a <b>circle</b>.'],
+      ['⏱️', 'Here a whole year goes by in about a minute. In real life it takes <b>365 days</b>.'],
+    ],
+  },
+  side: {
+    title: '👀 Side view',
+    question: 'Why do we have seasons?',
+    steps: [
+      'Look at the red stick. It shows the Earth\'s <b>tilt</b>.',
+      'Drag the date slider to <b>June</b>, then to <b>December</b>.',
+      'Which half of the Earth leans <b>towards</b> the Sun each time?',
+      'Try the <b>Tilt</b> slider. What happens at 0°?',
+    ],
+    look: 'Check the season for the northern and southern halves in the info panel.',
+    teachers: '<p><b>5ESs.02</b> Describe how the tilt of the Earth can create different seasons in different places.</p>',
+    card: '👀 Side view: the tilt',
+    science: 'The Earth\'s <b>axis</b> is <b>tilted</b>, and the tilt causes the <b>seasons</b>. When the northern half leans <b>towards</b> the Sun, it has <b>summer</b>. At the same time the southern half leans away and has <b>winter</b>. The seasons are <b>opposite</b>.',
+    real: [
+      ['📍', 'The red stick is not real. The <b>axis</b> is an imaginary line that the Earth spins around.'],
+    ],
+  },
+  earth: {
+    title: '🔍 Zoom to Earth',
+    question: 'Why is it day in some places and night in others?',
+    steps: [
+      'Find your <b>pin</b> 📍 on the Earth.',
+      'Watch the Earth <b>spin</b>. Your pin goes into day, then night.',
+      'Look at the yellow <b>sunbeams</b> hitting the Earth.',
+      'Change the date. Check <b>The Sun in the sky</b> card.',
+    ],
+    look: 'Pinch or scroll to zoom. Drag to look around.',
+    teachers: '<p><b>5ESs.02</b> Describe how the tilt of the Earth can create different seasons in different places.</p>',
+    card: '🔍 Zoom to Earth: day and night',
+    science: 'The Earth <b>spins</b> once a day. The side facing the Sun has <b>day</b>. The other side has <b>night</b>. When your half of the Earth leans towards the Sun, the Sun climbs higher and the days are longer.',
+    real: [
+      ['🔄', 'Here the Earth spins once every few seconds. In real life one spin takes <b>24 hours</b>.'],
+      ['☁️', 'Real sunlight and temperatures also depend on the weather, clouds, and the land and sea.'],
+    ],
+  },
+};
+const REAL_GENERAL = [
+  ['📏', 'The Sun and the Earth are <b>not to scale</b>. In real life, the Earth would be a tiny dot, very far away from the Sun.'],
+  ['🌙', 'The Moon and the other planets are left out.'],
+];
+const helpSeen = new Set();
+let firstHelp = true;
+const anyModalOpen = () => [...document.querySelectorAll('.modal')].some(m => !m.classList.contains('hidden'));
+function showHelp(v = state.view) {
+  const h = HELP[v];
+  $('#helpBody').innerHTML =
+    `<h2 id="helpTitle">${h.title}</h2>` +
+    (firstHelp ? '<p class="help-welcome">🌍 Welcome to Seasons Explorer!</p>' : '') +
+    `<h3 class="help-sec">🔬 The big question</h3><p class="help-q">${h.question}</p>` +
+    `<h3 class="help-sec">👆 What to do</h3><ol class="help-steps">${h.steps.map(s => `<li>${s}</li>`).join('')}</ol>` +
+    (h.look ? `<p class="help-look"><b>💡 Look out for:</b> ${h.look}</p>` : '') +
+    '<p class="help-mission">🚀 Try the Missions to win stars!</p>' +
+    `<details class="teachers"><summary>For teachers</summary>${h.teachers}${TEACHERS_ALSO}</details>`;
+  firstHelp = false;
+  helpSeen.add(v);
+  $('#helpModal').classList.remove('hidden');
+}
+function autoHelp(v) {
+  if (NO_HELP || helpSeen.has(v) || anyModalOpen()) return;
+  showHelp(v);
+}
+function showModel() {
+  const h = HELP[state.view];
+  $('#modelView').textContent = h.title;
+  $('#modelList').innerHTML = [...h.real, ...REAL_GENERAL]
+    .map(([em, t]) => `<li><span class="em">${em}</span><span>${t}</span></li>`).join('');
+  $('#modelModal').classList.remove('hidden');
+}
+function updateViewCard(v) {
+  $('#viewTitle').textContent = HELP[v].card;
+  $('#viewScience').innerHTML = `<b>🔬 The science</b>${HELP[v].science}`;
+}
+function onViewChanged(v) { updateViewCard(v); autoHelp(v); }
+const NO_HELP = /(^|[#&])nohelp=1(&|$)/.test(location.hash);
+const closeModal = m => m.classList.add('hidden');
+
+$('#helpBtn').onclick = () => showHelp();
+$('#helpClose').onclick = () => closeModal($('#helpModal'));
+$('#modelBtn').onclick = showModel;
 $('#modelClose').onclick = () => $('#modelModal').classList.add('hidden');
+document.querySelectorAll('.modal-x').forEach(b => b.onclick = () => closeModal(b.closest('.modal')));
 $('#missionsBtn').onclick = () => { renderMissionList(); $('#missionsModal').classList.remove('hidden'); };
 $('#missionsClose').onclick = () => $('#missionsModal').classList.add('hidden');
 $('#resetStars').onclick = () => { state.done = []; store.set('se-done', []); updateStars(); renderMissionList(); };
@@ -1454,7 +1568,8 @@ const d0 = viewDest('space'); camera.position.copy(d0.pos);
 drawEarthTexture();
 loadWorld();
 $('#loading').classList.add('hidden');
-if (!store.get('se-help-seen', false)) $('#helpModal').classList.remove('hidden');
+updateViewCard(state.view);
+autoHelp(state.view);
 animate();
 </script>
 </body>

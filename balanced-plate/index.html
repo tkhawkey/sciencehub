@@ -179,6 +179,29 @@
   .win-text { font-size: 17.5px; line-height: 1.5; margin-bottom: 14px; }
   .confetti { position: fixed; top: -40px; font-size: 26px; z-index: 40; pointer-events: none; animation: fall linear forwards; }
   @keyframes fall { to { transform: translateY(110vh) rotate(540deg); } }
+  /* Help pop-up (one tab at a time) */
+  .help-welcome { font-size: 17px; font-weight: 600; color: var(--blue); margin: 0 0 4px; }
+  .help-sec { margin: 12px 0 4px; font-size: 17px; }
+  .help-sec + p { margin: 0 0 4px; }
+  .modal-box ol { margin: 4px 0 6px; padding-left: 24px; line-height: 1.4; }
+  .teach { font-size: 13.5px; color: var(--muted); margin: 12px 0 14px; }
+  .teach summary { cursor: pointer; font-weight: 600; }
+  .teach p { margin: 4px 0; }
+  .model-tab { margin: -4px 0 8px; color: var(--muted); font-weight: 600; }
+  .modal-box { position: relative; }
+  .modal-x {
+    position: sticky; top: 0; float: right; z-index: 2;
+    width: 52px; height: 52px; margin: -6px -6px 6px 12px; padding: 0;
+    border: 0; border-radius: 50%; cursor: pointer;
+    background: var(--coral); color: #fff; font-size: 26px; font-weight: 700; line-height: 1;
+    display: grid; place-items: center; box-shadow: 0 3px 0 rgba(0,0,0,.2);
+    transition: transform .08s, filter .15s;
+  }
+  .modal-x:hover { filter: brightness(1.08); }
+  .modal-x:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,.2); }
+  .modal-x:focus-visible { outline: 3px solid var(--yellow); outline-offset: 2px; }
+  .science { background: #fff6d6; border: 3px solid var(--yellow); border-radius: 16px; padding: 10px 14px; margin: 8px 0; }
+  .science > b:first-child { display: block; font-size: 14px; text-transform: uppercase; letter-spacing: .04em; color: #8a5a00; margin-bottom: 2px; }
 
   /* ---------- Narrow screens: stage on top, drawer below ---------- */
   @media (max-width: 760px) {
@@ -208,7 +231,7 @@
   <div class="tabs" id="tabs"></div>
   <button class="btn missions" data-act="missions" title="Missions">🚀 <span class="long">Missions </span><span id="starCount"></span></button>
   <button class="btn" data-act="model" title="How is this model different from real life?">🤔<span class="long"> Real life?</span></button>
-  <button class="btn" id="helpBtn" data-act="view" data-view="help" aria-label="How to use">❓</button>
+  <button class="btn" id="helpBtn" data-act="help" aria-label="How to use">❓</button>
 </div>
 <main>
   <div id="stage"></div>
@@ -223,6 +246,7 @@
 </main>
 <div id="missionsModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="missionsTitle">
   <div class="modal-box">
+    <button class="modal-x" data-act="closeModals" aria-label="Close">✕</button>
     <h2 id="missionsTitle">🚀 Missions</h2>
     <div class="mission-list" id="missionList"></div>
     <div class="modal-actions"><button class="btn" data-act="resetStars">Reset stars</button><button class="btn primary" data-act="closeModals">Close</button></div>
@@ -230,26 +254,28 @@
 </div>
 <div id="modelModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modelTitle">
   <div class="modal-box">
+    <button class="modal-x" data-act="closeModals" aria-label="Close">✕</button>
     <h2 id="modelTitle">🤔 How is this model different from real life?</h2>
+    <p class="model-tab" id="modelTab"></p>
     <p style="margin-top:0">A <span class="term">model</span> shows some important features of something real – but not everything.</p>
-    <ul class="icons">
-      <li><span class="em">🧩</span><span>Each food is put in <b>one group</b>, but most real foods contain several things. Beans have protein <b>and</b> fibre; cheese has protein <b>and</b> fat.</span></li>
-      <li><span class="em">🍽️</span><span>Sam's plate shows a <b>whole day's</b> food at once. In real life, it is spread over breakfast, lunch, dinner and snacks.</span></li>
-      <li><span class="em">⚖️</span><span>Every picture counts as <b>one portion</b>. Real portions are different sizes, and different people need different amounts: an active footballer needs more energy food than someone who is resting.</span></li>
-      <li><span class="em">🔺</span><span>The <b>plate</b> and the <b>food pyramid</b> are two different models of a balanced diet. They don't quite agree: the pyramid puts starchy foods at the bottom, but the plate gives fruit and vegetables just as much room.</span></li>
-      <li><span class="em">🏷️</span><span>The food labels are made up, but real labels work the same way: they show what is in every 100 g or 100 ml.</span></li>
-      <li><span class="em">🦁</span><span>Real zoo animals get carefully planned diets, often with extra vitamins and minerals. The zoo here only shows their <b>main foods</b>.</span></li>
-      <li><span class="em">🖼️</span><span>The pictures are simple and are <b>not to scale</b>.</span></li>
-    </ul>
+    <ul class="icons" id="modelList"></ul>
     <div class="modal-actions"><button class="btn primary" data-act="closeModals">Got it!</button></div>
   </div>
 </div>
 <div id="winModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="winTitle">
   <div class="modal-box">
+    <button class="modal-x" data-act="closeModals" aria-label="Close">✕</button>
     <div class="win-emoji">⭐</div>
     <h2 id="winTitle" style="text-align:center">Mission complete!</h2>
     <div class="win-text" id="winText"></div>
     <div class="modal-actions"><button class="btn" data-act="closeModals">Keep exploring</button><a class="btn primary" id="winPractise" href="../practice/index.html#diet">✏️ Practise this</a><button class="btn primary" id="winNext" data-act="nextMission">Next mission ▶</button></div>
+  </div>
+</div>
+<div id="helpModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+  <div class="modal-box">
+    <button class="modal-x" data-act="closeModals" aria-label="Close">✕</button>
+    <div id="helpBody"></div>
+    <div class="modal-actions"><a class="btn" href="../practice/index.html#diet">✏️ Practise this</a><button class="btn primary" data-act="closeModals">Let's go! 🚀</button></div>
   </div>
 </div>
 
@@ -686,9 +712,12 @@ const LBL = {
       return `<div class="card lq"><p><b>${i + 1}.</b> ${q.q}</p><div class="stops">${opts.map((o, k) => `<button class="opt${st === 'right' && k === q.a ? ' done' : ''}" data-act="lans" data-q="${i}" data-k="${k}"${st === 'right' ? ' disabled' : ''}>${o}</button>`).join('')}</div>
         ${st === 'right' ? `<p class="job">✅ ${q.why}</p>` : st === 'wrong' ? `<p class="spot">🤔 Not quite. ${q.hint}</p>` : ''}</div>`;
     }).join('');
+    const setDone = S.qs.every((_, i) => L.answers[`${L.set}${i}`] === 'right');
     return `<div class="card"><h2>Label detective</h2>
+        <p><b>🔬 Big question:</b> what can a <b>food label</b> tell you about what is inside?</p>
         <p>Food labels tell you what is inside. Each label shows what is in <b>${S.per}</b>. Look carefully at the labels in the picture, then answer.</p>
-        <div class="stops">${tabs}</div><p class="muted">Solved: ${LBL.solved()} of ${QCOUNT}</p></div>${qs}`;
+        <div class="stops">${tabs}</div><p class="muted">Solved: ${LBL.solved()} of ${QCOUNT}</p>
+        ${setDone ? `<div class="science"><b>🔬 The science</b>A label shows what is in every <b>${S.per}</b>. Compare the same row on each label to choose foods with <b>less sugar</b> and <b>more fibre</b>.</div>` : ''}</div>${qs}`;
   },
   answer(q, k) {
     const L = state.labels, key = `${L.set}${q}`;
@@ -930,7 +959,73 @@ function stopMission() { state.mission = null; $('#banner').classList.add('hidde
 // The banner sits over the top of the drawer, so the drawer's cards start below it
 function fitBanner() { $('#drawer').style.paddingTop = state.mission == null ? '' : `${$('#banner').offsetHeight + 18}px`; }
 function updateStars() { $('#starCount').textContent = `${state.done.length}/${MISSIONS.length} ⭐`; }
-function closeModals() { document.querySelectorAll('.modal').forEach(m => m.classList.add('hidden')); }
+function closeModals() {
+  document.querySelectorAll('.modal').forEach(m => m.classList.add('hidden'));
+  // A tab's help that had to wait for another pop-up shows now
+  if (autoHelp.wait) { autoHelp.wait = false; autoHelp(); }
+}
+
+// ================= Help and "real life?" pop-ups: the current tab only =================
+const CUR = {
+  b: '<b>5Bp.01</b> Know that animals, including humans, need an adequate, balanced diet in order to be healthy.',
+  m: '<b>5TWSm.01</b> Know that a model presents an object, process or idea in a way that shows some of the important features.'
+};
+const HELP = {
+  plate: { q: 'What does a <b>balanced</b> day of food look like?',
+    steps: ['Pick a meal, then tap foods to put them on Sam\'s plate.', 'Choose a drink for Sam.', 'Press 💬 <b>Check with Sam</b> and read what Sam says.', 'Tap a food on the plate to see what it gives you.'],
+    look: 'Try 🔺 <b>A food pyramid</b>. It is another <b>model</b> of the same day.', cur: ['b', 'm'] },
+  lunch: { q: 'How do you pack a <b>balanced</b> lunch that suits the person eating it?',
+    steps: ['Choose who the lunchbox is for. Read what they need.', 'Make a sandwich and put it in.', 'Add other food and a drink. There are only 5 spaces!', 'Press 💬 <b>Check the lunchbox</b>.'],
+    look: 'A sandwich takes one space, but counts for more than one <b>food group</b>.', cur: ['b'] },
+  labels: { q: 'What can a <b>food label</b> tell you about what is inside?',
+    steps: ['Pick a set of foods.', 'Look closely at the labels in the picture.', 'Answer the questions. Stuck? Read the hint.'],
+    look: 'Each label shows what is in <b>100 g</b>. A bigger pack has more.', cur: ['b'] },
+  jobs: { q: 'What <b>jobs</b> do different foods do in your body?',
+    steps: ['Tap a food on the shelf.', 'Tap the job box it belongs in. You can drag it too.', 'Keep going until every food has a place.'],
+    look: 'Some foods do <b>two</b> jobs, so they can go in either box.', cur: ['b'] },
+  zoo: { q: 'Does every animal need the <b>same</b> balanced diet?',
+    steps: ['Choose an animal.', 'Put the right foods in its bowl.', 'Fill the water trough.', 'Press ✔ <b>Check</b>. Then try the next animal.'],
+    cur: ['b'] }
+};
+const NOHELP = new URLSearchParams(location.hash.slice(1)).get('nohelp') === '1';
+const helpSeen = new Set();
+const tabName = id => VIEWS[id].label.replace(/<[^>]+>/g, '');
+function showHelp() {
+  const h = HELP[state.view];
+  // The very first pop-up of the visit says hello
+  const hello = helpSeen.size ? '' : '<p class="help-welcome">Welcome to Balanced Plate! 👋</p>';
+  helpSeen.add(state.view);
+  $('#helpBody').innerHTML = `${hello}<h2 id="helpTitle">${tabName(state.view)}</h2>
+    <h3 class="help-sec">🔬 The big question</h3><p>${h.q}</p>
+    <h3 class="help-sec">👆 What to do</h3><ol>${h.steps.map(s => `<li>${s}</li>`).join('')}</ol>
+    ${h.look ? `<h3 class="help-sec">💡 Look out for</h3><p>${h.look}</p>` : ''}
+    <p>🚀 Try the <b>Missions</b> to win stars!</p>
+    <details class="teach"><summary>For teachers</summary>${h.cur.map(c => `<p>${CUR[c]}</p>`).join('')}</details>`;
+  $('#helpModal').classList.remove('hidden');
+}
+// Each tab's help pops up the first time it is opened in this visit (not saved, so a new class sees it again)
+function autoHelp() {
+  if (NOHELP || helpSeen.has(state.view)) return;
+  if (document.querySelector('.modal:not(.hidden)')) { autoHelp.wait = true; return; }
+  showHelp();
+}
+const REAL = {
+  group: ['🧩', 'Each food is put in <b>one group</b>, but most real foods contain several things. Beans have protein <b>and</b> fibre; cheese has protein <b>and</b> fat.'],
+  jobsGroup: ['🧩', 'Each food goes in one or two boxes, but most real foods contain <b>lots</b> of things. Cheese has protein <b>and</b> fat.'],
+  day: ['🍽️', 'Sam\'s plate shows a <b>whole day\'s</b> food at once. In real life, it is spread over breakfast, lunch, dinner and snacks.'],
+  portion: ['⚖️', 'Every picture counts as <b>one portion</b>. Real portions are different sizes, and different people need different amounts: an active footballer needs more energy food than someone who is resting.'],
+  pyramid: ['🔺', 'The <b>plate</b> and the <b>food pyramid</b> are two different models of a balanced diet. They don\'t quite agree: the pyramid puts starchy foods at the bottom, but the plate gives fruit and vegetables just as much room.'],
+  labels: ['🏷️', 'The food labels are made up, but real labels work the same way: they show what is in every 100 g or 100 ml.'],
+  zoo: ['🦁', 'Real zoo animals get carefully planned diets, often with extra vitamins and minerals. The zoo here only shows their <b>main foods</b>.'],
+  pics: ['🖼️', 'The pictures are simple and are <b>not to scale</b>.']
+};
+const REAL_TABS = {
+  plate: ['group', 'day', 'portion', 'pyramid', 'pics'],
+  lunch: ['group', 'portion', 'pics'],
+  labels: ['labels', 'pics'],
+  jobs: ['jobsGroup', 'pics'],
+  zoo: ['zoo', 'pics']
+};
 function confetti() {
   const em = ['⭐', '🌟', '🍎', '🥦', '🎉'];
   for (let i = 0; i < 30; i++) {
@@ -956,7 +1051,9 @@ const VIEWS = {
       // What Sam says goes at the top, so it is never scrolled out of sight
       return `
         ${saysCard(state.said, 'Sam')}
+        ${state.said?.ok ? '<div class="science"><b>🔬 The science</b>A <b>balanced diet</b> has the right amount of each food group. The bigger the part of the plate, the more of that group you need.</div>' : ''}
         <div class="card"><h2>Plate builder</h2>
+          <p><b>🔬 Big question:</b> what does a <b>balanced</b> day of food look like?</p>
           <p>Fill Sam's plate with <b>everything Sam eats in one day</b>. Tap a food to add it, or drag it on. It goes in its <b>food group's</b> part. Tap it again to take it off.</p>
           <div class="stops mealtabs">${meals}</div>
           <div class="shelf">${chips}</div>
@@ -981,7 +1078,9 @@ const VIEWS = {
         `<button class="opt sm${l.sw[key] === id ? ' on' : ''}" data-act="lsw" data-k="${key}" data-v="${id}"${l.box.includes('sandwich') ? ' disabled' : ''}>${picHTML(p[0])} ${p[1]}</button>`).join('')}</div></div>`;
       return `
         ${saysCard(l.said, LB.BRIEFS[l.brief].name)}
+        ${l.said?.ok ? '<div class="science"><b>🔬 The science</b>A <b>balanced</b> lunch has food from the different food groups. Different people need different things, so think about who will eat it.</div>' : ''}
         <div class="card"><h2>Lunchbox</h2>
+          <p><b>🔬 Big question:</b> how do you pack a <b>balanced</b> lunch that suits the person eating it?</p>
           <p>Pack a <b>balanced lunch</b> that fits in <b>5 spaces</b>. Read who it is for first!</p>
           <div class="stops">${briefs}</div></div>
         <div class="card"><h3>🥪 Make a sandwich</h3>
@@ -1008,14 +1107,15 @@ const VIEWS = {
       const j = state.jobs, left = JORDER.filter(f => !j.placed[f]);
       return `
         <div class="card"><h2>What is food for?</h2>
+          <p><b>🔬 Big question:</b> what <b>jobs</b> do different foods do in your body?</p>
           <p>Different foods do different <b>jobs</b> in your body. Tap a food, then tap a job it does. You can drag it there too. Some foods do <b>two</b> jobs!</p>
           ${left.length ? `<div class="shelf">${left.map(f => chip('job', f, FOODS[f][0], FOODS[f][1], j.sel === f ? ' sel' : '')).join('')}</div>`
             : '<p class="job">🎉 All the foods are in a right place!</p>'}
+          ${left.length ? '' : `<div class="science"><b>🔬 The science</b><b>Carbohydrates</b> give energy. <b>Proteins</b> help you grow and repair. <b>Fats</b> store energy. <b>Vitamins and minerals</b> keep you healthy. <b>Fibre</b> helps digestion. A <b>balanced diet</b> gives you all of these, in the right amounts.</div>`}
           ${j.msg ? `<p class="spot"><span>${j.msg[0]}</span> ${j.msg[1]}</p>` : ''}
           <p class="muted">Mistakes: ${j.mistakes}</p></div>
         ${left.length ? '' : `<div class="card"><h3>💡 One more thing you need</h3>
           <p><b>Water</b> helps every part of your body work. You need to drink every day.</p>
-          <p>A <b>balanced diet</b> gives you all of these, in the right amounts.</p>
           <div class="navrow"><button class="btn" data-act="jreset">↺ Start again</button></div></div>`}`;
     }
   },
@@ -1028,42 +1128,22 @@ const VIEWS = {
       const chips = Object.entries(PANTRY).map(([id, p]) => chip('zoo', id, p[0], p[1], bowl.includes(id) ? ' on' : '')).join('');
       return `
         <div class="card"><h2>Feed the zoo</h2>
+          <p><b>🔬 Big question:</b> does every animal need the <b>same</b> balanced diet?</p>
           <p>Animals need a balanced diet too. Fill each animal's bowl with the <b>right foods</b> for it, then check.</p>
-          <div class="stops">${animals}</div></div>
+          <div class="stops">${animals}</div>
+          ${z.fed.length === 4 ? '<div class="science"><b>🔬 The science</b>Every animal needs a <b>balanced diet</b> to be healthy, but a balanced diet is <b>different</b> for each animal. Humans eat both plants and animals, so our balanced diet has lots of different foods.</div>' : ''}</div>
         <div class="card"><h3>${A.em} Food for the ${A.name.toLowerCase()}</h3>
           ${z.msg ? `<p class="${z.msg[0] === '🎉' ? 'job' : 'spot'}"><span>${z.msg[0]}</span> ${z.msg[1]}</p>` : ''}
           <div class="shelf">${chips}</div>
           <div class="navrow" style="margin-top:8px"><button class="btn${wet ? ' active' : ''}" data-act="zwater">💧 ${wet ? 'Trough is full' : 'Fill the water trough'}</button></div>
-          <div class="navrow" style="margin-top:8px"><button class="btn go" data-act="zcheck"${bowl.length ? '' : ' disabled'}>✔ Check</button></div></div>
-        ${z.fed.length === 4 ? '<div class="card"><h3>🌍 What did you find out?</h3><p>Every animal needs a <b>balanced diet</b> to be healthy, but a balanced diet is <b>different</b> for each animal. Humans eat both plants and animals, so our balanced diet has lots of different foods.</p></div>' : ''}`;
-    }
-  },
-  help: {
-    label: 'Help',
-    stage: () => PL.stage(),
-    after: () => PL.foods(),
-    drawer() {
-      return `<div class="card"><h2>Help</h2>
-        <p><b>🍽️ Plate builder</b>: fill Sam's plate with a whole day's food, choose a drink, then check with Sam. Each food goes in its food group's part of the plate. Point at a food on the plate, or tap it, to see what it gives you. You can also see the day as a food pyramid.</p>
-        <p><b>🥪 Lunchbox</b>: pack a balanced lunch for a child with a special need.</p>
-        <p><b>🏷️ Labels</b>: be a label detective. Compare the labels on four foods, and work out how much is in a whole pack.</p>
-        <p><b>🔋 What is food for?</b>: match foods to the jobs they do in your body.</p>
-        <p><b>🦁 Feed the zoo</b>: give each animal the right foods for a balanced diet.</p>
-        <p><b>🚀 Missions</b>: challenges that use all the tabs. Win a star for each one!</p>
-        <p><b>🤔 Real life?</b>: how this model is different from real food and diets.</p></div>
-        <div class="card"><h3>🎯 What you are learning</h3>
-          <p><b>5Bp.01</b> Know that animals, including humans, need an adequate, balanced diet in order to be healthy.</p>
-          <p class="muted"><b>Also:</b> <b>5TWSm.01</b> Know that a model presents an object, process or idea in a way that shows some of the important features.</p></div>
-        <div class="navrow"><a class="btn go" href="../practice/index.html#diet">✏️ Practise this</a></div>`;
+          <div class="navrow" style="margin-top:8px"><button class="btn go" data-act="zcheck"${bowl.length ? '' : ' disabled'}>✔ Check</button></div></div>`;
     }
   }
 };
 
 function render() {
   const v = VIEWS[state.view];
-  // Help is the ❓ button at the end of the top bar, like the other tools, so it isn't one of the tabs
-  $('#helpBtn').classList.toggle('active', state.view === 'help');
-  $('#tabs').innerHTML = Object.entries(VIEWS).filter(([id]) => id !== 'help').map(([id, x]) =>
+  $('#tabs').innerHTML = Object.entries(VIEWS).map(([id, x]) =>
     `<button class="btn${id === state.view ? ' active' : ''}" data-act="view" data-view="${id}" aria-label="${x.label.replace(/<[^>]+>/g, '').replace(/^\S+ /, '')}">${x.label}</button>`).join('');
   const keep = $('#drawer').scrollTop, same = render.last === state.view;
   $('#stage').innerHTML = v.stage();
@@ -1073,6 +1153,7 @@ function render() {
   if (same) $('#drawer').scrollTop = keep;
   render.last = state.view;
   fitBanner();
+  autoHelp();
 }
 
 // ================= Actions =================
@@ -1113,7 +1194,12 @@ const ACTIONS = {
   },
   resetStars() { state.done = []; store.set('bp-done', []); updateStars(); ACTIONS.missions(); },
   closeModals() { closeModals(); },
-  model() { $('#modelModal').classList.remove('hidden'); }
+  help() { closeModals(); showHelp(); },
+  model() {
+    $('#modelTab').textContent = tabName(state.view);
+    $('#modelList').innerHTML = REAL_TABS[state.view].map(k => `<li><span class="em">${REAL[k][0]}</span><span>${REAL[k][1]}</span></li>`).join('');
+    $('#modelModal').classList.remove('hidden');
+  }
 };
 document.addEventListener('click', e => {
   const el = e.target.closest('[data-act]');
@@ -1134,7 +1220,8 @@ addEventListener('resize', fitBanner);
 // ================= Start =================
 // Test hooks: #view=plate&foods=apple,toast&drink=water&model=pyramid&check=1 fills the plate; #view=jobs&placed=toast,egg places foods;
 // #view=lunch&brief=ben&box=apple,yogNat&sandwich=brown,egg,lettuce&drink=water&check=1 packs a lunchbox;
-// #view=labels&set=drink opens a set of labels; #view=zoo&animal=lion&food=meat&water=1&check=1 fills a bowl; #mission=2 starts a mission
+// #view=labels&set=drink opens a set of labels; #view=zoo&animal=lion&food=meat&water=1&check=1 fills a bowl; #mission=2 starts a mission;
+// add &nohelp=1 to any of these to skip the help pop-ups
 const hp = new URLSearchParams(location.hash.slice(1));
 if (VIEWS[hp.get('view')]) state.view = hp.get('view');
 if (hp.has('foods')) state.plate = hp.get('foods').split(',').filter(id => FOODS[id]).slice(0, MAXFOOD);

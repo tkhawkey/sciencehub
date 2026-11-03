@@ -180,6 +180,14 @@
   .mission-item.done .star { filter: none; opacity: 1; }
   .win-emoji { font-size: 56px; text-align: center; }
   .win-text { font-size: 17.5px; line-height: 1.5; margin-bottom: 14px; }
+  .help-box h3 { margin: 12px 0 4px; font-size: 18px; }
+  .help-box p, .help-box ol { margin: 0 0 6px; }
+  .help-box ol { padding-left: 24px; }
+  .help-box ol li { margin: 3px 0; }
+  .help-box .welcome { font-weight: 700; color: var(--blue); margin-bottom: 4px; }
+  .help-box details.teach { font-size: 13.5px; color: var(--muted); margin: 12px 0; }
+  .help-box details.teach summary { cursor: pointer; font-weight: 600; }
+  .help-box details.teach p { margin: 4px 0; }
   .confetti { position: fixed; top: -40px; font-size: 26px; z-index: 40; pointer-events: none; animation: fall linear forwards; }
   @keyframes fall { to { transform: translateY(110vh) rotate(540deg); } }
 
@@ -192,6 +200,24 @@
     .brand { font-size: 18px; }
     .tl { display: none; }
   }
+
+  /* ---------- Big close button on every pop-up ---------- */
+  .modal-box { position: relative; }
+  .modal-x {
+    position: sticky; top: 0; float: right; z-index: 2;
+    width: 52px; height: 52px; margin: -6px -6px 6px 12px; padding: 0;
+    border: 0; border-radius: 50%; cursor: pointer;
+    background: var(--coral); color: #fff; font-size: 26px; font-weight: 700; line-height: 1;
+    display: grid; place-items: center; box-shadow: 0 3px 0 rgba(0,0,0,.2);
+    transition: transform .08s, filter .15s;
+  }
+  .modal-x:hover { filter: brightness(1.08); }
+  .modal-x:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,.2); }
+  .modal-x:focus-visible { outline: 3px solid var(--yellow); outline-offset: 2px; }
+
+  /* ---------- "The science" highlight ---------- */
+  .science { background: #fff6d6; border: 3px solid var(--yellow); border-radius: 16px; padding: 10px 14px; margin: 8px 0; }
+  .science > b:first-child { display: block; font-size: 14px; text-transform: uppercase; letter-spacing: .04em; color: #8a5a00; margin-bottom: 2px; }
 </style>
 </head>
 <body>
@@ -201,7 +227,7 @@
   <div class="tabs" id="tabs"></div>
   <button class="btn missions" data-act="missions" title="Missions">🚀 <span class="long">Missions </span><span id="starCount"></span></button>
   <button class="btn" data-act="model" title="How is this model different from real life?">🤔<span class="long"> Real life?</span></button>
-  <button class="btn" id="helpBtn" data-act="view" data-view="help" aria-label="How to use">❓</button>
+  <button class="btn" id="helpBtn" data-act="help" aria-label="How to use">❓</button>
 </div>
 <main>
   <div id="stage"></div>
@@ -216,6 +242,7 @@
 </main>
 <div id="missionsModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="missionsTitle">
   <div class="modal-box">
+    <button class="modal-x" data-act="closeModals" aria-label="Close">✕</button>
     <h2 id="missionsTitle">🚀 Missions</h2>
     <div class="mission-list" id="missionList"></div>
     <div class="modal-actions"><button class="btn" data-act="resetStars">Reset stars</button><button class="btn primary" data-act="closeModals">Close</button></div>
@@ -223,6 +250,7 @@
 </div>
 <div id="winModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="winTitle">
   <div class="modal-box">
+    <button class="modal-x" data-act="closeModals" aria-label="Close">✕</button>
     <div class="win-emoji">⭐</div>
     <h2 id="winTitle" style="text-align:center">Mission complete!</h2>
     <div class="win-text" id="winText"></div>
@@ -231,21 +259,19 @@
 </div>
 <div id="modelModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modelTitle">
   <div class="modal-box">
+    <button class="modal-x" data-act="closeModals" aria-label="Close">✕</button>
     <h2 id="modelTitle">🤔 How is this model different from real life?</h2>
+    <p class="muted" id="modelTab" style="margin:0 0 6px;font-weight:600"></p>
     <p style="margin-top:0">A <span class="term">model</span> shows some important features of something real – but not everything.</p>
-    <ul class="icons">
-      <li><span class="em">👻</span><span>Forces are <b>invisible</b>. The arrows are a way of showing them.</span></li>
-      <li><span class="em">📍</span><span>Real forces act on the <b>whole object</b>. Gravity pulls on every part of the book, and the table pushes on its whole bottom. We draw each force as <b>one arrow</b> starting on the object.</span></li>
-      <li><span class="em">📏</span><span>A longer arrow means a bigger force, but the lengths only <b>compare</b> forces. To find the real size of a force, you measure it in <b>newtons</b> with a force meter.</span></li>
-      <li><span class="em">🤏</span><span>Some forces are left out because they are <b>tiny</b>, like the air resistance on a trolley at walking speed.</span></li>
-      <li><span class="em">📸</span><span>Moving things don't really leave faded copies behind! The faded pictures are like <b>photos taken one after another</b>, all put into one picture.</span></li>
-      <li><span class="em">🪂</span><span>The parachute drop is a <b>simulation</b>. In a real test, you would drop each parachute <b>more than once</b> and work out an average.</span></li>
-      <li><span class="em">⏱️</span><span>A stopwatch shows <b>hundredths</b> of a second, but people take about a tenth of a second to press the button. So repeat drops give slightly different times, and the last digit is not very reliable.</span></li>
-      <li><span class="em">🛁</span><span>In the upthrust tank, only the <b>upthrust</b> arrow is drawn. Gravity and the pull of the force meter act on the object too.</span></li>
-      <li><span class="em">🚗</span><span>In the friction ramp, only <b>friction</b> from the surface is shown. A real toy car is also slowed a little by air resistance and by friction in its wheels.</span></li>
-      <li><span class="em">🖼️</span><span>The pictures are simple drawings and are <b>not to scale</b>.</span></li>
-    </ul>
+    <ul class="icons" id="modelList"></ul>
     <div class="modal-actions"><button class="btn primary" data-act="closeModals">Got it!</button></div>
+  </div>
+</div>
+<div id="helpModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+  <div class="modal-box help-box">
+    <button class="modal-x" data-act="closeModals" aria-label="Close">✕</button>
+    <div id="helpBody"></div>
+    <div class="modal-actions"><a class="btn" href="../practice/index.html#forces">✏️ Practise this</a><button class="btn primary" data-act="closeModals">Let's go! 🚀</button></div>
   </div>
 </div>
 
@@ -1245,6 +1271,8 @@ function startMission(i) {
   $('#bannerHint').classList.add('hidden'); $('#hintBtn').textContent = '💡 Show a hint';
   $('#banner').classList.remove('hidden');
   render();
+  // A mission may open a tab the child hasn't seen yet: show its help (it sits above the banner)
+  autoHelp();
 }
 function stopMission() { state.mission = null; $('#banner').classList.add('hidden'); fitBanner(); }
 // The banner sits over the top of the drawer, so the drawer's cards start below it
@@ -1277,7 +1305,9 @@ const VIEWS = {
         <span class="dots" aria-label="size ${a.len} of ${MAXLEN}">${'●'.repeat(a.len)}${'○'.repeat(MAXLEN - a.len)}</span>
         <button class="xbtn" data-act="remove" data-f="${a.f}" aria-label="Remove ${FORCES[a.f].name}">✖</button></li>`).join('');
       return `
-        <div class="card"><h2>Force arrows</h2><div class="scenes">${scenes}</div></div>
+        <div class="card"><h2>Force arrows</h2>
+          <div class="science"><b>🔬 The science</b>A <b>force</b> is a push or a pull. An object can have <b>more than one force</b> on it. An arrow shows which way each force acts.</div>
+          <div class="scenes">${scenes}</div></div>
         <div class="card">${moments}<p>${s.intro}</p>
           <p class="muted">Drag a force onto the picture. Then drag the end of its arrow to point it the right way. A <b>longer</b> arrow means a <b>bigger</b> force.</p>
           <div class="chips">${chips}</div></div>
@@ -1310,7 +1340,7 @@ const VIEWS = {
           ${c.drops.length ? `<table class="results"><tr><th>Drop</th><th>Canopy</th><th>Fall time</th></tr>${rows}</table>` : ''}</div>
         ${ready ? `<div class="card"><h3>💭 What did you find out?</h3><p>As the canopy gets bigger, the fall time…</p>
           <div class="stops">${q.map(([k, t]) => `<button class="opt${c.answer === k ? (k === 'longer' ? ' done' : ' wrong') : ''}" data-act="pconclude" data-a="${k}">${t}</button>`).join('')}</div>
-          ${c.answer === 'longer' ? '<p class="job">Yes! A bigger canopy pushes against more air, so it has <b>more air resistance</b> at the same speed. Air resistance balances gravity while the parachute is still falling slowly, so it takes <b>longer</b> to land.</p>'
+          ${c.answer === 'longer' ? '<div class="science"><b>🔬 The science</b>Yes! A bigger canopy pushes against more air, so it has <b>more air resistance</b> at the same speed. Air resistance balances gravity while the parachute is still falling slowly, so it takes <b>longer</b> to land.</div>'
             : c.answer ? '<p>Look at your graph again. Which way does the line go as the canopy gets bigger?</p>' : ''}</div>` : ''}`;
     }
   },
@@ -1341,7 +1371,7 @@ const VIEWS = {
         <div class="card">${task}
           ${t.msg && t.step !== 'done' ? `<p class="spot"><span>${t.msg[0]}</span> ${t.msg[1]}</p>` : ''}</div>
         ${done.length ? `<div class="card"><h3>📋 Results</h3><table class="results"><tr><th>Object</th><th>In air</th><th>In water</th><th>Upthrust</th></tr>${rows}</table>
-          ${done.length === 3 ? '<p class="job">Every object seemed <b>lighter</b> in water, because the water pushes up on it with <b>upthrust</b>. Things that sink have less upthrust than their weight. Things that float have upthrust as big as their weight.</p>' : '<p class="muted">Try all three objects.</p>'}</div>` : ''}`;
+          ${done.length === 3 ? '<div class="science"><b>🔬 The science</b>Every object seemed <b>lighter</b> in water, because the water pushes up on it with <b>upthrust</b>. Things that sink have less upthrust than their weight. Things that float have upthrust as big as their weight.</div>' : '<p class="muted">Try all three objects.</p>'}</div>` : ''}`;
     }
   },
   ramp: {
@@ -1375,39 +1405,89 @@ const VIEWS = {
               ${pr.surf === best ? 'Your prediction was <b>right</b>! 🎉' : 'Your prediction was different from the result. That\'s fine: scientists test their predictions to find out!'}</p>`; })() : ''}
           <p>Which surface has the <b>most friction</b>?</p>
           <div class="stops">${ids.map(id => `<button class="opt${r.answer === id ? (id === 'sandpaper' ? ' done' : ' wrong') : ''}" data-act="ranswer" data-s="${id}">${R.SURF[id].icon} ${R.SURF[id].label}</button>`).join('')}</div>
-          ${r.answer === 'sandpaper' ? '<p class="job">Yes! Sandpaper is the <b>roughest</b> surface, so it has the <b>most friction</b> and the car stopped soonest. Ice is the smoothest, with the least friction, so the car rolled furthest.</p>'
+          ${r.answer === 'sandpaper' ? '<div class="science"><b>🔬 The science</b>Yes! Sandpaper is the <b>roughest</b> surface, so it has the <b>most friction</b> and the car stopped soonest. Ice is the smoothest, with the least friction, so the car rolled furthest.</div>'
             : r.answer ? '<p>Look at your bar chart. On which surface did the car stop soonest?</p>' : ''}</div>` : ''}`;
     }
-  },
-  help: {
-    label: 'Help',
-    stage: () => A.stage(),
-    drawer() {
-      return `<div class="card"><h2>Help</h2>
-        <p><b>➡️ Force arrows</b>: choose a picture, then show the forces acting on the object. Drag a force onto the picture, then drag the end of the arrow to set its <b>direction</b> and <b>size</b>. Press <b>Check</b> when you are ready.</p>
-        <p><b>🪂 Parachute drop</b>: change the size of the parachute, drop it and time how long it takes to land. Your results make a line graph. Can you spot the result that doesn't fit?</p>
-        <p><b>🛁 Upthrust tank</b>: hang an object on a force meter and raise a tank of water around it. Read the force meter to the nearest newton, in air and in water, and work out the upthrust.</p>
-        <p><b>🚗 Friction ramp</b>: let a toy car roll down a ramp onto ice, wood, carpet or sandpaper. How far does it go on each surface?</p>
-        <p><b>🚀 Missions</b>: challenges that use all the tabs. Win a star for each one!</p>
-        <p>The label in the corner of the picture says if the object is <b>still</b>, <b>speeding up</b>, moving at a <b>steady speed</b> or <b>slowing down</b>. Faded pictures show where it was before.</p>
-        <p><b>🤔 Real life?</b>: how this model is different from real forces.</p></div>
-        <div class="card"><h3>🎯 What you are learning</h3>
-          <p><b>5Pf.01</b> Identify a range of forces (limited to gravity, applied forces, normal forces, upthrust, friction, air resistance and water resistance).</p>
-          <p><b>5Pf.02</b> Know that an object may have multiple forces acting upon it, even when at rest.</p>
-          <p><b>5Pf.03</b> Use force diagrams to show the name and direction of forces acting on an object.</p>
-          <p class="muted"><b>Also:</b> <b>5TWSc.05</b> Take appropriately accurate measurements.
-            <b>5TWSm.01</b> Know that a model presents an object, process or idea in a way that shows some of the important features.</p></div>
-        <div class="navrow"><a class="btn go" href="../practice/index.html#forces">✏️ Practise this</a></div>`;
-    }
   }
+};
+
+// ================= Help (❓): one pop-up per tab =================
+const CUR = {
+  f1: '<p><b>5Pf.01</b> Identify a range of forces (limited to gravity, applied forces, normal forces, upthrust, friction, air resistance and water resistance).</p>',
+  f2: '<p><b>5Pf.02</b> Know that an object may have multiple forces acting upon it, even when at rest.</p>',
+  f3: '<p><b>5Pf.03</b> Use force diagrams to show the name and direction of forces acting on an object.</p>',
+  sc5: '<p><b>5TWSc.05</b> Take appropriately accurate measurements.</p>',
+  sm1: '<p><b>5TWSm.01</b> Know that a model presents an object, process or idea in a way that shows some of the important features.</p>'
+};
+const HELP = {
+  arrows: { q: 'What forces act on an object, and which way does each one push or pull?',
+    steps: ['Choose a picture at the top of the panel.', 'Drag a force onto the picture.', 'Drag the end of the arrow to set its <b>direction</b> and <b>size</b>.', 'Press <b>Check</b> when you are ready.'],
+    tip: 'The label on the picture says if the object is still, speeding up, steady or slowing down.',
+    cur: CUR.f1 + CUR.f2 + CUR.f3 + CUR.sm1 },
+  parachute: { q: 'Does a bigger parachute fall more slowly?',
+    steps: ['Choose a canopy size with the slider.', 'Press <b>Drop!</b> and watch the stopwatch.', 'Test at least <b>4 different sizes</b>.', 'Tap the result that doesn\'t fit, then drop that size again.'],
+    tip: 'Watch the <b>air resistance</b> arrow as the parachute falls.',
+    cur: CUR.f1 + CUR.sc5 },
+  tank: { q: 'What happens to the force meter reading when an object goes into water?',
+    steps: ['Choose an object.', 'Read the force meter while the object hangs in the air.', 'Raise the tank, then read the force meter again.', 'Work out how big the <b>upthrust</b> is.'],
+    tip: 'Use the close-up to read the meter to the nearest <b>newton</b> (N).',
+    cur: CUR.f1 + CUR.sc5 },
+  ramp: { q: 'On which surface does the toy car roll the furthest?',
+    steps: ['Predict a surface and say why.', 'Choose a surface and press <b>Let go!</b>', 'Read the tape measure where the car stopped.', 'Test all <b>4 surfaces</b>.'],
+    tip: 'Watch the <b>friction</b> arrow as the car slows down.',
+    cur: CUR.f1 + CUR.sc5 }
+};
+// Help pops up the first time each tab is opened in this visit (not saved, so a new class sees it again)
+const helpSeen = new Set();
+let noHelp = false, welcomed = false;
+function showHelp(id = state.view) {
+  const h = HELP[id], v = VIEWS[id]; if (!h) return;
+  const name = v.label.replace(/<[^>]+>/g, '');
+  $('#helpBody').innerHTML = `${welcomed ? '' : '<p class="welcome">Welcome to Forces Playground!</p>'}
+    <h2 id="helpTitle">${name}</h2>
+    <h3>🔬 The big question</h3><p>${h.q}</p>
+    <h3>👆 What to do</h3><ol>${h.steps.map(s => `<li>${s}</li>`).join('')}</ol>
+    ${h.tip ? `<h3>💡 Look out for</h3><p>${h.tip}</p>` : ''}
+    <p>🚀 Try the <b>Missions</b> to win stars!</p>
+    <details class="teach"><summary>For teachers</summary>${h.cur}</details>`;
+  welcomed = true; helpSeen.add(id);
+  $('#helpModal').classList.remove('hidden');
+}
+function autoHelp() {
+  if (noHelp || helpSeen.has(state.view)) return;
+  // Never stack two pop-ups
+  if ([...document.querySelectorAll('.modal')].some(m => !m.classList.contains('hidden'))) return;
+  showHelp();
+}
+
+// ================= Real life? (🤔): one list per tab =================
+const RL = {
+  ghost: ['👻', 'Forces are <b>invisible</b>. The arrows are a way of showing them.'],
+  scale: ['🖼️', 'The pictures are simple drawings and are <b>not to scale</b>.']
+};
+const MODEL = {
+  arrows: [RL.ghost,
+    ['📍', 'Real forces act on the <b>whole object</b>. Gravity pulls on every part of the book, and the table pushes on its whole bottom. We draw each force as <b>one arrow</b> starting on the object.'],
+    ['📏', 'A longer arrow means a bigger force, but the lengths only <b>compare</b> forces. To find the real size of a force, you measure it in <b>newtons</b> with a force meter.'],
+    ['🤏', 'Some forces are left out because they are <b>tiny</b>, like the air resistance on a trolley at walking speed.'],
+    ['📸', 'Moving things don\'t really leave faded copies behind! The faded pictures are like <b>photos taken one after another</b>, all put into one picture.'],
+    RL.scale],
+  parachute: [
+    ['🪂', 'The parachute drop is a <b>simulation</b>. In a real test, you would drop each parachute <b>more than once</b> and work out an average.'],
+    ['⏱️', 'A stopwatch shows <b>hundredths</b> of a second, but people take about a tenth of a second to press the button. So repeat drops give slightly different times, and the last digit is not very reliable.'],
+    RL.ghost, RL.scale],
+  tank: [
+    ['🛁', 'Only the <b>upthrust</b> arrow is drawn. Gravity and the pull of the force meter act on the object too.'],
+    RL.ghost, RL.scale],
+  ramp: [
+    ['🚗', 'Only <b>friction</b> from the surface is shown. A real toy car is also slowed a little by air resistance and by friction in its wheels.'],
+    RL.ghost, RL.scale]
 };
 
 function render() {
   const v = VIEWS[state.view];
   P.stop(); R.stop();
-  // Help is the ❓ button at the end of the top bar, like the other tools, so it isn't one of the tabs
-  $('#helpBtn').classList.toggle('active', state.view === 'help');
-  $('#tabs').innerHTML = Object.entries(VIEWS).filter(([id]) => id !== 'help').map(([id, x]) =>
+  $('#tabs').innerHTML = Object.entries(VIEWS).map(([id, x]) =>
     `<button class="btn${id === state.view ? ' active' : ''}" data-act="view" data-view="${id}" aria-label="${x.label.replace(/<[^>]+>/g, '').replace(/^\S+ /, '')}">${x.label}</button>`).join('');
   $('#stage').innerHTML = v.stage();
   $('#drawer').innerHTML = v.drawer();
@@ -1417,7 +1497,8 @@ function render() {
 
 // ================= Actions =================
 const ACTIONS = {
-  view(el) { state.view = el.dataset.view; location.hash = 'view=' + state.view; render(); },
+  view(el) { state.view = el.dataset.view; location.hash = 'view=' + state.view; render(); autoHelp(); },
+  help() { closeModals(); showHelp(); },
   scene(el) { state.scene = +el.dataset.i; state.checked = null; render(); },
   moment(el) { state.moment[SCENES[state.scene].id] = +el.dataset.i; state.checked = null; render(); },
   remove(el) { A.remove(el.dataset.f); },
@@ -1440,7 +1521,12 @@ const ACTIONS = {
   },
   resetStars() { state.done = []; store.set('fp-done', []); updateStars(); ACTIONS.missions(); },
   closeModals() { closeModals(); },
-  model() { $('#modelModal').classList.remove('hidden'); },
+  model() {
+    closeModals();
+    $('#modelTab').textContent = VIEWS[state.view].label.replace(/<[^>]+>/g, '');
+    $('#modelList').innerHTML = (MODEL[state.view] || [RL.ghost, RL.scale]).map(([em, t]) => `<li><span class="em">${em}</span><span>${t}</span></li>`).join('');
+    $('#modelModal').classList.remove('hidden');
+  },
   pdrop() { P.drop(); },
   tpick(el) { T.pick(el.dataset.o); },
   tstep(el) { const t = state.tank; t.val = Math.max(0, Math.min(10, t.val + +el.dataset.d)); $('#drawer').innerHTML = VIEWS.tank.drawer(); },
@@ -1470,7 +1556,9 @@ addEventListener('resize', () => { A.fit(); fitBanner(); });
 
 // ================= Start =================
 // Test hooks: #view=arrows&scene=boat opens a scene (&moment=1 picks the second moment); &arrows=gravity:down:3,normal:up:2 draws arrows; &check=1 presses Check
+// &nohelp=1 stops the help popping up by itself (for screenshots and tests)
 const hp = new URLSearchParams(location.hash.slice(1));
+noHelp = hp.get('nohelp') === '1';
 if (VIEWS[hp.get('view')]) state.view = hp.get('view');
 if (hp.has('scene')) state.scene = Math.max(0, SCENES.findIndex(s => s.id === hp.get('scene')));
 if (hp.has('moment')) state.moment[SCENES[state.scene].id] = +hp.get('moment') || 0;
@@ -1505,6 +1593,8 @@ if (hp.has('drops')) hp.get('drops').split(',').forEach(sz => {
   const [start, stop] = P.wobble();
   P.record(size, P.path(size).T + stop - start - (odd ? P.LATE : 0), odd);
 });
+// Show the help for the starting tab (a #mission= hook has already done this)
+autoHelp();
 </script>
 </body>
 </html>

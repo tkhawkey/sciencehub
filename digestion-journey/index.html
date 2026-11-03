@@ -201,6 +201,31 @@
   .confetti { position: fixed; top: -40px; font-size: 26px; z-index: 40; pointer-events: none; animation: fall linear forwards; }
   @keyframes fall { to { transform: translateY(110vh) rotate(540deg); } }
 
+  /* ---------- Per-tab help, close buttons, "the science" boxes ---------- */
+  .modal-box { position: relative; }
+  .modal-x {
+    position: sticky; top: 0; float: right; z-index: 2;
+    width: 52px; height: 52px; margin: -6px -6px 6px 12px; padding: 0;
+    border: 0; border-radius: 50%; cursor: pointer;
+    background: var(--coral); color: #fff; font-size: 26px; font-weight: 700; line-height: 1;
+    display: grid; place-items: center; box-shadow: 0 3px 0 rgba(0,0,0,.2);
+    transition: transform .08s, filter .15s;
+  }
+  .modal-x:hover { filter: brightness(1.08); }
+  .modal-x:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,.2); }
+  .modal-x:focus-visible { outline: 3px solid var(--yellow); outline-offset: 2px; }
+  .science { background: #fff6d6; border: 3px solid var(--yellow); border-radius: 16px; padding: 10px 14px; margin: 8px 0; }
+  .science > b:first-child { display: block; font-size: 14px; text-transform: uppercase; letter-spacing: .04em; color: #8a5a00; margin-bottom: 2px; }
+  .help-welcome { font-size: 18px; font-weight: 700; color: var(--blue); margin: 0 0 6px; }
+  .help-sec { margin: 10px 0 4px; font-weight: 700; }
+  .help-body p, .help-body ol { margin: 4px 0 8px; line-height: 1.45; font-size: 17px; }
+  .help-body ol { padding-left: 24px; }
+  .help-teach { margin: 12px 0; font-size: 13.5px; color: var(--muted); }
+  .help-teach summary { cursor: pointer; font-weight: 600; }
+  .help-teach p { font-size: 13.5px; margin: 6px 0; }
+  .bigq { font-weight: 700; color: var(--blue); }
+  .model-tab { margin: -4px 0 8px; color: var(--muted); font-weight: 600; }
+
   /* ---------- Narrow screens: stage on top, drawer below ---------- */
   @media (max-width: 760px) {
     :root { --drawerW: 0px; }
@@ -218,7 +243,7 @@
   <div class="tabs" id="tabs"></div>
   <button class="btn missions" data-act="missions" title="Missions">🚀 <span class="long">Missions </span><span id="starCount"></span></button>
   <button class="btn" data-act="model" title="How is this model different from real life?">🤔<span class="long"> Real life?</span></button>
-  <button class="btn" id="helpBtn" data-act="view" data-view="help" aria-label="How to use">❓</button>
+  <button class="btn" id="helpBtn" data-act="help" aria-label="How to use this tab">❓</button>
 </div>
 <main>
   <div id="stage"></div>
@@ -233,6 +258,7 @@
 </main>
 <div id="missionsModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="missionsTitle">
   <div class="modal-box">
+    <button class="modal-x" data-act="closeModals" aria-label="Close">✕</button>
     <h2 id="missionsTitle">🚀 Missions</h2>
     <div class="mission-list" id="missionList"></div>
     <div class="modal-actions"><button class="btn" data-act="resetStars">Reset stars</button><button class="btn primary" data-act="closeModals">Close</button></div>
@@ -240,24 +266,28 @@
 </div>
 <div id="modelModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modelTitle">
   <div class="modal-box">
+    <button class="modal-x" data-act="closeModals" aria-label="Close">✕</button>
     <h2 id="modelTitle">🤔 How is this model different from real life?</h2>
+    <p class="model-tab" id="modelTab"></p>
     <p style="margin-top:0">A <span class="term">model</span> shows some important features of something real – but not everything.</p>
-    <ul class="icons">
-      <li><span class="em">📏</span><span>The organs are <b>not drawn to scale</b>.</span></li>
-      <li><span class="em">🌀</span><span>The small intestine is much <b>longer</b> and more tightly coiled than the picture shows.</span></li>
-      <li><span class="em">⏱️</span><span>The times are <b>averages</b>. They are different from person to person, and from food to food.</span></li>
-      <li><span class="em">🍎</span><span>The journey follows <b>one apple</b>, but real meals are a mix of different foods.</span></li>
-      <li><span class="em">🐕</span><span>The other animals are simple drawings. Their real organs have different shapes and sizes.</span></li>
-    </ul>
+    <ul class="icons" id="modelList"></ul>
     <div class="modal-actions"><button class="btn primary" data-act="closeModals">Got it!</button></div>
   </div>
 </div>
 <div id="winModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="winTitle">
   <div class="modal-box">
+    <button class="modal-x" data-act="closeModals" aria-label="Close">✕</button>
     <div class="win-emoji">⭐</div>
     <h2 id="winTitle" style="text-align:center">Mission complete!</h2>
     <div class="win-text" id="winText"></div>
     <div class="modal-actions"><button class="btn" data-act="closeModals">Keep exploring</button><a class="btn primary" id="winPractise" href="../practice/index.html#digestion">✏️ Practise this</a><button class="btn primary" id="winNext" data-act="nextMission">Next mission ▶</button></div>
+  </div>
+</div>
+<div id="helpModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+  <div class="modal-box help-body">
+    <button class="modal-x" data-act="closeModals" aria-label="Close">✕</button>
+    <div id="helpContent"></div>
+    <div class="modal-actions"><a class="btn" href="../practice/index.html#digestion">✏️ Practise this</a><button class="btn primary" data-act="closeModals">Let's go! 🚀</button></div>
   </div>
 </div>
 
@@ -1418,6 +1448,76 @@ function confetti() {
   }
 }
 
+// ================= Help and "Real life?" (current tab only) =================
+const CURRIC = {
+  bs: '<p><b>5Bs.04</b> Describe the human digestive system, including the functions of the organs involved (limited to mouth, oesophagus, stomach, small intestine, large intestine and anus), and know that many vertebrates have a similar digestive system.</p>',
+  m: '<p><b>5TWSm.01</b> Know that a model presents an object, process or idea in a way that shows some of the important features.</p>',
+  p: '<p><b>5TWSp.03</b> Make predictions, referring to relevant scientific knowledge and understanding within familiar and unfamiliar contexts.</p>'
+};
+const HELP = {
+  diagram: { icon: '🧍', q: 'What are the parts of the digestive system, and what does each one do?',
+    steps: ['Look at the labelled parts of the body.', 'Hover over a part to find out its job. On a tablet, tap it.', 'Use the key to match each colour to a part.'],
+    look: 'Food travels through <b>one long tube</b>, from the mouth to the anus.', teach: ['bs', 'm'] },
+  journey: { icon: '🍎', q: 'What happens to an apple on its journey through your body?',
+    steps: ['First, predict where food stays the <b>longest</b>.', 'Press <b>Next ▶</b> to move the apple on one stop.', 'Read what happens to the apple at each stop.'],
+    look: 'Red dots are <b>nutrients</b>. Blue drops are <b>water</b>.', teach: ['bs', 'p', 'm'] },
+  organs: { icon: '🧩', q: 'Where does each organ sit inside your body?',
+    steps: ['Drag an organ onto the body.', 'It snaps in when it is in the right place.', 'Too easy? Choose <b>No outlines (harder)</b>.'], teach: ['bs'] },
+  order: { icon: '🔢', q: 'In what order does food travel through your body?',
+    steps: ['Think about where food goes in.', 'Tap the parts in the order food visits them.', 'Try to finish with no wrong taps!'], teach: ['bs'] },
+  quiz: { icon: '❓', q: 'What job does each part of the digestive system do?',
+    steps: ['Read the job in the box.', 'Tap the part of the body that does that job.', 'A wrong tap tells you what that part really does.'], teach: ['bs'] },
+  teeth: { icon: '🦁', q: 'Why are a lion\'s teeth different from a zebra\'s teeth?',
+    steps: ['Tap a type of tooth to see it in both jaws.', 'Press <b>Chew!</b> to watch them eat.', 'Answer the <b>Lion or zebra?</b> quiz.'],
+    look: 'Watch which way each jaw moves when it chews.', teach: ['bs'] },
+  close: { icon: '🔬', q: 'What happens to food inside your organs?',
+    steps: ['Tap a button to pick a close-up.', 'Watch what happens inside.', 'Read the card to find out more.', 'Press <b>Pause</b> to stop and look closely.'], teach: ['bs', 'm'] },
+  animals: { icon: '🐕', q: 'Do other animals have a digestive system like ours?',
+    steps: ['Tap a part, like the stomach.', 'Find that part in every animal.', 'You can tap the animal pictures too.'],
+    look: 'Look closely at the cow\'s stomach!', teach: ['bs', 'm'] }
+};
+const REAL = {
+  scale: ['📏', 'The organs are <b>not drawn to scale</b>.'],
+  coil: ['🌀', 'The small intestine is much <b>longer</b> and more tightly coiled than the picture shows.'],
+  times: ['⏱️', 'The times are <b>averages</b>. They are different from person to person, and from food to food.'],
+  apple: ['🍎', 'The journey follows <b>one apple</b>, but real meals are a mix of different foods.'],
+  animals: ['🐕', 'The other animals are simple drawings. Their real organs have different shapes and sizes.'],
+  draw: ['✏️', 'The pictures are <b>simple drawings</b>. Real ones have much more detail.'],
+  jaw: ['🦷', 'You only see <b>one side</b> of each jaw. Real animals have teeth on both sides.'],
+  slow: ['🐢', 'Real digestion is much <b>slower</b> than these animations. It takes hours.']
+};
+const REAL_TABS = { diagram: ['scale', 'coil'], journey: ['times', 'apple', 'coil'], organs: ['scale', 'coil'], order: ['scale', 'coil'],
+  quiz: ['scale', 'coil'], teeth: ['draw', 'jaw'], close: ['slow', 'draw'], animals: ['animals', 'scale'] };
+// The help pops up the first time each tab is opened in this visit (not saved, so a new class sees it again); #nohelp=1 turns that off
+const seenHelp = new Set();
+let noAutoHelp = false;
+function showHelp() {
+  const h = HELP[state.view], first = !showHelp.shown;
+  showHelp.shown = true;
+  $('#helpContent').innerHTML = `
+    <h2 id="helpTitle">${h.icon} ${VIEWS[state.view].label}</h2>
+    ${first ? '<p class="help-welcome">Welcome to Digestion Journey!</p>' : ''}
+    <div class="help-sec">🔬 The big question</div><p>${h.q}</p>
+    <div class="help-sec">👆 What to do</div><ol>${h.steps.map(s => `<li>${s}</li>`).join('')}</ol>
+    ${h.look ? `<div class="help-sec">💡 Look out for</div><p>${h.look}</p>` : ''}
+    <p class="muted">🚀 Try the Missions to win stars!</p>
+    <details class="help-teach"><summary>For teachers</summary>${h.teach.map(k => CURRIC[k]).join('')}
+      <p>Organ shapes based on a diagram by Mariana Ruiz Villarreal (public domain).</p></details>`;
+  $('#helpModal').classList.remove('hidden');
+}
+function autoHelp() {
+  if (seenHelp.has(state.view)) return;
+  seenHelp.add(state.view);
+  // Never stack two pop-ups
+  if (noAutoHelp || document.querySelector('.modal:not(.hidden)')) return;
+  showHelp();
+}
+function showModel() {
+  $('#modelTab').textContent = VIEWS[state.view].label;
+  $('#modelList').innerHTML = REAL_TABS[state.view].map(k => `<li><span class="em">${REAL[k][0]}</span><span>${REAL[k][1]}</span></li>`).join('');
+  $('#modelModal').classList.remove('hidden');
+}
+
 // ================= Views =================
 const VIEWS = {
   diagram: {
@@ -1431,7 +1531,7 @@ const VIEWS = {
       ].map(([n, c]) => `<li><span class="sw" style="background:${c}"></span>${n}</li>`).join('');
       return `
         <div class="card"><h2>The digestive system</h2>
-          <p>Food goes in at the mouth and travels all the way through these organs.</p>
+          <div class="science"><b>🔬 The science</b>The digestive system breaks food down so your body can use it. Food goes in at the mouth and travels through one long tube to the anus.</div>
           <p><b>Hover over a part to find out what it does.</b> On a tablet or phone, tap it.</p>
           <ul class="key">${key}</ul></div>
         <div class="card"><p class="muted">The liver is drawn faintly so the body looks right, but it isn't part of this topic.</p></div>`;
@@ -1453,8 +1553,9 @@ const VIEWS = {
             <p class="muted">The times show once you have chosen.</p></div>`
         : STOPS.findIndex(x => x.id === longest) <= n
           ? `<div class="card"><h3>🤔 Your prediction</h3>
-              ${PREDICT.map(x => `<div class="trow${x.id === longest ? ' best' : ''}"><span>${x.name}${x.id === pr ? ' <b class="mine">🤔 you</b>' : ''}</span><span>${x.time.replace('About ', '')}</span></div>`).join('')}
-              <p>${pr === longest ? '🎉 Spot on! Food stays longest in the <b>large intestine</b>.' : `You guessed the ${guess.toLowerCase()}. Good thinking! But taking back water is slow, so food stays longest in the <b>large intestine</b>.`}</p></div>`
+              <p>${pr === longest ? '🎉 Spot on!' : `You guessed the ${guess.toLowerCase()}. Good thinking!`}</p>
+              <div class="science"><b>🔬 The science</b>Food stays longest in the <b>large intestine</b>, because taking back water is slow.</div>
+              ${PREDICT.map(x => `<div class="trow${x.id === longest ? ' best' : ''}"><span>${x.name}${x.id === pr ? ' <b class="mine">🤔 you</b>' : ''}</span><span>${x.time.replace('About ', '')}</span></div>`).join('')}</div>`
           : `<div class="card"><p class="muted" style="margin:0">🤔 You guessed: <b>${guess}</b>. Keep going to find out!</p></div>`;
       return `${pr ? '' : predict}
         <div class="card"><div class="muted">Stop ${n + 1} of ${STOPS.length}</div>
@@ -1477,11 +1578,13 @@ const VIEWS = {
       const n = state.placed ? state.placed.size : 0, done = n === PIECES.length;
       return `
         <div class="card"><h2>Drag the organs</h2>
+          <p class="bigq">🔬 Where does each organ sit inside your body?</p>
           <p>Drag each organ to the right place in the body. It will snap in when you get it right.</p>
           <p><b>${n} of ${PIECES.length}</b> placed</p>
           <div class="progress"><div style="width:${n / PIECES.length * 100}%"></div></div>
           <p class="muted" id="dragMsg">${done ? '' : state.outlines ? 'Tip: the pale outlines show where each organ goes.' : 'No outlines this time. Use what you know!'}</p></div>
-        ${done ? `<div class="card"><h2>🎉 Well done!</h2><p>You put every organ in the right place${state.outlines ? '' : ' with no outlines to help'}.</p></div>` : ''}
+        ${done ? `<div class="card"><h2>🎉 Well done!</h2><p>You put every organ in the right place${state.outlines ? '' : ' with no outlines to help'}.</p>
+          <div class="science"><b>🔬 The science</b>The organs join up to make <b>one long tube</b>, from the mouth to the anus.</div></div>` : ''}
         <div class="card"><h3>Outlines</h3><div class="stops">
           <button class="opt${state.outlines ? ' on' : ''}" data-act="outlines" data-on="1">Show outlines</button>
           <button class="opt${state.outlines ? '' : ' on'}" data-act="outlines" data-on="">No outlines (harder)</button></div></div>
@@ -1500,10 +1603,12 @@ const VIEWS = {
       const choices = o.choices.map(i => `<button class="opt${i < o.done ? ' used' : ''}" data-act="opick" data-n="${i}">${STOPS[i].name}</button>`).join('');
       return `
         <div class="card"><h2>Put the journey in order</h2>
+          <p class="bigq">🔬 In what order does food travel through your body?</p>
           <p>Tap the parts in the order the food goes through them. Start where the food goes in!</p>
           <div class="seq">${seq}</div>
           <p class="muted" id="orderMsg"></p></div>
         ${done ? `<div class="card"><h2>🎉 Well done!</h2><p>You put the whole journey in order${o.mistakes ? '' : ' with no mistakes'}!</p>
+            <div class="science"><b>🔬 The science</b>Food goes mouth → oesophagus → stomach → small intestine → large intestine → rectum → anus. It only goes <b>one way</b>!</div>
             ${o.mistakes ? `<p class="muted">Wrong taps: ${o.mistakes}. Can you do it with none next time?</p>` : ''}</div>
           <div class="navrow"><button class="btn go" data-act="view" data-view="journey">Watch the journey ▶</button></div>`
           : `<div class="card"><div class="choices">${choices}</div></div>`}
@@ -1520,13 +1625,15 @@ const VIEWS = {
       const done = q.n === STOPS.length;
       return `
         <div class="card"><h2>What happens here?</h2>
+          <p class="bigq">🔬 What job does each part of the digestive system do?</p>
           ${done ? '' : `<div class="muted">Question ${q.n + 1} of ${STOPS.length}</div>
           <p class="job">${JOBS[STOPS[q.order[q.n]].id].job}</p>
           <p><b>Tap the part of the body that does this.</b></p>`}
           <div class="progress"><div style="width:${q.n / STOPS.length * 100}%"></div></div>
           <p class="muted" id="quizMsg"></p></div>
         ${done ? `<div class="card"><h2>🎉 Well done!</h2><p>You matched every part to its job.</p>
-            <p><b>${q.firstTry} of ${STOPS.length}</b> right first time.</p></div>` : ''}
+            <p><b>${q.firstTry} of ${STOPS.length}</b> right first time.</p>
+            <div class="science"><b>🔬 The science</b>Each part has a job. The stomach churns food. The small intestine takes in <b>nutrients</b>. The large intestine takes back <b>water</b>.</div></div>` : ''}
         <div class="navrow"><button class="btn${done ? ' go' : ''}" data-act="restart">Start again ↺</button></div>`;
     }
   },
@@ -1549,7 +1656,8 @@ const VIEWS = {
             <div class="navrow"><button class="btn go" data-act="tnext">${t.q === TQUIZ.length - 1 ? 'See my score' : 'Next ▶'}</button></div>` : ''}`;
       return `
         <div class="card"><h2>Lion vs zebra teeth</h2>
-          <p>A lion is a <span class="term">predator</span> that eats meat. A zebra is <span class="term">prey</span> that eats grass. Their teeth are made for their food!</p></div>
+          <p>A lion is a <span class="term">predator</span> that eats meat. A zebra is <span class="term">prey</span> that eats grass.</p>
+          <div class="science"><b>🔬 The science</b>An animal's teeth suit the food it eats.</div></div>
         <div class="card"><h3>Tap a type of tooth</h3><div class="stops">${types}</div>
           ${sel ? `<p>🦁 <b>Lion:</b> ${sel.lion}</p><p>🦓 <b>Zebra:</b> ${sel.zebra}</p>` : ''}
           <p class="muted">You have all three types, because you eat plants and meat.</p></div>
@@ -1569,7 +1677,7 @@ const VIEWS = {
       const sc = CLOSE[state.close];
       const picks = CLOSE.map((x, i) => `<button class="opt${i === state.close ? ' on' : ''}" data-act="cpick" data-n="${i}">${x.name}</button>`).join('');
       return `
-        <div class="card"><h2>Close-ups</h2><p>Zoom right in to see what happens inside.</p><div class="stops">${picks}</div></div>
+        <div class="card"><h2>Close-ups</h2><p class="bigq">🔬 What happens to food inside your organs?</p><p>Zoom right in to see what happens inside.</p><div class="stops">${picks}</div></div>
         <div class="card"><h2>${sc.title}</h2><p>${sc.text}</p></div>
         <div class="navrow"><button class="btn" data-act="cpause">${state.cpaused ? '▶ Play' : '⏸ Pause'}</button></div>`;
     }
@@ -1583,48 +1691,24 @@ const VIEWS = {
       const chips = VPARTS.map(x => `<button class="opt${x === p ? ' on' : ''}" data-act="vpick" data-part="${x}">${VNAMES[x]}</button>`).join('');
       return `
         <div class="card"><h2>Other animals</h2>
-          <p>Many <span class="term">vertebrates</span> (animals with a backbone) have a digestive system like yours: one long tube from the mouth to the anus, with the <b>same parts in the same order</b>.</p></div>
+          <div class="science"><b>🔬 The science</b>Many <span class="term">vertebrates</span> (animals with a backbone) have a digestive system like yours: one long tube from the mouth to the anus, with the <b>same parts in the same order</b>.</div></div>
         <div class="card"><h3>Find a part in every animal</h3><p class="muted">Tap a part below, or in one of the animals.</p><div class="stops">${chips}</div>
           ${p ? `<p class="job">${VNAMES[p]}: ${JOBS[p].job}</p>` : ''}
           ${p === 'stomach' ? '<p>A cow\'s stomach has <b>4 parts</b>, because grass is so hard to break down. Similar, but not exactly the same!</p>' : ''}</div>
         ${m && m.id === 'dog' ? `<div class="card"><p><b>🐕 Dog parts found: ${found} of ${VPARTS.length}</b></p><div class="progress"><div style="width:${found / VPARTS.length * 100}%"></div></div></div>` : ''}`;
     }
   },
-  help: {
-    label: 'Help',
-    stage() { return $('#diagramSvg').innerHTML; },
-    drawer() {
-      return `<div class="card"><h2>Help</h2>
-        <p><b>Diagram</b>: learn the parts of the digestive system.</p>
-        <p><b>Journey</b>: follow an apple slice from the mouth to the anus. Press <b>Next</b> to move it on one stop.</p>
-        <p><b>Drag the organs</b>: drag each organ into its place in the body.</p>
-        <p><b>Journey order</b>: tap the parts of the digestive system in the order food goes through them.</p>
-        <p><b>What happens here?</b>: read what a part of the body does, then tap that part.</p>
-        <p><b>Lion vs zebra</b>: compare a meat-eater's teeth with a grass-eater's.</p>
-        <p><b>Close-ups</b>: zoom in on chewing, the stomach, the small intestine and the large intestine.</p>
-        <p><b>Other animals</b>: compare your digestive system with a dog's, a pig's and a cow's.</p>
-        <p><b>🚀 Missions</b>: challenges that use all the tabs. Win a star for each one!</p>
-        <p><b>🤔 Real life?</b>: how this model is different from a real body.</p>
-        <p class="muted">Organ shapes based on a diagram by Mariana Ruiz Villarreal (public domain).</p></div>
-        <div class="card"><h3>🎯 What you are learning</h3>
-          <p><b>5Bs.04</b> Describe the human digestive system, including the functions of the organs involved (limited to mouth, oesophagus, stomach, small intestine, large intestine and anus), and know that many vertebrates have a similar digestive system.</p>
-          <p class="muted"><b>Also:</b> <b>5TWSm.01</b> Know that a model presents an object, process or idea in a way that shows some of the important features.
-            <b>5TWSp.03</b> Make predictions, referring to relevant scientific knowledge and understanding within familiar and unfamiliar contexts.</p></div>
-        <div class="navrow"><a class="btn go" href="../practice/index.html#digestion">✏️ Practise this</a></div>`;
-    }
-  }
 };
 
 function render() {
   const v = VIEWS[state.view];
-  // Help is the ❓ button at the end of the top bar, like the other tools, so it isn't one of the tabs
-  $('#helpBtn').classList.toggle('active', state.view === 'help');
-  $('#tabs').innerHTML = Object.entries(VIEWS).filter(([id]) => id !== 'help').map(([id, x]) =>
+  $('#tabs').innerHTML = Object.entries(VIEWS).map(([id, x]) =>
     `<button class="btn${id === state.view ? ' active' : ''}" data-act="view" data-view="${id}">${x.label}</button>`).join('');
   $('#stage').innerHTML = v.stage();
   $('#drawer').innerHTML = v.drawer();
   if (v.after) v.after();
   fitBanner();
+  autoHelp();
 }
 
 // ================= Actions =================
@@ -1667,7 +1751,8 @@ const ACTIONS = {
   jgo(el) { const n = +el.dataset.n; setStep(n, n > 0 && n <= state.step + 1); },
   jpredict(el) { state.predict = el.dataset.id; $('#drawer').innerHTML = VIEWS.journey.drawer(); },
   vpick(el) { V.show(state.vpart === el.dataset.part ? null : el.dataset.part); },
-  model() { $('#modelModal').classList.remove('hidden'); }
+  model() { closeModals(); showModel(); },
+  help() { closeModals(); showHelp(); }
 };
 document.addEventListener('click', e => {
   const el = e.target.closest('[data-act]');
@@ -1682,6 +1767,8 @@ addEventListener('resize', fitBanner);
 // Test hooks: #view=journey&step=3 opens a stop; adding &t=0.5 freezes the trip into that stop halfway
 const hp = new URLSearchParams(location.hash.slice(1));
 if (VIEWS[hp.get('view')]) state.view = hp.get('view');
+// #nohelp=1 skips the help pop-up that opens with each new tab (for screenshots and tests)
+if (hp.get('nohelp') === '1') noAutoHelp = true;
 if (hp.has('step')) state.step = Math.max(0, Math.min(STOPS.length - 1, +hp.get('step') || 0));
 updateStars();
 // #mission=3 starts a mission straight away
