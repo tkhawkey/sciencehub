@@ -1759,5 +1759,9 @@ if (MISSIONS[hp.get('mission')]) startMission(+hp.get('mission'));
 else render();
 if (hp.has('check')) { if (state.view === 'layers') LY.check(); else AIR.check(); }
 </script>
+<script>
+  // Offline support: saves the whole Science Hub on this device the first time any page is opened (see ../sw.js)
+  if ('serviceWorker' in navigator) addEventListener('load', () => navigator.serviceWorker.register('../sw.js').catch(() => {}));
+</script>
 </body>
 </html>

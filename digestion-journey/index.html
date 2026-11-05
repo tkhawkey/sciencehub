@@ -1787,5 +1787,9 @@ if (state.view === 'teeth' && hp.has('type')) T.pick(hp.get('type'));
 if (state.view === 'quiz' && hp.has('q')) for (let i = 0; i < +hp.get('q'); i++) W.tap(STOPS[state.quiz.order[i]].organs[0]);
 if (state.view === 'journey' && hp.has('t') && state.step > 0) { J.reset(); J.highlight(state.step); J.frame(state.step, +hp.get('t')); }
 </script>
+<script>
+  // Offline support: saves the whole Science Hub on this device the first time any page is opened (see ../sw.js)
+  if ('serviceWorker' in navigator) addEventListener('load', () => navigator.serviceWorker.register('../sw.js').catch(() => {}));
+</script>
 </body>
 </html>

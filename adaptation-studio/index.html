@@ -2166,5 +2166,9 @@ if (location.hash === '#huntstats') {
 }
 window.__state = state; window.__render = render; window.__ACTIONS = ACTIONS; window.__start = startMission; window.__runMove = runMove;
 </script>
+<script>
+  // Offline support: saves the whole Science Hub on this device the first time any page is opened (see ../sw.js)
+  if ('serviceWorker' in navigator) addEventListener('load', () => navigator.serviceWorker.register('../sw.js').catch(() => {}));
+</script>
 </body>
 </html>

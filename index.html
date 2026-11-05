@@ -173,6 +173,8 @@
   footer img { width: 40px; height: auto; }
   footer p { margin: 0; font-family: var(--serif); font-size: 16px; }
   footer p b { display: block; font-size: 18px; }
+  footer .offline { display: block; margin-top: 4px; font-family: 'Fredoka', system-ui, sans-serif; font-size: 14px; color: var(--muted); }
+  footer .offline.ready { color: #05951a; font-weight: 600; }
 
   @media (max-width: 620px) {
     .hero { padding-bottom: 96px; }
@@ -376,13 +378,29 @@
 
 <footer>
   <img src="hub/mascot.svg" alt="">
-  <p><b>Cambridge International School Bratislava</b>Year 5 Science. Works on tablets and laptops.</p>
+  <p><b>Cambridge International School Bratislava</b>Year 5 Science. Works on tablets and laptops.<span class="offline" id="offline-status" hidden></span></p>
 </footer>
 
 <script>
   // Teacher view: add ?all to the address to see the hidden tiles too
   if (new URLSearchParams(location.search).has('all'))
     document.querySelectorAll('.tile[hidden]').forEach(t => { t.hidden = false; t.classList.add('is-hidden'); });
+
+  // Offline support: saves the whole hub on this device (see sw.js) and says when it is ready
+  if ('serviceWorker' in navigator && window.caches) {
+    addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+    const status = document.getElementById('offline-status');
+    let tries = 0;
+    const check = () => navigator.serviceWorker.getRegistration().then(reg => {
+      if (!reg) { if (tries++ < 30) setTimeout(check, 1000); return; }
+      caches.match(new URL('__ready', reg.scope).href).then(hit => {
+        status.hidden = false;
+        if (hit) { status.textContent = '✓ Saved on this device: it works without internet.'; status.className = 'offline ready'; }
+        else { status.textContent = 'Saving for offline use…'; if (tries++ < 80) setTimeout(check, 1500); }
+      });
+    }).catch(() => {});
+    addEventListener('load', () => setTimeout(check, 800));
+  }
 </script>
 
 </body>

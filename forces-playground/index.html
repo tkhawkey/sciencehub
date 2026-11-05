@@ -1596,5 +1596,9 @@ if (hp.has('drops')) hp.get('drops').split(',').forEach(sz => {
 // Show the help for the starting tab (a #mission= hook has already done this)
 autoHelp();
 </script>
+<script>
+  // Offline support: saves the whole Science Hub on this device the first time any page is opened (see ../sw.js)
+  if ('serviceWorker' in navigator) addEventListener('load', () => navigator.serviceWorker.register('../sw.js').catch(() => {}));
+</script>
 </body>
 </html>
