@@ -338,7 +338,7 @@ const CREDITS = {
   'fern.jpg': 'Photo: Christian Berg, CC BY 4.0', 'fern-spores.jpg': 'Photo: Krzysztof Ziarnek, Kenraiz, CC BY-SA 4.0',
   'pine.jpg': 'Photo: Ruslan Kastani, CC BY-SA 4.0', 'pine-cone.jpg': 'Photo: Wilfredor, CC0',
   'apple-young.jpg': 'Photo: Natalka Ukraine, CC BY 4.0', 'apple-bottom.jpg': 'Photo: Forest and Kim Starr, CC BY 3.0 US',
-  'pea-flower.jpg': 'Photo: Dyorkey, CC BY-SA 3.0', 'pea-pod.jpg': 'Photo: Rachael Gorjestani, CC0',
+  'pea-flower.jpg': 'Photo: Dyorkey, CC BY-SA 3.0', 'pea-young.jpg': 'Photo: Chmee2, CC BY 3.0', 'tomato-cut.jpg': 'Photo: Adityamadhav83, CC BY-SA 3.0', 'pea-pod.jpg': 'Photo: Rachael Gorjestani, CC0',
   'tomato-flower.jpg': 'Photo: Dinesh Valke, CC BY-SA 2.0', 'tomato-fruit.jpg': 'Photo: Rob Bertholf, CC BY 3.0'
 };
 const photo = (file, em, alt = '') => {
@@ -588,17 +588,21 @@ const DIS = {
   geo() {
     // Once the whole flower is on the tray, the tray takes the whole width
     const { w, h, narrow } = stageSize(), top = narrow ? 40 : 50, gone = !DIS.layerNow(), fw = gone ? 0 : Math.round(w * (narrow ? .38 : .4));
-    const tx = fw + (gone ? 8 : 4), ty = top, tw = w - tx - 8, th = h - ty - 8;
-    let yy = ty + (narrow ? 22 : 30);
-    const rows = (narrow ? [.16, .16, .34, .34] : [.2, .2, .3, .3]).map(k => { const r = { y: yy, h: (th - (narrow ? 22 : 30)) * k }; yy += r.h; return r; });
-    return { w, h, narrow, top, fw, tx, ty, tw, th, rows, sw: narrow ? 66 : 104, sh: narrow ? 24 : 32, fs: narrow ? 11.5 : 15 };
+    const tx = fw + (gone ? 8 : 4), ty = top, tw = w - tx - 8, th = h - ty - 8, head = narrow ? 22 : 30, ch = th - head, cy = ty + head;
+    // One part of the tray for each layer. A wide, short tray is split into a 2 × 2 grid (sepals and petals on the left,
+    // stamens and carpel on the right); otherwise the four parts are rows, one under another.
+    const grid = tw > ch * 1.6, lw = tw * .38;
+    const cells = grid ? [{ x: tx, y: cy, w: lw, h: ch / 2 }, { x: tx, y: cy + ch / 2, w: lw, h: ch / 2 }, { x: tx + lw, y: cy, w: tw - lw, h: ch / 2 }, { x: tx + lw, y: cy + ch / 2, w: tw - lw, h: ch / 2 }]
+      : (() => { let yy = cy; return (narrow ? [.16, .16, .34, .34] : [.2, .2, .3, .3]).map(k => { const r = { x: tx, y: yy, w: tw, h: ch * k }; yy += r.h; return r; }); })();
+    const small = narrow || ch < 330;
+    return { w, h, narrow, top, fw, tx, ty, tw, th, cells, sw: small ? 72 : 104, sh: small ? 26 : 32, fs: small ? 12.5 : 15 };
   },
-  // Label places in a row: spread out so they don't overlap
+  // Label places side by side: spread out so they don't overlap, and kept inside x0–x1
   spread(xs, sw, x0, x1) {
-    const o = xs.map(x => x - sw / 2);
+    const o = xs.map(x => Math.max(x0, x - sw / 2));
     for (let k = 1; k < o.length; k++) o[k] = Math.max(o[k], o[k - 1] + sw + 6);
-    const over = o[o.length - 1] + sw - x1; if (over > 0) for (let k = o.length - 1; k >= 0; k--) { o[k] -= over; if (k && o[k] < o[k - 1] + sw + 6) continue; break; }
-    return o.map(x => Math.max(x0, x));
+    for (let k = o.length - 1; k >= 0; k--) o[k] = Math.min(o[k], k === o.length - 1 ? x1 - sw : o[k + 1] - sw - 6);
+    return o;
   },
   // One label place: blank, a name found by tapping (explore), or a label placed by the child (test)
   slot(name, x, y, g, tx, ty) {
@@ -611,8 +615,8 @@ const DIS = {
       <text x="${x + g.sw / 2}" y="${y + g.sh / 2 + g.fs * .36}" text-anchor="middle" style="font-size:${g.fs}px;font-weight:700;fill:${put ? 'var(--ink)' : '#9aa3c5'}">${put ? cap(put) : test ? '' : '?'}</text></g>`;
   },
   // A bracket under a stamen or the carpel, with the name of the whole thing
-  bracket(name, x1, x2, y, g) {
-    const sx = Math.min(Math.max((x1 + x2) / 2 - g.sw / 2, g.tx + 4), g.tx + g.tw - g.sw - 4);
+  bracket(name, x1, x2, y, g, r) {
+    const sx = Math.min(Math.max((x1 + x2) / 2 - g.sw / 2, r.x + 4), r.x + r.w - g.sw - 4);
     return `<path d="M${x1} ${y} v7 H${x2} v-7" stroke="#8a93ad" stroke-width="2" fill="none"/>` + DIS.slot(name, sx, y + 16, g, (x1 + x2) / 2, y + 7);
   },
   stage() {
@@ -625,39 +629,45 @@ const DIS = {
     o += `<g data-drop="tray"><rect x="${g.tx}" y="${g.ty}" width="${g.tw}" height="${g.th}" rx="16" fill="#fff" stroke="#c6d0f2" stroke-width="2"/>
       <text x="${g.tx + 12}" y="${g.ty + (g.narrow ? 16 : 21)}" class="glabel">🧪 Dissection tray</text>`;
     const has = l => PARTS.filter(id => layerOf(id) === l && p.rm[id]).length;
-    g.rows.forEach((r, k) => {
-      const l = LAYERS[k], n = has(l), x0 = g.tx + 14, yc = r.y + r.h * (k < 2 ? .5 : .5);
-      if (k) o += `<line x1="${g.tx + 10}" x2="${g.tx + g.tw - 10}" y1="${r.y}" y2="${r.y}" stroke="#e1e6f5" stroke-dasharray="4 4"/>`;
-      if (!n) { o += `<text x="${g.tx + g.tw / 2}" y="${r.y + r.h / 2 + 5}" text-anchor="middle" class="gsmall">${k + 1}</text>`; return; }
+    g.cells.forEach((r, k) => {
+      const l = LAYERS[k], n = has(l), x0 = r.x + 14;
+      // Dashed lines between the parts of the tray
+      if (r.y > g.ty + 40) o += `<line x1="${r.x + 10}" x2="${r.x + r.w - 10}" y1="${r.y}" y2="${r.y}" stroke="#e1e6f5" stroke-dasharray="4 4"/>`;
+      if (r.x > g.tx + 1) o += `<line x1="${r.x}" x2="${r.x}" y1="${r.y + 6}" y2="${r.y + r.h - 6}" stroke="#e1e6f5" stroke-dasharray="4 4"/>`;
+      if (!n) { o += `<text x="${r.x + r.w / 2}" y="${r.y + r.h / 2 + 5}" text-anchor="middle" class="gsmall">${k + 1}</text>`; return; }
       if (k < 2) {
-        // Sepals and petals: one laid out flat, how many there are, and a label
-        const L = l === 'sepal' ? .2 : .5, Sr = Math.min((g.tw - g.sw - 70) / L, r.h * .62 / (l === 'sepal' ? .11 : .3));
+        // Sepals and petals: one laid out flat, how many there are, and a label just to the right
+        const L = l === 'sepal' ? .2 : .5, yc = r.y + r.h * .45, Sr = Math.max(20, Math.min(r.w * .42 / L, (r.w - g.sw - 70) / L, r.h * .6 / (l === 'sepal' ? .11 : .3)));
         o += `<g class="tapme" data-act="dname" data-v="${l}" transform="translate(${x0} ${yc}) scale(${Sr}) rotate(90)">${PART[l]()}</g>`;
-        o += `<text x="${x0 + L * Sr + 8}" y="${yc + 24}" class="glabel">×${n}</text>`;
-        const sx = g.tx + g.tw - g.sw - 10;
+        o += `<text x="${x0 + L * Sr + 6}" y="${yc + 22}" class="glabel">×${n}</text>`;
+        const sx = Math.min(x0 + L * Sr + 40, r.x + r.w - g.sw - 8);
         o += DIS.slot(l, sx, yc - g.sh / 2, g, x0 + L * Sr * .55, yc);
         return;
       }
+      // Stamen and carpel: label places above, the part, then a bracket and the whole thing's label below.
+      // The part's size comes from the room left once the labels fit, so nothing runs into the next part of the tray.
+      const thick = l === 'stamen' ? .1 : .17, len = l === 'stamen' ? .42 : .47, sy = r.y + 4;
+      const Sr = Math.max(40, Math.min((r.w - 60) / len, (r.h - g.sh * 2 - 42) / thick)), yc = sy + g.sh + 12 + thick / 2 * Sr;
       if (l === 'stamen') {
-        const Sr = Math.min((g.tw - 60) / .42, (r.h - g.sh * 2 - 28) / .1), sy = r.y + 6, by = yc + Math.max(.05 * Sr, 8) + 4;
+        const by = yc + Math.max(.05 * Sr, 8) + 4;
         o += `<g transform="translate(${x0} ${yc}) scale(${Sr}) rotate(90)">${PART.stamen({ pollen: true })}</g>`;
         o += `<rect class="tapme" data-act="dname" data-v="filament" x="${x0}" y="${yc - 12}" width="${.32 * Sr}" height="24" fill="transparent"/>`;
         o += `<rect class="tapme" data-act="dname" data-v="anther" x="${x0 + .31 * Sr}" y="${yc - .06 * Sr - 6}" width="${.1 * Sr + 6}" height="${.12 * Sr + 12}" fill="transparent"/>`;
         o += `<text x="${x0 + .43 * Sr + 6}" y="${yc + 6}" class="glabel">×${n}</text>`;
-        const [fx, ax] = DIS.spread([x0 + .17 * Sr, x0 + .36 * Sr], g.sw, g.tx + 4, g.tx + g.tw - 4);
+        const [fx, ax] = DIS.spread([x0 + .17 * Sr, x0 + .36 * Sr], g.sw, r.x + 4, r.x + r.w - 4);
         o += DIS.slot('filament', fx, sy, g, x0 + .17 * Sr, yc - 2) + DIS.slot('anther', ax, sy, g, x0 + .36 * Sr, yc - .045 * Sr);
-        o += DIS.bracket('stamen', x0, x0 + .41 * Sr, by, g);
+        o += DIS.bracket('stamen', x0, x0 + .41 * Sr, by, g, r);
         return;
       }
       // The carpel, lying flat: ovary on the left, style, stigma on the right. Cut open, the ovary shows what is inside.
-      const Sr = Math.min((g.tw - 50) / .47, (r.h - g.sh * 2 - 28) / .17), sy = r.y + 6, by = yc + .085 * Sr + 4;
+      const by = yc + .085 * Sr + 4;
       o += `<g transform="translate(${x0} ${yc}) scale(${Sr}) rotate(90)">${PART.carpel({ cut: p.cut })}</g>`;
       o += `<circle class="tapme" data-act="dname" data-v="ovary" cx="${x0 + .085 * Sr}" cy="${yc}" r="${.08 * Sr + 4}" fill="transparent"/>`;
       o += `<rect class="tapme" data-act="dname" data-v="style" x="${x0 + .17 * Sr}" y="${yc - 12}" width="${.23 * Sr}" height="24" fill="transparent"/>`;
       o += `<rect class="tapme" data-act="dname" data-v="stigma" x="${x0 + .4 * Sr}" y="${yc - .05 * Sr - 6}" width="${.06 * Sr + 8}" height="${.1 * Sr + 12}" fill="transparent"/>`;
-      const [ox, sx2, gx] = DIS.spread([x0 + .085 * Sr, x0 + .29 * Sr, x0 + .44 * Sr], g.sw, g.tx + 4, g.tx + g.tw - 4);
+      const [ox, sx2, gx] = DIS.spread([x0 + .085 * Sr, x0 + .29 * Sr, x0 + .44 * Sr], g.sw, r.x + 4, r.x + r.w - 4);
       o += DIS.slot('ovary', ox, sy, g, x0 + .085 * Sr, yc - .08 * Sr) + DIS.slot('style', sx2, sy, g, x0 + .29 * Sr, yc - 2) + DIS.slot('stigma', gx, sy, g, x0 + .435 * Sr, yc - .03 * Sr);
-      o += DIS.bracket('carpel', x0, x0 + .46 * Sr, by, g);
+      o += DIS.bracket('carpel', x0, x0 + .46 * Sr, by, g, r);
     });
     o += '</g>';
     const say = p.mode === 'test' ? (p.sel ? `Tap the box where “${cap(p.sel)}” goes.` : 'Choose a label, then tap its box on the tray.')
@@ -1025,24 +1035,15 @@ const DES = {
 };
 
 // ================= 6. From flower to fruit =================
-// Drawings for the steps there are no photos of
+// A pea pod, for the sort (the pea-pod emoji is missing on older tablets)
 const PEA_POD = '<svg viewBox="0 0 40 40" width="38" height="38" aria-hidden="true"><path d="M3 31 Q20 40 37 21 Q23 31 3 31 Z" fill="#6cbf4a" stroke="#3f8a2a"/><path d="M5 29 Q20 18 35 19" stroke="#3f8a2a" stroke-width="3" fill="none"/><circle cx="13" cy="31" r="3.5" fill="#a3e27f"/><circle cx="20" cy="30" r="3.5" fill="#a3e27f"/><circle cx="27" cy="27" r="3.5" fill="#a3e27f"/></svg>';
-const DRAW = {
-  peaYoung: `<svg viewBox="0 0 120 90" style="width:100%;height:100%"><rect width="120" height="90" fill="#eef7e6"/><path d="M10 80 Q40 60 60 40" stroke="#4f9e3a" stroke-width="3" fill="none"/>
-    <path d="M58 42 Q64 30 74 28 Q70 38 62 44Z" fill="#c9b98a" stroke="#9b8a5a"/><path d="M60 40 Q56 30 62 22 Q66 32 63 41Z" fill="#b8a77a" stroke="#9b8a5a"/>
-    <path d="M62 44 Q85 50 108 36 Q90 46 64 47Z" fill="#7fcf5a" stroke="#3f8a2a"/><text x="60" y="84" text-anchor="middle" font-size="9" font-family="Fredoka, sans-serif" fill="#5b6386">withered petals, a tiny pod</text></svg>`,
-  tomatoCut: `<svg viewBox="0 0 120 90" style="width:100%;height:100%"><rect width="120" height="90" fill="#fff4ef"/><circle cx="60" cy="46" r="34" fill="#e0463a" stroke="#a8261c" stroke-width="2"/>
-    ${[0, 120, 240].map(a => `<ellipse cx="${60 + 15 * Math.cos(a * Math.PI / 180)}" cy="${46 + 15 * Math.sin(a * Math.PI / 180)}" rx="11" ry="9" fill="#f6a08f" transform="rotate(${a} ${60 + 15 * Math.cos(a * Math.PI / 180)} ${46 + 15 * Math.sin(a * Math.PI / 180)})"/>`).join('')}
-    ${[0, 120, 240].flatMap(a => [-4, 0, 4].map(d => { const r = (a + d * 6) * Math.PI / 180; return `<ellipse cx="${(60 + 17 * Math.cos(r)).toFixed(1)}" cy="${(46 + 17 * Math.sin(r)).toFixed(1)}" rx="2.4" ry="1.6" fill="#f6efc0" stroke="#c9b26a" stroke-width=".6"/>`; })).join('')}
-    <circle cx="60" cy="46" r="5" fill="#f2b5a5"/><text x="60" y="88" text-anchor="middle" font-size="9" font-family="Fredoka, sans-serif" fill="#5b6386">cut open: seeds inside</text></svg>`
-};
-// [photo or drawing, emoji, caption, what is happening]
+// [photo, emoji if it is missing, caption, what is happening, which part of the photo to keep when it is cropped]
 const EXAMPLES = {
   apple: { name: '🍎 Apple', frames: [['apple-blossom.jpg', '🌸', 'Flower', 'Apple blossom in spring.'], ['apple-young.jpg', '🍏', 'Young fruit', 'The petals fall. The base of the flower swells into a tiny apple.'], ['apple-bottom.jpg', '🍎', 'Look underneath!', 'The dry bits at the bottom of an apple are the old sepals.']],
     sci: 'After pollination, the petals fall and the base of the flower swells into an <b>apple</b>. The <b>pips</b> in the core are the seeds. The dry sepals stay on, so you can still see them at the bottom of an apple.' },
-  pea: { name: 'Pea', frames: [['pea-flower.jpg', '🌸', 'Flower', 'A pea flower.'], ['@peaYoung', '', 'Petals wither', 'The petals wither and a tiny pod starts to grow from the ovary.'], ['pea-pod.jpg', '🟢', 'Fruit', 'The pod is the fruit. The peas inside are the seeds!']],
+  pea: { name: 'Pea', frames: [['pea-flower.jpg', '🌸', 'Flower', 'A pea flower.'], ['pea-young.jpg', '🌱', 'Petals wither', 'The petals wither, and a tiny pod grows out of the middle of the flower.', '33% 50%'], ['pea-pod.jpg', '🟢', 'Fruit', 'The pod is the fruit. The peas inside are the seeds!']],
     sci: 'A pea <b>pod</b> grows from the ovary of a pea flower. The pod is the <b>fruit</b>, and the peas inside it are the <b>seeds</b>.' },
-  tomato: { name: '🍅 Tomato', frames: [['tomato-flower.jpg', '🌼', 'Flower', 'Tomato flowers are small and yellow.'], ['tomato-fruit.jpg', '🍅', 'Fruit', 'The ovary swells into a tomato: green, then red. The green star on top is the sepals.'], ['@tomatoCut', '', 'Inside', 'Cut a tomato open: it is full of seeds.']],
+  tomato: { name: '🍅 Tomato', frames: [['tomato-flower.jpg', '🌼', 'Flower', 'Tomato flowers are small and yellow.'], ['tomato-fruit.jpg', '🍅', 'Fruit', 'The ovary swells into a tomato: green, then red. The green star on top is the sepals.'], ['tomato-cut.jpg', '🍅', 'Inside', 'Cut a tomato open: it is full of seeds.']],
     sci: 'A <b>tomato</b> grows from the ovary of a tomato flower, and it holds the seeds. So, to a scientist, a tomato is a <b>fruit</b>.' }
 };
 // [id, name, picture, a fruit?, why]
@@ -1073,9 +1074,9 @@ const FRU = {
     }
     const E = EXAMPLES[F.ex];
     return `<div class="lay-top"><span class="scaletag">${E.name}</span><div class="readout">From flower to fruit</div></div>
-      <div class="film">${E.frames.map(([pic, em, capt, what], k) => {
+      <div class="film">${E.frames.map(([pic, em, capt, what, pos], k) => {
         const covered = F.ex === 'apple' && k === 2 && !F.apred;
-        const img = covered ? '<div class="cover">❓</div>' : pic[0] === '@' ? DRAW[pic.slice(1)] : photo(pic, em, `${capt}: ${what}`);
+        const img = covered ? '<div class="cover">❓</div>' : photo(pic, em, `${capt}: ${what}`).replace('<img ', `<img style="object-position:${pos || '50% 50%'}" `);
         return `${k ? '<div class="arrow" aria-hidden="true">▶</div>' : ''}<div class="frame"><div class="photo">${img}</div><div class="cap"><span class="num">${k + 1}</span>${capt}<i>${covered ? 'Predict first!' : what}</i></div></div>`; }).join('')}</div>`;
   },
   drawer() {
@@ -1147,18 +1148,25 @@ const SUN = (() => {
 const freshCyc = () => ({ placed: { 0: 'seed' }, sel: null, mistakes: 0, last: null, watch: false, step: 0, play: false });
 state.cyc = freshCyc();
 const CYC = {
-  geo() { const { w, h, narrow } = stageSize(), top = narrow ? 40 : 50, cx = w / 2, cy = top + (h - top) / 2, bw = narrow ? 82 : 132, bh = narrow ? 58 : 88;
-    const R = Math.min((w - bw) / 2 - 8, (h - top - bh) / 2 - 6); return { w, h, narrow, top, cx, cy, R, bw, bh, at: i => { const a = (-90 + i * 45) * Math.PI / 180; return [cx + R * Math.cos(a), cy + R * Math.sin(a)]; } }; },
+  // The boxes sit round an oval. Neighbouring boxes are 0.7 × the oval's radius apart, across or down,
+  // so each box is kept to about a quarter of the space: then they never overlap, whatever the screen's shape.
+  geo() { const { w, h, narrow } = stageSize(), top = narrow ? 40 : 50, H = h - top - 8, cx = w / 2, cy = top + H / 2 + 4;
+    const bw = Math.min(narrow ? 84 : 140, w * .25), bh = Math.min(narrow ? 60 : 92, H * .25);
+    const Rx = (w - bw) / 2 - 8, Ry = (H - bh) / 2;
+    return { w, h, narrow, top, cx, cy, Rx, Ry, bw, bh, at: i => { const a = (-90 + i * 45) * Math.PI / 180; return [cx + Rx * Math.cos(a), cy + Ry * Math.sin(a)]; } }; },
   done: () => STAGES.every((_, i) => state.cyc.placed[i]),
   stage() {
     const C = state.cyc, g = CYC.geo(), now = C.watch ? C.step : -1;
-    let o = `<rect width="${g.w}" height="${g.h}" fill="#eef4fb"/><circle cx="${g.cx}" cy="${g.cy}" r="${g.R}" fill="none" stroke="#b7c3ea" stroke-width="3" stroke-dasharray="8 6"/>`;
+    let o = `<rect width="${g.w}" height="${g.h}" fill="#eef4fb"/><ellipse cx="${g.cx}" cy="${g.cy}" rx="${g.Rx}" ry="${g.Ry}" fill="none" stroke="#b7c3ea" stroke-width="3" stroke-dasharray="8 6"/>`;
     // Arrows round the wheel, half-way between the boxes
-    for (let i = 0; i < 8; i++) { const a = (-90 + i * 45 + 22.5) * Math.PI / 180, x = g.cx + g.R * Math.cos(a), y = g.cy + g.R * Math.sin(a), d = (a * 180 / Math.PI) + 90;
+    for (let i = 0; i < 8; i++) { const a = (-90 + i * 45 + 22.5) * Math.PI / 180, x = g.cx + g.Rx * Math.cos(a), y = g.cy + g.Ry * Math.sin(a), d = Math.atan2(g.Ry * Math.cos(a), -g.Rx * Math.sin(a)) * 180 / Math.PI;
       o += `<path d="M-7 -6 L7 0 L-7 6Z" transform="translate(${x} ${y}) rotate(${d})" fill="#8a93ad"/>`; }
     // The sunflower in the middle
     const last = C.watch ? C.step : Math.max(...Object.keys(C.placed).map(Number).filter(i => C.placed[i]));
-    const ps = Math.min(g.R * 1.15, 220);
+    // The middle picture fits inside the ring of boxes
+    // (it must clear the boxes above, below and at the sides, and the diagonal ones on at least one side; no room, no picture)
+    const ps = Math.min(220, 2 * (g.Ry - g.bh / 2 - 6), 2 * (g.Rx - g.bw / 2 - 6), 2 * (Math.max(.707 * g.Rx - g.bw / 2, .707 * g.Ry - g.bh / 2) - 6));
+    if (ps >= 40)
     o += `<svg x="${g.cx - ps / 2}" y="${g.cy - ps / 2}" width="${ps}" height="${ps}" viewBox="0 0 100 100">${SUN[last](100).replace(/^<svg[^>]*>|<\/svg>$/g, '')}</svg>`;
     STAGES.forEach(([id, name], i) => {
       const [x, y] = g.at(i), put = C.placed[i], bx = x - g.bw / 2, by = y - g.bh / 2, on = now === i;
