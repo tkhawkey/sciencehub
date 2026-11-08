@@ -1,0 +1,1515 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flower Lab</title>
+<meta name="description" content="Sort plants that flower from plants that don't, take a flower apart, follow the pollen, design a flower for a pollinator, see flowers turn into fruit and complete the life cycle – an interactive tool for Year 5.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ================= Shared look (matches Seed Lab) ================= */
+  :root {
+    --ink: #1d2340; --muted: #5b6386; --soft: #eef2ff;
+    --yellow: #ffc83d; --blue: #3d7bff; --coral: #ff5f6d; --green: #22b07d; --orange: #f0892e; --grey: #8a93ad; --pink: #e85d9e;
+    --space: #070d24; --drawerW: 360px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: var(--space); color: var(--ink); font-family: 'Fredoka', system-ui, sans-serif; font-size: 17px; line-height: 1.35; -webkit-tap-highlight-color: transparent; }
+  body { display: flex; flex-direction: column; }
+  button, input, textarea { font: inherit; color: inherit; }
+  b { font-weight: 700; }
+  .btn { border: 0; border-radius: 14px; padding: 9px 14px; min-height: 44px; cursor: pointer; background: #fff; color: var(--ink); font-weight: 600; font-size: 16px; box-shadow: 0 3px 0 rgba(0,0,0,.18); }
+  .btn:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,.18); }
+  .btn.active { background: var(--yellow); }
+  .btn:focus-visible { outline: 3px solid var(--yellow); outline-offset: 2px; }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .btn.go { background: var(--green); color: #fff; font-size: 19px; flex: 1; }
+  .btn.primary { background: var(--green); color: #fff; }
+  a.btn { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
+  #drawer a.btn.go, #drawer a.btn.primary { color: #fff; }
+
+  /* ---------- Top bar ---------- */
+  .topbar { flex: none; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 8px 10px; background: rgba(7,13,36,.95); z-index: 15; }
+  .brand { color: #fff; font-size: 21px; font-weight: 700; margin-right: auto; white-space: nowrap; }
+  .hub-link { flex: none; display: grid; place-items: center; width: 38px; height: 38px; border-radius: 12px; text-decoration: none; font-size: 20px; background: rgba(255,255,255,.14); box-shadow: 0 3px 0 rgba(0,0,0,.25); transition: background .15s, transform .08s; }
+  .hub-link:hover { background: rgba(255,255,255,.26); }
+  .hub-link:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,.25); }
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+  .btn.missions { background: var(--blue); color: #fff; }
+  .tabs .btn { padding: 9px 10px; }
+  /* Seven tabs: their words go first, leaving the icons */
+  @media (max-width: 1399px) {
+    .topbar .long { display: none; }
+    .brand { font-size: 18px; }
+    .topbar, .tabs { gap: 4px; }
+    .tabs .btn { padding: 9px 8px; font-size: 14.5px; }
+  }
+  @media (max-width: 1180px) { .tl { display: none; } .tabs .btn { font-size: 20px; padding: 6px 9px; } }
+
+  /* ---------- Main area: stage on the left, drawer on the right ---------- */
+  main { position: relative; flex: 1; min-height: 0; }
+  #stage { position: absolute; top: 0; bottom: 0; left: 0; right: var(--drawerW); overflow: hidden; background: #eef4fb; display: flex; align-items: center; justify-content: center; }
+  #stage > svg { width: 100%; height: 100%; display: block; touch-action: none; user-select: none; -webkit-user-select: none; }
+  #drawer { position: absolute; top: 0; right: 0; bottom: 0; width: var(--drawerW); background: #dfe6ff; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+  .card { background: #fff; border-radius: 16px; padding: 12px 14px; }
+  .card h2 { margin: 0 0 4px; font-size: 21px; line-height: 1.2; }
+  .card h3 { margin: 0 0 6px; font-size: 17px; }
+  .card p { margin: 4px 0; }
+  .muted { color: var(--muted); font-size: 14.5px; }
+  .term { background: #fff3c4; border-radius: 6px; padding: 0 4px; font-weight: 600; }
+  .navrow { display: flex; gap: 8px; flex-wrap: wrap; }
+  .opt { border: 2px solid #d3dbf7; background: #fff; border-radius: 12px; padding: 6px 10px; min-height: 44px; font-weight: 600; font-size: 15px; cursor: pointer; }
+  .opt.on { background: var(--yellow); border-color: #e0a800; }
+  .opt.wrong { background: #ffe0e3; border-color: var(--coral); }
+  .opt.done, .opt.done:disabled { background: #c9f2df; border-color: var(--green); opacity: 1; }
+  .opt:disabled { opacity: .45; cursor: default; }
+  .opt.sm { font-size: 14px; padding: 4px 8px; }
+  .stops { display: flex; flex-wrap: wrap; gap: 6px; }
+  .spot { background: #fff3c4; border-radius: 12px; padding: 8px 10px; margin-top: 6px !important; }
+  .job { font-size: 16px; background: #c9f2df; border-radius: 12px; padding: 8px 10px; }
+  .says { border: 3px solid var(--yellow); }
+  .says.good { border-color: var(--green); background: #effbf5; }
+  .says ul { margin: 6px 0 0; padding-left: 20px; }
+  .wq .opt { display: block; width: 100%; text-align: left; margin-top: 6px; }
+  .checkbar { position: sticky; bottom: -10px; z-index: 2; display: flex; margin: 0 -10px; padding: 6px 10px 10px; background: #dfe6ff; }
+  .slide { display: flex; align-items: center; gap: 8px; margin: 6px 0; }
+  .slide input[type=range] { flex: 1; min-height: 44px; accent-color: var(--coral); }
+  .lay-top { position: absolute; top: 8px; left: 10px; right: 10px; display: flex; gap: 8px; align-items: flex-start; flex-wrap: wrap; pointer-events: none; z-index: 2; }
+  .scaletag { background: var(--blue); color: #fff; font-weight: 700; border-radius: 10px; padding: 5px 10px; font-size: 15px; white-space: nowrap; }
+  .readout { background: #fff; border-radius: 12px; padding: 5px 10px; font-size: 15px; line-height: 1.3; box-shadow: 0 3px 8px rgba(0,0,0,.12); }
+  .tapme { cursor: pointer; }
+  .icons { list-style: none; padding: 0; margin: 0 0 14px; }
+  .icons li { display: flex; gap: 10px; padding: 6px 0; line-height: 1.35; }
+  .icons .em { font-size: 24px; width: 32px; flex: none; text-align: center; }
+  .linkbtn { border: 0; background: none; color: var(--blue); font-weight: 600; cursor: pointer; padding: 4px 0; font-size: 15px; min-height: 32px; }
+  a.linkbtn { display: inline-flex; align-items: center; text-decoration: none; }
+
+  /* ---------- Chips: tap one, then tap where it goes – or drag it there ---------- */
+  .chip { display: inline-flex; align-items: center; justify-content: center; gap: 4px; border: 2px solid #d3dbf7; background: #fff; border-radius: 12px; padding: 4px 12px; min-height: 44px; font-weight: 600; font-size: 15px; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
+  .chip.sel { background: var(--yellow); border-color: #e0a800; }
+  .chip-ghost { position: fixed; z-index: 30; pointer-events: none; transform: translate(-50%, -50%) rotate(-3deg); box-shadow: 0 8px 18px rgba(0,0,0,.3); opacity: .95; }
+  .bank { display: flex; flex-wrap: wrap; gap: 6px; }
+  .bank:empty::before { content: 'All placed!'; color: var(--muted); font-size: 15px; }
+  .mrow { display: flex; align-items: center; gap: 8px; margin: 6px 0; }
+  .mrow > span { flex: 1; font-size: 15px; line-height: 1.25; }
+  .mslot { flex: none; width: 118px; min-height: 44px; border: 2px dashed #b7c3ea; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; background: #f7f9ff; cursor: pointer; text-align: center; padding: 2px 4px; }
+  .mslot.ready { border-color: #e0a800; background: #fffbea; }
+  .mslot.over { border-style: solid; border-color: var(--green); }
+  .mslot.ok { border-style: solid; border-color: var(--green); background: #c9f2df; cursor: default; }
+  .mslot.bad { border-style: solid; border-color: var(--coral); background: #ffe0e3; }
+  svg .slot.over rect { stroke: var(--green); stroke-width: 4; }
+  svg .slot.ready rect { stroke: #e0a800; }
+
+  /* ---------- Sorting into two boxes ---------- */
+  .sortwrap { position: absolute; inset: 0; display: flex; flex-direction: column; gap: 8px; padding: 50px 8px 8px; }
+  .pool { flex: 1; min-height: 0; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; align-content: start; padding: 4px; }
+  .pcard { position: relative; display: flex; flex-direction: column; border: 3px solid #fff; background: #fff; border-radius: 14px; padding: 0; overflow: hidden; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; font-weight: 700; font-size: 15px; box-shadow: 0 3px 0 rgba(0,0,0,.12); text-align: center; }
+  .pcard img, .pcard .ph { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; display: block; pointer-events: none; }
+  .pcard .ph { display: grid; place-items: center; font-size: 46px; background: #e6f3e0; }
+  .pcard .ph svg { width: 60%; height: auto; }
+  .pcard > span { padding: 4px 6px; }
+  .pcard.sel { border-color: var(--yellow); box-shadow: 0 0 0 3px var(--yellow); }
+  .pcard.look { border-color: var(--blue); }
+  .bins { flex: none; height: 40%; min-height: 130px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .bin { border: 3px dashed #b7c3ea; border-radius: 16px; background: #fff; padding: 6px; display: flex; flex-direction: column; gap: 4px; overflow-y: auto; cursor: pointer; }
+  .bin h3 { margin: 0; font-size: 18px; text-align: center; pointer-events: none; }
+  .bin .bsub { text-align: center; font-size: 13.5px; color: var(--muted); font-weight: 600; pointer-events: none; }
+  .bin.ready { border-color: var(--yellow); background: #fffbea; }
+  .bin.over { border-style: solid; border-color: var(--green); background: #effbf5; }
+  .bin .in { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; }
+  .mini { width: 66px; display: flex; flex-direction: column; align-items: center; font-size: 12px; font-weight: 600; text-align: center; line-height: 1.1; pointer-events: none; }
+  .mini img, .mini .ph { width: 58px; height: 44px; object-fit: cover; border-radius: 8px; display: grid; place-items: center; font-size: 28px; background: #e6f3e0; }
+  .mini .ph svg { width: 34px; height: 34px; }
+  .photo { position: relative; border-radius: 14px; overflow: hidden; background: #e6f3e0; }
+  .photo img { width: 100%; display: block; }
+  .photo .ph { display: grid; place-items: center; font-size: 80px; aspect-ratio: 4 / 3; }
+  .pcard .credit, .mini .credit { display: none; }
+  .credit { position: absolute; right: 6px; bottom: 6px; background: rgba(0,0,0,.55); color: #fff; font-size: 11px; padding: 2px 6px; border-radius: 6px; max-width: calc(100% - 12px); }
+
+  /* ---------- Flower to fruit: photos in a row ---------- */
+  .film { position: absolute; inset: 0; padding: 54px 10px 10px; display: flex; gap: 8px; align-items: stretch; }
+  .frame { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; background: #fff; border-radius: 16px; padding: 8px; }
+  .frame .photo { flex: 1; min-height: 0; }
+  .frame .photo img { width: 100%; height: 100%; object-fit: cover; }
+  .frame .photo .ph { height: 100%; aspect-ratio: auto; }
+  .frame .cap { font-weight: 700; font-size: 16px; line-height: 1.2; }
+  .frame .cap i { display: block; font-style: normal; font-weight: 500; font-size: 14px; color: var(--muted); }
+  .frame .num { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--blue); color: #fff; font-size: 15px; margin-right: 4px; }
+  .arrow { align-self: center; font-size: 28px; color: var(--muted); }
+  .cover { display: grid; place-items: center; height: 100%; font-size: 70px; background: repeating-linear-gradient(45deg, #fff3c4 0 14px, #ffeaa0 14px 28px); }
+
+  /* ---------- Design a flower: the visits gauges (as in Adaptation Studio) ---------- */
+  .gauges { position: absolute; left: 10px; top: 52px; bottom: 10px; display: flex; gap: 6px; z-index: 3; }
+  .gauge { width: 82px; display: flex; flex-direction: column; align-items: center; gap: 4px; background: rgba(255,255,255,.94); border-radius: 16px; padding: 8px 6px; cursor: pointer; border: 3px solid transparent; text-align: center; font: inherit; color: var(--ink); }
+  .gauge.on { border-color: var(--blue); }
+  .gauge .gt { font-weight: 700; font-size: 14px; line-height: 1.15; display: flex; flex-direction: column; align-items: center; }
+  .gauge .gi { font-size: 24px; line-height: 1.2; }
+  .gauge .end { font-size: 12px; color: var(--muted); font-weight: 600; line-height: 1.1; }
+  .gauge .tube { position: relative; flex: 1; min-height: 50px; width: 26px; border-radius: 13px; margin: 14px 0; background: linear-gradient(to top, #ff7a5a 0%, #ffd27a 32%, #9ad48a 62%, #22a06b 100%); }
+  .gauge .tube.off { background: #e1e6f5; }
+  .gauge .gs { font-weight: 700; font-size: 13px; line-height: 1.15; min-height: 30px; display: flex; align-items: center; }
+  .gauge.bad .gs { color: #b23a12; } .gauge.good .gs { color: #0b6644; }
+  .marker { position: absolute; left: 50%; width: 34px; height: 34px; margin: -17px 0 0 -17px; border-radius: 50%; background: #fff; border: 3px solid var(--ink); display: flex; align-items: center; justify-content: center; font-size: 15px; transition: top .8s cubic-bezier(.3,1.4,.5,1); }
+  .feat { display: flex; align-items: flex-start; gap: 8px; padding: 5px 0; border-top: 1px solid #e1e6f5; font-size: 15px; line-height: 1.3; }
+  .feat:first-of-type { border-top: 0; }
+  .st { display: inline-block; flex: none; border-radius: 999px; padding: 1px 9px; font-weight: 600; font-size: 13px; white-space: nowrap; }
+  .st.help { background: #d9f6ea; color: #0b6644; } .st.problem { background: #ffe3cc; color: #8a4300; } .st.little { background: #eceff6; color: #4a5170; }
+  .frow { margin: 7px 0; }
+  .frow > span { display: block; font-weight: 700; font-size: 14.5px; margin-bottom: 3px; }
+
+  /* ---------- Pictures drawn on the stage ---------- */
+  .glabel { font-family: 'Fredoka', system-ui, sans-serif; font-size: 16px; font-weight: 700; fill: var(--ink); }
+  .gsmall { font-family: 'Fredoka', system-ui, sans-serif; font-size: 13px; font-weight: 600; fill: var(--muted); }
+  .part:hover > path, .part:hover > ellipse { filter: brightness(1.08); }
+  .bob { animation: bob 1.4s ease-in-out infinite alternate; }
+  @keyframes bob { to { transform: translateY(-8px); } }
+  .puff { animation: puff 1.6s ease-out infinite; }
+  @keyframes puff { from { opacity: 1; transform: translate(0, 0); } to { opacity: 0; transform: translate(var(--dx), var(--dy)); } }
+  .glow { animation: glow 1.2s ease-in-out infinite alternate; }
+  @keyframes glow { from { opacity: .35; } to { opacity: .9; } }
+  .scent { animation: rise 2.4s ease-in infinite; }
+  @keyframes rise { from { transform: translateY(0); opacity: 0; } 20% { opacity: .9; } to { transform: translateY(-40px); opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { .bob, .puff, .glow, .scent { animation: none; } }
+
+  /* ---------- Missions and pop-ups ---------- */
+  .banner { position: absolute; top: 10px; right: 10px; width: calc(var(--drawerW) - 20px); z-index: 6; background: #fff; border: 3px solid var(--yellow); border-radius: 16px; padding: 9px 44px 9px 14px; box-shadow: 0 6px 16px rgba(0,0,0,.18); }
+  .banner.hidden { display: none; }
+  .banner .kicker { font-size: 12.5px; font-weight: 700; color: var(--blue); text-transform: uppercase; letter-spacing: .04em; }
+  .banner .close { position: absolute; top: 6px; right: 6px; border: 0; background: var(--soft); border-radius: 50%; width: 32px; height: 32px; cursor: pointer; }
+  .banner .hint { margin-top: 4px; color: var(--muted); font-size: 15px; }
+  .banner .hint.hidden { display: none; }
+  .modal { position: fixed; inset: 0; background: rgba(5,10,30,.6); display: flex; align-items: center; justify-content: center; z-index: 20; padding: 16px; }
+  .modal.hidden { display: none; }
+  .modal-box { position: relative; background: #fff; border-radius: 24px; padding: 20px; width: min(580px, 100%); max-height: calc(100vh - 32px); overflow-y: auto; }
+  .modal-box h2 { margin: 0 0 8px; font-size: 25px; }
+  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+  .mission-list { display: grid; gap: 8px; margin-bottom: 14px; }
+  .mission-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; min-height: 52px; border-radius: 16px; background: var(--soft); border: 0; text-align: left; cursor: pointer; font-size: 16px; }
+  .mission-item .em { font-size: 25px; } .mission-item .t { flex: 1; font-weight: 600; }
+  .mission-item .star { font-size: 21px; filter: grayscale(1); opacity: .35; }
+  .mission-item.done .star { filter: none; opacity: 1; }
+  .core { background: var(--yellow); color: var(--ink); border-radius: 8px; padding: 1px 7px; font-size: 12.5px; font-weight: 700; white-space: nowrap; }
+  .win-emoji { font-size: 56px; text-align: center; }
+  .win-text { font-size: 17.5px; line-height: 1.5; margin-bottom: 14px; }
+  .confetti { position: fixed; top: -40px; font-size: 26px; z-index: 40; pointer-events: none; animation: fall linear forwards; }
+  @keyframes fall { to { transform: translateY(110vh) rotate(540deg); } }
+  .modal-x {
+    position: sticky; top: 0; float: right; z-index: 2;
+    width: 52px; height: 52px; margin: -6px -6px 6px 12px; padding: 0;
+    border: 0; border-radius: 50%; cursor: pointer;
+    background: var(--coral); color: #fff; font-size: 26px; font-weight: 700; line-height: 1;
+    display: grid; place-items: center; box-shadow: 0 3px 0 rgba(0,0,0,.2);
+    transition: transform .08s, filter .15s;
+  }
+  .modal-x:hover { filter: brightness(1.08); }
+  .modal-x:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,.2); }
+  .modal-x:focus-visible { outline: 3px solid var(--yellow); outline-offset: 2px; }
+  .science { background: #fff6d6; border: 3px solid var(--yellow); border-radius: 16px; padding: 10px 14px; margin: 8px 0; }
+  .science > b:first-child { display: block; font-size: 14px; text-transform: uppercase; letter-spacing: .04em; color: #8a5a00; margin-bottom: 2px; }
+  .seelab { display: flex; align-items: center; gap: 8px; background: #e7f7ee; border-radius: 12px; padding: 8px 10px; font-weight: 600; color: #0b6644; text-decoration: none; min-height: 44px; }
+  .help-body h3 { margin: 12px 0 4px; font-size: 17px; }
+  .help-body p { margin: 4px 0; line-height: 1.4; }
+  .help-body ol { margin: 4px 0; padding-left: 24px; line-height: 1.4; }
+  .help-body ol li { margin: 3px 0; }
+  .help-body .welcome { font-weight: 700; color: var(--blue); }
+  details.teach { margin: 12px 0; font-size: 13px; color: var(--muted); }
+  details.teach summary { cursor: pointer; font-weight: 600; min-height: 32px; }
+  details.teach p { margin: 4px 0; }
+  details.teach h4 { margin: 8px 0 2px; font-size: 13px; color: var(--ink); }
+
+  /* ---------- Narrow screens: stage on top, drawer below ---------- */
+  @media (max-width: 760px) {
+    :root { --drawerW: 0px; }
+    #stage { bottom: 42%; right: 0; }
+    #drawer { top: 58%; width: 100%; }
+    .banner { top: calc(58% + 8px); left: 8px; right: 8px; width: auto; }
+    .brand { font-size: 17px; }
+    .topbar > .btn { padding: 6px 9px; }
+    /* The seven tabs get a row of their own, under the title and buttons */
+    .tabs { order: 9; width: 100%; justify-content: space-between; gap: 3px; }
+    .tabs .btn { flex: 1; font-size: 18px; padding: 4px 0; min-height: 40px; }
+    .readout, .scaletag { font-size: 13px; padding: 3px 7px; }
+    .glabel { font-size: 12px; } .gsmall { font-size: 10.5px; }
+    .sortwrap { padding-top: 40px; gap: 5px; }
+    .pool { grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); gap: 5px; }
+    .pcard { font-size: 12px; } .pcard .ph { font-size: 30px; }
+    .bins { min-height: 100px; gap: 5px; }
+    .bin h3 { font-size: 14px; } .bin .bsub { display: none; }
+    .mini { width: 46px; font-size: 10px; } .mini img, .mini .ph { width: 42px; height: 32px; font-size: 20px; }
+    .film { padding-top: 40px; gap: 4px; }
+    .frame { padding: 4px; } .frame .cap { font-size: 12px; } .frame .cap i { display: none; } .frame .num { width: 20px; height: 20px; font-size: 12px; }
+    .arrow { font-size: 16px; }
+    .gauges { top: 40px; gap: 3px; }
+    .gauge { width: 50px; padding: 5px 2px; } .gauge .gn, .gauge .end { display: none; } .gauge .gs { font-size: 10px; min-height: 24px; }
+    .gauge .tube { width: 18px; margin: 10px 0; } .marker { width: 26px; height: 26px; margin: -13px 0 0 -13px; font-size: 12px; }
+    .mslot { width: 96px; font-size: 14px; }
+  }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a class="hub-link" href="../index.html" title="Back to the Science Hub" aria-label="Back to the Science Hub">🏠</a>
+  <div class="brand">🌸 Flower Lab</div>
+  <div class="tabs" id="tabs"></div>
+  <button class="btn missions" data-act="missions" title="Missions">🚀 <span class="long">Missions </span><span id="starCount"></span></button>
+  <button class="btn" data-act="model" title="How is this model different from real life?">🤔<span class="long"> Real life?</span></button>
+  <button class="btn" id="helpBtn" data-act="help" aria-label="How to use">❓</button>
+</div>
+<main>
+  <div id="stage"></div>
+  <div id="drawer"></div>
+  <div id="banner" class="banner hidden" role="status">
+    <div class="kicker" id="bannerKicker"></div>
+    <div id="bannerText"></div>
+    <button class="linkbtn" data-act="hint" id="hintBtn">💡 Show a hint</button>
+    <div class="hint hidden" id="bannerHint"></div>
+    <button class="close" data-act="stopMission" aria-label="Stop this mission">✖</button>
+  </div>
+</main>
+<div id="missionsModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="missionsTitle">
+  <div class="modal-box">
+    <button class="modal-x" data-act="closeModals" aria-label="Close">✕</button>
+    <h2 id="missionsTitle">🚀 Missions</h2>
+    <p class="muted" style="margin-top:-4px">Short of time? Start with the <span class="core">⏱ Lesson</span> missions.</p>
+    <div class="mission-list" id="missionList"></div>
+    <div class="modal-actions"><button class="btn" data-act="resetStars">Reset stars</button><button class="btn primary" data-act="closeModals">Close</button></div>
+  </div>
+</div>
+<div id="modelModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modelTitle">
+  <div class="modal-box">
+    <button class="modal-x" data-act="closeModals" aria-label="Close">✕</button>
+    <h2 id="modelTitle">🤔 How is this model different from real life?</h2>
+    <p class="muted" id="modelTab" style="margin:-4px 0 8px;font-weight:600"></p>
+    <p style="margin-top:0">A <span class="term">model</span> shows some important features of something real – but not everything.</p>
+    <ul class="icons" id="modelList"></ul>
+    <div class="modal-actions"><button class="btn primary" data-act="closeModals">Got it!</button></div>
+  </div>
+</div>
+<div id="winModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="winTitle">
+  <div class="modal-box">
+    <button class="modal-x" data-act="closeModals" aria-label="Close">✕</button>
+    <div class="win-emoji">⭐</div>
+    <h2 id="winTitle" style="text-align:center">Mission complete!</h2>
+    <div class="win-text" id="winText"></div>
+    <div class="modal-actions"><button class="btn" data-act="closeModals">Keep exploring</button><a class="btn primary" id="winPractise" href="../practice/index.html#flowers">✏️ Practise this</a><button class="btn primary" id="winNext" data-act="nextMission">Next mission ▶</button></div>
+  </div>
+</div>
+<div id="helpModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+  <div class="modal-box">
+    <button class="modal-x" data-act="closeModals" aria-label="Close">✕</button>
+    <div class="help-body" id="helpBody"></div>
+    <div class="modal-actions"><a class="btn" href="../practice/index.html#flowers">✏️ Practise this</a><button class="btn primary" data-act="closeModals">Let's go! 🚀</button></div>
+  </div>
+</div>
+
+<script>
+// ================= Utilities =================
+const $ = (s, r = document) => r.querySelector(s);
+// Saved progress; private windows can block storage, so failures are ignored
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+};
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+const stageSize = () => { const st = $('#stage'), w = st.clientWidth || 900, h = st.clientHeight || 600; return { w, h, narrow: w < 560 }; };
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+const mix = (c1, c2, t) => { const p = c => [1, 3, 5].map(k => parseInt(c.slice(k, k + 2), 16)), a = p(c1), b = p(c2);
+  return '#' + a.map((v, k) => Math.round(v + (b[k] - v) * clamp(t)).toString(16).padStart(2, '0')).join(''); };
+const lc = t => t[0].toLowerCase() + t.slice(1);
+const cap = t => t[0].toUpperCase() + t.slice(1);
+// A question with choices: wrong ones turn red and stay disabled, the right one turns green
+const choices = (act, opts, chosen, wrongs, right) => opts.map(([v, t]) => `<button class="opt${chosen === v && v === right ? ' done' : wrongs.includes(v) ? ' wrong' : ''}" data-act="${act}" data-v="${v}"${wrongs.includes(v) || chosen === right ? ' disabled' : ''}>${t}</button>`).join('');
+// A prediction: no right or wrong yet, just the child's choice
+const predict = (act, opts, chosen) => opts.map(([v, t]) => `<button class="opt${chosen === v ? ' on' : ''}" data-act="${act}" data-v="${v}"${chosen ? ' disabled' : ''}>${t}</button>`).join('');
+
+// ================= Photos =================
+// Each photo's credit, as in Adaptation Studio. A missing photo falls back to the plant's emoji.
+// All from Wikimedia Commons; photos/credits.json has the link to each one.
+const CREDITS = {
+  'sunflower.jpg': 'Photo: daryl_mitchell, CC BY-SA 2.0', 'sunflower-clue.jpg': 'Photo: Brandon Weeks, CC BY 3.0',
+  'apple-tree.jpg': 'Photo: Mars 2002, CC BY-SA 3.0', 'apple-blossom.jpg': 'Photo: Billpowellisalive, CC BY-SA 3.0',
+  'grass.jpg': 'Photo: Julian Paren, CC BY-SA 2.0', 'grass-flower.jpg': 'Photo: Hectonichus, CC BY-SA 4.0',
+  'oak-catkins.jpg': 'Photo: Famartin, CC BY-SA 4.0', '../adaptation-studio/photos/oak.jpg': 'Photo: David Hawgood, CC BY-SA 2.0',
+  'cactus.jpg': 'Photo: Diego Delso, CC BY-SA 3.0', 'cactus-flower.jpg': 'Photo: DataEcologist, CC BY-SA 4.0',
+  'moss.jpg': 'Photo: Tomas Pocius, CC0', 'moss-capsules.jpg': 'Photo: jacilluch, CC BY-SA 2.0',
+  'fern.jpg': 'Photo: Christian Berg, CC BY 4.0', 'fern-spores.jpg': 'Photo: Krzysztof Ziarnek, Kenraiz, CC BY-SA 4.0',
+  'pine.jpg': 'Photo: Ruslan Kastani, CC BY-SA 4.0', 'pine-cone.jpg': 'Photo: Wilfredor, CC0',
+  'apple-young.jpg': 'Photo: Natalka Ukraine, CC BY 4.0', 'apple-bottom.jpg': 'Photo: Forest and Kim Starr, CC BY 3.0 US',
+  'pea-flower.jpg': 'Photo: Dyorkey, CC BY-SA 3.0', 'pea-pod.jpg': 'Photo: Rachael Gorjestani, CC0',
+  'tomato-flower.jpg': 'Photo: Dinesh Valke, CC BY-SA 2.0', 'tomato-fruit.jpg': 'Photo: Rob Bertholf, CC BY 3.0'
+};
+const photo = (file, em, alt = '') => {
+  const src = file.includes('/') ? file : `photos/${file}`, c = CREDITS[file];
+  return `<img src="${src}" alt="${esc(alt)}" onerror="this.outerHTML='<div class=&quot;ph&quot;>${em}</div>'">${c ? `<span class="credit">${esc(c)}</span>` : ''}`;
+};
+
+// ================= Drag or tap =================
+// Anything with data-drag can be picked up; anything with data-drop can take it.
+// A tap picks it up (the view's pick), a second tap on a drop place puts it there (the view's drop).
+// Dragging does the same in one go.
+const DND = { start: null, ghost: null, over: null, skipClick: false };
+document.addEventListener('pointerdown', e => {
+  const el = e.target.closest('[data-drag]');
+  if (!el || e.button > 0 || el.matches(':disabled')) return;
+  DND.start = { el, id: el.dataset.drag, x: e.clientX, y: e.clientY, moved: false };
+});
+document.addEventListener('pointermove', e => {
+  const d = DND.start; if (!d) return;
+  if (!d.moved) {
+    if (Math.hypot(e.clientX - d.x, e.clientY - d.y) < 10) return;
+    d.moved = true;
+    const v = VIEWS[state.view], html = v.ghost && v.ghost(d.id);
+    let g;
+    if (html) { g = document.createElement('div'); g.className = 'chip'; g.innerHTML = html; }
+    else { g = d.el.cloneNode(true); g.style.width = d.el.offsetWidth + 'px'; }
+    g.classList.add('chip-ghost'); g.removeAttribute('data-drag');
+    document.body.appendChild(g); DND.ghost = g;
+  }
+  DND.ghost.style.left = e.clientX + 'px'; DND.ghost.style.top = e.clientY + 'px';
+  const over = document.elementFromPoint(e.clientX, e.clientY)?.closest('[data-drop]');
+  if (over !== DND.over) { DND.over?.classList.remove('over'); over?.classList.add('over'); DND.over = over; }
+});
+function endDrag(e) {
+  const d = DND.start; DND.start = null;
+  if (!d || !d.moved) return;
+  DND.ghost?.remove(); DND.ghost = null; DND.over?.classList.remove('over'); DND.over = null;
+  DND.skipClick = true; setTimeout(() => DND.skipClick = false, 0);
+  const over = e && document.elementFromPoint(e.clientX, e.clientY)?.closest('[data-drop]');
+  const v = VIEWS[state.view];
+  if (over && v.drop) v.drop(d.id, over.dataset.drop);
+}
+document.addEventListener('pointerup', endDrag);
+document.addEventListener('pointercancel', () => endDrag(null));
+
+// ================= The model flower =================
+// Drawn side-on, with its stalk going down from the base of the flower at (0, 0). One unit = the flower's size.
+// It has 5 sepals, 5 petals, 6 stamens (each an anther on a filament) and 1 carpel (stigma, style and ovary).
+const FL = { sepals: [-145, -108, 108, 145, 180], petals: [0, -32, 32, -64, 64], stamens: [-34, -22, -10, 10, 22, 34] };
+const PARTS = [...FL.sepals.map((_, i) => 'sepal' + i), ...FL.petals.map((_, i) => 'petal' + i), ...FL.stamens.map((_, i) => 'stamen' + i), 'carpel'];
+const layerOf = id => id.replace(/\d+$/, '');
+const SHAPE = {
+  sepal: (L = .2, w = .055) => `M0 0 C${w} ${-L * .25} ${w * 1.1} ${-L * .7} 0 ${-L} C${-w * 1.1} ${-L * .7} ${-w} ${-L * .25} 0 0Z`,
+  petal: (L = .5, w = .15) => `M0 0 C${w * .5} ${-L * .15} ${w * 1.15} ${-L * .55} ${w * .75} ${-L * .9} Q0 ${-L * 1.08} ${-w * .75} ${-L * .9} C${-w * 1.15} ${-L * .55} ${-w * .5} ${-L * .15} 0 0Z`
+};
+const NS = 'vector-effect="non-scaling-stroke"';
+const COL = { petal: '#ff7eb6', petalEdge: '#cf3f80', sepal: '#4caf50', sepalEdge: '#2f7d3a', anther: '#ffb81c', antherEdge: '#c78300', filament: '#f3e6b0', ovary: '#8fd16f', ovaryEdge: '#4e9a3a', style: '#bfe3a6', stigma: '#e8a23a', fruit: '#e0463a' };
+// The parts on their own, pointing up from (0, 0): used on the flower and on the dissection tray
+const PART = {
+  sepal: (o = {}) => `<path d="${SHAPE.sepal()}" fill="${o.dry ? '#a39250' : COL.sepal}" stroke="${o.hl || COL.sepalEdge}" stroke-width="${o.hl ? 5 : 1.5}" ${NS}/><path d="M0 -.02 V-.16" stroke="${COL.sepalEdge}" stroke-width="1" ${NS} opacity=".6"/>`,
+  petal: (o = {}) => { const c = o.wither ? mix(o.col || COL.petal, '#a0784a', o.wither) : o.col || COL.petal;
+    return `<path d="${SHAPE.petal(.5 * (1 - (o.wither || 0) * .18))}" fill="${c}" stroke="${o.hl || COL.petalEdge}" stroke-width="${o.hl ? 5 : 1.5}" ${NS}/><path d="M0 -.04 V-.36" stroke="${COL.petalEdge}" stroke-width="1" ${NS} opacity=".35"/>`; },
+  // A stamen: the filament (stalk) holding up the anther, where pollen is made
+  stamen: (o = {}) => `<path d="M0 0 V-.34" stroke="${o.wither ? '#c9b98a' : COL.filament}" stroke-width=".014"/><path d="M0 0 V-.34" stroke="${o.hl || 'transparent'}" stroke-width="${o.hl ? 5 : 0}" ${NS} opacity=".7"/>
+    <ellipse cy="-.36" rx=".026" ry=".048" fill="${o.wither ? '#9b7a3a' : COL.anther}" stroke="${o.hl || COL.antherEdge}" stroke-width="${o.hl ? 5 : 1.2}" ${NS}/>
+    ${o.pollen ? [[-.03, -.37], [.032, -.35], [-.024, -.32], [.02, -.41], [0, -.42]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r=".009" fill="#ffd84a"/>`).join('') : ''}`,
+  // The carpel: the stigma on top of the style, and the ovary at the bottom
+  carpel: (o = {}) => {
+    const s = o.swell || 0, rx = .065 * (1 + s * 2.4), ry = .08 * (1 + s * 2.4), cy = -ry - .005, top = cy - ry;
+    const oc = s > 0 ? mix(COL.ovary, COL.fruit, (s - .45) / .55) : COL.ovary, gone = clamp(1 - s * 1.6);
+    let g = '';
+    if (gone > 0) g += `<g opacity="${gone}"><path d="M-.012 ${top + .01} L-.012 -.41 L.012 -.41 L.012 ${top + .01}Z" fill="${o.cut ? '#eaf6dd' : COL.style}" stroke="${o.hl || COL.ovaryEdge}" stroke-width="${o.hl ? 5 : 1.2}" ${NS}/>
+      <path d="M-.042 -.415 Q-.04 -.455 0 -.452 Q.04 -.455 .042 -.415 Q0 -.4 -.042 -.415Z" fill="${COL.stigma}" stroke="${o.hl || '#a8641a'}" stroke-width="${o.hl ? 5 : 1.2}" ${NS}/>
+      ${Array.from({ length: o.stuck || 0 }, (_, k) => `<circle cx="${(-.03 + (k % 5) * .015).toFixed(3)}" cy="${(-.448 - (k % 2) * .01).toFixed(3)}" r=".009" fill="#ffd84a" stroke="#c78300" stroke-width=".5" ${NS}/>`).join('')}</g>`;
+    g += `<ellipse cy="${cy}" rx="${rx}" ry="${ry}" fill="${o.cut ? '#f3fbe9' : oc}" stroke="${o.hl || (s > .5 ? '#a8261c' : COL.ovaryEdge)}" stroke-width="${o.hl ? 5 : 1.5}" ${NS}/>`;
+    if (o.cut) {
+      // Inside the ovary: tiny parts that can become seeds (not labelled: Year 5 doesn't need their name)
+      g += `<ellipse cy="${cy}" rx="${rx}" ry="${ry}" fill="none" stroke="${oc}" stroke-width="${Math.max(.012, rx * .18)}" opacity=".9"/>`;
+      const n = 4, seed = o.seeds || 0;
+      for (let k = 0; k < n; k++) {
+        const yy = cy - ry * .55 + k * (ry * 1.1 / (n - 1)), xx = (k % 2 ? 1 : -1) * rx * .28;
+        g += seed > 0 ? `<ellipse cx="${xx}" cy="${yy}" rx="${(.012 + seed * rx * .2).toFixed(4)}" ry="${(.009 + seed * ry * .12).toFixed(4)}" fill="${mix('#f6f1c7', '#d9b56a', seed)}" stroke="#a88b4e" stroke-width="1" ${NS}/>`
+          : `<ellipse cx="${xx}" cy="${yy}" rx=".012" ry=".009" fill="#f6f1c7" stroke="#b9b37a" stroke-width="1" ${NS}/>`;
+      }
+      // The pollen tube grows from the stigma, down the style, into the ovary
+      if (o.tube > 0) { const end = -.41 + (top + ry * .3 + .41) * o.tube; g += `<path d="M0 -.41 L0 ${end.toFixed(4)}" stroke="#e08a00" stroke-width="2.5" stroke-linecap="round" ${NS}/>`; }
+    }
+    return g;
+  }
+};
+// The whole flower. o: x, y (base of the flower), S (size in px), stalk (px), rm (parts taken off), tap (parts can be picked up),
+// hl (a part or a whole layer to highlight), col (petal colour), wither, fall (0–1), swell, cut, tube, seeds, stuck (pollen on the stigma), pollen (on the anthers)
+function flowerG(o) {
+  const { x, y, S, stalk = S * .9, rm = {}, tap = false, hl = null } = o;
+  const w = o.wither || 0, f = o.fall || 0;
+  const da = id => o.act ? ` data-act="${o.act}" data-v="${id}" class="tapme part"` : tap ? ` data-drag="${id}" class="tapme part"` : '';
+  const hi = id => hl && (hl === id || hl === layerOf(id)) ? '#ffc83d' : null;
+  let g = `<path d="M${x} ${y} Q${x - S * .04} ${y + stalk * .5} ${x} ${y + stalk}" stroke="#3f9d4a" stroke-width="${Math.max(3, S * .035)}" fill="none" stroke-linecap="round"/>`;
+  g += `<g transform="translate(${x} ${y}) scale(${S})">`;
+  FL.sepals.forEach((a, i) => { const id = 'sepal' + i; if (!rm[id]) g += `<g transform="rotate(${a})${a === 180 ? ' scale(.8)' : ''}"${da(id)}>${PART.sepal({ hl: hi(id), dry: o.swell > .3 })}</g>`; });
+  // Petals and stamens droop as they wither, then fall
+  const droop = a => a + (a >= 0 ? 1 : -1) * w * 50;
+  const falling = (k, inner) => f > 0 ? `<g transform="translate(${((k % 2 ? 1 : -1) * f * .25).toFixed(3)} ${(f * 1.3).toFixed(3)})" opacity="${(1 - f).toFixed(2)}">${inner}</g>` : inner;
+  if (f < 1) {
+    FL.petals.forEach((a, i) => { const id = 'petal' + i; if (!rm[id]) g += falling(i, `<g transform="rotate(${droop(a)})"${da(id)}>${PART.petal({ hl: hi(id), col: o.col, wither: w })}</g>`); });
+    FL.stamens.forEach((a, i) => { const id = 'stamen' + i; if (!rm[id]) g += falling(i + 1, `<g transform="rotate(${droop(a) * (1 + w * .4)})"${da(id)}>${PART.stamen({ hl: hi(id), wither: w > .2, pollen: o.pollen })}</g>`); });
+  }
+  if (!rm.carpel) g += `<g${da('carpel')}>${PART.carpel({ hl: hi('carpel'), swell: o.swell, cut: o.cut, tube: o.tube, seeds: o.seeds, stuck: o.stuck })}</g>`;
+  return g + '</g>';
+}
+// A flower made for the wind: no petals, anthers dangling outside on long filaments, a feathery stigma
+function windFlowerG(x, y, S, o = {}) {
+  let g = `<path d="M${x} ${y} Q${x + S * .05} ${y + S * .6} ${x} ${y + S * 1.2}" stroke="#7a9a3a" stroke-width="${Math.max(3, S * .03)}" fill="none"/>`;
+  g += `<g transform="translate(${x} ${y}) scale(${S})">`;
+  // Small, dull, green-brown scales instead of petals
+  g += [-.05, .05].map(dx => `<ellipse cx="${dx}" cy="-.04" rx=".05" ry=".09" fill="#a8b06a" stroke="#6f7a3a" stroke-width="1" ${NS}/>`).join('');
+  // Anthers dangling on long, floppy filaments
+  [[-1, .1], [1, .14], [-1, .3], [1, .26]].forEach(([s, d]) => {
+    const ex = s * (.2 + d * .3), ey = .1 + d;
+    g += `<path d="M0 -.04 Q${s * .16} -.1 ${ex} ${ey}" stroke="#d8cf9a" stroke-width=".01" fill="none"/><ellipse cx="${ex}" cy="${ey + .04}" rx=".022" ry=".05" fill="${o.empty ? '#c9b98a' : '#e9d36a'}" stroke="#9a8a3a" stroke-width="1" ${NS}/>`;
+  });
+  // A feathery stigma, sticking out to catch pollen from the air
+  [-1, 1].forEach(s => {
+    g += `<path d="M0 -.1 L${s * .1} -.38" stroke="#efe6f2" stroke-width=".012"/>`;
+    for (let k = 1; k <= 6; k++) { const t = k / 7, px = s * .1 * t, py = -.1 - .28 * t; g += `<path d="M${px} ${py} l${-.05} ${-.02} M${px} ${py} l.05 ${-.02}" stroke="#d9c9e6" stroke-width=".007"/>`; }
+  });
+  g += Array.from({ length: o.stuck || 0 }, (_, k) => `<circle cx="${((k % 2 ? 1 : -1) * (.03 + (k % 4) * .018)).toFixed(3)}" cy="${(-.18 - (k % 5) * .04).toFixed(3)}" r=".012" fill="#ffd84a" stroke="#c78300" stroke-width=".5" ${NS}/>`).join('');
+  return g + '</g>';
+}
+// A bee: o.dust = pollen on its body
+const beeG = (x, y, s, o = {}) => `<g transform="translate(${x} ${y}) scale(${s})"${o.attrs || ''}>
+  <ellipse cx="-.1" cy="-.62" rx=".34" ry=".44" fill="#eaf4ff" stroke="#9fb3cf" stroke-width="1" ${NS} opacity=".85" transform="rotate(-25 -.1 -.62)"/>
+  <ellipse cx=".22" cy="-.6" rx=".28" ry=".38" fill="#eaf4ff" stroke="#9fb3cf" stroke-width="1" ${NS} opacity=".85" transform="rotate(20 .22 -.6)"/>
+  <ellipse cx="0" cy="0" rx=".72" ry=".46" fill="#ffc83d" stroke="#3a2a10" stroke-width="2" ${NS}/>
+  <path d="M-.25 -.42 Q-.32 0 -.25 .42 M.08 -.45 Q.02 0 .08 .45" stroke="#3a2a10" stroke-width=".14" fill="none"/>
+  <circle cx=".66" cy="-.05" r=".26" fill="#3a2a10"/><circle cx=".74" cy="-.12" r=".06" fill="#fff"/>
+  <path d="M-.72 0 l-.22 .05 l.22 .08Z" fill="#3a2a10"/>
+  ${o.dust ? [[-.4, .2], [-.1, .32], [.25, .3], [-.5, -.1], [.1, .1], [.4, .22], [-.2, -.05]].map(([a, b]) => `<circle cx="${a}" cy="${b}" r=".09" fill="#ffe14a" stroke="#c78300" stroke-width="1" ${NS}/>`).join('') : ''}
+</g>`;
+
+// ================= State =================
+const freshSort = () => ({ pred: null, placed: {}, sel: null, look: null, clue: {}, last: null });
+const freshParts = () => ({ mode: 'explore', rm: {}, named: {}, info: null, cut: false, oops: null, sel: null, placed: {}, marks: {}, bank: shuffle(NAMES), tries: 0 });
+const NAMES = ['sepal', 'petal', 'anther', 'filament', 'stamen', 'stigma', 'style', 'ovary', 'carpel'];
+const state = { view: 'sort', mission: null, done: store.get('fl-done', []), sort: freshSort(), parts: freshParts() };
+
+// Sorting into two boxes. items: [id, name, picture]; bins: [id, title, small print]
+function sortStage({ items, bins, placed, sel, look, tag, say }) {
+  const left = items.filter(([id]) => !placed[id]);
+  return `<div class="lay-top"><span class="scaletag">${tag}</span><div class="readout">${say}</div></div>
+    <div class="sortwrap">
+      <div class="pool">${left.map(([id, name, pic]) => `<button class="pcard${sel === id ? ' sel' : ''}${look === id && sel !== id ? ' look' : ''}" data-drag="${id}" aria-label="${esc(name)}">${pic}<span>${name}</span></button>`).join('')}</div>
+      <div class="bins">${bins.map(([b, t, sub]) => `<div class="bin${sel ? ' ready' : ''}" data-drop="${b}" role="button" aria-label="${esc(t)}"><h3>${t}</h3><div class="bsub">${sub}</div>
+        <div class="in">${items.filter(([id]) => placed[id] === b).map(([, name, pic]) => `<span class="mini">${pic}${name}</span>`).join('')}</div></div>`).join('')}</div>
+    </div>`;
+}
+
+// ================= 1. Flowering or not? =================
+// [id, name, emoji, photo, clue photo, makes flowers?, what it is, the clue, said when sorted right, hint when sorted wrong]
+const PLANTS = [
+  ['grass', 'Grass', '🌾', 'grass.jpg', 'grass-flower.jpg', true, 'A meadow of long grass.',
+    'Look at the tops of the stems. These feathery bits are lots of tiny <b>flowers</b>! They have no colourful petals, so they are easy to miss.',
+    'Surprise! Grass <b>does</b> make flowers. They are small and green, with no colourful petals.', 'Look closely at the feathery tops of the grass. What are they?'],
+  ['fern', 'Fern', '🌿', 'fern.jpg', 'fern-spores.jpg', false, 'A fern with big, feathery leaves.',
+    'Turn a leaf over. The brown dots underneath are full of <b>spores</b>: tiny specks, like dust, that can grow into new ferns.',
+    'Ferns never make flowers. They make <b>spores</b> under their leaves instead.', 'Look under the leaves. Are those brown dots flowers?'],
+  ['apple', 'Apple tree', '🍏', 'apple-tree.jpg', 'apple-blossom.jpg', true, 'An apple tree in spring.',
+    'In spring, apple trees are covered in white and pink <b>blossom</b>. Blossom is lots of flowers!',
+    'Apple blossom is flowers. Later, the flowers turn into apples.', 'What is the white and pink blossom made of?'],
+  ['pine', 'Pine tree', '🌲', 'pine.jpg', 'pine-cone.jpg', false, 'A tall pine tree.',
+    'Look for the <b>cones</b>. A pine tree\'s seeds grow inside its cones, between the woody scales.',
+    'Pine trees make seeds inside <b>cones</b>, but they never make flowers.', 'A cone is not a flower. Does a pine tree have any flowers?'],
+  ['cactus', 'Cactus', '🌵', 'cactus.jpg', 'cactus-flower.jpg', true, 'A spiky cactus.',
+    'Many cacti grow big, bright flowers, sometimes for only a day or two.',
+    'Surprise! A cactus is a flowering plant. Its flowers can be big and bright.', 'Look closer: what is growing on top of the cactus?'],
+  ['moss', 'Moss', '🟩', 'moss.jpg', 'moss-capsules.jpg', false, 'A soft, green cushion of moss.',
+    'Look for tiny stalks with a little case on top. The cases are full of <b>spores</b>: tiny specks, like dust, that can grow into new moss plants.',
+    'Moss never makes flowers. It makes <b>spores</b> instead.', 'Those little cases on stalks are not flowers. What is inside them?'],
+  ['oak', 'Oak tree', '🌳', '../adaptation-studio/photos/oak.jpg', 'oak-catkins.jpg', true, 'A big, old oak tree.',
+    'In spring, long, dangly strings hang from the twigs. They are called <b>catkins</b>, and each one is made of lots of tiny flowers.',
+    'Surprise! Oak trees make flowers: the dangly <b>catkins</b> are made of tiny flowers. Later, other tiny flowers on the tree grow into acorns.', 'Look closely at the dangly catkins in spring. What are they made of?'],
+  ['sunflower', 'Sunflower', '🌻', 'sunflower.jpg', 'sunflower-clue.jpg', true, 'A tall plant with a huge yellow head.',
+    'The big yellow head is a <b>flower</b>. Easy to spot!',
+    'Sunflowers make big, bright flowers.', 'Look at the big yellow head. What is it?']
+];
+const plant = id => PLANTS.find(p => p[0] === id);
+const SBINS = [['yes', '🌸 Makes flowers', 'a flowering plant'], ['no', '🚫 No flowers', 'never makes flowers']];
+const SORT = {
+  stage() {
+    const s = state.sort, n = Object.keys(s.placed).length;
+    return sortStage({ items: PLANTS.map(p => [p[0], p[1], s.clue[p[0]] ? photo(p[4], p[2]) : photo(p[3], p[2])]), bins: SBINS, placed: s.placed, sel: s.sel, look: s.look,
+      tag: `${n} of ${PLANTS.length} sorted`, say: s.sel ? `Now tap the box where the ${lc(plant(s.sel)[1])} belongs.` : 'Tap a plant to look at it. Then tap its box, or drag it there.' });
+  },
+  drawer() {
+    const s = state.sort, n = Object.keys(s.placed).length, all = n === PLANTS.length, P = s.look && plant(s.look), L = s.last;
+    const pred = `<div class="card${s.pred ? '' : ' says'}"><h3>🤔 Predict first</h3><p>Do <b>all</b> plants make flowers?</p>
+      <div class="wq">${predict('spred', [['yes', 'Yes: every plant makes flowers.'], ['no', 'No: some plants never make flowers.']], s.pred)}</div></div>`;
+    const said = L ? `<div class="card says${L.ok ? ' good' : ''}"><h3>${L.ok ? '✅' : '💡'} ${plant(L.id)[1]}</h3><p>${L.ok ? plant(L.id)[8] : s.clue[L.id] ? plant(L.id)[9] : 'Not quite. Tap <b>🔍 Look for clues</b> to look closer.'}</p></div>` : '';
+    const look = P && !s.placed[P[0]] ? `<div class="card"><div class="photo">${s.clue[P[0]] ? photo(P[4], P[2], `${P[1]}: a close-up`) : photo(P[3], P[2], P[1])}</div>
+        <h3 style="margin-top:8px">${P[2]} ${P[1]}</h3><p>${s.clue[P[0]] ? P[7] : P[6]}</p>
+        <div class="navrow" style="margin-top:6px"><button class="btn" data-act="sclue">${s.clue[P[0]] ? '↩ Whole plant' : '🔍 Look for clues'}</button></div>
+        <p style="margin-top:8px"><b>Where does it go?</b></p><div class="navrow">${SBINS.map(([b, t]) => `<button class="opt" data-act="sbin" data-v="${b}">${t}</button>`).join('')}</div></div>` : '';
+    const intro = `<div class="card"><h2>🌼 Flowering or not?</h2><p>A <span class="term">flowering plant</span> is a plant that makes flowers. Do all plants make flowers? Look for clues!</p>
+      <p class="muted">${n} of ${PLANTS.length} sorted.${n ? '' : ' Tap a plant to start.'}</p>${n ? '<button class="linkbtn" data-act="sreset">↺ Start again</button>' : ''}</div>`;
+    if (all) return `${said}<div class="card says good"><h3>🎉 All sorted!</h3><p>5 of these plants make flowers. 3 never do.</p>
+        ${s.pred ? `<p class="muted">You predicted: ${s.pred === 'yes' ? 'every plant makes flowers.' : 'some plants never make flowers.'} ${s.pred === 'no' ? '✅ You were right!' : '❌ Not this time: moss, ferns and pine trees never make flowers.'}</p>` : ''}</div>
+      <div class="science"><b>🔬 The science</b>Not all plants make flowers. <b>Mosses</b> and <b>ferns</b> make <span class="term">spores</span> instead. <b>Conifers</b>, like pine trees, make seeds in <b>cones</b>, but no flowers. Some flowering plants have flowers that are small and easy to miss, like grass and oak trees.</div>
+      ${intro}`;
+    return `${s.pred ? '' : pred}${said}${look}${intro}${s.pred ? pred : ''}`;
+  },
+  sel: () => state.sort.sel,
+  pick(id) { const s = state.sort; s.sel = s.sel === id ? null : id; s.look = id; s.last = null; render(); $('#drawer').scrollTop = 0; },
+  drop(id, bin) {
+    const s = state.sort, P = plant(id); if (!P || s.placed[id]) return;
+    const ok = (bin === 'yes') === P[5]; s.last = { id, ok };
+    if (ok) { s.placed[id] = bin; s.sel = null; s.look = null; if (Object.keys(s.placed).length === PLANTS.length) emit('sorted'); }
+    else { s.sel = null; s.look = id; }
+    render(); $('#drawer').scrollTop = 0;
+  }
+};
+
+// ================= 2. Take a flower apart =================
+// The order of a real dissection: from the outside in
+const LAYERS = ['sepal', 'petal', 'stamen', 'carpel'];
+const LAYER_HOW = {
+  sepal: 'Start on the outside. Take off the 5 <span class="term">sepals</span>: the green, leaf-like parts under the petals. Tap each one, or drag it to the tray.',
+  petal: 'Now take off the 5 <span class="term">petals</span>: the coloured parts of the flower.',
+  stamen: 'Next, take off the 6 <span class="term">stamens</span>: the thin stalks with yellow tips, around the middle.',
+  carpel: 'Only the <span class="term">carpel</span> is left, in the middle. Tap it to lift it onto the tray.'
+};
+// What each name means, shown when it is found on the tray
+const NAME_INFO = {
+  sepal: 'A <b>sepal</b> is one of the green, leaf-like parts on the outside of the flower.',
+  petal: 'A <b>petal</b> is one of the coloured parts of the flower.',
+  anther: 'The <b>anther</b> is the top of a stamen. It is covered in yellow <span class="term">pollen</span>: a fine, yellow dust.',
+  filament: 'The <b>filament</b> is the thin stalk under the anther.',
+  stamen: 'A <b>stamen</b> is an anther on a filament. This flower has 6 stamens.',
+  stigma: 'The <b>stigma</b> is the sticky top of the carpel.',
+  style: 'The <b>style</b> is the stalk that joins the stigma to the ovary.',
+  ovary: 'The <b>ovary</b> is the swollen part at the bottom of the carpel.',
+  carpel: 'The <b>carpel</b> is the stigma, the style and the ovary together. It is in the very middle of the flower.'
+};
+// Tapping part of a stamen or the carpel also finds the name of the whole thing
+const GROUP = { anther: 'stamen', filament: 'stamen', stigma: 'carpel', style: 'carpel', ovary: 'carpel' };
+const DIS = {
+  layerNow() { const p = state.parts; return LAYERS.find(l => PARTS.some(id => layerOf(id) === l && !p.rm[id])); },
+  geo() {
+    // Once the whole flower is on the tray, the tray takes the whole width
+    const { w, h, narrow } = stageSize(), top = narrow ? 40 : 50, gone = !DIS.layerNow(), fw = gone ? 0 : Math.round(w * (narrow ? .38 : .4));
+    const tx = fw + (gone ? 8 : 4), ty = top, tw = w - tx - 8, th = h - ty - 8;
+    let yy = ty + (narrow ? 22 : 30);
+    const rows = (narrow ? [.16, .16, .34, .34] : [.2, .2, .3, .3]).map(k => { const r = { y: yy, h: (th - (narrow ? 22 : 30)) * k }; yy += r.h; return r; });
+    return { w, h, narrow, top, fw, tx, ty, tw, th, rows, sw: narrow ? 66 : 104, sh: narrow ? 24 : 32, fs: narrow ? 11.5 : 15 };
+  },
+  // Label places in a row: spread out so they don't overlap
+  spread(xs, sw, x0, x1) {
+    const o = xs.map(x => x - sw / 2);
+    for (let k = 1; k < o.length; k++) o[k] = Math.max(o[k], o[k - 1] + sw + 6);
+    const over = o[o.length - 1] + sw - x1; if (over > 0) for (let k = o.length - 1; k >= 0; k--) { o[k] -= over; if (k && o[k] < o[k - 1] + sw + 6) continue; break; }
+    return o.map(x => Math.max(x0, x));
+  },
+  // One label place: blank, a name found by tapping (explore), or a label placed by the child (test)
+  slot(name, x, y, g, tx, ty) {
+    const p = state.parts, test = p.mode === 'test', put = test ? p.placed[name] : p.named[name] ? name : null, mark = test && put ? p.marks[name] : null;
+    const fill = mark === true ? '#c9f2df' : mark === false ? '#ffe0e3' : put ? '#fff' : '#f7f9ff', stroke = mark === true ? 'var(--green)' : mark === false ? 'var(--coral)' : put ? 'var(--ink)' : '#b7c3ea';
+    const att = test ? ` class="slot tapme${p.sel ? ' ready' : ''}" data-drop="slot:${name}"${put && mark !== true ? ` data-act="dunplace" data-v="${name}"` : ''}` : ` class="tapme" data-act="dname" data-v="${name}"`;
+    return `<line x1="${x + g.sw / 2}" y1="${ty < y ? y : y + g.sh}" x2="${tx}" y2="${ty}" stroke="#8a93ad" stroke-width="1.5"/>
+      <circle cx="${tx}" cy="${ty}" r="3" fill="#8a93ad"/>
+      <g${att}><rect x="${x}" y="${y}" width="${g.sw}" height="${g.sh}" rx="9" fill="${fill}" stroke="${stroke}" stroke-width="2" stroke-dasharray="${put ? '' : '5 4'}"/>
+      <text x="${x + g.sw / 2}" y="${y + g.sh / 2 + g.fs * .36}" text-anchor="middle" style="font-size:${g.fs}px;font-weight:700;fill:${put ? 'var(--ink)' : '#9aa3c5'}">${put ? cap(put) : test ? '' : '?'}</text></g>`;
+  },
+  // A bracket under a stamen or the carpel, with the name of the whole thing
+  bracket(name, x1, x2, y, g) {
+    const sx = Math.min(Math.max((x1 + x2) / 2 - g.sw / 2, g.tx + 4), g.tx + g.tw - g.sw - 4);
+    return `<path d="M${x1} ${y} v7 H${x2} v-7" stroke="#8a93ad" stroke-width="2" fill="none"/>` + DIS.slot(name, sx, y + 16, g, (x1 + x2) / 2, y + 7);
+  },
+  stage() {
+    const p = state.parts, g = DIS.geo(), now = DIS.layerNow();
+    // The flower, on the left
+    const fy = g.top + (g.h - g.top) * .5, S = Math.min(g.fw * .92, (g.h - g.top) * .52 / .58);
+    let o = `<rect width="${g.w}" height="${g.h}" fill="#eef4fb"/><rect x="0" y="${g.h - 16}" width="${g.fw}" height="16" fill="#cfe6c0"/>`;
+    if (g.fw) o += flowerG({ x: g.fw / 2, y: fy, S, stalk: g.h - fy - 8, rm: p.rm, tap: p.mode === 'explore', hl: p.oops ? now : null, pollen: true });
+    // The dissection tray, on the right
+    o += `<g data-drop="tray"><rect x="${g.tx}" y="${g.ty}" width="${g.tw}" height="${g.th}" rx="16" fill="#fff" stroke="#c6d0f2" stroke-width="2"/>
+      <text x="${g.tx + 12}" y="${g.ty + (g.narrow ? 16 : 21)}" class="glabel">🧪 Dissection tray</text>`;
+    const has = l => PARTS.filter(id => layerOf(id) === l && p.rm[id]).length;
+    g.rows.forEach((r, k) => {
+      const l = LAYERS[k], n = has(l), x0 = g.tx + 14, yc = r.y + r.h * (k < 2 ? .5 : .5);
+      if (k) o += `<line x1="${g.tx + 10}" x2="${g.tx + g.tw - 10}" y1="${r.y}" y2="${r.y}" stroke="#e1e6f5" stroke-dasharray="4 4"/>`;
+      if (!n) { o += `<text x="${g.tx + g.tw / 2}" y="${r.y + r.h / 2 + 5}" text-anchor="middle" class="gsmall">${k + 1}</text>`; return; }
+      if (k < 2) {
+        // Sepals and petals: one laid out flat, how many there are, and a label
+        const L = l === 'sepal' ? .2 : .5, Sr = Math.min((g.tw - g.sw - 70) / L, r.h * .62 / (l === 'sepal' ? .11 : .3));
+        o += `<g class="tapme" data-act="dname" data-v="${l}" transform="translate(${x0} ${yc}) scale(${Sr}) rotate(90)">${PART[l]()}</g>`;
+        o += `<text x="${x0 + L * Sr + 8}" y="${yc + 24}" class="glabel">×${n}</text>`;
+        const sx = g.tx + g.tw - g.sw - 10;
+        o += DIS.slot(l, sx, yc - g.sh / 2, g, x0 + L * Sr * .55, yc);
+        return;
+      }
+      if (l === 'stamen') {
+        const Sr = Math.min((g.tw - 60) / .42, (r.h - g.sh * 2 - 28) / .1), sy = r.y + 6, by = yc + Math.max(.05 * Sr, 8) + 4;
+        o += `<g transform="translate(${x0} ${yc}) scale(${Sr}) rotate(90)">${PART.stamen({ pollen: true })}</g>`;
+        o += `<rect class="tapme" data-act="dname" data-v="filament" x="${x0}" y="${yc - 12}" width="${.32 * Sr}" height="24" fill="transparent"/>`;
+        o += `<rect class="tapme" data-act="dname" data-v="anther" x="${x0 + .31 * Sr}" y="${yc - .06 * Sr - 6}" width="${.1 * Sr + 6}" height="${.12 * Sr + 12}" fill="transparent"/>`;
+        o += `<text x="${x0 + .43 * Sr + 6}" y="${yc + 6}" class="glabel">×${n}</text>`;
+        const [fx, ax] = DIS.spread([x0 + .17 * Sr, x0 + .36 * Sr], g.sw, g.tx + 4, g.tx + g.tw - 4);
+        o += DIS.slot('filament', fx, sy, g, x0 + .17 * Sr, yc - 2) + DIS.slot('anther', ax, sy, g, x0 + .36 * Sr, yc - .045 * Sr);
+        o += DIS.bracket('stamen', x0, x0 + .41 * Sr, by, g);
+        return;
+      }
+      // The carpel, lying flat: ovary on the left, style, stigma on the right. Cut open, the ovary shows what is inside.
+      const Sr = Math.min((g.tw - 50) / .47, (r.h - g.sh * 2 - 28) / .17), sy = r.y + 6, by = yc + .085 * Sr + 4;
+      o += `<g transform="translate(${x0} ${yc}) scale(${Sr}) rotate(90)">${PART.carpel({ cut: p.cut })}</g>`;
+      o += `<circle class="tapme" data-act="dname" data-v="ovary" cx="${x0 + .085 * Sr}" cy="${yc}" r="${.08 * Sr + 4}" fill="transparent"/>`;
+      o += `<rect class="tapme" data-act="dname" data-v="style" x="${x0 + .17 * Sr}" y="${yc - 12}" width="${.23 * Sr}" height="24" fill="transparent"/>`;
+      o += `<rect class="tapme" data-act="dname" data-v="stigma" x="${x0 + .4 * Sr}" y="${yc - .05 * Sr - 6}" width="${.06 * Sr + 8}" height="${.1 * Sr + 12}" fill="transparent"/>`;
+      const [ox, sx2, gx] = DIS.spread([x0 + .085 * Sr, x0 + .29 * Sr, x0 + .44 * Sr], g.sw, g.tx + 4, g.tx + g.tw - 4);
+      o += DIS.slot('ovary', ox, sy, g, x0 + .085 * Sr, yc - .08 * Sr) + DIS.slot('style', sx2, sy, g, x0 + .29 * Sr, yc - 2) + DIS.slot('stigma', gx, sy, g, x0 + .435 * Sr, yc - .03 * Sr);
+      o += DIS.bracket('carpel', x0, x0 + .46 * Sr, by, g);
+    });
+    o += '</g>';
+    const say = p.mode === 'test' ? (p.sel ? `Tap the box where “${cap(p.sel)}” goes.` : 'Choose a label, then tap its box on the tray.')
+      : now ? (g.narrow ? 'Tap a part to take it off.' : 'Take the flower apart, from the outside in. Tap a part, or drag it to the tray.') : p.cut ? 'The ovary, cut open.' : 'Tap each part on the tray to find its name.';
+    return `<div class="lay-top"><span class="scaletag">${p.mode === 'test' ? '🙈 Test' : '🔍 Explore'}</span><div class="readout">${say}</div></div>
+      <svg id="disSvg" viewBox="0 0 ${g.w} ${g.h}" aria-label="A flower and a dissection tray">${o}</svg>`;
+  },
+  drawer() {
+    const p = state.parts, now = DIS.layerNow(), found = NAMES.filter(n => p.named[n]).length;
+    const modes = `<div class="stops">${[['explore', '🔍 Explore'], ['test', '🙈 Test']].map(([m, t]) => `<button class="opt sm${p.mode === m ? ' on' : ''}" data-act="dmode" data-v="${m}">${t}</button>`).join('')}</div>`;
+    const cut = !now ? `<div class="card"><h3>🔪 Inside the carpel</h3><p>${p.cut ? 'Inside the ovary are tiny parts. After pollination, they can grow into <b>seeds</b>.' : 'What is inside the ovary? Cut the carpel open to find out.'}</p>
+      <div class="navrow"><button class="btn${p.cut ? '' : ' go'}" data-act="dcut">${p.cut ? '↩ Put it back together' : '🔪 Cut the carpel open'}</button></div></div>` : '';
+    if (p.mode === 'test') {
+      const right = NAMES.filter(n => p.marks[n] === true).length, wrong = NAMES.filter(n => p.marks[n] === false).length, left = p.bank.filter(n => !Object.values(p.placed).includes(n));
+      return `${right === NAMES.length ? `<div class="card says good"><h3>🎉 All 9 labels are right!</h3><p>You know every part of a flower.</p></div>` : wrong ? `<div class="card says"><h3>🔎 ${right} right so far</h3><p>The red labels are in the wrong place. Tap one to take it off, then try again.</p></div>` : ''}
+        <div class="card"><h2>🙈 No peeking!</h2>${modes}<p style="margin-top:6px">All the parts are on the tray. Put each label in the right box: tap a label, then tap its box. Or drag it there.</p>
+          <div class="bank" style="margin-top:8px">${left.map(n => `<button class="chip${p.sel === n ? ' sel' : ''}" data-drag="${n}">${cap(n)}</button>`).join('')}</div></div>
+        ${cut}
+        <div class="checkbar"><button class="btn go" data-act="dcheck"${Object.keys(p.placed).length ? '' : ' disabled'}>✔ Check my labels</button></div>`;
+    }
+    const step = now ? `<div class="card${p.oops ? ' says' : ''}"><h3>${LAYERS.indexOf(now) + 1}. ${cap(now)}${now === 'carpel' ? '' : 's'}</h3><p>${LAYER_HOW[now]}</p>${p.oops ? `<p class="spot">💡 ${p.oops}</p>` : ''}</div>` : '';
+    const info = p.info ? `<div class="card says good"><h3>🏷️ ${cap(p.info)}</h3><p>${NAME_INFO[p.info]}</p>${GROUP[p.info] ? `<p class="muted">${GROUP[p.info] === 'stamen' ? 'The anther and the filament together make a <b>stamen</b>.' : 'The stigma, style and ovary together make the <b>carpel</b>.'}</p>` : ''}</div>` : '';
+    return `${info}<div class="card"><h2>🔪 Take a flower apart</h2>${modes}<p style="margin-top:6px">Scientists take flowers apart to see how they are made. This is called a <span class="term">dissection</span>.</p>
+        ${now ? '' : `<p class="muted">${found} of ${NAMES.length} names found.</p>`}</div>
+      ${step}${cut}
+      ${!now && found === NAMES.length ? `<div class="science"><b>🔬 The science</b>From the outside in, a flower has <b>sepals</b>, <b>petals</b>, <b>stamens</b> and a <b>carpel</b>. A stamen is an <b>anther</b> on a <b>filament</b>. The carpel is the <b>stigma</b>, the <b>style</b> and the <b>ovary</b>.</div>
+        <div class="checkbar"><button class="btn go" data-act="dmode" data-v="test">🙈 Now test yourself</button></div>` : ''}
+      ${Object.keys(p.rm).length ? '<div class="card"><button class="btn" data-act="dreset">↺ Put the flower back together</button></div>' : ''}`;
+  },
+  ghost(id) {
+    if (state.parts.mode === 'test') return null;
+    const l = layerOf(id);
+    return `<svg width="54" height="54" viewBox="-.3 -.5 .6 .6"><g>${PART[l]({ pollen: true })}</g></svg>`;
+  },
+  sel: () => state.parts.mode === 'test' ? state.parts.sel : null,
+  // Explore: picking up a part takes it off the flower. Test: picking up a label chooses it.
+  pick(id) {
+    const p = state.parts;
+    if (p.mode === 'test') { p.sel = p.sel === id ? null : id; render(); return; }
+    const now = DIS.layerNow(), l = layerOf(id);
+    if (l !== now) { p.oops = `Take off the ${now === 'carpel' ? 'carpel' : now + 's'} first. A dissection starts on the outside and works in.`; render(); return; }
+    p.rm[id] = true; p.oops = null; render(); DIS.check();
+  },
+  drop(id, where) {
+    const p = state.parts;
+    if (p.mode !== 'test') { if (where === 'tray' && PARTS.includes(id)) DIS.pick(id); return; }
+    if (!where.startsWith('slot:') || !NAMES.includes(id)) return;
+    const slot = where.slice(5); if (p.marks[slot] === true) return;
+    Object.keys(p.placed).forEach(k => { if (p.placed[k] === id) { delete p.placed[k]; delete p.marks[k]; } });
+    p.placed[slot] = id; delete p.marks[slot]; p.sel = null; render();
+  },
+  check() { const p = state.parts; if (p.mode === 'explore' && !DIS.layerNow() && NAMES.every(n => p.named[n])) emit('dissected'); }
+};
+
+// ================= 3. What does each part do? =================
+// [icon, name, job (short, for matching), the job explained]. Sepals are extra: not in 5Bs.03, but children ask.
+const JOBS = {
+  petal: ['🌸', 'Petals', 'Attract pollinators', 'Bright petals attract insects, like bees and butterflies, and other <span class="term">pollinators</span>: animals that carry pollen from flower to flower.'],
+  anther: ['🟡', 'Anthers', 'Make pollen', 'The anthers make <span class="term">pollen</span>: a fine, yellow dust. A flower needs pollen to make seeds.'],
+  stigma: ['🎯', 'Stigma', 'Catches pollen', 'The stigma is <b>sticky</b>, so it catches pollen. The pollen might come on an insect, or blow in on the wind.'],
+  ovary: ['🌰', 'Ovary', 'Where seeds form. It becomes the fruit.', 'After pollination, <b>seeds</b> form inside the ovary. Then the ovary grows into the <b>fruit</b>, with the seeds inside.'],
+  sepal: ['🛡️', 'Sepals', 'Protect the flower while it is a bud', 'Before the flower opens, the sepals wrap around the bud and <b>protect</b> it.']
+};
+const JORDER = ['petal', 'anther', 'stigma', 'ovary', 'sepal'];
+const freshJobs = () => ({ sel: null, seen: {}, rows: shuffle(JORDER), chip: null, placed: {}, marks: {} });
+state.jobs = freshJobs();
+// A closed bud, with its sepals wrapped round it
+const budG = (x, y, s) => `<g transform="translate(${x} ${y}) scale(${s})"><path d="M0 0 V.5" stroke="#3f9d4a" stroke-width=".04"/>
+  <ellipse cy="-.24" rx=".11" ry=".22" fill="${COL.petal}" stroke="${COL.petalEdge}" stroke-width="1" ${NS}/>
+  <g transform="rotate(-9)"><path d="${SHAPE.sepal(.42, .1)}" fill="${COL.sepal}" stroke="${COL.sepalEdge}" stroke-width="1.5" ${NS}/></g>
+  <g transform="rotate(9)"><path d="${SHAPE.sepal(.42, .1)}" fill="#5fbf5f" stroke="${COL.sepalEdge}" stroke-width="1.5" ${NS}/></g></g>`;
+const JOB = {
+  geo() { const { w, h, narrow } = stageSize(), top = narrow ? 40 : 50, S = Math.min(w * .62, (h - top) * .62 / .58); return { w, h, narrow, top, S, x: w * .5, y: top + (h - top) * .62 }; },
+  stage() {
+    const j = state.jobs, g = JOB.geo(), sel = j.sel, at = (ux, uy) => [g.x + ux * g.S, g.y + uy * g.S];
+    let o = `<rect width="${g.w}" height="${g.h}" fill="#eef4fb"/><rect y="${g.h - 18}" width="${g.w}" height="18" fill="#cfe6c0"/>`;
+    o += flowerG({ x: g.x, y: g.y, S: g.S, stalk: g.h - g.y - 10, act: 'jpart', hl: sel === 'anther' ? 'stamen' : sel === 'stigma' || sel === 'ovary' ? null : sel, pollen: true,
+      cut: sel === 'ovary', seeds: sel === 'ovary' ? .5 : 0, stuck: sel === 'stigma' ? 6 : 0 });
+    // Tap places on top of the carpel, so the stigma and the ovary can be chosen on their own
+    const [sx, sy] = at(0, -.43), [ox, oy] = at(0, -.085);
+    o += `<circle class="tapme" data-act="jpart" data-v="stigma" cx="${sx}" cy="${sy}" r="${Math.max(16, g.S * .05)}" fill="transparent"/>`;
+    o += `<ellipse class="tapme" data-act="jpart" data-v="ovary" cx="${ox}" cy="${oy}" rx="${Math.max(14, g.S * .07)}" ry="${Math.max(16, g.S * .085)}" fill="transparent"/>`;
+    const ring = (x, y, r) => `<circle class="glow" cx="${x}" cy="${y}" r="${r}" fill="none" stroke="#ffc83d" stroke-width="6" pointer-events="none"/>`;
+    if (sel === 'stigma') o += ring(sx, sy, g.S * .07);
+    if (sel === 'ovary') o += ring(ox, oy, g.S * .12);
+    if (sel === 'petal') o += `<g class="bob" pointer-events="none">${beeG(g.x + g.S * .62, g.top + 60, Math.max(16, g.S * .07))}</g><text class="bob" x="${g.x - g.S * .7}" y="${g.top + 70}" style="font-size:${Math.max(28, g.S * .1)}px" pointer-events="none">🦋</text>`;
+    if (sel === 'anther') FL.stamens.forEach((a, k) => { const r = a * Math.PI / 180, [x, y] = at(Math.sin(r) * .36, -Math.cos(r) * .36);
+      for (let q = 0; q < 3; q++) o += `<circle class="puff" style="--dx:${(Math.sin(r) * 30 + (q - 1) * 12).toFixed(0)}px;--dy:${-20 - q * 10}px;animation-delay:${(k * .2 + q * .45).toFixed(2)}s" cx="${x}" cy="${y}" r="3.5" fill="#ffd84a" pointer-events="none"/>`; });
+    if (sel === 'sepal') o += `<rect x="${g.w - (g.narrow ? 96 : 150)}" y="${g.top + 8}" width="${g.narrow ? 88 : 140}" height="${g.narrow ? 120 : 180}" rx="14" fill="#fff" stroke="var(--yellow)" stroke-width="3"/>
+      ${budG(g.w - (g.narrow ? 52 : 80), g.top + (g.narrow ? 92 : 136), g.narrow ? 140 : 210)}<text x="${g.w - (g.narrow ? 52 : 80)}" y="${g.top + (g.narrow ? 120 : 180)}" text-anchor="middle" class="gsmall">A bud</text>`;
+    const say = sel && JOBS[sel] ? `${JOBS[sel][0]} ${JOBS[sel][1]}: ${lc(JOBS[sel][2])}` : 'Tap a part of the flower to find out its job.';
+    return `<div class="lay-top"><span class="scaletag">${Object.keys(j.seen).length} of 5 jobs found</span><div class="readout">${say}</div></div>
+      <svg id="jobSvg" viewBox="0 0 ${g.w} ${g.h}" aria-label="A flower: tap a part to find out its job">${o}</svg>`;
+  },
+  drawer() {
+    const j = state.jobs, J = JOBS[j.sel], right = JORDER.filter(k => j.marks[k] === true).length;
+    const card = J ? `<div class="card says good"><h3>${J[0]} ${J[1]}</h3><p>${J[3]}</p>${j.sel === 'sepal' ? '<p class="muted">Sepals are extra: they are not one of the four jobs to learn.</p>' : ''}</div>`
+      : j.sel === 'style' ? '<div class="card says"><h3>Style</h3><p>This is the style, between the stigma and the ovary. Tap the <b>stigma</b> at the top, or the <b>ovary</b> at the bottom.</p></div>' : '';
+    const left = JORDER.filter(k => !Object.values(j.placed).includes(k));
+    return `${card}<div class="card"><h2>🛠️ What does each part do?</h2><p>Each part of a flower has a job. Tap the <b>petals</b>, the <b>anthers</b>, the <b>stigma</b> and the <b>ovary</b>. Can you find the job of the <b>sepals</b> too?</p>
+        <div class="stops" style="margin-top:6px">${JORDER.map(k => `<button class="opt sm${j.sel === k ? ' on' : j.seen[k] ? ' done' : ''}" data-act="jpart" data-v="${k}">${JOBS[k][0]} ${JOBS[k][1]}</button>`).join('')}</div></div>
+      <div class="card"><h3>🔗 Match the part to its job</h3><p class="muted">Tap a part, then tap its job. Or drag it there.</p>
+        <div class="bank" style="margin:6px 0">${left.map(k => `<button class="chip${j.chip === k ? ' sel' : ''}" data-drag="${k}">${JOBS[k][1]}</button>`).join('')}</div>
+        ${j.rows.map(k => { const put = j.placed[k], m = j.marks[k];
+          return `<div class="mrow"><span>${JOBS[k][2]}</span><div class="mslot${m === true ? ' ok' : m === false ? ' bad' : j.chip ? ' ready' : ''}" data-drop="m:${k}"${put && m !== true ? ` data-act="junplace" data-v="${k}"` : ''}>${put ? JOBS[put][1] : ''}</div></div>`; }).join('')}
+        ${right === 5 ? '<p class="job">🎉 All 5 matched!</p>' : JORDER.some(k => j.marks[k] === false) ? '<p class="spot">💡 The red ones are not right yet. Tap one to take it off. Tap that part on the flower to check its job.</p>' : ''}</div>
+      ${right === 5 ? '<div class="science"><b>🔬 The science</b><b>Petals</b> attract pollinators. <b>Anthers</b> make pollen. The <b>stigma</b> catches pollen. The <b>ovary</b> is where seeds form, and it becomes the fruit.</div>'
+        : `<div class="checkbar"><button class="btn go" data-act="jcheck"${Object.keys(j.placed).length ? '' : ' disabled'}>✔ Check my matches</button></div>`}`;
+  },
+  sel: () => state.jobs.chip,
+  pick(id) { const j = state.jobs; j.chip = j.chip === id ? null : id; render(); },
+  drop(id, where) {
+    const j = state.jobs; if (!where.startsWith('m:') || !JOBS[id]) return;
+    const slot = where.slice(2); if (j.marks[slot] === true) return;
+    Object.keys(j.placed).forEach(k => { if (j.placed[k] === id) { delete j.placed[k]; delete j.marks[k]; } });
+    j.placed[slot] = id; delete j.marks[slot]; j.chip = null; render();
+  }
+};
+
+// ================= 4. Follow the pollen =================
+const freshPol = () => ({ mode: 'insect', bee: null, carry: null, target: null, msg: null, pred: null, t: 0, grown: false, wpred: null, blown: false, blowing: false });
+state.pol = freshPol();
+const POL = {
+  geo() {
+    const { w, h, narrow } = stageSize(), top = narrow ? 40 : 50, S = Math.min(w * .34, (h - top) * .5 / .58), y = top + (h - top) * .6;
+    const F = { A: { x: w * .26, y }, B: { x: w * .74, y } };
+    // Where the bee lands: on the anthers, in the middle of the flower
+    Object.values(F).forEach(f => { f.lx = f.x - S * .02; f.ly = f.y - S * .4; });
+    return { w, h, narrow, top, S, F, bs: Math.max(16, S * .11) };
+  },
+  // The time-lapse after pollination: what the flower looks like at time t (0–100)
+  look(t) { return { tube: clamp(t / 18), seeds: clamp((t - 18) / 12) * .3 + clamp((t - 55) / 45) * .7, wither: clamp((t - 30) / 15), fall: clamp((t - 42) / 13), swell: clamp((t - 55) / 45), cut: t > 0 }; },
+  day: t => Math.round(t * .56),
+  phase(t) {
+    if (t < 3) return 'Day 0. Pollen is stuck on the stigma.';
+    if (t < 18) return 'A tiny tube grows out of a pollen grain. It grows down the <b>style</b>, all the way to the <b>ovary</b>.';
+    if (t < 30) return 'The pollen joins with a tiny part inside the ovary, and that part grows into a <b>seed</b>.';
+    if (t < 55) return 'The petals and stamens <b>wither</b> (dry up) and fall off. The flower doesn\'t need them any more.';
+    if (t < 100) return 'The ovary <b>swells</b>. It is turning into a <b>fruit</b>, with the seeds growing inside it.';
+    return 'About 8 weeks later: the ovary has become a <b>fruit</b>, full of seeds!';
+  },
+  stage() {
+    const P = state.pol, g = POL.geo();
+    let o = `<rect width="${g.w}" height="${g.h}" fill="#dff1ff"/><rect y="${g.h - 22}" width="${g.w}" height="22" fill="#9bd06a"/>`;
+    if (P.mode === 'wind') {
+      const wy = g.top + (g.h - g.top) * .45, ws = Math.min(g.w * .32, (g.h - g.top) * .48);
+      o += windFlowerG(g.w * .26, wy, ws) + windFlowerG(g.w * .74, wy, ws, { stuck: P.blown ? 6 : 0 });
+      o += ['A', 'B'].map((n, k) => `<text x="${g.w * (k ? .74 : .26)}" y="${g.h - 30}" text-anchor="middle" class="glabel">Flower ${n}</text>`).join('');
+      o += `<g id="windPollen"></g>`;
+      if (!P.blowing) o += `<text x="${g.w * .06}" y="${wy - ws * .2}" style="font-size:${g.narrow ? 26 : 40}px">🌬️</text>`;
+      return `<div class="lay-top"><span class="scaletag">🌬️ Wind</span><div class="readout">${P.blown ? 'Some pollen stuck to flower B\'s feathery stigma.' : 'Press 🌬️ Blow to make the wind blow.'}</div></div>
+        <svg id="polSvg" viewBox="0 0 ${g.w} ${g.h}" aria-label="Two wind-pollinated flowers">${o}</svg>`;
+    }
+    ['A', 'B'].forEach(n => {
+      const f = g.F[n], tl = P.target === n ? POL.look(P.t) : {};
+      o += `<g class="tapme" data-act="pfly" data-v="${n}">${flowerG({ x: f.x, y: f.y, S: g.S, stalk: g.h - f.y - 12, pollen: !(P.target === n && P.t > 30), stuck: P.target === n ? 6 : 0, ...tl })}</g>`;
+      o += `<text x="${f.x}" y="${g.h - 30}" text-anchor="middle" class="glabel">Flower ${n}</text>`;
+    });
+    // After pollination, the bee flies off to the top of the picture, out of the way of the time-lapse
+    const b = P.target && P.pred ? { x: g.w * .5, y: g.top + 40 } : P.bee || { x: g.w * .5, y: g.top + 40 };
+    o += `<g id="bee" data-bee="1" style="cursor:grab">${beeG(b.x, b.y, g.bs, { dust: !!P.carry })}<circle cx="${b.x}" cy="${b.y}" r="${g.bs * 1.6}" fill="transparent"/></g>`;
+    const tag = P.target && P.pred ? `⏩ Day ${POL.day(P.t)}${P.t > 0 ? ' · cut-away view' : ''}` : '🐝 Insect';
+    const say = !P.carry ? 'Drag the bee to a flower, or tap a flower.' : !P.target ? 'Now take the bee to the other flower.' : P.pred ? 'Move the slider to fast forward time.' : 'Pollination! What will happen now?';
+    return `<div class="lay-top"><span class="scaletag" id="polTag">${tag}</span><div class="readout">${say}</div></div>
+      <svg id="polSvg" viewBox="0 0 ${g.w} ${g.h}" aria-label="Two flowers and a bee">${o}</svg>`;
+  },
+  drawer() {
+    const P = state.pol;
+    const modes = `<div class="stops">${[['insect', '🐝 Insect'], ['wind', '🌬️ Wind']].map(([m, t]) => `<button class="opt sm${P.mode === m ? ' on' : ''}" data-act="pmode" data-v="${m}">${t}</button>`).join('')}</div>`;
+    const again = '<div class="card"><button class="btn" data-act="preset">↺ Start again</button></div>';
+    if (P.mode === 'wind') {
+      const opts = [['most', 'Most of the pollen'], ['half', 'About half of it'], ['little', 'Only a little of it']];
+      return `<div class="card"><h2>🌬️ Wind pollination</h2>${modes}<p style="margin-top:6px">Some flowers don't need insects. The <b>wind</b> carries their pollen. Look: no bright petals, the anthers dangle outside, and the stigma is <b>feathery</b>.</p></div>
+        <div class="card wq"><h3>🤔 Predict first</h3><p>The wind blows pollen from flower A. How much will land on flower B's stigma?</p>${predict('pwpred', opts, P.wpred)}</div>
+        ${P.blown ? `<div class="card says${P.wpred === 'little' ? ' good' : ''}"><h3>${P.wpred === 'little' ? '✅ You were right!' : '❌ Not this time'}</h3><p>You predicted: ${lc(opts.find(x => x[0] === P.wpred)[1])}. Only a <b>little</b> pollen landed on the stigma. Most of it blew away.</p></div>
+          <div class="science"><b>🔬 The science</b>In <span class="term">wind pollination</span>, light pollen blows from dangling anthers. A feathery stigma catches some of it. Most of the pollen is lost, so wind-pollinated flowers make <b>lots</b> of pollen.</div>` : ''}
+        <div class="checkbar"><button class="btn go" data-act="pblow"${P.wpred && !P.blowing ? '' : ' disabled'}>🌬️ ${P.blown ? 'Blow again' : 'Blow'}</button></div>`;
+    }
+    const intro = `<div class="card"><h2>🐝 Follow the pollen</h2>${modes}<p style="margin-top:6px">Bees visit flowers to drink <span class="term">nectar</span>: a sweet juice inside the flower. Drag the bee to a flower, or tap the flower.</p></div>`;
+    const other = P.carry === 'A' ? 'B' : 'A';
+    const msg = { dusted: `<div class="card says good"><h3>🟡 Dusted with pollen</h3><p>The bee drinks nectar from flower ${P.carry}. Pollen from the <b>anthers</b> rubs onto its hairy body. Now take the bee to flower ${other}!</p></div>`,
+      same: `<div class="card says"><h3>💡 Same flower</h3><p>The bee already has this flower's pollen on it. Take it to the <b>other</b> flower.</p></div>` }[P.msg] || '';
+    if (!P.target) return msg + intro;
+    const opts = [['fruit', 'It will grow a fruit with seeds inside.'], ['petals', 'It will grow more petals.'], ['none', 'Nothing will change.']];
+    const end = P.t >= 100;
+    return `<div class="card says good"><h3>✨ Pollination!</h3><p>Some pollen rubs off the bee onto flower ${P.target}'s sticky <b>stigma</b>. Moving pollen from an anther to a stigma is called <span class="term">pollination</span>.</p></div>
+      <div class="card wq"><h3>🤔 Predict first</h3><p>What will happen to flower ${P.target} now?</p>${predict('ppred', opts, P.pred)}</div>
+      ${P.pred ? `<div class="card"><h3>⏩ Time-lapse</h3><p class="muted">Move the slider. You can go back and forth.</p>
+        <div class="slide"><span>🌸</span><input type="range" id="tl" min="0" max="100" value="${P.t}" aria-label="Time after pollination"><span>🍅</span></div>
+        <p id="tlText" style="min-height:66px">${POL.phase(P.t)}</p></div>` : ''}
+      <div id="tlEnd">${end && P.pred ? POL.ending() : ''}</div>
+      ${intro}${again}`;
+  },
+  ending() {
+    const P = state.pol;
+    return `<div class="card says${P.pred === 'fruit' ? ' good' : ''}"><h3>${P.pred === 'fruit' ? '✅ Your prediction was right!' : '❌ Your prediction was not right'}</h3><p>The ovary grew into a fruit, with seeds inside.</p></div>
+      <div class="science"><b>🔬 The science</b>After <b>pollination</b>, the pollen joins with tiny parts inside the ovary, and they grow into <b>seeds</b>. The petals fall off, and the <b>ovary</b> becomes the <b>fruit</b>. The fruit holds the seeds.</div>`;
+  },
+  // Bee flights: dragged by hand, or flying to a tapped flower
+  moveBee(x, y) { const P = state.pol, g = POL.geo(); P.bee = { x, y }; const el = $('#bee'); if (el) el.innerHTML = `${beeG(x, y, g.bs, { dust: !!P.carry })}<circle cx="${x}" cy="${y}" r="${g.bs * 1.6}" fill="transparent"/>`; },
+  fly(n) {
+    const P = state.pol, g = POL.geo(), f = g.F[n], from = P.bee || { x: g.w * .5, y: g.top + 40 }, t0 = performance.now();
+    if (POL.flying) return; POL.flying = true;
+    const step = now => { const k = clamp((now - t0) / 700), e = k * k * (3 - 2 * k);
+      POL.moveBee(from.x + (f.lx - from.x) * e, from.y + (f.ly - from.y) * e - Math.sin(k * Math.PI) * 40);
+      if (k < 1) requestAnimationFrame(step); else { POL.flying = false; POL.land(n); } };
+    requestAnimationFrame(step);
+  },
+  land(n) {
+    const P = state.pol, g = POL.geo();
+    P.bee = { x: g.F[n].lx, y: g.F[n].ly };
+    if (P.carry && P.carry !== n) { if (!P.target) P.target = n; P.msg = null; }
+    else P.msg = P.carry === n ? 'same' : 'dusted';
+    P.carry = n; render(); $('#drawer').scrollTop = 0;
+  },
+  // The wind blows pollen grains from flower A: a few stick on flower B's stigma, the rest blow away
+  blow() {
+    const P = state.pol, g = POL.geo(), wy = g.top + (g.h - g.top) * .45, ws = Math.min(g.w * .32, (g.h - g.top) * .48);
+    const sx = g.w * .26, bx = g.w * .74, by = wy - ws * .26, N = 60, t0 = performance.now();
+    const grains = Array.from({ length: N }, (_, k) => ({ y0: wy + ws * (.1 + Math.random() * .3), d: Math.random() * 900, amp: 10 + Math.random() * 30, ph: Math.random() * 6, stick: k % 10 === 0, end: wy - ws * (Math.random() * .6) + (Math.random() < .5 ? 1 : -1) * ws * .7 }));
+    P.blowing = true; P.blown = false; render();
+    const step = now => {
+      const el = $('#windPollen'); if (!el || state.view !== 'pollen' || P.mode !== 'wind') { P.blowing = false; return; }
+      const T = now - t0; let o = '';
+      grains.forEach(q => { const k = clamp((T - q.d) / 2200); if (k <= 0) return;
+        let x = sx + (g.w * 1.1 - sx) * k, y = q.y0 + (q.end - q.y0) * k + Math.sin(k * 9 + q.ph) * q.amp;
+        if (q.stick) { const k2 = clamp(k * 1.6); x = sx + (bx - sx) * k2; y = q.y0 + (by - q.y0) * k2 + Math.sin(k2 * 7 + q.ph) * q.amp * (1 - k2); }
+        o += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${g.narrow ? 2.5 : 3.5}" fill="#ffd84a" stroke="#c78300" stroke-width=".8"/>`; });
+      el.innerHTML = o;
+      if (T < 3300) requestAnimationFrame(step); else { P.blowing = false; P.blown = true; render(); }
+    };
+    requestAnimationFrame(step);
+  }
+};
+
+// ================= 5. Design a flower for a pollinator =================
+const FEATS = [
+  ['colour', 'Petal colour', [['blue', '🔵 Blue'], ['purple', '🟣 Purple'], ['yellow', '🟡 Yellow'], ['red', '🔴 Red'], ['white', '⚪ White'], ['dull', '🟤 Dull green']]],
+  ['size', 'Petals', [['big', 'Big'], ['small', 'Small'], ['none', 'Tiny or none']]],
+  ['shape', 'Shape', [['open', 'Open bowl'], ['tube', 'Long tube']]],
+  ['scent', 'Scent', [['none', 'None'], ['sweet', 'Sweet, in the day'], ['night', 'Strong, in the evening']]],
+  ['nectar', 'Nectar', [['yes', 'Yes'], ['no', 'No']]],
+  ['time', 'Opens', [['day', '☀️ In the day'], ['night', '🌙 At night']]],
+  ['parts', 'Anthers and stigma', [['in', 'Inside the flower'], ['out', 'Hanging outside']]],
+  ['pollen', 'Pollen', [['sticky', 'A little, sticky'], ['light', 'Lots, light and dusty']]]
+];
+const PCOL = { blue: '#4a7bff', purple: '#9b59d0', yellow: '#ffd23d', red: '#e8343c', white: '#f7f7f0', dull: '#a8b06a' };
+const WHO = [['bee', '🐝', 'Bee'], ['butterfly', '🦋', 'Butterfly'], ['moth', '🌙', 'Moth'], ['wind', '🌬️', 'Wind']];
+// Which features suit each pollinator: [help / little / problem, why]. A feature that isn't listed makes no difference to it.
+const BRIGHT = ['blue', 'purple', 'yellow', 'red'];
+const RULES = {
+  bee: {
+    colour: v => ['blue', 'purple', 'yellow'].includes(v) ? ['help', 'Bees see blue, purple and yellow well.'] : v === 'red' ? ['problem', 'Bees see red poorly.'] : v === 'white' ? ['little', 'Bees like blue, purple or yellow best.'] : ['problem', 'Dull petals are hard for a bee to spot.'],
+    size: v => v === 'big' ? ['help', 'Big petals are easy to spot, and give the bee somewhere to land.'] : v === 'small' ? ['little', 'Small petals are harder to spot and to land on.'] : ['problem', 'No petals: nothing to spot, and nowhere to land.'],
+    scent: v => v === 'sweet' ? ['help', 'Bees follow a sweet scent.'] : v === 'night' ? ['little', 'Bees are asleep in the evening, so they miss the scent.'] : ['problem', 'No scent for a bee to follow.'],
+    nectar: v => v === 'yes' ? ['help', 'Nectar is the sweet drink that bees come for.'] : ['problem', 'No nectar: nothing for the bee to drink.'],
+    time: v => v === 'day' ? ['help', 'Bees fly in the day.'] : ['problem', 'Bees are asleep at night, when this flower is open.']
+  },
+  butterfly: {
+    colour: v => BRIGHT.includes(v) ? ['help', 'Butterflies like bright colours, even red.'] : v === 'white' ? ['little', 'Pale petals are not very bright.'] : ['problem', 'Dull petals are hard to spot.'],
+    size: v => v === 'big' ? ['help', 'Big petals give the butterfly somewhere to land.'] : v === 'small' ? ['little', 'Small petals give little room to land.'] : ['problem', 'No petals: nowhere for a butterfly to land.'],
+    shape: v => v === 'tube' ? ['help', 'A butterfly\'s long tongue reaches the nectar at the bottom of a long tube.'] : ['little', 'Butterflies can feed here, but a long tube suits their long tongue best.'],
+    nectar: v => v === 'yes' ? ['help', 'Nectar is the sweet drink that butterflies come for.'] : ['problem', 'No nectar: nothing for the butterfly to drink.'],
+    time: v => v === 'day' ? ['help', 'Butterflies fly in the day.'] : ['problem', 'Butterflies are resting at night, when this flower is open.']
+  },
+  moth: {
+    colour: v => v === 'white' ? ['help', 'Pale or white petals show up in the dark.'] : ['problem', 'This colour is hard to see at night. Pale or white shows up best.'],
+    size: v => v === 'none' ? ['problem', 'No petals to show up in the dark.'] : null,
+    scent: v => v === 'night' ? ['help', 'Moths fly in the evening, and follow a strong scent.'] : v === 'sweet' ? ['little', 'This scent has gone by the evening, when moths fly.'] : ['problem', 'No scent for a moth to follow in the dark.'],
+    nectar: v => v === 'yes' ? ['help', 'Moths drink the nectar.'] : ['problem', 'No nectar: nothing for the moth to drink.'],
+    time: v => v === 'night' ? ['help', 'This flower is open at night, when moths fly.'] : ['problem', 'This flower is closed at night, when moths fly.']
+  },
+  wind: {
+    colour: v => v === 'dull' ? ['help', 'No need for bright colours: the wind can\'t see!'] : ['little', 'Bright petals are wasted: the wind can\'t see them.'],
+    size: v => v === 'big' ? ['problem', 'Big petals get in the way of the wind.'] : ['help', 'Small or no petals keep out of the wind\'s way.'],
+    scent: v => v === 'none' ? ['help', 'No need for scent: the wind can\'t smell!'] : ['little', 'Scent is wasted: the wind can\'t smell it.'],
+    nectar: v => v === 'no' ? ['help', 'No need for nectar: the wind doesn\'t drink!'] : ['little', 'Nectar is wasted: the wind doesn\'t drink it.'],
+    parts: v => v === 'out' ? ['help', 'Dangling anthers shake pollen into the wind, and a stigma outside the flower catches pollen from the air.'] : ['problem', 'The wind can\'t reach anthers and a stigma that are tucked inside.'],
+    pollen: v => v === 'light' ? ['help', 'Lots of light pollen blows a long way.'] : ['problem', 'Sticky pollen doesn\'t blow away.']
+  }
+};
+const SVAL = { help: .92, little: .5, problem: .12 };
+const freshDes = () => ({ target: 'bee', f: { colour: 'white', size: 'small', shape: 'open', scent: 'none', nectar: 'yes', time: 'day', parts: 'in', pollen: 'sticky' }, pred: null, shown: false, gauge: null });
+state.des = freshDes();
+const DES = {
+  // Each feature's effect on one pollinator, and how well the flower suits it overall (0–1)
+  feats(who, f) { return FEATS.map(([k]) => { const r = RULES[who][k] && RULES[who][k](f[k]); return r ? { k, st: r[0], why: r[1] } : null; }).filter(Boolean); },
+  score(who, f) { const it = DES.feats(who, f); return it.reduce((a, i) => a + SVAL[i.st], 0) / it.length; },
+  scores(f) { return Object.fromEntries(WHO.map(([w]) => [w, DES.score(w, f)])); },
+  top(f) { const s = DES.scores(f); return WHO.map(w => w[0]).sort((a, b) => s[b] - s[a])[0]; },
+  wins(who, f) { const s = DES.scores(f); return s[who] >= .8 && WHO.every(([w]) => s[w] <= s[who]); },
+  level(who, v) { const wind = who === 'wind'; return v >= .8 ? (wind ? 'Lots of pollen carried' : 'Lots of visits!') : v >= .55 ? (wind ? 'Some pollen' : 'Some visits') : v >= .35 ? (wind ? 'A little pollen' : 'A few visits') : (wind ? 'Hardly any' : 'Hardly any visits'); },
+  // The designed flower, drawn side-on
+  flower(f, x, y, S) {
+    const c = PCOL[f.colour], edge = mix(c, '#000000', .3), sz = { big: 1, small: .6, none: .18 }[f.size], tube = f.shape === 'tube', out = f.parts === 'out';
+    let g = `<path d="M${x} ${y} V${y + S}" stroke="#3f9d4a" stroke-width="${Math.max(3, S * .035)}"/><g transform="translate(${x} ${y}) scale(${S})">`;
+    g += [-125, 125].map(a => `<g transform="rotate(${a})">${PART.sepal()}</g>`).join('');
+    const top = tube ? -.5 : 0;
+    if (tube) g += `<path d="M-.045 0 L-.075 ${top} L.075 ${top} L.045 0Z" fill="${c}" stroke="${edge}" stroke-width="1.5" ${NS}/>`;
+    // Nectar, deep down at the bottom of the flower
+    if (f.nectar === 'yes') g += `<ellipse cy="-.035" rx=".03" ry=".02" fill="#ffb31a" stroke="#c77a00" stroke-width="1" ${NS}/>`;
+    const petals = tube ? [-70, -35, 0, 35, 70] : FL.petals;
+    petals.forEach(a => { g += `<g transform="translate(0 ${top}) rotate(${a}) scale(${sz * (tube ? .55 : 1)})"><path d="${SHAPE.petal()}" fill="${c}" stroke="${edge}" stroke-width="1.5" ${NS}/></g>`; });
+    // Anthers and stigma: tucked inside, or dangling outside to catch the wind
+    if (out) {
+      [[-1, .12], [1, .16], [-1, .3], [1, .26]].forEach(([s, d]) => { const ex = s * (.32 + d * .3), ey = top + d * .4;
+        g += `<path d="M0 ${top - .04} Q${s * .2} ${top - .14} ${ex} ${ey}" stroke="#d8cf9a" stroke-width=".01" fill="none"/><ellipse cx="${ex}" cy="${ey + .04}" rx=".024" ry=".05" fill="${COL.anther}" stroke="${COL.antherEdge}" stroke-width="1" ${NS}/>`; });
+      [-1, 1].forEach(s => { g += `<path d="M0 ${top - .04} L${s * .14} ${top - .5}" stroke="#d9c9e6" stroke-width=".012"/>`;
+        for (let k = 1; k <= 6; k++) { const t = k / 7, px = s * .14 * t, py = top - .04 - .46 * t; g += `<path d="M${px} ${py} l-.05 -.02 M${px} ${py} l.05 -.02" stroke="#d9c9e6" stroke-width=".007"/>`; } });
+    } else {
+      (tube ? [-8, 8] : [-26, -12, 12, 26]).forEach(a => { g += `<g transform="translate(0 ${tube ? top + .1 : 0}) rotate(${a}) scale(${tube ? .45 : .75})">${PART.stamen()}</g>`; });
+      g += `<g transform="translate(0 ${tube ? top + .1 : 0}) scale(${tube ? .45 : .8})">${PART.carpel()}</g>`;
+    }
+    g += '</g>';
+    // Light, dusty pollen drifts off the flower
+    if (f.pollen === 'light') for (let k = 0; k < 9; k++) g += `<circle class="puff" style="--dx:${30 + k * 6}px;--dy:${-10 - (k % 3) * 12}px;animation-delay:${(k * .25).toFixed(2)}s" cx="${x + S * (out ? .3 : .1)}" cy="${y + S * (top - .25)}" r="2.5" fill="#ffd84a"/>`;
+    // Scent: wavy lines rising from the flower
+    if (f.scent !== 'none') for (let k = 0; k < 3; k++) g += `<path class="scent" style="animation-delay:${k * .8}s" d="M${x + (k - 1) * S * .14} ${y + S * (top - .55)} q8 -10 0 -20 t0 -20" stroke="${f.scent === 'night' ? '#c79bff' : '#ff9ccf'}" stroke-width="${f.scent === 'night' ? 4 : 3}" fill="none" stroke-linecap="round"/>`;
+    return g;
+  },
+  gauges() {
+    const d = state.des, s = DES.scores(d.f);
+    return `<div class="gauges">${WHO.map(([w, em, name]) => { const v = s[w], st = !d.shown ? '' : v >= .8 ? ' good' : v < .35 ? ' bad' : '';
+      return `<button class="gauge${st}${d.shown && (d.gauge || d.target) === w ? ' on' : ''}" data-act="dgauge" data-v="${w}" aria-label="${name}">
+        <span class="gt"><span class="gi">${em}</span><span class="gn">${name}</span></span><span class="end">lots</span>
+        <span class="tube${d.shown ? '' : ' off'}"><span class="marker" style="top:${d.shown ? ((1 - v) * 100).toFixed(0) : 50}%">${d.shown ? em : '?'}</span></span>
+        <span class="end">none</span><span class="gs">${d.shown ? DES.level(w, v) : 'Predict first'}</span></button>`; }).join('')}</div>`;
+  },
+  stage() {
+    const d = state.des, { w, h, narrow } = stageSize(), top = narrow ? 40 : 50, gw = narrow ? 4 * 53 + 10 : 4 * 88 + 14, night = d.f.time === 'night';
+    const fx = gw + (w - gw) / 2, S = Math.min((w - gw) * .55, (h - top) * .55), fy = top + (h - top) * .5;
+    let o = `<rect width="${w}" height="${h}" fill="${night ? '#1d2550' : '#dff1ff'}"/><rect y="${h - 22}" width="${w}" height="22" fill="${night ? '#2f4a2a' : '#9bd06a'}"/>`;
+    o += night ? `<circle cx="${w - 50}" cy="${top + 34}" r="20" fill="#fdf5c9"/><circle cx="${w - 42}" cy="${top + 28}" r="18" fill="#1d2550"/>` + [[.4, .2], [.6, .12], [.8, .3], [.5, .35], [.9, .18]].map(([a, b]) => `<circle cx="${gw + (w - gw) * a}" cy="${top + (h - top) * b}" r="1.8" fill="#fff"/>`).join('')
+      : `<circle cx="${w - 46}" cy="${top + 34}" r="22" fill="#ffd23d"/>`;
+    o += DES.flower(d.f, fx, fy, S);
+    // Once tested: the pollinators that come, more of them when the flower suits them better
+    if (d.shown) {
+      const s = DES.scores(d.f), spots = [[-.75, -.85], [.7, -.95], [-.55, -.35], [.62, -.3], [0, -1.15], [-.9, -.6]];
+      let k = 0;
+      WHO.forEach(([who, em]) => { const n = s[who] >= .8 ? 2 : s[who] >= .55 ? 1 : 0;
+        for (let q = 0; q < n; q++) { const [a, b] = spots[k++ % spots.length];
+          o += who === 'wind' ? `<text class="bob" x="${fx + a * S}" y="${fy + b * S * .6}" style="font-size:${narrow ? 22 : 34}px">🌬️</text>`
+            : who === 'bee' ? `<g class="bob">${beeG(fx + a * S, fy + b * S * .6, narrow ? 10 : 15)}</g>`
+            : who === 'moth' ? `<g class="bob">${mothG(fx + a * S, fy + b * S * .6, narrow ? 14 : 22)}</g>` : `<text class="bob" x="${fx + a * S}" y="${fy + b * S * .6}" style="font-size:${narrow ? 22 : 34}px">${em}</text>`; } });
+    }
+    const T = WHO.find(x => x[0] === d.target);
+    return `<div class="lay-top" style="left:${gw + 6}px"><span class="scaletag">${T[1]} For a ${lc(T[2])}</span><div class="readout">${d.shown ? 'Tap a gauge to see why.' : 'Choose the features, then predict.'}</div></div>
+      ${DES.gauges()}<svg id="desSvg" viewBox="0 0 ${w} ${h}" aria-label="The flower you designed">${o}</svg>`;
+  },
+  drawer() {
+    const d = state.des, s = DES.scores(d.f), top = DES.top(d.f), G = d.gauge || d.target, T = WHO.find(x => x[0] === G);
+    const locked = state.mission != null && MISSIONS[state.mission].target;
+    const who = `<div class="card"><h2>🎨 Design a flower</h2><p>A <span class="term">pollinator</span> is an animal that carries pollen from flower to flower. Design a flower for one!</p>
+      <p style="margin-top:6px"><b>Who is your flower for?</b></p><div class="stops">${WHO.map(([w, em, n]) => `<button class="opt sm${d.target === w ? ' on' : ''}" data-act="dtarget" data-v="${w}"${locked ? ' disabled' : ''}>${em} ${w === 'wind' ? 'The wind' : n}</button>`).join('')}</div>
+      ${d.target === 'moth' ? '<p class="muted">Moths fly in the evening and at night.</p>' : d.target === 'wind' ? '<p class="muted">The wind is not an animal, but it carries pollen too.</p>' : ''}</div>`;
+    const feats = `<div class="card"><h3>🌸 Your flower</h3>${FEATS.map(([k, t, opts]) => `<div class="frow"><span>${t}</span><div class="stops">${opts.map(([v, l]) => `<button class="opt sm${d.f[k] === v ? ' on' : ''}" data-act="dfeat" data-k="${k}" data-v="${v}">${l}</button>`).join('')}</div></div>`).join('')}</div>`;
+    const predCard = `<div class="card wq${d.shown ? '' : ' says'}"><h3>🤔 Predict first</h3><p>Who will visit your flower the most?</p>${predict('dpred', WHO.map(([w, em, n]) => [w, `${em} ${w === 'wind' ? 'The wind' : `The ${lc(n)}`}`]), d.pred)}</div>`;
+    if (!d.shown) return `${who}${feats}${predCard}`;
+    const P = WHO.find(x => x[0] === d.pred), Top = WHO.find(x => x[0] === top), win = DES.wins(d.target, d.f);
+    const res = `<div class="card says${d.pred === top ? ' good' : ''}"><h3>${d.pred === top ? '✅ Your prediction was right!' : '❌ Not this time'}</h3><p>You predicted: ${P[1]} ${P[0] === 'wind' ? 'the wind' : `the ${lc(P[2])}`}. ${top === 'wind' ? 'Most pollen was carried by: <b>🌬️ the wind</b>' : `Visited most by: <b>${Top[1]} the ${lc(Top[2])}</b>`}.</p></div>`;
+    const list = `<div class="card"><h3>${T[1]} Why: ${lc(T[2])}</h3><p class="muted">${DES.level(G, s[G])} · tap another gauge to compare.</p>
+      ${DES.feats(G, d.f).map(i => `<div class="feat"><span class="st ${i.st}">${{ help: '✓ helps', little: '~ not much', problem: '✗ problem' }[i.st]}</span><span><b>${FEATS.find(x => x[0] === i.k)[1]}:</b> ${i.why}</span></div>`).join('')}</div>`;
+    return `${res}${win ? `<div class="card says good"><h3>🎉 A great flower for ${d.target === 'wind' ? 'the wind' : `a ${lc(WHO.find(x => x[0] === d.target)[2])}`}!</h3></div>` : ''}${list}${who}${feats}`;
+  }
+};
+
+// ================= 6. From flower to fruit =================
+// Drawings for the steps there are no photos of
+const PEA_POD = '<svg viewBox="0 0 40 40" width="38" height="38" aria-hidden="true"><path d="M3 31 Q20 40 37 21 Q23 31 3 31 Z" fill="#6cbf4a" stroke="#3f8a2a"/><path d="M5 29 Q20 18 35 19" stroke="#3f8a2a" stroke-width="3" fill="none"/><circle cx="13" cy="31" r="3.5" fill="#a3e27f"/><circle cx="20" cy="30" r="3.5" fill="#a3e27f"/><circle cx="27" cy="27" r="3.5" fill="#a3e27f"/></svg>';
+const DRAW = {
+  peaYoung: `<svg viewBox="0 0 120 90" style="width:100%;height:100%"><rect width="120" height="90" fill="#eef7e6"/><path d="M10 80 Q40 60 60 40" stroke="#4f9e3a" stroke-width="3" fill="none"/>
+    <path d="M58 42 Q64 30 74 28 Q70 38 62 44Z" fill="#c9b98a" stroke="#9b8a5a"/><path d="M60 40 Q56 30 62 22 Q66 32 63 41Z" fill="#b8a77a" stroke="#9b8a5a"/>
+    <path d="M62 44 Q85 50 108 36 Q90 46 64 47Z" fill="#7fcf5a" stroke="#3f8a2a"/><text x="60" y="84" text-anchor="middle" font-size="9" font-family="Fredoka, sans-serif" fill="#5b6386">withered petals, a tiny pod</text></svg>`,
+  tomatoCut: `<svg viewBox="0 0 120 90" style="width:100%;height:100%"><rect width="120" height="90" fill="#fff4ef"/><circle cx="60" cy="46" r="34" fill="#e0463a" stroke="#a8261c" stroke-width="2"/>
+    ${[0, 120, 240].map(a => `<ellipse cx="${60 + 15 * Math.cos(a * Math.PI / 180)}" cy="${46 + 15 * Math.sin(a * Math.PI / 180)}" rx="11" ry="9" fill="#f6a08f" transform="rotate(${a} ${60 + 15 * Math.cos(a * Math.PI / 180)} ${46 + 15 * Math.sin(a * Math.PI / 180)})"/>`).join('')}
+    ${[0, 120, 240].flatMap(a => [-4, 0, 4].map(d => { const r = (a + d * 6) * Math.PI / 180; return `<ellipse cx="${(60 + 17 * Math.cos(r)).toFixed(1)}" cy="${(46 + 17 * Math.sin(r)).toFixed(1)}" rx="2.4" ry="1.6" fill="#f6efc0" stroke="#c9b26a" stroke-width=".6"/>`; })).join('')}
+    <circle cx="60" cy="46" r="5" fill="#f2b5a5"/><text x="60" y="88" text-anchor="middle" font-size="9" font-family="Fredoka, sans-serif" fill="#5b6386">cut open: seeds inside</text></svg>`
+};
+// [photo or drawing, emoji, caption, what is happening]
+const EXAMPLES = {
+  apple: { name: '🍎 Apple', frames: [['apple-blossom.jpg', '🌸', 'Flower', 'Apple blossom in spring.'], ['apple-young.jpg', '🍏', 'Young fruit', 'The petals fall. The base of the flower swells into a tiny apple.'], ['apple-bottom.jpg', '🍎', 'Look underneath!', 'The dry bits at the bottom of an apple are the old sepals.']],
+    sci: 'After pollination, the petals fall and the base of the flower swells into an <b>apple</b>. The <b>pips</b> in the core are the seeds. The dry sepals stay on, so you can still see them at the bottom of an apple.' },
+  pea: { name: 'Pea', frames: [['pea-flower.jpg', '🌸', 'Flower', 'A pea flower.'], ['@peaYoung', '', 'Petals wither', 'The petals wither and a tiny pod starts to grow from the ovary.'], ['pea-pod.jpg', '🟢', 'Fruit', 'The pod is the fruit. The peas inside are the seeds!']],
+    sci: 'A pea <b>pod</b> grows from the ovary of a pea flower. The pod is the <b>fruit</b>, and the peas inside it are the <b>seeds</b>.' },
+  tomato: { name: '🍅 Tomato', frames: [['tomato-flower.jpg', '🌼', 'Flower', 'Tomato flowers are small and yellow.'], ['tomato-fruit.jpg', '🍅', 'Fruit', 'The ovary swells into a tomato: green, then red. The green star on top is the sepals.'], ['@tomatoCut', '', 'Inside', 'Cut a tomato open: it is full of seeds.']],
+    sci: 'A <b>tomato</b> grows from the ovary of a tomato flower, and it holds the seeds. So, to a scientist, a tomato is a <b>fruit</b>.' }
+};
+// [id, name, picture, a fruit?, why]
+const FOODS = [
+  ['tomato', 'Tomato', '🍅', true, 'It holds seeds, so it is a fruit, even though it is not sweet.'],
+  ['carrot', 'Carrot', '🥕', false, 'A carrot is a <b>root</b>. There are no seeds inside it.'],
+  ['pepper', 'Pepper', '🫑', true, 'Cut one open: it is full of seeds. So it is a fruit.'],
+  ['lettuce', 'Lettuce', '🥬', false, 'We eat the <b>leaves</b> of a lettuce. There are no seeds inside.'],
+  ['cucumber', 'Cucumber', '🥒', true, 'It has seeds inside, so it is a fruit.'],
+  ['potato', 'Potato', '🥔', false, 'A potato grows underground and stores food for the plant. There are no seeds inside.'],
+  ['peapod', 'Pea pod', PEA_POD, true, 'The pod holds the peas, and the peas are seeds. So the pod is a fruit.'],
+  ['broccoli', 'Broccoli', '🥦', false, 'Broccoli is lots of tiny flower <b>buds</b>! It is not a fruit.'],
+  ['apple', 'Apple', '🍎', true, 'The pips in the core are seeds, so an apple is a fruit.'],
+  ['onion', 'Onion', '🧅', false, 'An onion is made of thick, juicy leaves, packed together. There are no seeds inside.'],
+  ['pumpkin', 'Pumpkin', '🎃', true, 'It is full of seeds, so it is a fruit.']
+];
+const food = id => FOODS.find(f => f[0] === id);
+const FBINS = [['yes', '🍅 Fruit', 'holds seeds'], ['no', '🥕 Not a fruit', 'no seeds inside']];
+const freshFruit = () => ({ ex: 'apple', apred: null, spred: null, placed: {}, sel: null, last: null });
+state.fruit = freshFruit();
+const FRU = {
+  stage() {
+    const F = state.fruit;
+    if (F.ex === 'sort') {
+      const n = Object.keys(F.placed).length;
+      return sortStage({ items: FOODS.map(f => [f[0], f[1], `<div class="ph">${f[2]}</div>`]), bins: FBINS, placed: F.placed, sel: F.sel, look: null,
+        tag: `${n} of ${FOODS.length} sorted`, say: F.sel ? `Tap the box where the ${lc(food(F.sel)[1])} belongs.` : 'Tap a food, then tap its box. Or drag it there.' });
+    }
+    const E = EXAMPLES[F.ex];
+    return `<div class="lay-top"><span class="scaletag">${E.name}</span><div class="readout">From flower to fruit</div></div>
+      <div class="film">${E.frames.map(([pic, em, capt, what], k) => {
+        const covered = F.ex === 'apple' && k === 2 && !F.apred;
+        const img = covered ? '<div class="cover">❓</div>' : pic[0] === '@' ? DRAW[pic.slice(1)] : photo(pic, em, `${capt}: ${what}`);
+        return `${k ? '<div class="arrow" aria-hidden="true">▶</div>' : ''}<div class="frame"><div class="photo">${img}</div><div class="cap"><span class="num">${k + 1}</span>${capt}<i>${covered ? 'Predict first!' : what}</i></div></div>`; }).join('')}</div>`;
+  },
+  drawer() {
+    const F = state.fruit;
+    const nav = `<div class="stops">${[...Object.entries(EXAMPLES).map(([k, E]) => [k, k === 'pea' ? `${PEA_POD.replace(/38/g, '20')} Pea` : E.name]), ['sort', '❓ Is it a fruit?']].map(([k, t]) => `<button class="opt sm${F.ex === k ? ' on' : ''}" data-act="fex" data-v="${k}">${t}</button>`).join('')}</div>`;
+    const head = `<div class="card"><h2>🍎 From flower to fruit</h2><p>To a scientist, a <span class="term">fruit</span> is the part of a plant that holds the <b>seeds</b>. It grows from the flower after pollination.</p>${nav}</div>`;
+    if (F.ex === 'sort') {
+      const n = Object.keys(F.placed).length, L = F.last, done = n === FOODS.length;
+      const pred = `<div class="card wq${F.spred ? '' : ' says'}"><h3>🤔 Predict first</h3><p>Is a <b>tomato</b> a fruit?</p>${predict('fspred', [['yes', 'Yes, it is a fruit.'], ['no', 'No, it is a vegetable.']], F.spred)}</div>`;
+      const said = L ? `<div class="card says${L.ok ? ' good' : ''}"><h3>${L.ok ? '✅' : '💡'} ${food(L.id)[1]}</h3><p>${L.ok ? food(L.id)[4] : food(L.id)[3] ? 'Think like a scientist: does it hold seeds?' : 'Imagine cutting it open. Are there seeds inside?'}</p></div>` : '';
+      return `${F.spred ? '' : pred}${said}${done ? `<div class="card says good"><h3>🎉 All sorted!</h3>${F.spred ? `<p class="muted">You predicted a tomato ${F.spred === 'yes' ? 'is' : 'is not'} a fruit. ${F.spred === 'yes' ? '✅ Right!' : '❌ It is a fruit: it holds seeds.'}</p>` : ''}</div>
+        <div class="science"><b>🔬 The science</b>A <b>fruit</b> is the part of a plant that holds the seeds. So tomatoes, peppers, cucumbers and pea pods are all fruits. Not all fruits are sweet! Carrots (roots), lettuce (leaves) and potatoes have no seeds inside, so they are not fruits.</div>` : ''}
+        ${head}${F.spred ? pred : ''}${n ? '<div class="card"><button class="btn" data-act="fsreset">↺ Start the sort again</button></div>' : ''}`;
+    }
+    const E = EXAMPLES[F.ex];
+    const apple = F.ex === 'apple' ? `<div class="card wq${F.apred ? '' : ' says'}"><h3>🤔 Predict first</h3><p>The bottom of an apple has some dry, brown bits. What do you think they are?</p>
+        ${predict('fapred', [['sepals', 'The old sepals from the flower'], ['roots', 'Tiny roots'], ['bruise', 'A bruise']], F.apred)}
+        ${F.apred ? `<p class="${F.apred === 'sepals' ? 'job' : 'spot'}">${F.apred === 'sepals' ? '✅ Yes!' : '❌ Not this time.'} They are the old <b>sepals</b>. They stay on while the apple grows. Look at picture 3.</p>` : ''}</div>` : '';
+    return `${apple}${head}<div class="card"><h3>${E.name}</h3><ol style="margin:4px 0;padding-left:22px">${E.frames.map(f => `<li>${f[3]}</li>`).join('')}</ol></div>
+      ${F.ex !== 'apple' || F.apred ? `<div class="science"><b>🔬 The science</b>${E.sci}</div>` : ''}
+      <div class="checkbar"><button class="btn go" data-act="fex" data-v="${F.ex === 'apple' ? 'pea' : F.ex === 'pea' ? 'tomato' : 'sort'}">Next: ${F.ex === 'apple' ? 'pea' : F.ex === 'pea' ? 'tomato' : 'is it a fruit?'} ▶</button></div>`;
+  },
+  sel: () => state.fruit.ex === 'sort' ? state.fruit.sel : null,
+  pick(id) { const F = state.fruit; if (F.ex !== 'sort') return; F.sel = F.sel === id ? null : id; F.last = null; render(); },
+  drop(id, bin) {
+    const F = state.fruit, f = food(id); if (!f || F.placed[id]) return;
+    const ok = (bin === 'yes') === f[3]; F.last = { id, ok }; F.sel = null;
+    if (ok) { F.placed[id] = bin; if (Object.keys(F.placed).length === FOODS.length) emit('fruitsorted'); }
+    render(); $('#drawer').scrollTop = 0;
+  }
+};
+
+// ================= 7. The life cycle =================
+// [id, name, what happens]
+const STAGES = [
+  ['seed', 'Seed', 'A seed lies in the soil.'],
+  ['germ', 'Germination', 'The seed starts to grow: a root, then a shoot.'],
+  ['seedling', 'Seedling', 'A young plant with its first leaves.'],
+  ['adult', 'Adult plant', 'The plant grows big and strong, with lots of leaves.'],
+  ['flower', 'Flowering', 'The plant makes flowers.'],
+  ['poll', 'Pollination', 'Pollen moves from an anther to a stigma.'],
+  ['fruit', 'Fruit and seeds', 'Seeds form, inside the fruit.'],
+  ['disp', 'Seed dispersal', 'The seeds are carried away from the plant.']
+];
+const SEE_LAB = { germ: ['../seed-lab/index.html#view=grow', 'Watch a seed germinate'], disp: ['../seed-lab/index.html#view=spread', 'How seeds travel'] };
+// A sunflower at each stage, in a 100 × 100 box
+const SUN = (() => {
+  const soil = '<rect x="0" y="72" width="100" height="28" fill="#8a5a33"/><rect x="0" y="72" width="100" height="3" fill="#6b4422"/>';
+  const seed = (x, y, s = 1, r = 0) => `<g transform="translate(${x} ${y}) rotate(${r}) scale(${s})"><path d="M0 -9 C6 -7 6 4 0 9 C-6 4 -6 -7 0 -9Z" fill="#2b2b2b"/><path d="M-2 -7 L-2.6 7 M2 -7 L2.6 7" stroke="#e8e2d0" stroke-width="1.2"/></g>`;
+  const leaf = (x, y, s, r) => `<path transform="translate(${x} ${y}) rotate(${r}) scale(${s})" d="M0 0 C6 -6 14 -4 18 0 C14 4 6 6 0 0Z" fill="#4caf50" stroke="#2f7d3a" stroke-width=".8"/>`;
+  const stem = (y1, y2) => `<path d="M50 ${y1} V${y2}" stroke="#3f9d4a" stroke-width="3.5"/>`;
+  const head = (x, y, r, o = {}) => { let g = '';
+    if (!o.bare) for (let k = 0; k < 16; k++) { const a = k * 22.5; g += `<ellipse cx="${x}" cy="${y - r * 1.05}" rx="${r * .2}" ry="${r * .45}" fill="${o.brown ? '#c9a24a' : '#ffd23d'}" stroke="#e0a800" stroke-width=".6" transform="rotate(${a} ${x} ${y})"/>`; }
+    g += `<circle cx="${x}" cy="${y}" r="${r * .62}" fill="${o.brown ? '#5a3a1a' : '#7a4a1e'}"/>`;
+    if (o.seeds) for (let k = 0; k < 14; k++) { const a = k * 2.4, d = r * .5 * Math.sqrt((k + .5) / 14); g += `<ellipse cx="${(x + d * Math.cos(a)).toFixed(1)}" cy="${(y + d * Math.sin(a)).toFixed(1)}" rx="1.6" ry="1" fill="#e8e2d0"/>`; }
+    return g; };
+  const big = (o = {}) => stem(72, 30) + leaf(50, 60, 1.4, 20) + leaf(50, 50, 1.3, 160) + leaf(50, 42, 1.1, 25) + (o.droop ? `<g transform="rotate(35 50 32)">${head(50, 24, 13, o)}</g>` : head(50, 22, 14, o));
+  return [
+    () => soil + seed(50, 84, 2.6, 20),
+    () => soil + `<path d="M50 88 Q47 94 50 100 M50 92 l-7 5 M50 96 l6 3" stroke="#f3e7c9" stroke-width="3" fill="none"/><path d="M52 76 Q56 56 44 52" stroke="#7cc46a" stroke-width="4" fill="none"/>` + seed(50, 84, 2.1, 20),
+    () => soil + stem(72, 40) + leaf(50, 41, 1.7, 200) + leaf(50, 41, 1.7, -20),
+    () => soil + stem(72, 16) + leaf(50, 62, 1.4, 20) + leaf(50, 52, 1.3, 160) + leaf(50, 40, 1.2, 25) + leaf(50, 30, 1, 150) + `<circle cx="50" cy="14" r="6" fill="#7cc46a" stroke="#3f8a2a"/>`,
+    () => soil + big(),
+    () => soil + big() + beeG(58, 14, 6, { dust: true }),
+    () => soil + big({ brown: true, seeds: true, droop: true, bare: true }),
+    () => soil + big({ brown: true, seeds: true, droop: true, bare: true }) + '<text x="58" y="20" font-size="16">🐦</text>' + seed(30, 60, .5, 40) + seed(70, 66, .5, -30) + seed(20, 76, .5, 80) + seed(80, 78, .5, 10)
+  ].map(f => (s = 60) => `<svg viewBox="0 0 100 100" width="${s}" height="${s}" aria-hidden="true">${f()}</svg>`);
+})();
+const freshCyc = () => ({ placed: { 0: 'seed' }, sel: null, mistakes: 0, last: null, watch: false, step: 0, play: false });
+state.cyc = freshCyc();
+const CYC = {
+  geo() { const { w, h, narrow } = stageSize(), top = narrow ? 40 : 50, cx = w / 2, cy = top + (h - top) / 2, bw = narrow ? 82 : 132, bh = narrow ? 58 : 88;
+    const R = Math.min((w - bw) / 2 - 8, (h - top - bh) / 2 - 6); return { w, h, narrow, top, cx, cy, R, bw, bh, at: i => { const a = (-90 + i * 45) * Math.PI / 180; return [cx + R * Math.cos(a), cy + R * Math.sin(a)]; } }; },
+  done: () => STAGES.every((_, i) => state.cyc.placed[i]),
+  stage() {
+    const C = state.cyc, g = CYC.geo(), now = C.watch ? C.step : -1;
+    let o = `<rect width="${g.w}" height="${g.h}" fill="#eef4fb"/><circle cx="${g.cx}" cy="${g.cy}" r="${g.R}" fill="none" stroke="#b7c3ea" stroke-width="3" stroke-dasharray="8 6"/>`;
+    // Arrows round the wheel, half-way between the boxes
+    for (let i = 0; i < 8; i++) { const a = (-90 + i * 45 + 22.5) * Math.PI / 180, x = g.cx + g.R * Math.cos(a), y = g.cy + g.R * Math.sin(a), d = (a * 180 / Math.PI) + 90;
+      o += `<path d="M-7 -6 L7 0 L-7 6Z" transform="translate(${x} ${y}) rotate(${d})" fill="#8a93ad"/>`; }
+    // The sunflower in the middle
+    const last = C.watch ? C.step : Math.max(...Object.keys(C.placed).map(Number).filter(i => C.placed[i]));
+    const ps = Math.min(g.R * 1.15, 220);
+    o += `<svg x="${g.cx - ps / 2}" y="${g.cy - ps / 2}" width="${ps}" height="${ps}" viewBox="0 0 100 100">${SUN[last](100).replace(/^<svg[^>]*>|<\/svg>$/g, '')}</svg>`;
+    STAGES.forEach(([id, name], i) => {
+      const [x, y] = g.at(i), put = C.placed[i], bx = x - g.bw / 2, by = y - g.bh / 2, on = now === i;
+      o += `<g class="slot tapme${C.sel && !put ? ' ready' : ''}"${put ? '' : ` data-drop="s:${i}"`}${C.watch ? ` data-act="cstep" data-v="${i}"` : ''}><rect x="${bx}" y="${by}" width="${g.bw}" height="${g.bh}" rx="14" fill="${on ? '#fff3c4' : put ? '#fff' : '#f7f9ff'}" stroke="${on ? 'var(--yellow)' : put ? 'var(--green)' : '#b7c3ea'}" stroke-width="${on ? 5 : 2.5}" stroke-dasharray="${put ? '' : '6 5'}"/>`;
+      if (put) { const s = g.bh - (g.narrow ? 22 : 30);
+        o += `<svg x="${x - s / 2}" y="${by + 2}" width="${s}" height="${s}" viewBox="0 0 100 100">${SUN[i](100).replace(/^<svg[^>]*>|<\/svg>$/g, '')}</svg><text x="${x}" y="${by + g.bh - (g.narrow ? 6 : 9)}" text-anchor="middle" style="font-size:${g.narrow ? 10.5 : 14}px;font-weight:700;fill:var(--ink)">${name}</text>`; }
+      else o += `<text x="${x}" y="${y + 8}" text-anchor="middle" style="font-size:${g.narrow ? 20 : 26}px;font-weight:700;fill:#b7c3ea">${i + 1}</text>`;
+      o += '</g>';
+    });
+    const say = C.watch ? `${C.step + 1}. ${STAGES[C.step][1]}: ${lc(STAGES[C.step][2])}` : C.sel ? `Tap the box where “${STAGES.find(s => s[0] === C.sel)[1]}” goes.` : 'Start at the seed and go round clockwise. Choose a stage, then tap its box.';
+    return `<div class="lay-top"><span class="scaletag">🔄 ${C.watch ? 'A sunflower' : `${Object.keys(C.placed).length} of 8`}</span><div class="readout">${say}</div></div>
+      <svg id="cycSvg" viewBox="0 0 ${g.w} ${g.h}" aria-label="The life cycle of a flowering plant">${o}</svg>`;
+  },
+  drawer() {
+    const C = state.cyc, done = CYC.done(), L = C.last;
+    const left = STAGES.filter(([id], i) => !C.placed[i]);
+    const head = `<div class="card"><h2>🔄 The life cycle</h2><p>A <span class="term">life cycle</span> is all the stages in a living thing's life, going round and round. Put the stages of a flowering plant in order, starting from the seed.</p></div>`;
+    if (!done) return `${L ? `<div class="card says${L.ok ? ' good' : ''}"><h3>${L.ok ? '✅ ' + STAGES[L.i][1] : '💡 Not there'}</h3><p>${L.ok ? STAGES[L.i][2] : `Look at box ${L.i}: ${STAGES[L.i - 1][1]}. What comes straight after that?`}</p></div>` : ''}
+      ${head}<div class="card"><h3>Stages</h3><div class="bank">${left.map(([id, name]) => `<button class="chip${C.sel === id ? ' sel' : ''}" data-drag="${id}">${SUN[STAGES.findIndex(s => s[0] === id)](30)} ${name}</button>`).join('')}</div>
+        <p class="muted" style="margin-top:6px">Mistakes: ${C.mistakes}</p></div>`;
+    const link = SEE_LAB[STAGES[C.step][0]];
+    return `${C.mistakes ? `<div class="card says"><h3>🔄 Complete, with ${C.mistakes} mistake${C.mistakes > 1 ? 's' : ''}</h3><p>Can you do it with <b>no</b> mistakes? <button class="linkbtn" data-act="creset">↺ Try again</button></p></div>` : '<div class="card says good"><h3>🎉 Complete, with no mistakes!</h3></div>'}
+      <div class="card"><h3>🌻 Watch a sunflower</h3><p>Follow one sunflower all the way round its life cycle.</p>
+        <div class="navrow"><button class="btn" data-act="cmove" data-d="-1" aria-label="Back">◀</button><button class="btn go" data-act="cplay">${C.play ? '⏸ Pause' : '▶ Play'}</button><button class="btn" data-act="cmove" data-d="1" aria-label="Next">▶</button></div>
+        ${C.watch ? `<p style="margin-top:8px"><b>${C.step + 1}. ${STAGES[C.step][1]}</b>: ${STAGES[C.step][2]}</p>${link ? `<a class="seelab" href="${link[0]}">🌱 Find out more in Seed Lab: ${lc(link[1])} ▶</a>` : ''}` : ''}</div>
+      <div class="science"><b>🔬 The science</b>A flowering plant grows from a <b>seed</b>. It <b>germinates</b>, grows into a <b>seedling</b> and then an <b>adult plant</b>. It <b>flowers</b>, and after <b>pollination</b> it makes <b>fruit and seeds</b>. The seeds are <b>dispersed</b> (spread), and each one can start the cycle again.</div>
+      <div class="card"><button class="btn" data-act="creset">↺ Start the wheel again</button></div>`;
+  },
+  sel: () => state.cyc.sel,
+  pick(id) { const C = state.cyc; C.sel = C.sel === id ? null : id; render(); },
+  drop(id, where) {
+    const C = state.cyc, i = +where.slice(2); if (!where.startsWith('s:') || C.placed[i]) return;
+    const ok = STAGES[i][0] === id; C.sel = null;
+    if (ok) C.placed[i] = id; else C.mistakes++;
+    C.last = { i, ok };
+    if (CYC.done()) { C.watch = true; C.step = 0; if (!C.mistakes) emit('cycled'); }
+    render(); $('#drawer').scrollTop = 0;
+  },
+  tick() { const C = state.cyc; clearTimeout(CYC.timer); if (!C.play || state.view !== 'cycle') { C.play = false; return; }
+    CYC.timer = setTimeout(() => { if (!C.play || state.view !== 'cycle') return; C.step = (C.step + 1) % 8; render(); CYC.tick(); }, 2600); }
+};
+
+// A moth: pale, furry wings held flat
+const mothG = (x, y, s) => `<g transform="translate(${x} ${y}) scale(${s})"><path d="M0 0 C-.4 -.9 -1.3 -.7 -1.1 .1 C-1 .5 -.4 .5 0 .2Z M0 0 C.4 -.9 1.3 -.7 1.1 .1 C1 .5 .4 .5 0 .2Z" fill="#e9e1cf" stroke="#9a8f78" stroke-width="1.2" ${NS}/>
+  <ellipse rx=".14" ry=".5" fill="#b8ab90"/><path d="M-.05 -.45 Q-.3 -.9 -.45 -.85 M.05 -.45 Q.3 -.9 .45 -.85" stroke="#7a6f58" stroke-width="1.5" fill="none" ${NS}/></g>`;
+
+// ================= Views =================
+const VIEWS = {
+  sort: { label: '🌼 <span class="tl">Flowers?</span>', name: 'Flowering or not?', ...SORT },
+  parts: { label: '🔪 <span class="tl">Take apart</span>', name: 'Take a flower apart', ...DIS },
+  jobs: { label: '🛠️ <span class="tl">Jobs</span>', name: 'What does each part do?', ...JOB },
+  pollen: { label: '🐝 <span class="tl">Pollen</span>', name: 'Follow the pollen', ...POL },
+  design: { label: '🎨 <span class="tl">Design</span>', name: 'Design a flower', ...DES },
+  fruit: { label: '🍎 <span class="tl">Fruit</span>', name: 'From flower to fruit', ...FRU },
+  cycle: { label: '🔄 <span class="tl">Life cycle</span>', name: 'The life cycle', ...CYC }
+};
+// Test mode: every part on the tray, every label in the bank
+function setTest() { Object.assign(state.parts, { mode: 'test', rm: Object.fromEntries(PARTS.map(id => [id, true])), sel: null, placed: {}, marks: {}, bank: shuffle(NAMES), oops: null }); }
+
+// ================= Missions =================
+// Each mission sets up a view; the view calls emit() when something happens, and on() says whether that completes it.
+// core: one of the three missions for a 45-minute lesson
+const MISSIONS = [
+  { id: 'sorted', icon: '🌼', title: 'Does every plant have flowers?', task: 'Sort all 8 plants: do they make <b>flowers</b>, or not? Look for clues!',
+    hint: 'Tap a plant, then tap 🔍 Look for clues. Some flowers are tiny and green!',
+    setup() { state.view = 'sort'; state.sort = freshSort(); }, on: ev => ev === 'sorted',
+    win: () => 'Not all plants make flowers! Mosses and ferns make <b>spores</b>, and pine trees make seeds in <b>cones</b>. But grass, oak trees and cacti <b>do</b> make flowers.' },
+  { id: 'dissect', core: true, icon: '🔪', title: 'Take it apart', task: 'Take the flower apart, from the outside in. Then tap every part on the tray to find all <b>9 names</b>.',
+    hint: 'Sepals first, then petals, then stamens, then the carpel. On the tray, tap the anther, filament, stigma, style and ovary too.',
+    setup() { state.view = 'parts'; state.parts = freshParts(); }, on: ev => ev === 'dissected',
+    win: () => 'Sepals, petals, stamens (an anther on a filament) and the carpel (stigma, style and ovary). You took a flower apart like a <b>botanist</b>: a scientist who studies plants!' },
+  { id: 'test', icon: '🙈', title: 'No peeking!', task: 'Put all <b>9 labels</b> in the right places on the dissection tray.',
+    hint: 'A stamen is an anther on a filament. The carpel is the stigma, the style and the ovary.',
+    setup() { state.view = 'parts'; state.parts = freshParts(); setTest(); }, on: ev => ev === 'tested',
+    win: () => 'All 9 labels, with no peeking! You know every part of a flower.' },
+  { id: 'jobs', core: true, icon: '🛠️', title: 'What\'s my job?', task: 'Match each part of the flower to its <b>job</b>.',
+    hint: 'Tap each part on the flower first, to find out its job.',
+    setup() { state.view = 'jobs'; state.jobs = freshJobs(); }, on: ev => ev === 'matched',
+    win: () => 'Petals attract pollinators, anthers make pollen, the stigma catches pollen, and the ovary is where seeds form. Every part has a job!' },
+  { id: 'bee', core: true, icon: '🐝', title: 'Busy bee', task: 'Take the bee from one flower to the other. Then fast forward time until the flower has grown a <b>fruit</b>.',
+    hint: 'Drag the bee to flower A first, so it picks up pollen. Then take it to flower B. Then predict, and move the slider all the way.',
+    setup() { state.view = 'pollen'; state.pol = freshPol(); }, on: ev => ev === 'grown',
+    win: () => 'Pollen went from an anther to a stigma: <b>pollination</b>. Then seeds formed, and the ovary grew into a <b>fruit</b>.' },
+  { id: 'wind', icon: '🌬️', title: 'Blowing in the wind', target: 'wind', task: 'Design a flower that the <b>wind</b> pollinates. Predict, then test it.',
+    hint: 'The wind can\'t see, smell or drink! Think about the petals, where the anthers and stigma are, and the pollen.',
+    setup() { state.view = 'design'; state.des = freshDes(); state.des.target = 'wind'; }, on: (ev, d) => ev === 'designed' && d.target === 'wind',
+    win: () => 'Small, dull petals, no scent or nectar, dangling anthers, a stigma outside the flower and lots of light pollen: just like <b>grass</b> flowers!' },
+  { id: 'moth', icon: '🌙', title: 'Night shift', target: 'moth', task: 'Design a flower for a <b>moth</b>. Moths fly in the evening and at night.',
+    hint: 'What shows up in the dark? What can a moth follow when it is too dark to see far?',
+    setup() { state.view = 'design'; state.des = freshDes(); state.des.target = 'moth'; }, on: (ev, d) => ev === 'designed' && d.target === 'moth',
+    win: () => 'Pale petals show up in the dark, and a strong evening scent leads the moth to the flower. Honeysuckle and evening primrose are like this.' },
+  { id: 'fruit', icon: '🍅', title: 'Is it a fruit?', task: 'Sort all 11 foods: is each one a <b>fruit</b>, or not?',
+    hint: 'A scientist asks: does it hold seeds?',
+    setup() { state.view = 'fruit'; state.fruit = freshFruit(); state.fruit.ex = 'sort'; }, on: ev => ev === 'fruitsorted',
+    win: () => 'To a scientist, a fruit is the part that holds the seeds. Tomatoes, peppers, cucumbers and pea pods are all fruits!' },
+  { id: 'cycle', icon: '🔄', title: 'Round and round', task: 'Complete the life cycle wheel with <b>no mistakes</b>.',
+    hint: 'Start at the seed and go round clockwise. What does a seed do first?',
+    setup() { state.view = 'cycle'; state.cyc = freshCyc(); }, on: ev => ev === 'cycled',
+    win: () => 'Seed, germination, seedling, adult plant, flowering, pollination, fruit and seeds, seed dispersal… and round again!' }
+];
+function emit(ev, data = {}) {
+  if (state.mission == null) return;
+  const i = state.mission, m = MISSIONS[i];
+  if (!m.on(ev, data)) return;
+  stopMission();
+  if (!state.done.includes(m.id)) { state.done.push(m.id); store.set('fl-done', state.done); }
+  updateStars();
+  setTimeout(() => {
+    $('#winTitle').textContent = `${m.icon} Mission complete!`;
+    $('#winText').innerHTML = m.win(data);
+    $('#winNext').style.display = i < MISSIONS.length - 1 ? '' : 'none';
+    $('#winPractise').style.display = i < MISSIONS.length - 1 ? 'none' : '';
+    $('#winNext').dataset.i = i + 1;
+    $('#winModal').classList.remove('hidden'); confetti();
+  }, 1200);
+}
+function startMission(i) {
+  closeModals();
+  state.mission = i; MISSIONS[i].setup();
+  location.hash = 'view=' + state.view;
+  const m = MISSIONS[i];
+  $('#bannerKicker').textContent = `Mission ${i + 1} of ${MISSIONS.length}: ${m.title}`;
+  $('#bannerText').innerHTML = m.task; $('#bannerHint').innerHTML = m.hint;
+  $('#bannerHint').classList.add('hidden'); $('#hintBtn').textContent = '💡 Show a hint';
+  $('#banner').classList.remove('hidden');
+  render(); $('#drawer').scrollTop = 0;
+}
+function stopMission() { state.mission = null; $('#banner').classList.add('hidden'); fitBanner(); }
+// The banner sits over the top of the drawer, so the drawer's cards start below it
+function fitBanner() { $('#drawer').style.paddingTop = state.mission == null ? '' : `${$('#banner').offsetHeight + 18}px`; }
+function updateStars() { $('#starCount').textContent = `${state.done.filter(id => MISSIONS.some(m => m.id === id)).length}/${MISSIONS.length} ⭐`; }
+function closeModals() { document.querySelectorAll('.modal').forEach(m => m.classList.add('hidden')); }
+// Closing a pop-up by hand (button, ✕, Esc, tapping outside) can let a waiting help pop-up show
+function closeAll() { closeModals(); maybeHelp(); }
+function confetti() {
+  const em = ['⭐', '🌟', '🌸', '🌼', '🐝', '🎉'];
+  for (let i = 0; i < 30; i++) {
+    const s = document.createElement('span'); s.className = 'confetti'; s.textContent = em[i % em.length];
+    s.style.left = `${Math.random() * 100}vw`; s.style.animationDuration = `${2 + Math.random() * 2}s`; s.style.animationDelay = `${Math.random() * .6}s`;
+    document.body.appendChild(s); setTimeout(() => s.remove(), 5000);
+  }
+}
+
+// ================= Help and Real life: one pop-up each, about the tab you are on =================
+const OBJ = {
+  '5Bs.01': 'Know that not all plants produce flowers.',
+  '5Bs.02': 'Identify the parts of a flower (limited to petals, sepals, anthers, filaments, stamens, stigma, style, carpel and ovary).',
+  '5Bs.03': 'Describe the functions of the parts of a flower (limited to petals, anthers, stigma and ovary).',
+  '5Bp.02': 'Know the stages in the life cycle of a flowering plant.',
+  '5Bp.03': 'Describe how flowering plants reproduce by pollination, fruit and seed production, and seed dispersal. <span class="muted">(Here: pollination, fruit and seed production. Seed dispersal is in <a href="../seed-lab/index.html#view=spread">Seed Lab</a>.)</span>',
+  '5Be.02': 'Describe how flowering plants are adapted to attract pollinators and promote seed dispersal. <span class="muted">(Here: attracting pollinators. Seed dispersal is in <a href="../seed-lab/index.html#view=spread">Seed Lab</a>.)</span>',
+  '5TWSc.01': 'Sort, group and classify objects, materials and living things through testing, observation and using secondary information.',
+  '5TWSm.01': 'Know that a model presents an object, process or idea in a way that shows some of the important features.',
+  '5TWSm.02': 'Use models, including diagrams, to represent and describe scientific phenomena and ideas.',
+  '5TWSp.03': 'Make predictions, referring to relevant scientific knowledge and understanding within familiar and unfamiliar contexts.'
+};
+const MAIN = ['5Bs.01', '5Bs.02', '5Bs.03', '5Bp.02', '5Bp.03', '5Be.02'], SUPPORT = ['5TWSc.01', '5TWSm.01', '5TWSm.02', '5TWSp.03'];
+const HELP = {
+  sort: { q: 'Do <b>all</b> plants make flowers?', steps: ['<b>Predict</b> first.', 'Tap a plant to look at it. Tap <b>🔍 Look for clues</b> to look closer.', 'Put it in a box: <b>makes flowers</b> or <b>no flowers</b>. Tap the box, or drag the plant there.'],
+    look: 'Some flowers are tiny and green, and easy to miss!', codes: ['5Bs.01', '5TWSc.01'] },
+  parts: { q: 'What are the parts of a flower?', steps: ['Take the flower apart, from the <b>outside in</b>. Tap each part, or drag it to the tray.', 'Tap each part on the tray to find its <b>name</b>.', 'Cut the carpel open to see inside.', 'Switch to <b>🙈 Test</b> and put the labels on yourself.'],
+    look: 'A <b>stamen</b> is an anther on a filament. The <b>carpel</b> is the stigma, style and ovary.', codes: ['5Bs.02', '5TWSm.01', '5TWSm.02'] },
+  jobs: { q: 'What job does each part of a flower do?', steps: ['Tap a part of the flower to find out its job.', 'Match each part to its job: tap a part, then tap its job. Or drag it.', 'Press <b>Check</b>.'],
+    look: 'The four jobs to learn: <b>petals</b>, <b>anthers</b>, <b>stigma</b> and <b>ovary</b>.', codes: ['5Bs.03', '5TWSm.02'] },
+  pollen: { q: 'How does a flower make seeds and fruit?', steps: ['Drag the bee to one flower, then to the other. Or tap the flowers.', '<b>Predict</b> what will happen next.', 'Move the <b>time-lapse</b> slider to watch the fruit grow.', 'Try <b>🌬️ Wind</b> to see pollen blow from flower to flower.'],
+    look: 'Where does the pollen start, and where does it end up?', codes: ['5Bp.03', '5TWSm.01', '5TWSm.02', '5TWSp.03'] },
+  design: { q: 'How are flowers suited to the pollinators that visit them?', steps: ['Choose who your flower is for.', 'Choose its features: colour, petals, shape, scent and more.', '<b>Predict</b> who will visit most. Then see the gauges.', 'Tap a gauge to see why.'],
+    look: 'Every feature counts. Think about what each pollinator can see, smell and drink.', codes: ['5Be.02', '5TWSp.03', '5TWSm.01'] },
+  fruit: { q: 'Where do fruits come from?', steps: ['Look at an apple, a pea and a tomato turning from flower to fruit.', '<b>Predict</b> before you look.', 'Then sort the foods: is it a <b>fruit</b>?'],
+    look: 'To a scientist, a fruit holds the <b>seeds</b>. Not all fruits are sweet!', codes: ['5Bp.03', '5TWSc.01', '5TWSp.03'] },
+  cycle: { q: 'What are the stages in the life of a flowering plant?', steps: ['Start at the seed. Choose a stage, then tap its box on the wheel. Or drag it.', 'Go round <b>clockwise</b>.', 'Then watch a <b>sunflower</b> go all the way round.'],
+    look: 'It is a cycle: the seeds start it all again.', codes: ['5Bp.02', '5TWSm.02'] }
+};
+const MODEL = {
+  sort: [['📅', 'Many plants only flower at one time of year. An oak tree\'s catkins hang for a few weeks in spring, so you might not see them.'],
+    ['🌲', 'Pine is one kind of <b>conifer</b>. Fir and spruce trees are conifers too: they make cones, not flowers.']],
+  parts: [['🌺', 'Real flowers come in many different shapes. Some have parts that are hard to see, or parts that are joined together.'],
+    ['🔢', 'This model flower has 5 sepals, 5 petals, 6 stamens and 1 carpel. Real flowers have different numbers. A lily\'s sepals look just like its petals!']],
+  jobs: [['👃', 'Petals are not the only way to attract pollinators. Many flowers have a <b>scent</b>, and <b>nectar</b> to drink.'],
+    ['🌺', 'Real flowers come in many different shapes. Some have parts that are hard to see.']],
+  pollen: [['⏩', 'The time-lapse is much faster than real life: a fruit takes <b>weeks</b> to grow.'],
+    ['🐦', 'Pollination also happens by <b>birds</b>, <b>bats</b> and other animals, not just insects and the wind.'],
+    ['🔬', 'One pollen grain is far too small to see. The yellow dots here are giant!'],
+    ['🌸', 'A flower makes many seeds, not just a few. A real fruit can have hundreds.']],
+  design: [['🧩', 'This tool only changes a few features. Real flowers have many more features that work together.'],
+    ['🐦', 'Pollination also happens by <b>birds</b>, <b>bats</b> and other animals.'],
+    ['🌼', 'Real flowers don\'t choose their features. This tool lets you explore which features suit each pollinator. Many flowers are visited by more than one kind.']],
+  fruit: [['⏩', 'A fruit takes weeks to grow, not three pictures.'],
+    ['🍎', 'An apple is a special fruit: most of the part we eat grows from the base of the flower, around the ovary. The core is the ovary, with the seeds inside.'],
+    ['🍌', 'Some fruits we buy have been grown to have tiny seeds, or almost none.']],
+  cycle: [['⏩', 'A real sunflower takes a few months to go round its life cycle, from spring to autumn.'],
+    ['🌳', 'Some plants, like apple trees, live for many years. They flower and make fruit every year.']],
+  all: [['🖍️', 'The pictures are simple drawings, not to scale.']]
+};
+// Help pops up the first time each tab is opened in this visit (not saved, so a new class sees it again)
+const helpSeen = new Set();
+let autoHelp = true, welcomed = false;
+function showHelp() {
+  const H = HELP[state.view], V = VIEWS[state.view];
+  helpSeen.add(state.view);
+  const core = MISSIONS.map((m, i) => m.core ? `${i + 1} (${m.title})` : null).filter(Boolean);
+  $('#helpBody').innerHTML = `<h2 id="helpTitle">${V.label.replace(/<[^>]+>/g, '').split(' ')[0]} ${V.name}</h2>
+    ${welcomed ? '' : '<p class="welcome">Welcome to Flower Lab!</p>'}
+    <h3>🔬 The big question</h3><p>${H.q}</p>
+    <h3>👆 What to do</h3><ol>${H.steps.map(s => `<li>${s}</li>`).join('')}</ol>
+    <p><b>💡 Look out for:</b> ${H.look}</p>
+    <p>🚀 Try the <b>Missions</b> to win stars!</p>
+    <details class="teach"><summary>For teachers</summary>${H.codes.map(c => `<p><b>${c}</b> ${OBJ[c]}</p>`).join('')}
+      <h4>⏱ A 45-minute lesson</h4><p>Start with the three <b>Lesson</b> missions: ${core.join(', ')}.</p>
+      <h4>All of Flower Lab's objectives</h4><p>Main: ${MAIN.join(', ')}. Supporting: ${SUPPORT.join(', ')}.</p></details>`;
+  welcomed = true;
+  $('#helpModal').classList.remove('hidden');
+}
+// Never on top of another pop-up: it waits until that one closes
+function maybeHelp() {
+  if (!autoHelp || helpSeen.has(state.view) || document.querySelector('.modal:not(.hidden)')) return;
+  showHelp();
+}
+
+function renderStage() { $('#stage').innerHTML = VIEWS[state.view].stage(); }
+function render() {
+  const v = VIEWS[state.view];
+  $('#tabs').innerHTML = Object.entries(VIEWS).map(([id, x]) =>
+    `<button class="btn${id === state.view ? ' active' : ''}" data-act="view" data-view="${id}" title="${x.name}" aria-label="${x.name}">${x.label}</button>`).join('');
+  const keep = $('#drawer').scrollTop, same = render.last === state.view;
+  $('#drawer').innerHTML = v.drawer();
+  renderStage();
+  // Staying on the same tab keeps the drawer where it was scrolled to
+  if (same) $('#drawer').scrollTop = keep;
+  render.last = state.view;
+  fitBanner();
+  maybeHelp();
+}
+
+// ================= Actions =================
+const ACTIONS = {
+  view(el) { state.view = el.dataset.view; location.hash = 'view=' + state.view; render(); },
+  // Flowering or not?
+  spred(el) { state.sort.pred = el.dataset.v; render(); },
+  sclue() { const s = state.sort; s.clue[s.look] = !s.clue[s.look]; render(); },
+  sbin(el) { SORT.drop(state.sort.look, el.dataset.v); },
+  sreset() { state.sort = { ...freshSort(), pred: state.sort.pred }; render(); },
+  // Take a flower apart
+  dmode(el) { if (el.dataset.v === 'test') setTest(); else Object.assign(state.parts, { mode: 'explore', sel: null }); render(); $('#drawer').scrollTop = 0; },
+  dname(el) { const p = state.parts, n = el.dataset.v; if (p.mode !== 'explore') return; p.named[n] = true; if (GROUP[n]) p.named[GROUP[n]] = true; p.info = n; render(); $('#drawer').scrollTop = 0; DIS.check(); },
+  dunplace(el) { const p = state.parts; delete p.placed[el.dataset.v]; delete p.marks[el.dataset.v]; render(); },
+  dcheck() { const p = state.parts; Object.keys(p.placed).forEach(k => p.marks[k] = p.placed[k] === k); p.tries++; render(); $('#drawer').scrollTop = 0; if (NAMES.every(n => p.marks[n] === true)) emit('tested'); },
+  dcut() { state.parts.cut = !state.parts.cut; render(); },
+  dreset() { const m = state.parts.mode; state.parts = freshParts(); if (m === 'test') setTest(); render(); },
+  // What does each part do?
+  jpart(el) { const j = state.jobs, v = el.dataset.v, l = layerOf(v); j.sel = l === 'stamen' ? 'anther' : l === 'carpel' ? 'style' : l; if (JOBS[j.sel]) j.seen[j.sel] = true; render(); $('#drawer').scrollTop = 0; },
+  junplace(el) { const j = state.jobs; delete j.placed[el.dataset.v]; delete j.marks[el.dataset.v]; render(); },
+  jcheck() { const j = state.jobs; Object.keys(j.placed).forEach(k => j.marks[k] = j.placed[k] === k); render(); if (JORDER.every(k => j.marks[k] === true)) emit('matched'); },
+  // Follow the pollen
+  pfly(el) { if (state.pol.mode === 'insect') POL.fly(el.dataset.v); },
+  pmode(el) { state.pol = { ...freshPol(), mode: el.dataset.v }; render(); },
+  ppred(el) { state.pol.pred = el.dataset.v; render(); },
+  pwpred(el) { state.pol.wpred = el.dataset.v; render(); },
+  pblow() { if (!state.pol.blowing) POL.blow(); },
+  preset() { state.pol = { ...freshPol(), mode: state.pol.mode }; render(); $('#drawer').scrollTop = 0; },
+  // Design a flower
+  dtarget(el) { Object.assign(state.des, { target: el.dataset.v, gauge: null }); render(); },
+  dfeat(el) { const d = state.des; d.f[el.dataset.k] = el.dataset.v; Object.assign(d, { shown: false, pred: null, gauge: null }); render(); },
+  dpred(el) { const d = state.des; d.pred = el.dataset.v; d.shown = true; render(); $('#drawer').scrollTop = 0; if (DES.wins(d.target, d.f)) emit('designed', { target: d.target }); },
+  dgauge(el) { const d = state.des; if (!d.shown) return; d.gauge = el.dataset.v; render(); $('#drawer').scrollTop = 0; },
+  // From flower to fruit
+  fex(el) { const F = state.fruit; F.ex = el.dataset.v; F.sel = null; render(); $('#drawer').scrollTop = 0; },
+  fapred(el) { state.fruit.apred = el.dataset.v; render(); },
+  fspred(el) { state.fruit.spred = el.dataset.v; render(); },
+  fsreset() { Object.assign(state.fruit, { placed: {}, sel: null, last: null }); render(); },
+  // The life cycle
+  cstep(el) { const C = state.cyc; C.step = +el.dataset.v; C.play = false; render(); },
+  cmove(el) { const C = state.cyc; C.watch = true; C.play = false; C.step = (C.step + +el.dataset.d + 8) % 8; render(); },
+  cplay() { const C = state.cyc; C.watch = true; C.play = !C.play; render(); CYC.tick(); },
+  creset() { clearTimeout(CYC.timer); state.cyc = freshCyc(); render(); $('#drawer').scrollTop = 0; },
+  // Missions and pop-ups
+  missions() {
+    $('#missionList').innerHTML = MISSIONS.map((m, i) => `<button class="mission-item${state.done.includes(m.id) ? ' done' : ''}" data-act="startMission" data-i="${i}">
+      <span class="em">${m.icon}</span><span class="t">${i + 1}. ${m.title}</span>${m.core ? '<span class="core">⏱ Lesson</span>' : ''}<span class="star">⭐</span></button>`).join('');
+    $('#missionsModal').classList.remove('hidden');
+  },
+  startMission(el) { startMission(+el.dataset.i); },
+  nextMission(el) { startMission(+el.dataset.i); },
+  stopMission() { stopMission(); },
+  hint() {
+    const h = $('#bannerHint');
+    h.classList.toggle('hidden');
+    $('#hintBtn').textContent = h.classList.contains('hidden') ? '💡 Show a hint' : '💡 Hide the hint';
+    fitBanner();
+  },
+  resetStars() { state.done = []; store.set('fl-done', []); updateStars(); ACTIONS.missions(); },
+  closeModals() { closeAll(); },
+  help() { closeModals(); showHelp(); },
+  model() {
+    $('#modelTab').textContent = `${VIEWS[state.view].label.replace(/<[^>]+>/g, '').split(' ')[0]} ${VIEWS[state.view].name}`;
+    $('#modelList').innerHTML = [...MODEL[state.view], ...MODEL.all].map(([em, t]) => `<li><span class="em">${em}</span><span>${t}</span></li>`).join('');
+    $('#modelModal').classList.remove('hidden');
+  }
+};
+// Taps: pick something up, put it down, or do an action
+document.addEventListener('click', e => {
+  if (DND.skipClick) { DND.skipClick = false; return; }
+  const v = VIEWS[state.view], drag = e.target.closest('[data-drag]');
+  if (drag && v.pick) { v.pick(drag.dataset.drag); return; }
+  const drop = e.target.closest('[data-drop]'), sel = v.sel && v.sel();
+  if (drop && sel) { v.drop(sel, drop.dataset.drop); return; }
+  const el = e.target.closest('[data-act]');
+  if (el && ACTIONS[el.dataset.act]) ACTIONS[el.dataset.act](el);
+});
+// The time-lapse slider redraws only the picture, so the slider keeps working while it is dragged
+document.addEventListener('input', e => {
+  if (e.target.id !== 'tl') return;
+  const P = state.pol; P.t = +e.target.value; renderStage(); $('#tlText').innerHTML = POL.phase(P.t);
+  if (P.t >= 100 && !P.grown) { P.grown = true; $('#tlEnd').innerHTML = POL.ending(); emit('grown'); }
+});
+// Dragging the bee around the sky
+const BEE = { on: false, moved: false };
+document.addEventListener('pointerdown', e => { if (e.target.closest('[data-bee]') && !POL.flying) { BEE.on = true; BEE.moved = false; e.preventDefault(); } });
+document.addEventListener('pointermove', e => {
+  if (!BEE.on) return; const svg = $('#polSvg'); if (!svg) return;
+  const pt = svg.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY; const p = pt.matrixTransform(svg.getScreenCTM().inverse());
+  BEE.moved = true; POL.moveBee(p.x, p.y);
+});
+document.addEventListener('pointerup', () => {
+  if (!BEE.on) return; BEE.on = false; if (!BEE.moved) return;
+  DND.skipClick = true; setTimeout(() => DND.skipClick = false, 0);
+  const P = state.pol, g = POL.geo(), b = P.bee, near = ['A', 'B'].find(n => Math.hypot(b.x - g.F[n].lx, b.y - g.F[n].ly) < g.S * .32);
+  if (near) POL.land(near);
+});
+// Tapping the dark background or pressing Escape closes a pop-up
+document.querySelectorAll('.modal').forEach(m => m.addEventListener('click', e => { if (e.target === m) closeAll(); }));
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeAll(); });
+let resizeT;
+addEventListener('resize', () => { fitBanner(); clearTimeout(resizeT); resizeT = setTimeout(renderStage, 120); });
+
+// ================= Start =================
+// Test hooks: #view=parts  ·  #mission=1  ·  #nohelp=1  ·  #mode=test  ·  #dissected=1  ·  #ex=sort  ·  #cycle=1 (wheel done)
+const hp = new URLSearchParams(location.hash.slice(1));
+if (VIEWS[hp.get('view')]) state.view = hp.get('view');
+if (hp.has('nohelp')) autoHelp = false;
+if (hp.get('mode') === 'test') setTest();
+if (hp.has('dissected')) { state.parts.rm = Object.fromEntries(PARTS.map(id => [id, true])); }
+if (hp.get('ex') && (EXAMPLES[hp.get('ex')] || hp.get('ex') === 'sort')) state.fruit.ex = hp.get('ex');
+if (hp.has('cycle')) { STAGES.forEach(([id], i) => state.cyc.placed[i] = id); state.cyc.watch = true; }
+updateStars();
+if (MISSIONS[hp.get('mission')]) startMission(+hp.get('mission'));
+else render();
+</script>
+<script>
+  // Offline support: saves the whole Science Hub on this device the first time any page is opened (see ../sw.js)
+  if ('serviceWorker' in navigator) addEventListener('load', () => navigator.serviceWorker.register('../sw.js').catch(() => {}));
+</script>
+</body>
+</html>

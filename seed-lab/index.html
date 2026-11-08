@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Seed Lab</title>
-<meta name="description" content="Plan a fair test to find out what bean seeds need to germinate: change one thing, keep the rest the same, predict, then fast forward 10 days – an interactive tool for Year 5.">
+<meta name="description" content="Plan a fair test to find out what bean seeds need to germinate, watch a bean seed germinate in a time-lapse, and find out how seeds travel – an interactive tool for Year 5.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -185,6 +185,17 @@
   .seedcards { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 6px; }
   .seedcard { display: flex; flex-direction: column; align-items: center; gap: 2px; border: 2px solid #d3dbf7; background: #fff; border-radius: 12px; padding: 6px 4px; min-height: 44px; font-weight: 600; font-size: 13.5px; line-height: 1.15; cursor: pointer; text-align: center; }
   .seedcard.sel { background: var(--yellow); border-color: #e0a800; }
+  /* Watch it germinate: put the stages in order (tap a stage, then its place – or drag it) */
+  .bank { display: flex; flex-wrap: wrap; gap: 6px; }
+  .bank:empty::before { content: 'All placed!'; color: var(--muted); font-size: 15px; }
+  .mrow { display: flex; align-items: center; gap: 8px; margin: 6px 0; }
+  .mrow > b { flex: none; width: 26px; height: 26px; border-radius: 50%; background: var(--blue); color: #fff; display: grid; place-items: center; font-size: 15px; }
+  .mslot { flex: 1; min-height: 44px; border: 2px dashed #b7c3ea; border-radius: 12px; display: flex; align-items: center; padding: 4px 10px; font-weight: 600; font-size: 15px; background: #f7f9ff; cursor: pointer; line-height: 1.2; }
+  .mslot.ready { border-color: #e0a800; background: #fffbea; }
+  .mslot.over { border-style: solid; border-color: var(--green); }
+  .mslot.ok { border-style: solid; border-color: var(--green); background: #c9f2df; cursor: default; }
+  .mslot.bad { border-style: solid; border-color: var(--coral); background: #ffe0e3; }
+  .flowerlink { display: flex; align-items: center; gap: 8px; background: #fde7f1; border-radius: 12px; padding: 8px 10px; margin-top: 8px; font-weight: 600; color: #a3245e; text-decoration: none; min-height: 44px; }
   textarea.reason { width: 100%; min-height: 64px; border: 2px solid #c3cdf2; border-radius: 12px; padding: 6px 8px; font-size: 15.5px; resize: vertical; }
 
   /* ---------- Per-tab help, close buttons and "the science" boxes ---------- */
@@ -582,6 +593,11 @@ const MISSIONS = [
     setup() { state.view = 'bench'; state.lab = freshLab(); },
     on: ev => ev === 'finished',
     win: () => 'A complete investigation, from question to conclusion! That is exactly how scientists work.' },
+  { id: 'germinate', icon: '🫘', title: 'Root or shoot first?', task: 'Put the stages of <b>germination</b> in order. Then check your order with the time-lapse.',
+    hint: 'Predict first. What does a dry seed need before anything can grow out of it? Then which way does each part grow?',
+    setup() { state.view = 'grow'; state.gr = freshGr(); },
+    on: ev => ev === 'germinated',
+    win: () => 'The seed takes in water and swells, its coat splits, the <b>root</b> grows down, the <b>shoot</b> grows up, and the first leaves open. That is <b>germination</b>!' },
   { id: 'whyspread', icon: '🌳', title: 'Why spread out?', task: 'Find out what happens to seeds that fall right under their parent tree, and <b>why</b>.',
     hint: 'Click Next to see the seedlings a few weeks later. Look at the shade under the tree.',
     setup() { state.view = 'spread'; state.sp = freshSp(); },
@@ -845,7 +861,8 @@ const SP = {
         'All the seeds <b>germinate</b>. They all had water and warmth.',
         'Under the tree, only <b>1</b> seedling is still growing. The rest are thin, pale and dying. Far away from the tree, <b>10</b> are growing well.'];
       const right = sp.whySaid === 'ok';
-      return `<div class="card">${nav}<h2 style="margin-top:8px">🌳 Why do seeds spread out?</h2><p>A plant can't move. But its seeds can travel! What happens if they don't?</p></div>
+      return `<div class="card">${nav}<h2 style="margin-top:8px">🌳 Why do seeds spread out?</h2><p>A plant can't move. But its seeds can travel! What happens if they don't?</p>
+          <a class="flowerlink" href="../flower-lab/index.html#view=fruit">🌸 Where do fruits and seeds come from? See Flower Lab ▶</a></div>
         <div class="card"><h3>Picture ${sp.frame + 1}</h3><p>${caps[sp.frame]}</p>
           <div class="navrow"><button class="btn" data-act="sframe" data-d="-1"${sp.frame ? '' : ' disabled'}>◀ Back</button>${sp.frame < 2 ? '<button class="btn go" data-act="sframe" data-d="1">Next ▶</button>' : ''}</div></div>
         ${sp.frame === 2 ? `<div class="card${right ? ' says good' : ''}"><h3>Why did the seedlings under the tree struggle?</h3><p class="muted">Tick all the reasons.</p>
@@ -884,6 +901,87 @@ const SP = {
       ${done ? `<div class="checkbar">${sp.place < PLACES.length - 1 ? '<button class="btn go" data-act="snext">Next place ▶</button>' : allDone ? '<button class="btn" data-act="sfitreset">↺ Start again</button>' : ''}</div>` : ''}`;
   }
 };
+
+// ================= Watch it germinate =================
+// The five stages, in order: [id, short card, what happens]
+const GSTAGES = [
+  ['swell', '💧 Takes in water and swells', 'The dry seed takes in <b>water</b> and swells.'],
+  ['split', '💥 The seed coat splits', 'The <b>seed coat</b> splits.'],
+  ['root', '⬇️ The root grows down', 'The <b>root</b> grows out first, and grows down.'],
+  ['shoot', '⬆️ The shoot grows up', 'The <b>shoot</b> grows up, towards the light.'],
+  ['leaves', '🌿 The first leaves open', 'The first <b>leaves</b> open. Until then, the seedling uses the food stored inside the seed.']
+];
+const freshGr = () => ({ pred: null, sel: null, order: {}, marks: {}, bank: [2, 0, 4, 1, 3].map(k => GSTAGES[k][0]), ordered: false, t: 0, rootSeen: false, checked: false });
+state.gr = freshGr();
+const GR = {
+  // How far each stage has got at time t (0–100)
+  look(t) { return { swell: clamp(t / 20), split: clamp((t - 20) / 10), root: clamp((t - 30) / 28), shoot: clamp((t - 55) / 25), leaves: clamp((t - 80) / 20) }; },
+  stageAt(t) { return t < 20 ? 0 : t < 30 ? 1 : t < 55 ? 2 : t < 80 ? 3 : 4; },
+  day: t => Math.round(t * .12),
+  stage() {
+    const G = state.gr, { w, h, narrow } = stageSize(), top = narrow ? 40 : 50, k = GR.look(G.t);
+    const soilY = top + (h - top) * .38, sx = w / 2, sy = soilY + (h - soilY) * .28, R = Math.min(w, h) * (narrow ? .1 : .1);
+    let o = `<rect width="${w}" height="${h}" fill="#dff1ff"/><circle cx="${w - 60}" cy="${top + 40}" r="24" fill="#ffd23d"/>`;
+    o += `<rect y="${soilY}" width="${w}" height="${h - soilY}" fill="#7a5233"/><rect y="${soilY}" width="${w}" height="8" fill="#5a3a20"/>`;
+    for (let q = 0; q < 40; q++) o += `<circle cx="${(q * 97) % w}" cy="${soilY + 14 + ((q * 53) % (h - soilY - 20))}" r="${1.5 + q % 3}" fill="#6a4529"/>`;
+    // Water soaking in from the soil while the seed swells
+    if (k.swell > 0 && k.swell < 1) for (let q = 0; q < 8; q++) { const a = q * Math.PI / 4, d = R * (2.6 - k.swell * 1.4);
+      o += `<path d="M0 -6 Q5 1 0 5 Q-5 1 0 -6Z" transform="translate(${sx + d * Math.cos(a)} ${sy + d * Math.sin(a)}) scale(${narrow ? 1.4 : 2})" fill="#6fb7ff" opacity="${(1 - k.swell * .7).toFixed(2)}"/>`; }
+    // The root: out of the seed first, growing down, with side roots later
+    if (k.root > 0) { const L = k.root * (h - sy - R * 1.2), rx = sx - R * .15, ry = sy + R * .25;
+      o += `<path d="M${rx} ${ry} Q${rx - R * .3} ${ry + L * .5} ${rx - R * .1} ${ry + L}" stroke="#f3e7c9" stroke-width="${R * .2}" fill="none" stroke-linecap="round"/>`;
+      if (k.root > .6) [.45, .6, .75].forEach((f, q) => { const yy = ry + L * f, len = R * (k.root - .55) * 2.2; o += `<path d="M${rx - R * .2} ${yy} l${q % 2 ? len : -len} ${len * .5}" stroke="#f3e7c9" stroke-width="${R * .07}" stroke-linecap="round"/>`; }); }
+    // The shoot: hooked as it pushes up through the soil, then straight, growing towards the light
+    if (k.shoot > 0) { const bx = sx + R * .2, by = sy - R * .3, H = k.shoot * (sy - top - 40), tx = bx + R * .1, ty = by - H, hook = clamp(1 - (k.shoot - .6) / .4);
+      o += `<path d="M${bx} ${by} Q${bx + R * .4} ${by - H * .5} ${tx} ${ty}" stroke="#5fae3f" stroke-width="${R * .18}" fill="none" stroke-linecap="round"/>`;
+      if (k.leaves > 0) [-1, 1].forEach(s => { const a = s * (10 + k.leaves * 50), lw = R * (.3 + k.leaves * .9);
+        o += `<ellipse cx="${tx + s * lw * .55 * Math.sin(Math.abs(a) * Math.PI / 180)}" cy="${ty - lw * .5 * Math.cos(a * Math.PI / 180)}" rx="${lw * .32}" ry="${lw * .6}" fill="#5fbf4f" stroke="#3f8a2a" stroke-width="1.5" transform="rotate(${a} ${tx + s * lw * .55 * Math.sin(Math.abs(a) * Math.PI / 180)} ${ty - lw * .5 * Math.cos(a * Math.PI / 180)})"/>`; });
+      else if (hook > 0) o += `<path d="M${tx} ${ty} q${R * .35 * hook} ${-R * .3 * hook} ${R * .45 * hook} ${R * .2 * hook}" stroke="#5fae3f" stroke-width="${R * .18}" fill="none" stroke-linecap="round"/>`; }
+    // The seed: small and wrinkly when dry, plump once it has taken in water; it shrinks a little as its food is used up
+    const sc = .72 + k.swell * .28 - k.leaves * .12, col = k.swell < 1 ? mixHex('#c9a46a', '#e9d7a8', k.swell) : mixHex('#e9d7a8', '#d8c8a0', k.leaves);
+    o += `<g transform="translate(${sx} ${sy}) scale(${R * sc})"><path d="M-1 0 C-1 -.75 .9 -.85 1 -.1 C1.05 .25 .6 .38 .3 .22 C.1 .12 -.1 .12 -.3 .26 C-.7 .6 -1 .3 -1 0Z" fill="${col}" stroke="#a88b4e" stroke-width="2" vector-effect="non-scaling-stroke"/>
+      ${k.swell < .6 ? '<path d="M-.6 -.3 Q-.2 -.1 .2 -.4 M-.5 .05 Q0 -.05 .5 -.2" stroke="#a88b4e" stroke-width="1.2" fill="none" vector-effect="non-scaling-stroke"/>' : ''}
+      ${k.split > 0 ? `<path d="M-.75 -.45 l.25 .15 l.2 -.2 l.25 .2 l.2 -.18 l.25 .15" stroke="#6b4b22" stroke-width="${1.5 + k.split * 2}" fill="none" vector-effect="non-scaling-stroke"/>` : ''}</g>`;
+    const st = GR.stageAt(G.t);
+    return `<div class="lay-top"><span class="scaletag">🫘 Day ${GR.day(G.t)}</span><div class="readout">${G.pred ? `${st + 1}. ${GSTAGES[st][2].replace(/<\/?b>/g, '')}` : 'Predict first, then move the slider.'}</div></div>
+      <svg id="grSvg" viewBox="0 0 ${w} ${h}" aria-label="A bean seed germinating in the soil">${o}</svg>`;
+  },
+  drawer() {
+    const G = state.gr, opts = [['root', 'The root'], ['shoot', 'The shoot'], ['same', 'Both at the same time']];
+    const pred = `<div class="card wq${G.pred ? '' : ' says'}"><h3>🤔 Predict first</h3><p>When a bean seed starts to grow, which comes out first?</p>
+      ${opts.map(([v, t]) => `<button class="opt${G.pred === v ? ' on' : ''}" data-act="gpred" data-v="${v}"${G.pred ? ' disabled' : ''}>${t}</button>`).join('')}
+      <div id="gpredRes">${GR.predRes()}</div></div>`;
+    const head = `<div class="card"><h2>🫘 Watch it germinate</h2><p>A seed <b>germinates</b> when it starts to grow. What happens, and in what order?</p></div>`;
+    if (!G.pred) return pred + head;
+    const left = G.bank.filter(id => !Object.values(G.order).includes(id)), allRight = G.ordered;
+    const order = `<div class="card${allRight ? ' says good' : ''}"><h3>🔢 Put the stages in order</h3><p class="muted">Tap a stage, then tap its place. Or drag it there.</p>
+      <div class="bank" style="margin:6px 0">${left.map(id => `<button class="chip${G.sel === id ? ' sel' : ''}" data-drag="${id}">${GSTAGES.find(s => s[0] === id)[1]}</button>`).join('')}</div>
+      ${GSTAGES.map((_, i) => { const put = G.order[i], m = G.marks[i];
+        return `<div class="mrow"><b>${i + 1}</b><div class="mslot${m === true ? ' ok' : m === false ? ' bad' : G.sel && !put ? ' ready' : ''}" data-drop="g:${i}"${put && m !== true ? ` data-act="gunplace" data-v="${i}"` : ''}>${put ? GSTAGES.find(s => s[0] === put)[1] : ''}</div></div>`; }).join('')}
+      ${allRight ? `<p class="job">✅ That is the right order! ${G.checked ? '' : 'Now <b>check it</b> with the time-lapse: move the slider all the way.'}</p>` : GSTAGES.some((_, i) => G.marks[i] === false) ? '<p class="spot">💡 The red ones are in the wrong place. Tap one to take it out. Use the time-lapse to help you.</p>' : ''}
+      ${allRight ? '' : `<div class="navrow"><button class="btn go" data-act="gcheck"${Object.keys(G.order).length === GSTAGES.length ? '' : ' disabled'}>✔ Check my order</button></div>`}</div>`;
+    const tl = `<div class="card"><h3>⏩ Time-lapse</h3><p class="muted">Move the slider. You can go back and forth.</p>
+      <div class="slide"><span>🫘</span><input type="range" id="gtl" min="0" max="100" value="${G.t}" aria-label="Days since planting"><span>🌱</span></div>
+      <p id="gtlText" style="min-height:66px"><b>${GR.stageAt(G.t) + 1}.</b> ${GSTAGES[GR.stageAt(G.t)][2]}</p></div>`;
+    const sci = G.checked ? `<div class="science"><b>🔬 The science</b>A seed <b>germinates</b> when it has water and a suitable temperature. It takes in water and swells, and its coat splits. The <b>root</b> grows down first, then the <b>shoot</b> grows up towards the light. Until its first leaves open, the seedling uses the <b>food stored inside the seed</b>.</div>` : '';
+    return `${pred}${tl}${order}${sci}${head}<div class="card"><button class="btn" data-act="greset">↺ Start again</button></div>`;
+  },
+  // The prediction checked, once the time-lapse has shown the root coming out
+  predRes() { const G = state.gr; return G.rootSeen && G.pred ? `<p class="${G.pred === 'root' ? 'job' : 'spot'}">${G.pred === 'root' ? '✅ You were right!' : '❌ Not this time.'} The <b>root</b> comes out first. It grows down, to hold the seedling in the soil and take in water.</p>` : ''; },
+  sel: () => state.gr.sel,
+  pick(id) { const G = state.gr; G.sel = G.sel === id ? null : id; render(); },
+  drop(id, where) {
+    const G = state.gr; if (!where.startsWith('g:') || !GSTAGES.some(s => s[0] === id)) return;
+    const i = +where.slice(2); if (G.marks[i] === true) return;
+    Object.keys(G.order).forEach(k => { if (G.order[k] === id) { delete G.order[k]; delete G.marks[k]; } });
+    G.order[i] = id; delete G.marks[i]; G.sel = null; render();
+  },
+  // The time-lapse confirms the order once it has been played to the end, after the order is right
+  watched() { const G = state.gr; if (G.ordered && G.t >= 100 && !G.checked) { G.checked = true; emit('germinated'); setTimeout(render, 300); } }
+};
+// Mix two colours (#rrggbb), t from 0 to 1
+function mixHex(c1, c2, t) { const p = c => [1, 3, 5].map(k => parseInt(c.slice(k, k + 2), 16)), a = p(c1), b = p(c2); return '#' + a.map((v, k) => Math.round(v + (b[k] - v) * clamp(t)).toString(16).padStart(2, '0')).join(''); }
+function clamp(v, a = 0, b = 1) { return Math.max(a, Math.min(b, v)); }
 
 // ================= Views =================
 const said = (msgs, good) => msgs ? `<div class="card says${good ? ' good' : ''}"><h3>${good ? '✅ That is a fair test!' : '🔎 Check your plan'}</h3>${Array.isArray(msgs) ? `<ul>${msgs.map(m => `<li>${m}</li>`).join('')}</ul>` : `<p>${msgs}</p>`}</div>` : '';
@@ -966,6 +1064,12 @@ const VIEWS = {
         ${eff === 'none' ? '' : '<div class="checkbar"><button class="btn go" data-act="pnext">Next: draw a bar chart ▶</button></div>'}`;
     }
   },
+  grow: {
+    label: '🫘 <span class="tl">Watch it germinate</span>',
+    stage: () => GR.stage(),
+    drawer: () => GR.drawer(),
+    sel: GR.sel, pick: GR.pick, drop: GR.drop
+  },
   spread: {
     label: '🌬️ <span class="tl">Spreading seeds</span>',
     stage: () => SP.stage(),
@@ -998,7 +1102,17 @@ const HELP = {
     steps: ['<b>Why spread?</b> Look at the pictures, then answer.', '<b>Ways to travel:</b> open all 8 flaps.',
       '<b>Sort the seeds</b> into the ways they travel.', '<b>Seed for the place:</b> choose the best seed for each place.'],
     look: 'The <b>shape</b> of a seed is a clue to how it travels.',
-    codes: [['5Bp.03', 'Describe how flowering plants reproduce by pollination, fruit and seed production, and seed dispersal. <span class="muted">(Here: seed dispersal.)</span>']]
+    codes: [['5Bp.03', 'Describe how flowering plants reproduce by pollination, fruit and seed production, and seed dispersal. <span class="muted">(Here: seed dispersal. Pollination, fruit and seed production are in <a href="../flower-lab/index.html#view=pollen">Flower Lab</a>.)</span>'],
+      ['5Be.02', 'Describe how flowering plants are adapted to attract pollinators and promote seed dispersal. <span class="muted">(Here: seed dispersal. Attracting pollinators is in <a href="../flower-lab/index.html#view=design">Flower Lab</a>.)</span>']]
+  },
+  grow: {
+    title: '🫘 Watch it germinate',
+    q: 'What happens when a seed <b>germinates</b> (starts to grow)?',
+    steps: ['<b>Predict</b>: does the root or the shoot come out first?', 'Put the 5 stages in <b>order</b>. Tap a stage, then tap its place. Or drag it.', 'Move the <b>time-lapse</b> slider to check your order.'],
+    look: 'What comes out of the seed first, and which way does it grow?',
+    codes: [['5Bp.04', 'Describe seed germination and know that seeds, in general, require water and an appropriate temperature to germinate.'],
+      ['5TWSp.03', 'Make predictions, referring to relevant scientific knowledge and understanding within familiar and unfamiliar contexts.'],
+      ['5Bp.02', 'Know the stages in the life cycle of a flowering plant. <span class="muted">(The whole life cycle is in <a href="../flower-lab/index.html#view=cycle">Flower Lab</a>.)</span>']]
   }
 };
 // Real life: the differences for each tab, plus one that is true for both
@@ -1010,6 +1124,9 @@ const MODEL = {
     ['☀️', 'Seedlings in the dark grow <b>taller and thinner</b>, searching for light. They stay <b>pale yellow</b>, because a plant needs light to make the green substance in its leaves (called <b>chlorophyll</b>). Once a seedling has used up the food stored in its seed, it <b>does</b> need light to keep growing. Germination is only the very start.']],
   spread: [['🌳', 'A few seedlings under a parent tree do survive. The numbers here show the idea, not a real count.'],
     ['🌰', 'Many seeds travel in more than one way. Acorns and sweet chestnuts drop and roll, but squirrels and jays also carry them off and bury them. Shakers need the wind to sway them.']],
+  grow: [['⏩', 'A real bean takes one to two weeks to get this far. The time-lapse takes seconds.'],
+    ['🪟', 'You can\'t usually see a seed under the soil. To watch one, grow a bean in a clear jar, pressed against damp kitchen paper.'],
+    ['🌱', 'Different kinds of seed germinate at different speeds, and their first leaves can look different.']],
   all: [['🖍️', 'The pictures are simple drawings, not to scale.']]
 };
 const tabName = id => VIEWS[id].label.replace(/<[^>]+>/g, '');
@@ -1111,6 +1228,11 @@ const ACTIONS = {
   pwhy(el) { const L = state.lab; L.why = el.dataset.v; if (!WHY[L.iv][+L.why][1] && !L.whyWrong.includes(L.why)) L.whyWrong.push(L.why); render(); },
   pimp(el) { const L = state.lab; L.imp = +el.dataset.v; if (!L.impTried.includes(L.imp)) L.impTried.push(L.imp); render(); },
   pfinish() { const L = state.lab; L.step = 8; render(); $('#drawer').scrollTop = 0; emit('finished', { iv: L.iv }); },
+  // Watch it germinate
+  gpred(el) { state.gr.pred = el.dataset.v; render(); },
+  gunplace(el) { const G = state.gr; delete G.order[el.dataset.v]; delete G.marks[el.dataset.v]; render(); },
+  gcheck() { const G = state.gr; GSTAGES.forEach(([id], i) => { if (G.order[i]) G.marks[i] = G.order[i] === id; }); G.ordered = GSTAGES.every((_, i) => G.marks[i] === true); render(); },
+  greset() { state.gr = freshGr(); render(); $('#drawer').scrollTop = 0; },
   missions() {
     $('#missionList').innerHTML = MISSIONS.map((m, i) => `<button class="mission-item${state.done.includes(m.id) ? ' done' : ''}" data-act="startMission" data-i="${i}">
       <span class="em">${m.icon}</span><span class="t">${i + 1}. ${m.title}</span><span class="star">⭐</span></button>`).join('');
@@ -1135,8 +1257,51 @@ const ACTIONS = {
   }
 };
 document.addEventListener('click', e => {
+  if (DND.skipClick) { DND.skipClick = false; return; }
+  // Tap to pick something up (data-drag), then tap where it goes (data-drop), in views that sort or order things
+  const v = VIEWS[state.view], drag = e.target.closest('[data-drag]');
+  if (drag && v.pick) { v.pick(drag.dataset.drag); return; }
+  const drop = e.target.closest('[data-drop]'), sel = v.sel && v.sel();
+  if (drop && sel) { v.drop(sel, drop.dataset.drop); return; }
   const el = e.target.closest('[data-act]');
   if (el && ACTIONS[el.dataset.act]) ACTIONS[el.dataset.act](el);
+});
+// …or drag it there in one go
+const DND = { start: null, ghost: null, over: null, skipClick: false };
+document.addEventListener('pointerdown', e => {
+  const el = e.target.closest('[data-drag]');
+  if (!el || e.button > 0) return;
+  DND.start = { el, id: el.dataset.drag, x: e.clientX, y: e.clientY, moved: false };
+});
+document.addEventListener('pointermove', e => {
+  const d = DND.start; if (!d) return;
+  if (!d.moved) {
+    if (Math.hypot(e.clientX - d.x, e.clientY - d.y) < 10) return;
+    d.moved = true;
+    const g = d.el.cloneNode(true); g.classList.add('chip-ghost'); g.removeAttribute('data-drag'); g.style.width = d.el.offsetWidth + 'px';
+    document.body.appendChild(g); DND.ghost = g;
+  }
+  DND.ghost.style.left = e.clientX + 'px'; DND.ghost.style.top = e.clientY + 'px';
+  const over = document.elementFromPoint(e.clientX, e.clientY)?.closest('[data-drop]');
+  if (over !== DND.over) { DND.over?.classList.remove('over'); over?.classList.add('over'); DND.over = over; }
+});
+function endDrag(e) {
+  const d = DND.start; DND.start = null;
+  if (!d || !d.moved) return;
+  DND.ghost?.remove(); DND.ghost = null; DND.over?.classList.remove('over'); DND.over = null;
+  DND.skipClick = true; setTimeout(() => DND.skipClick = false, 0);
+  const over = e && document.elementFromPoint(e.clientX, e.clientY)?.closest('[data-drop]'), v = VIEWS[state.view];
+  if (over && v.drop) v.drop(d.id, over.dataset.drop);
+}
+document.addEventListener('pointerup', endDrag);
+document.addEventListener('pointercancel', () => endDrag(null));
+// The germination time-lapse redraws only the picture, so the slider keeps working while it is dragged
+document.addEventListener('input', e => {
+  if (e.target.id !== 'gtl') return;
+  const G = state.gr; G.t = +e.target.value; renderStage();
+  const st = GR.stageAt(G.t); $('#gtlText').innerHTML = `<b>${st + 1}.</b> ${GSTAGES[st][2]}`;
+  if (st >= 2 && !G.rootSeen) { G.rootSeen = true; $('#gpredRes').innerHTML = GR.predRes(); }
+  GR.watched();
 });
 // Typed and ticked answers are kept, so they survive the drawer being redrawn
 document.addEventListener('input', e => { if (e.target.id === 'reason') { state.lab.reason = e.target.value; const b = $('[data-act=pnext]'); if (b) b.disabled = !(state.lab.pred && state.lab.reason.trim()); } });

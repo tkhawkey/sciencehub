@@ -4,7 +4,7 @@
    Afterwards the pages work without internet. When the device is online, pages are fetched from the website
    first, so updates reach children automatically. */
 
-var CACHE = "cis-science-2026-11-05a";   // a new name on each publish makes devices re-download everything
+var CACHE = "cis-science-2026-11-08a";   // a new name on each publish makes devices re-download everything
 
 // Every file of the site. This list is regenerated on each publish.
 var FILES = [
@@ -36,6 +36,29 @@ var FILES = [
   "digestion-journey/pics/mouth.svg",
   "digestion-journey/pics/teeth.svg",
   "earth-seasons/index.html",
+  "flower-lab/index.html",
+  "flower-lab/photos/apple-blossom.jpg",
+  "flower-lab/photos/apple-bottom.jpg",
+  "flower-lab/photos/apple-tree.jpg",
+  "flower-lab/photos/apple-young.jpg",
+  "flower-lab/photos/cactus-flower.jpg",
+  "flower-lab/photos/cactus.jpg",
+  "flower-lab/photos/credits.json",
+  "flower-lab/photos/fern-spores.jpg",
+  "flower-lab/photos/fern.jpg",
+  "flower-lab/photos/grass-flower.jpg",
+  "flower-lab/photos/grass.jpg",
+  "flower-lab/photos/moss-capsules.jpg",
+  "flower-lab/photos/moss.jpg",
+  "flower-lab/photos/oak-catkins.jpg",
+  "flower-lab/photos/pea-flower.jpg",
+  "flower-lab/photos/pea-pod.jpg",
+  "flower-lab/photos/pine-cone.jpg",
+  "flower-lab/photos/pine.jpg",
+  "flower-lab/photos/sunflower-clue.jpg",
+  "flower-lab/photos/sunflower.jpg",
+  "flower-lab/photos/tomato-flower.jpg",
+  "flower-lab/photos/tomato-fruit.jpg",
   "forces-playground/index.html",
   "forces-playground/pics/boat.svg",
   "forces-playground/pics/book.svg",
@@ -48,6 +71,7 @@ var FILES = [
   "hub/thumbs/balanced-plate.jpg",
   "hub/thumbs/digestion-journey.jpg",
   "hub/thumbs/earth-seasons.jpg",
+  "hub/thumbs/flower-lab.jpg",
   "hub/thumbs/forces-playground.jpg",
   "hub/thumbs/particle-playground.jpg",
   "hub/thumbs/practice.jpg",
@@ -59,6 +83,7 @@ var FILES = [
   "practice/banks/diet.js",
   "practice/banks/digestion.js",
   "practice/banks/earth-space.js",
+  "practice/banks/flowers.js",
   "practice/banks/forces.js",
   "practice/banks/particles.js",
   "practice/banks/seeds.js",
