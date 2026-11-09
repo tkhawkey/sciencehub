@@ -153,11 +153,13 @@
   .ansrow { display: flex; align-items: center; gap: 8px; margin: 8px 0 4px; font-weight: 600; flex-wrap: wrap; }
   .wsmall { font-family: 'Fredoka', system-ui, sans-serif; font-size: 13px; font-weight: 600; fill: var(--ink); paint-order: stroke; stroke: #fff; stroke-width: 4px; stroke-linejoin: round; }
   /* ---------- Solution or mixture: the Solutions box sits inside the Mixtures box ---------- */
-  .nest { flex: none; height: 52%; min-height: 190px; border: 3px dashed #b7c3ea; border-radius: 22px; background: #fff; padding: 6px 8px; display: flex; flex-direction: column; gap: 4px; overflow-y: auto; cursor: pointer; }
+  /* The cards take only the room they need, and the boxes get the rest, so nothing is squeezed once the cards are sorted */
+  .mixwrap .pool { flex: 0 1 auto; max-height: 46%; }
+  .nest { flex: 1 1 auto; min-height: 190px; border: 3px dashed #b7c3ea; border-radius: 22px; background: #fff; padding: 6px 8px; display: flex; flex-direction: column; gap: 4px; overflow-y: auto; cursor: pointer; }
   .nest h3 { margin: 0; font-size: 18px; text-align: center; pointer-events: none; }
   .nest .bsub { text-align: center; font-size: 13.5px; color: var(--muted); font-weight: 600; pointer-events: none; }
   .nest .in { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; }
-  .nest .inner { flex: 1; min-height: 90px; margin: 2px auto 2px; width: min(70%, 420px); border: 3px dashed #8fd3b3; border-radius: 22px; background: #effbf5; padding: 6px; display: flex; flex-direction: column; gap: 4px; }
+  .nest .inner { flex: 1 0 auto; min-height: 90px; margin: 2px auto 2px; width: min(70%, 420px); border: 3px dashed #8fd3b3; border-radius: 22px; background: #effbf5; padding: 6px; display: flex; flex-direction: column; gap: 4px; }
   .nest.ready, .nest.ready .inner { border-color: var(--yellow); }
   .nest.over { border-style: solid; border-color: var(--green); background: #f7fff9; }
   .nest .inner.over { border-style: solid; border-color: var(--green); background: #d6f5e6; }
@@ -650,7 +652,7 @@ const MIX = {
     const card = x => `<button class="pcard${m.sel === x[0] ? ' sel' : ''}" data-drag="${x[0]}" aria-label="${x[1]}"><div class="ph">${jar(x, 70)}</div><span>${x[1]}</span></button>`;
     const mini = x => `<span class="mini"><span class="ph">${jar(x, 34)}</span>${x[1]}</span>`;
     return `<div class="lay-top"><span class="scaletag">${n} of ${MIXES.length} sorted</span><div class="readout">${m.sel ? 'Tap the box where it goes.' : 'Tap one, then tap its box. Or drag it.'}</div></div>
-      <div class="sortwrap"><div class="pool">${left.map(card).join('')}</div>
+      <div class="sortwrap mixwrap"><div class="pool">${left.map(card).join('')}</div>
         <div class="nest${m.sel ? ' ready' : ''}" data-drop="mix" role="button" aria-label="Mixtures that are not solutions"><h3>🥣 Mixtures</h3><div class="bsub">not solutions</div>
           <div class="in">${MIXES.filter(x => m.placed[x[0]] === 'mix').map(mini).join('')}</div>
           <div class="inner" data-drop="sol" role="button" aria-label="Solutions"><h3>🥤 Solutions</h3><div class="bsub">a special kind of mixture</div>
@@ -743,7 +745,7 @@ const FT = {
   setIv(k) { const t = state.ft; t.iv = k; t.beakers = FV[k].opts.map(() => fstart()); t.sel = 0; },
   // Pictures
   beakersG(w, h, top, narrow, show) {
-    const t = state.ft, n = FT.n(), cw = (w - 20) / n, bw = Math.min(cw * .6, (h - top) * .35), bh = bw * 1.1, base = top + (h - top) * .62, means = t.ran ? FT.means() : null;
+    const t = state.ft, n = FT.n(), cw = (w - 20) / n, bw = Math.min(cw * .6, (h - top) * .35), bh = bw * 1.1, base = top + (h - top) * .62, means = t.ran || show != null ? FT.means() : null;
     let o = `<rect y="${base}" width="${w}" height="${h - base}" fill="#c9a77c"/><rect y="${base}" width="${w}" height="6" fill="#a8835a"/>`;
     t.beakers.forEach((b, i) => {
       const cx = 10 + cw * (i + .5), on = t.step === 1 && t.sel === i, hot = +b.temp >= 40, lvl = { 50: .35, 100: .55, 200: .8 }[b.water];
@@ -828,9 +830,16 @@ const FT = {
   run() {
     const t = state.ft, me = FT.means(), end = Math.max(...me), t0 = performance.now();
     t.running = true; FT.clock = 0; render();
-    const tick = now => { FT.clock = (now - t0) / 3000 * end; if (state.view !== 'speed') { t.running = false; return; }
-      if (FT.clock < end) { renderStage(); requestAnimationFrame(tick); } else { t.running = false; t.ran = true; t.step = 6; render(); $('#drawer').scrollTop = 0; } };
-    requestAnimationFrame(tick);
+    // A plain timer, not an animation frame, so the stopwatches still finish if the page is in the background
+    clearInterval(FT.timer);
+    FT.timer = setInterval(() => {
+      FT.clock = (performance.now() - t0) / 3000 * end;
+      if (state.ft !== t || !t.running) { clearInterval(FT.timer); return; }
+      // Leaving the tab stops the stopwatches; coming back, you press Start again
+      if (state.view !== 'speed') { t.running = false; clearInterval(FT.timer); return; }
+      if (FT.clock < end) renderStage();
+      else { clearInterval(FT.timer); t.running = false; t.ran = true; t.step = 6; render(); $('#drawer').scrollTop = 0; }
+    }, 40);
   },
   drawer() {
     const t = state.ft, V = t.iv && FV[t.iv];
