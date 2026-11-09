@@ -82,7 +82,7 @@ window.BANKS.push({
   { type: 'cloze', prompt: 'Fill the gaps about dissolving.',
     text: 'When salt {dissolves} in water, it makes a {solution}. The salt particles spread out {between} the water particles.',
     extra: ['melts', 'disappears'],
-    explain: 'The salt has not disappeared. You could taste it, or evaporate the water to get it back.' },
+    explain: 'The salt has not disappeared. Evaporate the water and the salt is left behind.' },
 
   // ---------- True or false ----------
   { type: 'tf', prompt: 'True or false?',

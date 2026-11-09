@@ -1505,7 +1505,9 @@ const VIEWS = {
           ${PU.ORDER.map(id => { const S = PU.SAMPLES[id], p = u.pred[id]; return `<tr><td>${S[0]}</td><td>${S[3]}</td><td>${p ? 'pure' : 'not pure'} ${p === S[5] ? '✅' : '❌'}</td></tr>`; }).join('')}</table>
           <p class="muted">Your predictions: ${right} of 5 right.${u.reason ? ` Your reason: “${esc(u.reason)}”` : ''}</p>
           <ul class="facts">${PU.ORDER.map(id => `<li><b>${PU.SAMPLES[id][1]}:</b> ${PU.SAMPLES[id][4]}</li>`).join('')}</ul>
-          <div class="navrow" style="margin-top:8px"><button class="btn" data-act="preset">↺ Start again</button></div></div>`;
+          <div class="navrow" style="margin-top:8px"><button class="btn" data-act="preset">↺ Start again</button></div></div>
+        <div class="card"><h3>🧂 How do we get the salt back?</h3><p>Find out in Dissolving Lab's Separation station.</p>
+          <div class="navrow"><a class="btn primary" href="../dissolving-lab/index.html#view=sep&task=salt">⚗️ Go to the Separation station ▶</a></div></div>`;
     }
   },
   town: {

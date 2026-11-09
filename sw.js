@@ -4,7 +4,7 @@
    Afterwards the pages work without internet. When the device is online, pages are fetched from the website
    first, so updates reach children automatically. */
 
-var CACHE = "cis-science-2026-11-09a";   // a new name on each publish makes devices re-download everything
+var CACHE = "cis-science-2026-11-09b";   // a new name on each publish makes devices re-download everything
 
 // Every file of the site. This list is regenerated on each publish.
 var FILES = [
@@ -35,6 +35,7 @@ var FILES = [
   "digestion-journey/pics/body.svg",
   "digestion-journey/pics/mouth.svg",
   "digestion-journey/pics/teeth.svg",
+  "dissolving-lab/index.html",
   "earth-seasons/index.html",
   "flower-lab/index.html",
   "flower-lab/photos/apple-blossom.jpg",
@@ -72,6 +73,7 @@ var FILES = [
   "hub/thumbs/air-and-water.jpg",
   "hub/thumbs/balanced-plate.jpg",
   "hub/thumbs/digestion-journey.jpg",
+  "hub/thumbs/dissolving-lab.jpg",
   "hub/thumbs/earth-seasons.jpg",
   "hub/thumbs/flower-lab.jpg",
   "hub/thumbs/forces-playground.jpg",
@@ -84,6 +86,7 @@ var FILES = [
   "practice/banks/air-water.js",
   "practice/banks/diet.js",
   "practice/banks/digestion.js",
+  "practice/banks/dissolving.js",
   "practice/banks/earth-space.js",
   "practice/banks/flowers.js",
   "practice/banks/forces.js",

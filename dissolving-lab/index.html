@@ -1,0 +1,1368 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dissolving Lab</title>
+<meta name="description" content="What dissolves, and in which liquid? Where does it go? How can you make it dissolve faster, and how do you get it back? An interactive tool for Year 5 on dissolving and separating.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ================= Shared look (matches Seed Lab) ================= */
+  :root {
+    --ink: #1d2340; --muted: #5b6386; --soft: #eef2ff;
+    --yellow: #ffc83d; --blue: #3d7bff; --coral: #ff5f6d; --green: #22b07d; --orange: #f0892e; --grey: #8a93ad; --pink: #e85d9e;
+    --space: #070d24; --drawerW: 360px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: var(--space); color: var(--ink); font-family: 'Fredoka', system-ui, sans-serif; font-size: 17px; line-height: 1.35; -webkit-tap-highlight-color: transparent; }
+  body { display: flex; flex-direction: column; }
+  button, input, textarea { font: inherit; color: inherit; }
+  b { font-weight: 700; }
+  .btn { border: 0; border-radius: 14px; padding: 9px 14px; min-height: 44px; cursor: pointer; background: #fff; color: var(--ink); font-weight: 600; font-size: 16px; box-shadow: 0 3px 0 rgba(0,0,0,.18); }
+  .btn:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,.18); }
+  .btn.active { background: var(--yellow); }
+  .btn:focus-visible { outline: 3px solid var(--yellow); outline-offset: 2px; }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .btn.go { background: var(--green); color: #fff; font-size: 19px; flex: 1; }
+  .btn.primary { background: var(--green); color: #fff; }
+  a.btn { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
+  #drawer a.btn.go, #drawer a.btn.primary { color: #fff; }
+
+  /* ---------- Top bar ---------- */
+  .topbar { flex: none; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 8px 10px; background: rgba(7,13,36,.95); z-index: 15; }
+  .brand { color: #fff; font-size: 21px; font-weight: 700; margin-right: auto; white-space: nowrap; }
+  .hub-link { flex: none; display: grid; place-items: center; width: 38px; height: 38px; border-radius: 12px; text-decoration: none; font-size: 20px; background: rgba(255,255,255,.14); box-shadow: 0 3px 0 rgba(0,0,0,.25); transition: background .15s, transform .08s; }
+  .hub-link:hover { background: rgba(255,255,255,.26); }
+  .hub-link:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,.25); }
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+  .btn.missions { background: var(--blue); color: #fff; }
+  .tabs .btn { padding: 9px 10px; }
+  /* Seven tabs: their words go first, leaving the icons */
+  @media (max-width: 1399px) {
+    .topbar .long { display: none; }
+    .brand { font-size: 18px; }
+    .topbar, .tabs { gap: 4px; }
+    .tabs .btn { padding: 9px 8px; font-size: 14.5px; }
+  }
+  @media (max-width: 1180px) { .tl { display: none; } .tabs .btn { font-size: 20px; padding: 6px 9px; } }
+
+  /* ---------- Main area: stage on the left, drawer on the right ---------- */
+  main { position: relative; flex: 1; min-height: 0; }
+  #stage { position: absolute; top: 0; bottom: 0; left: 0; right: var(--drawerW); overflow: hidden; background: #eef4fb; display: flex; align-items: center; justify-content: center; }
+  #stage > svg { width: 100%; height: 100%; display: block; touch-action: none; user-select: none; -webkit-user-select: none; }
+  #drawer { position: absolute; top: 0; right: 0; bottom: 0; width: var(--drawerW); background: #dfe6ff; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+  .card { background: #fff; border-radius: 16px; padding: 12px 14px; }
+  .card h2 { margin: 0 0 4px; font-size: 21px; line-height: 1.2; }
+  .card h3 { margin: 0 0 6px; font-size: 17px; }
+  .card p { margin: 4px 0; }
+  .muted { color: var(--muted); font-size: 14.5px; }
+  .term { background: #fff3c4; border-radius: 6px; padding: 0 4px; font-weight: 600; }
+  .navrow { display: flex; gap: 8px; flex-wrap: wrap; }
+  .opt { border: 2px solid #d3dbf7; background: #fff; border-radius: 12px; padding: 6px 10px; min-height: 44px; font-weight: 600; font-size: 15px; cursor: pointer; }
+  .opt.on { background: var(--yellow); border-color: #e0a800; }
+  .opt.wrong { background: #ffe0e3; border-color: var(--coral); }
+  .opt.done, .opt.done:disabled { background: #c9f2df; border-color: var(--green); opacity: 1; }
+  .opt:disabled { opacity: .45; cursor: default; }
+  .opt.sm { font-size: 14px; padding: 4px 8px; }
+  .stops { display: flex; flex-wrap: wrap; gap: 6px; }
+  .spot { background: #fff3c4; border-radius: 12px; padding: 8px 10px; margin-top: 6px !important; }
+  .job { font-size: 16px; background: #c9f2df; border-radius: 12px; padding: 8px 10px; }
+  .says { border: 3px solid var(--yellow); }
+  .says.good { border-color: var(--green); background: #effbf5; }
+  .says ul { margin: 6px 0 0; padding-left: 20px; }
+  .wq .opt { display: block; width: 100%; text-align: left; margin-top: 6px; }
+  .checkbar { position: sticky; bottom: -10px; z-index: 2; display: flex; margin: 0 -10px; padding: 6px 10px 10px; background: #dfe6ff; }
+  .slide { display: flex; align-items: center; gap: 8px; margin: 6px 0; }
+  .slide input[type=range] { flex: 1; min-height: 44px; accent-color: var(--coral); }
+  .lay-top { position: absolute; top: 8px; left: 10px; right: 10px; display: flex; gap: 8px; align-items: flex-start; flex-wrap: wrap; pointer-events: none; z-index: 2; }
+  .scaletag { background: var(--blue); color: #fff; font-weight: 700; border-radius: 10px; padding: 5px 10px; font-size: 15px; white-space: nowrap; }
+  .readout { background: #fff; border-radius: 12px; padding: 5px 10px; font-size: 15px; line-height: 1.3; box-shadow: 0 3px 8px rgba(0,0,0,.12); }
+  .tapme { cursor: pointer; }
+  .icons { list-style: none; padding: 0; margin: 0 0 14px; }
+  .icons li { display: flex; gap: 10px; padding: 6px 0; line-height: 1.35; }
+  .icons .em { font-size: 24px; width: 32px; flex: none; text-align: center; }
+  .linkbtn { border: 0; background: none; color: var(--blue); font-weight: 600; cursor: pointer; padding: 4px 0; font-size: 15px; min-height: 32px; }
+  a.linkbtn { display: inline-flex; align-items: center; text-decoration: none; }
+
+  /* ---------- Chips: tap one, then tap where it goes – or drag it there ---------- */
+  .chip { display: inline-flex; align-items: center; justify-content: center; gap: 4px; border: 2px solid #d3dbf7; background: #fff; border-radius: 12px; padding: 4px 12px; min-height: 44px; font-weight: 600; font-size: 15px; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
+  .chip.sel { background: var(--yellow); border-color: #e0a800; }
+  .chip-ghost { position: fixed; z-index: 30; pointer-events: none; transform: translate(-50%, -50%) rotate(-3deg); box-shadow: 0 8px 18px rgba(0,0,0,.3); opacity: .95; }
+  .bank { display: flex; flex-wrap: wrap; gap: 6px; }
+  .bank:empty::before { content: 'All placed!'; color: var(--muted); font-size: 15px; }
+  .mrow { display: flex; align-items: center; gap: 8px; margin: 6px 0; }
+  .mrow > span { flex: 1; font-size: 15px; line-height: 1.25; }
+  .mslot { flex: none; width: 118px; min-height: 44px; border: 2px dashed #b7c3ea; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; background: #f7f9ff; cursor: pointer; text-align: center; padding: 2px 4px; }
+  .mslot.ready { border-color: #e0a800; background: #fffbea; }
+  .mslot.over { border-style: solid; border-color: var(--green); }
+  .mslot.ok { border-style: solid; border-color: var(--green); background: #c9f2df; cursor: default; }
+  .mslot.bad { border-style: solid; border-color: var(--coral); background: #ffe0e3; }
+  svg .slot.over rect { stroke: var(--green); stroke-width: 4; }
+  svg .slot.ready rect { stroke: #e0a800; }
+
+  /* ---------- Sorting into two boxes ---------- */
+  .sortwrap { position: absolute; inset: 0; display: flex; flex-direction: column; gap: 8px; padding: 50px 8px 8px; }
+  .pool { flex: 1; min-height: 0; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; align-content: start; grid-auto-rows: max-content; padding: 4px; }
+  .pcard { position: relative; display: flex; flex-direction: column; border: 3px solid #fff; background: #fff; border-radius: 14px; padding: 0; overflow: hidden; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; font-weight: 700; font-size: 15px; box-shadow: 0 3px 0 rgba(0,0,0,.12); text-align: center; }
+  .pcard img, .pcard .ph { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; display: block; pointer-events: none; }
+  .pcard .ph { display: grid; place-items: center; font-size: 46px; background: #e6f3e0; }
+  .pcard .ph svg { width: 60%; height: auto; }
+  .pcard > span { padding: 4px 6px; }
+  .pcard.sel { border-color: var(--yellow); box-shadow: 0 0 0 3px var(--yellow); }
+  .pcard.look { border-color: var(--blue); }
+  .bins { flex: none; height: 40%; min-height: 130px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .bin { border: 3px dashed #b7c3ea; border-radius: 16px; background: #fff; padding: 6px; display: flex; flex-direction: column; gap: 4px; overflow-y: auto; cursor: pointer; }
+  .bin h3 { margin: 0; font-size: 18px; text-align: center; pointer-events: none; }
+  .bin .bsub { text-align: center; font-size: 13.5px; color: var(--muted); font-weight: 600; pointer-events: none; }
+  .bin.ready { border-color: var(--yellow); background: #fffbea; }
+  .bin.over { border-style: solid; border-color: var(--green); background: #effbf5; }
+  .bin .in { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; }
+  .mini { width: 66px; display: flex; flex-direction: column; align-items: center; font-size: 12px; font-weight: 600; text-align: center; line-height: 1.1; pointer-events: none; }
+  .mini img, .mini .ph { width: 58px; height: 44px; object-fit: cover; border-radius: 8px; display: grid; place-items: center; font-size: 28px; background: #e6f3e0; }
+  .mini .ph svg { width: 34px; height: 34px; }
+  .photo { position: relative; border-radius: 14px; overflow: hidden; background: #e6f3e0; }
+  .photo img { width: 100%; display: block; }
+  .photo .ph { display: grid; place-items: center; font-size: 80px; aspect-ratio: 4 / 3; }
+  .pcard .credit, .mini .credit { display: none; }
+  .credit { position: absolute; right: 6px; bottom: 6px; background: rgba(0,0,0,.55); color: #fff; font-size: 11px; padding: 2px 6px; border-radius: 6px; max-width: calc(100% - 12px); }
+
+  /* ---------- The fair test (as in Seed Lab) ---------- */
+  .steps { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
+  .steps span { font-size: 12.5px; font-weight: 700; padding: 3px 8px; border-radius: 10px; background: var(--soft); color: var(--muted); }
+  .steps span.now { background: var(--yellow); color: var(--ink); }
+  .steps span.done { background: #c9f2df; color: #147a55; }
+  .varrow { margin: 8px 0; }
+  .varrow > span { display: block; font-weight: 700; font-size: 14.5px; margin-bottom: 4px; }
+  .tag { background: var(--yellow); border-radius: 8px; padding: 1px 6px; font-size: 12px; }
+  .keeps { display: grid; gap: 4px; margin-top: 6px; }
+  .keep { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 4px 8px; border-radius: 10px; background: var(--soft); font-size: 15px; cursor: pointer; }
+  .keep input { width: 22px; height: 22px; flex: none; accent-color: var(--green); }
+  ul.spot { padding-left: 28px; }
+  .seedcards { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 6px; }
+  .seedcard { display: flex; flex-direction: column; align-items: center; gap: 2px; border: 2px solid #d3dbf7; background: #fff; border-radius: 12px; padding: 6px 4px; min-height: 44px; font-weight: 600; font-size: 13.5px; line-height: 1.15; cursor: pointer; text-align: center; }
+  .seedcard.sel { background: var(--yellow); border-color: #e0a800; }
+  .seedcard:disabled { opacity: .6; cursor: default; }
+  .gtable { width: 100%; border-collapse: collapse; font-size: 15px; margin: 6px 0; }
+  .gtable th { text-align: left; font-size: 13.5px; color: var(--muted); padding: 2px 4px; }
+  .gtable td { border-top: 1px solid #e1e6f5; padding: 5px 4px; }
+  .numin { width: 90px; min-height: 44px; font-size: 20px; text-align: center; border: 2px solid #c3cdf2; border-radius: 12px; padding: 4px; background: #fff; }
+  .numin:focus { outline: 3px solid var(--yellow); border-color: #e0a800; }
+  .numin.ok { border-color: var(--green); background: #effbf5; }
+  .ansrow { display: flex; align-items: center; gap: 8px; margin: 8px 0 4px; font-weight: 600; flex-wrap: wrap; }
+  .wsmall { font-family: 'Fredoka', system-ui, sans-serif; font-size: 13px; font-weight: 600; fill: var(--ink); paint-order: stroke; stroke: #fff; stroke-width: 4px; stroke-linejoin: round; }
+  /* ---------- Solution or mixture: the Solutions box sits inside the Mixtures box ---------- */
+  .nest { flex: none; height: 52%; min-height: 190px; border: 3px dashed #b7c3ea; border-radius: 22px; background: #fff; padding: 6px 8px; display: flex; flex-direction: column; gap: 4px; overflow-y: auto; cursor: pointer; }
+  .nest h3 { margin: 0; font-size: 18px; text-align: center; pointer-events: none; }
+  .nest .bsub { text-align: center; font-size: 13.5px; color: var(--muted); font-weight: 600; pointer-events: none; }
+  .nest .in { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; }
+  .nest .inner { flex: 1; min-height: 90px; margin: 2px auto 2px; width: min(70%, 420px); border: 3px dashed #8fd3b3; border-radius: 22px; background: #effbf5; padding: 6px; display: flex; flex-direction: column; gap: 4px; }
+  .nest.ready, .nest.ready .inner { border-color: var(--yellow); }
+  .nest.over { border-style: solid; border-color: var(--green); background: #f7fff9; }
+  .nest .inner.over { border-style: solid; border-color: var(--green); background: #d6f5e6; }
+  @media (max-width: 760px) { .nest { min-height: 150px; } .nest h3 { font-size: 14px; } .nest .bsub { display: none; } .nest .inner { width: 80%; min-height: 70px; } .wsmall { font-size: 11px; } }
+
+  /* ---------- Pictures drawn on the stage ---------- */
+  .glabel { font-family: 'Fredoka', system-ui, sans-serif; font-size: 16px; font-weight: 700; fill: var(--ink); }
+  .gsmall { font-family: 'Fredoka', system-ui, sans-serif; font-size: 13px; font-weight: 600; fill: var(--muted); }
+  .part:hover > path, .part:hover > ellipse { filter: brightness(1.08); }
+  .bob { animation: bob 1.4s ease-in-out infinite alternate; }
+  @keyframes bob { to { transform: translateY(-8px); } }
+  .puff { animation: puff 1.6s ease-out infinite; }
+  @keyframes puff { from { opacity: 1; transform: translate(0, 0); } to { opacity: 0; transform: translate(var(--dx), var(--dy)); } }
+  .glow { animation: glow 1.2s ease-in-out infinite alternate; }
+  @keyframes glow { from { opacity: .35; } to { opacity: .9; } }
+  .scent { animation: rise 2.4s ease-in infinite; }
+  @keyframes rise { from { transform: translateY(0); opacity: 0; } 20% { opacity: .9; } to { transform: translateY(-40px); opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { .bob, .puff, .glow, .scent { animation: none; } }
+
+  /* ---------- Missions and pop-ups ---------- */
+  .banner { position: absolute; top: 10px; right: 10px; width: calc(var(--drawerW) - 20px); z-index: 6; background: #fff; border: 3px solid var(--yellow); border-radius: 16px; padding: 9px 44px 9px 14px; box-shadow: 0 6px 16px rgba(0,0,0,.18); }
+  .banner.hidden { display: none; }
+  .banner .kicker { font-size: 12.5px; font-weight: 700; color: var(--blue); text-transform: uppercase; letter-spacing: .04em; }
+  .banner .close { position: absolute; top: 6px; right: 6px; border: 0; background: var(--soft); border-radius: 50%; width: 32px; height: 32px; cursor: pointer; }
+  .banner .hint { margin-top: 4px; color: var(--muted); font-size: 15px; }
+  .banner .hint.hidden { display: none; }
+  .modal { position: fixed; inset: 0; background: rgba(5,10,30,.6); display: flex; align-items: center; justify-content: center; z-index: 20; padding: 16px; }
+  .modal.hidden { display: none; }
+  .modal-box { position: relative; background: #fff; border-radius: 24px; padding: 20px; width: min(580px, 100%); max-height: calc(100vh - 32px); overflow-y: auto; }
+  .modal-box h2 { margin: 0 0 8px; font-size: 25px; }
+  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+  .mission-list { display: grid; gap: 8px; margin-bottom: 14px; }
+  .mission-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; min-height: 52px; border-radius: 16px; background: var(--soft); border: 0; text-align: left; cursor: pointer; font-size: 16px; }
+  .mission-item .em { font-size: 25px; } .mission-item .t { flex: 1; font-weight: 600; }
+  .mission-item .star { font-size: 21px; filter: grayscale(1); opacity: .35; }
+  .mission-item.done .star { filter: none; opacity: 1; }
+  .core { background: var(--yellow); color: var(--ink); border-radius: 8px; padding: 1px 7px; font-size: 12.5px; font-weight: 700; white-space: nowrap; }
+  .win-emoji { font-size: 56px; text-align: center; }
+  .win-text { font-size: 17.5px; line-height: 1.5; margin-bottom: 14px; }
+  .confetti { position: fixed; top: -40px; font-size: 26px; z-index: 40; pointer-events: none; animation: fall linear forwards; }
+  @keyframes fall { to { transform: translateY(110vh) rotate(540deg); } }
+  .modal-x {
+    position: sticky; top: 0; float: right; z-index: 2;
+    width: 52px; height: 52px; margin: -6px -6px 6px 12px; padding: 0;
+    border: 0; border-radius: 50%; cursor: pointer;
+    background: var(--coral); color: #fff; font-size: 26px; font-weight: 700; line-height: 1;
+    display: grid; place-items: center; box-shadow: 0 3px 0 rgba(0,0,0,.2);
+    transition: transform .08s, filter .15s;
+  }
+  .modal-x:hover { filter: brightness(1.08); }
+  .modal-x:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,.2); }
+  .modal-x:focus-visible { outline: 3px solid var(--yellow); outline-offset: 2px; }
+  .science { background: #fff6d6; border: 3px solid var(--yellow); border-radius: 16px; padding: 10px 14px; margin: 8px 0; }
+  .science > b:first-child { display: block; font-size: 14px; text-transform: uppercase; letter-spacing: .04em; color: #8a5a00; margin-bottom: 2px; }
+  .seelab { display: flex; align-items: center; gap: 8px; background: #e7f7ee; border-radius: 12px; padding: 8px 10px; font-weight: 600; color: #0b6644; text-decoration: none; min-height: 44px; }
+  .help-body h3 { margin: 12px 0 4px; font-size: 17px; }
+  .help-body p { margin: 4px 0; line-height: 1.4; }
+  .help-body ol { margin: 4px 0; padding-left: 24px; line-height: 1.4; }
+  .help-body ol li { margin: 3px 0; }
+  .help-body .welcome { font-weight: 700; color: var(--blue); }
+  details.teach { margin: 12px 0; font-size: 13px; color: var(--muted); }
+  details.teach summary { cursor: pointer; font-weight: 600; min-height: 32px; }
+  details.teach p { margin: 4px 0; }
+  details.teach h4 { margin: 8px 0 2px; font-size: 13px; color: var(--ink); }
+
+  /* ---------- Narrow screens: stage on top, drawer below ---------- */
+  @media (max-width: 760px) {
+    :root { --drawerW: 0px; }
+    #stage { bottom: 42%; right: 0; }
+    #drawer { top: 58%; width: 100%; }
+    .banner { top: calc(58% + 8px); left: 8px; right: 8px; width: auto; }
+    .brand { font-size: 17px; }
+    .topbar > .btn { padding: 5px 7px; }
+    .brand { font-size: 15px; white-space: normal; line-height: 1.05; max-width: 82px; }
+    /* The seven tabs get a row of their own, under the title and buttons */
+    .tabs { order: 9; width: 100%; justify-content: space-between; gap: 3px; }
+    .tabs .btn { flex: 1; font-size: 18px; padding: 4px 0; min-height: 40px; }
+    .readout, .scaletag { font-size: 13px; padding: 3px 7px; }
+    .glabel { font-size: 12px; } .gsmall { font-size: 10.5px; }
+    .sortwrap { padding-top: 40px; gap: 5px; }
+    .pool { grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); gap: 5px; }
+    .pcard { font-size: 12px; } .pcard .ph { font-size: 30px; }
+    .bins { min-height: 100px; gap: 5px; }
+    .bin h3 { font-size: 14px; } .bin .bsub { display: none; }
+    .mini { width: 46px; font-size: 10px; } .mini img, .mini .ph { width: 42px; height: 32px; font-size: 20px; }
+    .mslot { width: 96px; font-size: 14px; }
+  }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a class="hub-link" href="../index.html" title="Back to the Science Hub" aria-label="Back to the Science Hub">🏠</a>
+  <div class="brand">🧂 Dissolving Lab</div>
+  <div class="tabs" id="tabs"></div>
+  <button class="btn missions" data-act="missions" title="Missions">🚀 <span class="long">Missions </span><span id="starCount"></span></button>
+  <button class="btn" data-act="words" title="Key words">📖<span class="long"> Words</span></button>
+  <button class="btn" data-act="model" title="How is this model different from real life?">🤔<span class="long"> Real life?</span></button>
+  <button class="btn" id="helpBtn" data-act="help" aria-label="How to use">❓</button>
+</div>
+<main>
+  <div id="stage"></div>
+  <div id="drawer"></div>
+  <div id="banner" class="banner hidden" role="status">
+    <div class="kicker" id="bannerKicker"></div>
+    <div id="bannerText"></div>
+    <button class="linkbtn" data-act="hint" id="hintBtn">💡 Show a hint</button>
+    <div class="hint hidden" id="bannerHint"></div>
+    <button class="close" data-act="stopMission" aria-label="Stop this mission">✖</button>
+  </div>
+</main>
+<div id="missionsModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="missionsTitle">
+  <div class="modal-box">
+    <button class="modal-x" data-act="closeModals" aria-label="Close">✕</button>
+    <h2 id="missionsTitle">🚀 Missions</h2>
+    <p class="muted" style="margin-top:-4px">Short of time? Start with the <span class="core">⏱ Lesson</span> missions.</p>
+    <div class="mission-list" id="missionList"></div>
+    <div class="modal-actions"><button class="btn" data-act="resetStars">Reset stars</button><button class="btn primary" data-act="closeModals">Close</button></div>
+  </div>
+</div>
+<div id="modelModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modelTitle">
+  <div class="modal-box">
+    <button class="modal-x" data-act="closeModals" aria-label="Close">✕</button>
+    <h2 id="modelTitle">🤔 How is this model different from real life?</h2>
+    <p class="muted" id="modelTab" style="margin:-4px 0 8px;font-weight:600"></p>
+    <p style="margin-top:0">A <span class="term">model</span> shows some important features of something real – but not everything.</p>
+    <ul class="icons" id="modelList"></ul>
+    <div class="modal-actions"><button class="btn primary" data-act="closeModals">Got it!</button></div>
+  </div>
+</div>
+<div id="wordsModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="wordsTitle">
+  <div class="modal-box">
+    <button class="modal-x" data-act="closeModals" aria-label="Close">✕</button>
+    <h2 id="wordsTitle">📖 Key words</h2>
+    <ul class="icons" id="wordsList"></ul>
+    <div class="modal-actions"><button class="btn primary" data-act="closeModals">Got it!</button></div>
+  </div>
+</div>
+<div id="winModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="winTitle">
+  <div class="modal-box">
+    <button class="modal-x" data-act="closeModals" aria-label="Close">✕</button>
+    <div class="win-emoji">⭐</div>
+    <h2 id="winTitle" style="text-align:center">Mission complete!</h2>
+    <div class="win-text" id="winText"></div>
+    <div class="modal-actions"><button class="btn" data-act="closeModals">Keep exploring</button><a class="btn primary" id="winPractise" href="../practice/index.html#dissolving">✏️ Practise this</a><button class="btn primary" id="winNext" data-act="nextMission">Next mission ▶</button></div>
+  </div>
+</div>
+<div id="helpModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+  <div class="modal-box">
+    <button class="modal-x" data-act="closeModals" aria-label="Close">✕</button>
+    <div class="help-body" id="helpBody"></div>
+    <div class="modal-actions"><a class="btn" href="../practice/index.html#dissolving">✏️ Practise this</a><button class="btn primary" data-act="closeModals">Let's go! 🚀</button></div>
+  </div>
+</div>
+
+<script>
+// ================= Utilities =================
+const $ = (s, r = document) => r.querySelector(s);
+// Saved progress; private windows can block storage, so failures are ignored
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+};
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+const stageSize = () => { const st = $('#stage'), w = st.clientWidth || 900, h = st.clientHeight || 600; return { w, h, narrow: w < 560 }; };
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+const mix = (c1, c2, t) => { const p = c => [1, 3, 5].map(k => parseInt(c.slice(k, k + 2), 16)), a = p(c1), b = p(c2);
+  return '#' + a.map((v, k) => Math.round(v + (b[k] - v) * clamp(t)).toString(16).padStart(2, '0')).join(''); };
+const lc = t => t[0].toLowerCase() + t.slice(1);
+const cap = t => t[0].toUpperCase() + t.slice(1);
+// A question with choices: wrong ones turn red and stay disabled, the right one turns green
+const choices = (act, opts, chosen, wrongs, right) => opts.map(([v, t]) => `<button class="opt${chosen === v && v === right ? ' done' : wrongs.includes(v) ? ' wrong' : ''}" data-act="${act}" data-v="${v}"${wrongs.includes(v) || chosen === right ? ' disabled' : ''}>${t}</button>`).join('');
+// A prediction: no right or wrong yet, just the child's choice
+const predict = (act, opts, chosen) => opts.map(([v, t]) => `<button class="opt${chosen === v ? ' on' : ''}" data-act="${act}" data-v="${v}"${chosen ? ' disabled' : ''}>${t}</button>`).join('');
+
+// ================= Drag or tap =================
+// Anything with data-drag can be picked up; anything with data-drop can take it.
+// A tap picks it up (the view's pick), a second tap on a drop place puts it there (the view's drop).
+// Dragging does the same in one go.
+const DND = { start: null, ghost: null, over: null, skipClick: false };
+document.addEventListener('pointerdown', e => {
+  const el = e.target.closest('[data-drag]');
+  if (!el || e.button > 0 || el.matches(':disabled')) return;
+  DND.start = { el, id: el.dataset.drag, x: e.clientX, y: e.clientY, moved: false };
+});
+document.addEventListener('pointermove', e => {
+  const d = DND.start; if (!d) return;
+  if (!d.moved) {
+    if (Math.hypot(e.clientX - d.x, e.clientY - d.y) < 10) return;
+    d.moved = true;
+    const v = VIEWS[state.view], html = v.ghost && v.ghost(d.id);
+    let g;
+    if (html) { g = document.createElement('div'); g.className = 'chip'; g.innerHTML = html; }
+    else { g = d.el.cloneNode(true); g.style.width = d.el.offsetWidth + 'px'; }
+    g.classList.add('chip-ghost'); g.removeAttribute('data-drag');
+    document.body.appendChild(g); DND.ghost = g;
+  }
+  DND.ghost.style.left = e.clientX + 'px'; DND.ghost.style.top = e.clientY + 'px';
+  const over = document.elementFromPoint(e.clientX, e.clientY)?.closest('[data-drop]');
+  if (over !== DND.over) { DND.over?.classList.remove('over'); over?.classList.add('over'); DND.over = over; }
+});
+function endDrag(e) {
+  const d = DND.start; DND.start = null;
+  if (!d || !d.moved) return;
+  DND.ghost?.remove(); DND.ghost = null; DND.over?.classList.remove('over'); DND.over = null;
+  DND.skipClick = true; setTimeout(() => DND.skipClick = false, 0);
+  const over = e && document.elementFromPoint(e.clientX, e.clientY)?.closest('[data-drop]');
+  const v = VIEWS[state.view];
+  if (over && v.drop) v.drop(d.id, over.dataset.drop);
+}
+document.addEventListener('pointerup', endDrag);
+document.addEventListener('pointercancel', () => endDrag(null));
+
+
+// A repeatable random number generator, so the same picture comes back every time (from Particle Playground)
+function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+
+// ================= Particles (copied from Particle Playground) =================
+// Particles drawn inside a round close-up, in one of three arrangements.
+// kind: 'solid' (a neat pattern), 'open' (a pattern with more space, like ice), 'liquid' (close, no pattern), 'gas' (far apart).
+// mix: { n, col } adds n smaller particles of a second substance in the gaps between the others (a solution).
+// Every particle of the first substance stays where it was.
+function zoomCircle(cx, cy, R, kind, col, extra = '', mix = null) {
+  const id = 'z' + (zoomCircle.n = (zoomCircle.n || 0) + 1), r = R / 7, pts = [], gapsAt = [], g = rng(Math.round(cx + cy));
+  if (kind === 'gas') for (let i = 0; i < 7; i++) { const a = i * 2.4 + 0.5, d = R * (.25 + .5 * ((i * 37) % 10) / 10); pts.push([cx + Math.cos(a) * d, cy + Math.sin(a) * d]); }
+  else {
+    const gap = kind === 'open' ? 2.5 : kind === 'liquid' ? 2.25 : 2.05;
+    for (let row = -4; row <= 4; row++) for (let col = -5; col <= 5; col++) {
+      let x = cx + (col + (row & 1) * .5) * gap * r, y = cy + row * gap * r * .87;
+      if (kind === 'liquid') { x += (g() - .5) * r * .32; y += (g() - .5) * r * .32; }
+      if (Math.hypot(x - cx, y - cy) < R - r * .6) pts.push([x, y]);
+      // The middle of each triangle of neighbouring particles: a gap where a dissolved particle can fit
+      const gx = cx + (col + .5 + (row & 1) * .5) * gap * r, gy = cy + (row + 1 / 3) * gap * r * .87;
+      if (Math.hypot(gx - cx, gy - cy) < R - r) gapsAt.push([gx, gy, (Math.sin(row * 7.1 + col * 3.7) * 43758.5453 % 1 + 1) % 1]);
+    }
+  }
+  return `<clipPath id="${id}"><circle cx="${cx}" cy="${cy}" r="${R}"/></clipPath><circle cx="${cx}" cy="${cy}" r="${R}" fill="#fff" stroke="#8a93ad" stroke-width="3"/>`
+    + `<g clip-path="url(#${id})">${pts.map(([x, y]) => `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(r * .92).toFixed(1)}" fill="${col}" stroke="rgba(0,0,0,.25)"/>`).join('')}`
+    + (mix ? gapsAt.sort((a, b) => a[2] - b[2]).slice(0, mix.n).map(([x, y]) => `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(r * .5).toFixed(1)}" fill="${mix.col}" stroke="rgba(0,0,0,.6)" stroke-width="2"/>`).join('') : '')
+    + `${extra}</g>`;
+}
+const zoomLabel = (cx, y, txt) => `<text x="${cx}" y="${y}" text-anchor="middle" class="wsmall">${txt}</text>`;
+// A clump of solid particles that has not dissolved, packed together in a close-up of radius R.
+// at: 'bottom' (sunk), 'spread' (small bits floating, as in cloudy water), 'top' (waiting on the surface)
+function clump(cx, cy, R, col, at = 'bottom') {
+  const pr = R / 7 * .92, rr = rng(7);
+  if (at === 'spread') return [[-.45, -.4], [.35, -.2], [-.1, .25], [.5, .45], [-.55, .4]].map(([a, b]) =>
+    [[0, 0], [1.9, 0], [.95, -1.6]].map(([dx, dy]) => `<circle cx="${(cx + a * R + dx * pr).toFixed(1)}" cy="${(cy + b * R + dy * pr).toFixed(1)}" r="${pr.toFixed(1)}" fill="${col}" stroke="rgba(0,0,0,.45)" stroke-width="1.5"/>`).join('')).join('');
+  const y0 = at === 'top' ? cy - R * .55 : cy + R * .78, dir = at === 'top' ? 1 : -1;
+  return `<rect x="${cx - R}" y="${at === 'top' ? cy - R : y0 - pr * 4.6}" width="${2 * R}" height="${at === 'top' ? y0 - cy + R + pr * 4.6 : R * 2}" fill="#fff"/>`
+    + [0, 1, 2].map(rw => Array.from({ length: 8 }, (_, k) => `<circle cx="${(cx - R * .78 + pr + k * pr * 2.05 + (rw & 1) * pr + (rr() - .5) * .3).toFixed(1)}" cy="${(y0 + dir * rw * pr * 1.8).toFixed(1)}" r="${pr.toFixed(1)}" fill="${col}" stroke="rgba(0,0,0,.45)" stroke-width="1.5"/>`).join('')).join('');
+}
+
+// ================= The substances =================
+// Solids: [name, emoji, colour of its grains and particles, dissolves in water?, dissolves in oil?]
+const SOLIDS = {
+  salt: ['Salt', '🧂', '#f4f4f4', true, false],
+  sugar: ['Sugar', '🍬', '#ffe7a3', true, false],
+  sand: ['Sand', '🏖️', '#d9b26f', false, false],
+  chalk: ['Chalk', '🖍️', '#fbfbf6', false, false],
+  coffee: ['Instant coffee', '☕', '#7a4a2a', true, false]
+};
+const SORDER = ['salt', 'sugar', 'sand', 'chalk', 'coffee'];
+// Liquids: [name, emoji, colour in the beaker, colour of its particles]
+const LIQUIDS = { water: ['Water', '💧', '#bfe3ff', '#7fb2ff'], oil: ['Cooking oil', '🫒', '#f6dc7a', '#f2c94c'] };
+const KEYWORDS = [
+  ['🧂', 'solute', 'the solid that dissolves'],
+  ['💧', 'solvent', 'the liquid it dissolves in'],
+  ['🥤', 'solution', 'the see-through liquid you get when a solid dissolves'],
+  ['🌀', 'dissolve', 'when a solid breaks up into tiny particles that spread out in a liquid'],
+  ['🥣', 'mixture', 'two or more things mixed together that can be separated again'],
+  ['🔁', 'reversible', 'can be changed back']
+];
+
+// ================= Drawings =================
+// A glass beaker on the bench. o: liq (liquid colour), lvl (how full, 0–1), tint (a solution's colour), cloud (0–1, cloudy),
+// sed {col, h} (a layer settled at the bottom), grains {col, n} (crystals lying at the bottom), layer {col, h} (a liquid floating on top)
+function beakerG(cx, base, bw, bh, o = {}) {
+  const x0 = cx - bw / 2, top = base - bh, lvl = base - bh * (o.lvl ?? .72), rr = rng(Math.round(cx * 3 + base));
+  let g = '';
+  if (o.liq) {
+    g += `<rect x="${x0}" y="${lvl}" width="${bw}" height="${base - lvl}" fill="${o.liq}" opacity=".9"/>`;
+    if (o.tint) g += `<rect x="${x0}" y="${lvl}" width="${bw}" height="${base - lvl}" fill="${o.tint}" opacity=".55"/>`;
+    // A solution is see-through: lines behind the beaker show through it
+    if (!o.cloud) g += [.3, .55, .8].map(f => `<path d="M${x0 + 8} ${lvl + (base - lvl) * f} H${x0 + bw - 8}" stroke="#fff" stroke-width="2" opacity=".55"/>`).join('');
+    if (o.cloud) g += `<rect x="${x0}" y="${lvl}" width="${bw}" height="${base - lvl}" fill="#f4f4ee" opacity="${(o.cloud * .8).toFixed(2)}"/>`;
+    if (o.layer) g += `<rect x="${x0}" y="${lvl}" width="${bw}" height="${bh * o.layer.h}" fill="${o.layer.col}" opacity=".95"/><path d="M${x0} ${lvl + bh * o.layer.h} H${x0 + bw}" stroke="rgba(0,0,0,.2)"/>`;
+    g += `<path d="M${x0} ${lvl} H${x0 + bw}" stroke="rgba(0,0,0,.18)" stroke-width="2"/>`;
+  }
+  if (o.sed) { const sh = bh * o.sed.h;
+    g += `<path d="M${x0} ${base} V${base - sh * .8} Q${cx} ${base - sh * 1.2} ${x0 + bw} ${base - sh * .8} V${base}Z" fill="${o.sed.col}"/>` + Array.from({ length: 24 }, () => `<circle cx="${(x0 + 4 + rr() * (bw - 8)).toFixed(1)}" cy="${(base - 2 - rr() * sh * .7).toFixed(1)}" r="1.5" fill="rgba(0,0,0,.25)"/>`).join(''); }
+  if (o.grains) g += Array.from({ length: o.grains.n }, (_, k) => { const x = x0 + 6 + rr() * (bw - 12), y = base - 3 - rr() * Math.min(10, 2 + o.grains.n / 6); return `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="4.5" height="4.5" fill="${o.grains.col}" stroke="rgba(0,0,0,.35)" stroke-width=".8" transform="rotate(${(k * 37) % 90} ${x.toFixed(1)} ${y.toFixed(1)})"/>`; }).join('');
+  // The glass, with a lip and a few measuring marks
+  g += `<path d="M${x0 - 4} ${top} L${x0} ${top + 6} V${base} H${x0 + bw} V${top + 6} L${x0 + bw + 4} ${top}" fill="none" stroke="#7d8db0" stroke-width="3" stroke-linejoin="round"/>`;
+  g += [.25, .5, .75].map(f => `<path d="M${x0 + bw} ${base - bh * f} h-${bw * .12}" stroke="#7d8db0" stroke-width="1.5"/>`).join('');
+  return g;
+}
+// A spoonful of a solid, held above a beaker
+const spoonG = (x, y, col, s = 1) => `<g transform="translate(${x} ${y}) scale(${s})"><path d="M-70 -8 L-12 0" stroke="#9aa6c7" stroke-width="6" stroke-linecap="round"/><ellipse cx="12" cy="2" rx="26" ry="11" fill="#c9d0e4" stroke="#8a93ad" stroke-width="2"/>
+  ${Array.from({ length: 9 }, (_, k) => `<circle cx="${12 + (k % 5 - 2) * 7}" cy="${-2 - Math.floor(k / 5) * 5}" r="3.4" fill="${col}" stroke="rgba(0,0,0,.35)"/>`).join('')}</g>`;
+// A stirring rod in a beaker, and swirl lines
+const stirG = (cx, base, bw, bh) => `<path d="M${cx + bw * .18} ${base - bh - 18} L${cx - bw * .05} ${base - 8}" stroke="#a8b4d6" stroke-width="5" stroke-linecap="round"/>
+  <path d="M${cx - bw * .3} ${base - bh * .35} q${bw * .3} ${-bh * .12} ${bw * .6} 0" stroke="#fff" stroke-width="3" fill="none" opacity=".8" class="glow"/>`;
+// A digital balance. reading in grams; what = a picture sitting on it (SVG)
+const balanceG = (cx, base, w, reading, what = '', label = '') => `${what}
+  <rect x="${cx - w / 2}" y="${base}" width="${w}" height="${w * .16}" rx="8" fill="#e6e9f2" stroke="#8a93ad" stroke-width="2"/>
+  <rect x="${cx - w * .42}" y="${base - 6}" width="${w * .84}" height="8" rx="3" fill="#c9cfdc" stroke="#8a93ad" stroke-width="1.5"/>
+  <rect x="${cx - w * .2}" y="${base + w * .03}" width="${w * .4}" height="${w * .1}" rx="4" fill="#1d2340"/>
+  <text x="${cx}" y="${base + w * .03 + w * .08}" text-anchor="middle" style="font-family:'Courier New',monospace;font-weight:700;font-size:${Math.max(12, w * .085)}px;fill:#7dff9a">${reading} g</text>
+  ${label ? `<text x="${cx}" y="${base + w * .16 + 22}" text-anchor="middle" class="glabel">${label}</text>` : ''}`;
+// A small dish of a solid
+const dishG = (cx, base, w, col, n = 14) => { const rr = rng(5); return `<path d="M${cx - w / 2} ${base - w * .18} Q${cx} ${base + w * .08} ${cx + w / 2} ${base - w * .18}" fill="#eef1f8" stroke="#8a93ad" stroke-width="2"/>`
+  + Array.from({ length: n }, () => `<rect x="${(cx - w * .3 + rr() * w * .6).toFixed(1)}" y="${(base - w * .17 - rr() * w * .07).toFixed(1)}" width="5" height="5" fill="${col}" stroke="rgba(0,0,0,.35)" stroke-width=".8"/>`).join(''); };
+
+// ================= State =================
+const freshBeaker = () => ({ solid: null, liquid: 'water', step: 'choose', pred: {}, done: {} });
+const freshMass = () => ({ solid: 'salt', n: 2, step: 0, pred: null, where: null, whereWrong: [] });
+const freshFull = () => ({ solid: 'sugar', temp: 'cold', n: 0, pred: null, found: {} });
+const freshMix = () => ({ placed: {}, sel: null, last: null, pred: null });
+const state = { view: 'beaker', mission: null, done: store.get('dl-done', []), beaker: freshBeaker(), mass: freshMass(), full: freshFull(), mix: freshMix() };
+const key = (s, l) => `${s}-${l}`;
+
+// ================= 1. The beaker =================
+const BK = {
+  // What you see after stirring
+  result(s, l) {
+    const S = SOLIDS[s], L = LIQUIDS[l], yes = l === 'water' ? S[3] : S[4];
+    if (yes) return `<b>${S[0]}</b> dissolved. ${S[0]} is the <span class="term">solute</span>, ${lc(L[0])} is the <span class="term">solvent</span>, and together they make a <span class="term">solution</span>.${s === 'coffee' ? ' The solution is brown, but you can still see through it. A solution can be coloured.' : ' You can see right through it, and the solid has gone from sight.'}`;
+    if (s === 'chalk') return `<b>Chalk</b> did not dissolve in ${lc(L[0])}. The ${lc(L[0])} went <b>cloudy</b>: tiny bits of chalk are floating in it. Cloudy means it has <b>not</b> dissolved. Wait, and the bits settle at the bottom.`;
+    if (l === 'oil' && S[3]) return `<b>${S[0]}</b> did not dissolve in cooking oil. The grains just sit at the bottom. But ${lc(S[0])} <b>does</b> dissolve in water!`;
+    return `<b>${S[0]}</b> did not dissolve in ${lc(L[0])}. You can still see it at the bottom. This is a <span class="term">mixture</span>, but not a solution.`;
+  },
+  geo() { const { w, h, narrow } = stageSize(), top = narrow ? 40 : 50, half = w / 2, bw = Math.min(half * .45, (h - top) * .36), bh = bw * 1.15, base = top + (h - top) * .78;
+    return { w, h, narrow, top, cx: half * .5, bw, bh, base, R: Math.min(half * .4, (h - top) * .36), zx: half * 1.5, zy: top + (h - top) * .45 }; },
+  stage() {
+    const b = state.beaker, g = BK.geo(), S = SOLIDS[b.solid], L = LIQUIDS[b.liquid], st = b.step;
+    const yes = S && (b.liquid === 'water' ? S[3] : S[4]), mixed = st === 'stirred' || st === 'settled';
+    let o = `<rect width="${g.w}" height="${g.h}" fill="#eef4fb"/><rect y="${g.base}" width="${g.w / 2}" height="${g.h - g.base}" fill="#c9a77c"/><rect y="${g.base}" width="${g.w / 2}" height="6" fill="#a8835a"/>`;
+    o += `<line x1="${g.w / 2}" x2="${g.w / 2}" y1="${g.top}" y2="${g.h - 10}" stroke="#c6d0f2" stroke-width="2" stroke-dasharray="6 6"/>`;
+    // The beaker, as you would see it
+    const bo = { liq: L[2] };
+    if (S && mixed) {
+      if (yes && b.solid === 'coffee') bo.liq = '#d9b48a';
+      else if (!yes && b.solid === 'chalk') { if (st === 'stirred') bo.cloud = 1; else bo.sed = { col: S[2], h: .06 }; }
+      else if (!yes && b.solid === 'sand') bo.sed = { col: S[2], h: .09 };
+      else if (!yes) bo.grains = { col: S[2], n: 26 };
+    }
+    if (S && st === 'added') { if (b.solid === 'sand') bo.sed = { col: S[2], h: .07 }; else bo.grains = { col: S[2], n: 26 }; }
+    o += beakerG(g.cx, g.base, g.bw, g.bh, bo);
+    if (S && st === 'predict') o += spoonG(g.cx + g.bw * .1, g.base - g.bh - 30, S[2], g.narrow ? .7 : 1);
+    if (st === 'added') o += stirG(g.cx, g.base, g.bw, g.bh);
+    o += `<text x="${g.cx}" y="${g.base + (g.narrow ? 20 : 28)}" text-anchor="middle" class="glabel">${S && st !== 'predict' ? `${L[0]} + ${lc(S[0])}` : L[0]}</text>`;
+    // The same beaker, zoomed in to its particles
+    let extra = '', mix = null;
+    if (S && (st === 'added' || (mixed && !yes))) extra = clump(g.zx, g.zy, g.R, S[2], st === 'stirred' && b.solid === 'chalk' ? 'spread' : 'bottom');
+    if (S && mixed && yes) mix = { n: 10, col: S[2] };
+    o += zoomCircle(g.zx, g.zy, g.R, 'liquid', L[3], extra, mix);
+    o += zoomLabel(g.zx, g.zy - g.R - 12, '🔍 Zoomed in: each circle is a particle');
+    o += zoomLabel(g.zx, g.zy + g.R + 20, !S || st === 'predict' ? `${L[0]} particles` : st === 'added' ? `${S[0]} particles, packed together` : yes ? `${S[0]} particles, spread out between the ${lc(L[0])} particles` : st === 'stirred' && b.solid === 'chalk' ? 'Small clumps of chalk, floating' : `${S[0]} particles stay packed together`);
+    if (S && mixed && yes) o += zoomLabel(g.zx, g.zy + g.R + 38, 'They are still there!');
+    const say = !S ? 'Choose a solid and a liquid.' : st === 'predict' ? `Will ${lc(S[0])} dissolve in ${lc(L[0])}? Predict first.` : st === 'added' ? 'Now stir it.' : yes ? `It dissolved: a solution.` : st === 'stirred' && b.solid === 'chalk' ? 'Cloudy: not dissolved.' : 'It did not dissolve.';
+    return `<div class="lay-top"><span class="scaletag">🧪 ${S ? `${S[0]} in ${lc(L[0])}` : 'The beaker'}</span><div class="readout">${say}</div></div>
+      <svg id="bkSvg" viewBox="0 0 ${g.w} ${g.h}" aria-label="A beaker, and a close-up of its particles">${o}</svg>`;
+  },
+  drawer() {
+    const b = state.beaker, S = SOLIDS[b.solid], L = LIQUIDS[b.liquid], k = S && key(b.solid, b.liquid), n = Object.keys(b.done).length;
+    const pick = `<div class="card"><h2>🧪 The beaker</h2><p class="muted">Will it dissolve? Choose a solid and a liquid.</p>
+      <p style="margin:6px 0 2px"><b>Solid</b></p><div class="stops">${SORDER.map(s => `<button class="opt sm${b.solid === s ? ' on' : ''}" data-act="bsolid" data-v="${s}">${SOLIDS[s][1]} ${SOLIDS[s][0]}</button>`).join('')}</div>
+      <p style="margin:8px 0 2px"><b>Liquid</b></p><div class="stops">${Object.entries(LIQUIDS).map(([l, x]) => `<button class="opt sm${b.liquid === l ? ' on' : ''}" data-act="bliquid" data-v="${l}">${x[1]} ${x[0]}</button>`).join('')}</div></div>`;
+    let step = '';
+    if (S && b.step === 'predict') step = `<div class="card says"><h3>🤔 Predict first</h3><p>Will <b>${lc(S[0])}</b> dissolve in <b>${lc(L[0])}</b>?</p>
+      <div class="navrow">${[['yes', '✅ Yes'], ['no', '❌ No']].map(([v, t]) => `<button class="btn${b.pred[k] === v ? ' active' : ''}" data-act="bpred" data-v="${v}">${t}</button>`).join('')}</div>
+      <div class="checkbar" style="position:static;margin:8px 0 0;padding:0;background:none"><button class="btn go" data-act="badd"${b.pred[k] ? '' : ' disabled'}>🥄 Add a spoonful</button></div></div>`;
+    if (S && b.step === 'added') step = `<div class="card says"><h3>🥄 In it goes</h3><p>The ${lc(S[0])} is in the ${lc(L[0])}. Now stir it.</p><div class="navrow"><button class="btn go" data-act="bstir">🌀 Stir</button></div></div>`;
+    if (S && (b.step === 'stirred' || b.step === 'settled')) {
+      const yes = b.liquid === 'water' ? S[3] : S[4], right = (b.pred[k] === 'yes') === yes;
+      step = `<div class="card says${yes ? ' good' : ''}"><h3>${yes ? '✅ It dissolved' : '❌ It did not dissolve'}</h3><p>${BK.result(b.solid, b.liquid)}</p>
+        <p class="muted">You predicted: ${b.pred[k]}. ${right ? '✅ Right!' : '❌ Not this time.'}</p>
+        ${b.solid === 'chalk' && b.step === 'stirred' ? '<div class="navrow"><button class="btn" data-act="bwait">⏳ Wait 10 minutes</button></div>' : ''}</div>`;
+    }
+    const table = n ? `<div class="card"><h3>📋 Results</h3><table class="gtable"><tr><th>Solid</th><th>💧 Water</th><th>🫒 Oil</th></tr>
+      ${SORDER.map(s => `<tr><td>${SOLIDS[s][1]} ${SOLIDS[s][0]}</td>${['water', 'oil'].map(l => `<td>${b.done[key(s, l)] ? (l === 'water' ? SOLIDS[s][3] : SOLIDS[s][4]) ? '✅ dissolves' : '❌ no' : '<span class="muted">?</span>'}</td>`).join('')}</tr>`).join('')}</table>
+      <p class="muted">${n} of 10 tested.</p></div>` : '';
+    const both = SORDER.filter(s => SOLIDS[s][3] && b.done[key(s, 'water')] && b.done[key(s, 'oil')]).length;
+    const sci = both ? `<div class="science"><b>🔬 The science</b>${both > 1 ? 'Salt, sugar and coffee' : 'Some solids'} dissolve in water, but <b>not</b> in cooking oil. So whether something dissolves depends on the <b>solid</b> and on the <b>liquid</b>. Being able to dissolve is a <b>property</b> of a solid. Being able to dissolve things is a property of a liquid.</div>` : '';
+    return `${step}${pick}${sci}${table}<a class="seelab" href="../particle-playground/index.html#view=dis">🔬 More about particles in Particle Playground ▶</a>`;
+  }
+};
+
+// ================= 2. Where did it go? =================
+const MASS = {
+  water: 100, spoon: 5,
+  stage() {
+    const m = state.mass, S = SOLIDS[m.solid], { w, h, narrow } = stageSize(), top = narrow ? 40 : 50, sg = m.n * MASS.spoon;
+    const bw = Math.min(w * (narrow ? .3 : .22), (h - top) * .32), bh = bw * 1.1, base = top + (h - top) * .62, balW = bw * 1.6;
+    let o = `<rect width="${w}" height="${h}" fill="#eef4fb"/>`;
+    if (m.step < 3) {
+      // Two balances: the water on one, the solid on the other
+      const x1 = w * .27, x2 = w * .7;
+      o += balanceG(x1, base, balW, m.step >= 1 ? MASS.water : 0, m.step >= 1 ? beakerG(x1, base - 6, bw, bh, { liq: LIQUIDS.water[2], lvl: .6 }) : '', m.step >= 1 ? 'Water' : 'Empty');
+      o += balanceG(x2, base, balW, m.step >= 2 ? sg : 0, m.step >= 2 ? dishG(x2, base - 6, bw, S[2], 6 + m.n * 4) : '', m.step >= 2 ? S[0] : 'Empty');
+      if (m.step >= 2) o += `<text x="${w / 2}" y="${top + 40}" text-anchor="middle" class="glabel" style="font-size:${narrow ? 15 : 22}px">${MASS.water} g + ${sg} g = ${MASS.water + sg} g</text>`;
+    } else {
+      // One balance: the solution
+      const x1 = w * .3;
+      o += balanceG(x1, base, balW, MASS.water + sg, beakerG(x1, base - 6, bw, bh, { liq: LIQUIDS.water[2], lvl: .62 }), `Water + ${lc(S[0])}`);
+      const R = Math.min(w * .2, (h - top) * .3), zx = w * .73, zy = top + (h - top) * .45;
+      o += zoomCircle(zx, zy, R, 'liquid', LIQUIDS.water[3], '', { n: 4 + m.n * 2, col: S[2] }) + zoomLabel(zx, zy + R + 20, `The ${lc(S[0])} particles are still there,`) + zoomLabel(zx, zy + R + 38, 'spread out between the water particles');
+    }
+    const say = ['Put the water on the balance.', 'Now weigh the ' + lc(S[0]) + '.', 'Predict, then stir it in.', `${MASS.water} g + ${sg} g = ${MASS.water + sg} g. Nothing was lost!`][m.step];
+    return `<div class="lay-top"><span class="scaletag">⚖️ Where did it go?</span><div class="readout">${say}</div></div>
+      <svg id="massSvg" viewBox="0 0 ${w} ${h}" aria-label="Balances showing mass">${o}</svg>`;
+  },
+  drawer() {
+    const m = state.mass, S = SOLIDS[m.solid], sg = m.n * MASS.spoon, tot = MASS.water + sg;
+    const head = `<div class="card"><h2>⚖️ Where did it go?</h2><p>When ${lc(S[0])} dissolves, we can't see it any more. Has it gone? Use a <b>balance</b> to find out. A balance measures <span class="term">mass</span>: how heavy something is, in grams (g).</p>
+      ${m.step === 0 ? `<p style="margin:6px 0 2px"><b>Solid</b></p><div class="stops">${['salt', 'sugar'].map(s => `<button class="opt sm${m.solid === s ? ' on' : ''}" data-act="msolid" data-v="${s}">${SOLIDS[s][1]} ${SOLIDS[s][0]}</button>`).join('')}</div>
+        <p style="margin:8px 0 2px"><b>Spoonfuls</b> (5 g each)</p><div class="stops">${[1, 2, 3, 4].map(n => `<button class="opt sm${m.n === n ? ' on' : ''}" data-act="mn" data-v="${n}">${n}</button>`).join('')}</div>` : ''}</div>`;
+    if (m.step < 2) return `<div class="card says"><h3>${m.step + 1}. ${m.step ? `Weigh the ${lc(S[0])}` : 'Weigh the water'}</h3><p class="muted">The balance only counts what is inside the beaker or dish.</p>
+      <div class="navrow"><button class="btn go" data-act="mstep">${m.step ? `🥄 Put ${m.n} spoonful${m.n > 1 ? 's' : ''} of ${lc(S[0])} on` : '💧 Put the water on'}</button></div></div>${head}`;
+    const opts = [['less', `Less than ${tot} g: the ${lc(S[0])} will be gone`], ['same', `${tot} g: the same`], ['more', `More than ${tot} g`]];
+    if (m.step === 2) return `<div class="card says wq"><h3>🤔 Predict first</h3><p>The water is <b>${MASS.water} g</b>. The ${lc(S[0])} is <b>${sg} g</b>. You stir the ${lc(S[0])} into the water. What will the balance show?</p>${predict('mpred', opts, m.pred)}
+      <div class="navrow" style="margin-top:8px"><button class="btn go" data-act="mstep"${m.pred ? '' : ' disabled'}>🌀 Tip it in and stir</button></div></div>${head}`;
+    const whereOpts = [['gone', 'It disappeared.'], ['water', 'It turned into water.'], ['there', `It is still there. Its particles are spread out between the water particles.`]];
+    const right = m.where === 'there';
+    return `<div class="card says${m.pred === 'same' ? ' good' : ''}"><h3>${m.pred === 'same' ? '✅ Your prediction was right!' : '❌ Not this time'}</h3><p>The balance shows <b>${tot} g</b>: ${MASS.water} g + ${sg} g. The mass stayed the same.</p></div>
+      <div class="card wq"><h3>Where did the ${lc(S[0])} go?</h3>${choices('mwhere', whereOpts, m.where, m.whereWrong, 'there')}
+        ${m.where && !right ? `<p class="spot">💡 ${m.where === 'gone' ? 'If it had gone, the mass would be less. Look at the balance.' : 'Then there would be more water, but the zoomed-in view shows the same water particles.'}</p>` : ''}</div>
+      ${right ? `<div class="science"><b>🔬 The science</b>The ${lc(S[0])} did not disappear. It <b>dissolved</b>: it broke up into tiny particles that spread out between the water particles. They are far too small to see, but they are still there. That is why the mass stays the same.</div>
+        <div class="card"><h3>🔎 How can we prove it is still there?</h3><p>Scientists <b>never taste</b> things in an experiment. Instead, they <b>evaporate</b> the water: the water goes into the air, and the ${lc(S[0])} is left behind. Try it in <button class="linkbtn" data-act="view" data-view="sep">⚗️ Separation station</button>.</p></div>` : ''}
+      <div class="card"><button class="btn" data-act="mreset">↺ Try again</button></div>${head}`;
+  }
+};
+
+// ================= 3. Keep adding =================
+// 25 mL of water; a spoonful is 5 g. How many spoonfuls dissolve before no more will dissolve.
+// Real values for 25 mL of water: sugar about 47 g at 10 °C and 65 g at 50 °C; salt about 9 g at both.
+const CAP = { sugar: { cold: 9, warm: 13 }, salt: { cold: 1, warm: 1 } };
+const TEMPS = { cold: ['❄️', 'Cold water (10 °C)'], warm: ['♨️', 'Warm water (50 °C)'] };
+const FULL = {
+  stage() {
+    const f = state.full, S = SOLIDS[f.solid], cap = CAP[f.solid][f.temp], { w, h, narrow } = stageSize(), top = narrow ? 40 : 50;
+    const bw = Math.min(w * (narrow ? .42 : .3), (h - top) * .45), bh = bw * 1.1, cx = w * .3, base = top + (h - top) * .8, extra = Math.max(0, f.n - cap);
+    let o = `<rect width="${w}" height="${h}" fill="#eef4fb"/><rect y="${base}" width="${w}" height="${h - base}" fill="#c9a77c"/>`;
+    o += beakerG(cx, base, bw, bh, { liq: f.temp === 'warm' ? '#d4ecff' : '#b5ddff', lvl: .55, sed: extra ? { col: f.solid === 'sugar' ? '#f3e2a8' : '#e6e6e6', h: Math.min(.16, .035 + extra * .03) } : null });
+    if (f.temp === 'warm') o += [0, 1, 2].map(k => `<path class="scent" style="animation-delay:${k * .7}s" d="M${cx + (k - 1) * bw * .2} ${base - bh * .6} q6 -8 0 -16 t0 -16" stroke="#c9d6ea" stroke-width="3" fill="none"/>`).join('');
+    o += `<text x="${cx}" y="${base + (narrow ? 20 : 28)}" text-anchor="middle" class="glabel">${TEMPS[f.temp][0]} 25 mL of ${f.temp} water</text>`;
+    // A tally of spoonfuls: dissolved ones filled in, ones that would not dissolve outlined in red
+    const cols = narrow ? 5 : 6, cell = Math.min((w * .38) / cols, 46), gx = w * .58, gy = top + 50;
+    o += `<text x="${gx}" y="${gy - 14}" class="glabel">Spoonfuls added: ${f.n}</text>`;
+    for (let k = 0; k < Math.max(f.n, 1); k++) { const x = gx + (k % cols) * cell, y = gy + Math.floor(k / cols) * cell, ok = k < cap;
+      o += k < f.n ? `<g><circle cx="${x + cell / 2}" cy="${y + cell / 2}" r="${cell * .4}" fill="${ok ? '#c9f2df' : '#ffe0e3'}" stroke="${ok ? 'var(--green)' : 'var(--coral)'}" stroke-width="2"/><text x="${x + cell / 2}" y="${y + cell / 2 + 5}" text-anchor="middle" style="font-size:${cell * .36}px">${ok ? '✓' : '✗'}</text></g>` : ''; }
+    const say = !f.n ? 'Add a spoonful of ' + lc(S[0]) + '.' : extra ? 'No more will dissolve: the extra sits at the bottom.' : 'It all dissolved. Add another!';
+    return `<div class="lay-top"><span class="scaletag">🥄 Keep adding</span><div class="readout">${say}</div></div>
+      <svg id="fullSvg" viewBox="0 0 ${w} ${h}" aria-label="A beaker of water with sugar being added">${o}</svg>`;
+  },
+  drawer() {
+    const f = state.full, S = SOLIDS[f.solid], cap = CAP[f.solid][f.temp], full = f.n > cap, fk = key(f.solid, f.temp);
+    const res = Object.keys(f.found).length ? `<div class="card"><h3>📋 Results</h3><table class="gtable"><tr><th>Solid</th><th>❄️ Cold</th><th>♨️ Warm</th></tr>
+      ${['sugar', 'salt'].map(s => `<tr><td>${SOLIDS[s][1]} ${SOLIDS[s][0]}</td>${['cold', 'warm'].map(t => `<td>${f.found[key(s, t)] ? `<b>${CAP[s][t]}</b> spoonfuls (${CAP[s][t] * 5} g)` : '<span class="muted">?</span>'}</td>`).join('')}</tr>`).join('')}</table></div>` : '';
+    const both = f.found[key('sugar', 'cold')] && f.found[key('sugar', 'warm')];
+    const pred = `<div class="card wq${f.pred ? '' : ' says'}"><h3>🤔 Predict first</h3><p>Which will dissolve <b>more</b> sugar?</p>${predict('fpred', [['cold', '❄️ Cold water'], ['warm', '♨️ Warm water'], ['same', 'They will dissolve the same amount']], f.pred)}</div>`;
+    return `${full ? `<div class="card says good"><h3>🛑 No more will dissolve</h3><p>${cap} spoonful${cap > 1 ? 's' : ''} (${cap * 5} g) of ${lc(S[0])} dissolved in 25 mL of ${f.temp} water. After that, no more would dissolve: the extra ${lc(S[0])} sits at the bottom.</p></div>` : ''}
+      ${f.pred ? '' : pred}
+      <div class="card"><h2>🥄 Keep adding</h2><p>How much ${lc(S[0])} can dissolve in a small glass of water? Add a spoonful at a time and stir, until no more will dissolve.</p>
+        <p style="margin:6px 0 2px"><b>Solid</b></p><div class="stops">${['sugar', 'salt'].map(s => `<button class="opt sm${f.solid === s ? ' on' : ''}" data-act="fsolid" data-v="${s}">${SOLIDS[s][1]} ${SOLIDS[s][0]}</button>`).join('')}</div>
+        <p style="margin:8px 0 2px"><b>Water</b></p><div class="stops">${Object.entries(TEMPS).map(([t, [em, n]]) => `<button class="opt sm${f.temp === t ? ' on' : ''}" data-act="ftemp" data-v="${t}">${em} ${n}</button>`).join('')}</div>
+        ${f.temp === 'warm' ? '<p class="muted">⚠️ In class, an adult pours warm water.</p>' : ''}
+        <div class="navrow" style="margin-top:8px"><button class="btn go" data-act="fadd" data-v="1"${f.pred ? '' : ' disabled'}>🥄 Add 1 and stir</button><button class="btn" data-act="fadd" data-v="5"${f.pred ? '' : ' disabled'}>+5</button><button class="btn" data-act="freset">↺ Fresh water</button></div></div>
+      ${both ? `<div class="science"><b>🔬 The science</b><b>Warm</b> water can dissolve <b>more</b> sugar than cold water. ${f.found[key('salt', 'cold')] && f.found[key('salt', 'warm')] ? 'Salt is different: warm water dissolves only a tiny bit more salt than cold water. How much dissolves depends on the solid and on the liquid.' : 'Try salt too!'}${f.pred ? ` <span class="muted">You predicted: ${f.pred === 'same' ? 'the same' : f.pred + ' water'}. ${f.pred === 'warm' ? '✅' : '❌'}</span>` : ''}</div>` : ''}
+      ${res}${f.pred ? pred : ''}`;
+  }
+};
+
+// ================= 4. Solution or just a mixture? =================
+// A little jar of each one. [id, name, a solution?, liquid colour, extra, why]
+const MIXES = [
+  ['saltw', 'Salt water', true, '#bfe3ff', {}, 'The salt dissolved. It is see-through, with no bits: a solution.'],
+  ['sand', 'Sand and water', false, '#bfe3ff', { sed: { col: '#d9b26f', h: .16 } }, 'The sand did not dissolve: it sinks to the bottom.'],
+  ['sugarw', 'Sugar water', true, '#bfe3ff', {}, 'The sugar dissolved. It is see-through, with no bits: a solution.'],
+  ['chalk', 'Chalk and water', false, '#bfe3ff', { cloud: .9 }, 'It is cloudy: the chalk has not dissolved. Leave it and the chalk settles.'],
+  ['coffee', 'Coffee', true, '#d9b48a', {}, 'The coffee dissolved. It is brown, but see-through: a coloured solution.'],
+  ['mud', 'Muddy water', false, '#bfe3ff', { tint: '#8a6a3a', cloud: .6, sed: { col: '#6b4b2a', h: .1 } }, 'You can\'t see through it, and mud settles at the bottom. It has not dissolved.'],
+  ['oil', 'Oil and water', false, '#bfe3ff', { layer: { col: '#f6dc7a', h: .2 } }, 'The oil floats on top in a layer. It does not dissolve in water.']
+];
+const jar = (o, s = 54) => `<svg viewBox="0 0 60 66" width="${s}" height="${s}" aria-hidden="true">${beakerG(30, 62, 40, 50, { liq: o[3], ...o[4] })}</svg>`;
+const MIX = {
+  stage() {
+    const m = state.mix, left = MIXES.filter(x => !m.placed[x[0]]), n = MIXES.length - left.length;
+    const card = x => `<button class="pcard${m.sel === x[0] ? ' sel' : ''}" data-drag="${x[0]}" aria-label="${x[1]}"><div class="ph">${jar(x, 70)}</div><span>${x[1]}</span></button>`;
+    const mini = x => `<span class="mini"><span class="ph">${jar(x, 34)}</span>${x[1]}</span>`;
+    return `<div class="lay-top"><span class="scaletag">${n} of ${MIXES.length} sorted</span><div class="readout">${m.sel ? 'Tap the box where it goes.' : 'Tap one, then tap its box. Or drag it.'}</div></div>
+      <div class="sortwrap"><div class="pool">${left.map(card).join('')}</div>
+        <div class="nest${m.sel ? ' ready' : ''}" data-drop="mix" role="button" aria-label="Mixtures that are not solutions"><h3>🥣 Mixtures</h3><div class="bsub">not solutions</div>
+          <div class="in">${MIXES.filter(x => m.placed[x[0]] === 'mix').map(mini).join('')}</div>
+          <div class="inner" data-drop="sol" role="button" aria-label="Solutions"><h3>🥤 Solutions</h3><div class="bsub">a special kind of mixture</div>
+            <div class="in">${MIXES.filter(x => m.placed[x[0]] === 'sol').map(mini).join('')}</div></div></div></div>`;
+  },
+  drawer() {
+    const m = state.mix, L = m.last, all = Object.keys(m.placed).length === MIXES.length, item = id => MIXES.find(x => x[0] === id);
+    const pred = `<div class="card wq${m.pred ? '' : ' says'}"><h3>🤔 Predict first</h3><p>Is a <b>solution</b> a kind of <b>mixture</b>?</p>${predict('xpred', [['yes', 'Yes'], ['no', 'No']], m.pred)}</div>`;
+    return `${m.pred ? '' : pred}
+      ${L ? `<div class="card says${L.ok ? ' good' : ''}"><h3>${L.ok ? '✅' : '💡'} ${item(L.id)[1]}</h3><p>${L.ok ? item(L.id)[5] : item(L.id)[2] ? 'Look again: can you see any bits? Is it see-through?' : 'Look again: has it really dissolved? Can you see bits, a layer or a cloud?'}</p></div>` : ''}
+      ${all ? `<div class="science"><b>🔬 The science</b>A <span class="term">mixture</span> is two or more things mixed together, that can be separated again. A <span class="term">solution</span> is a special kind of mixture, where a solid has dissolved in a liquid. <b>All solutions are mixtures, but not all mixtures are solutions.</b> ${m.pred ? `<span class="muted">You predicted: ${m.pred}. ${m.pred === 'yes' ? '✅' : '❌'}</span>` : ''}</div>` : ''}
+      <div class="card"><h2>🥣 Solution or just a mixture?</h2><p>Every one of these is a <span class="term">mixture</span>. But which ones are also <span class="term">solutions</span>?</p>
+        <p class="muted">Solutions go in the inner box. Other mixtures go in the outer box.</p>
+        ${Object.keys(m.placed).length ? '<button class="linkbtn" data-act="xreset">↺ Start again</button>' : ''}</div>${m.pred ? pred : ''}`;
+  },
+  sel: () => state.mix.sel,
+  pick(id) { const m = state.mix; m.sel = m.sel === id ? null : id; m.last = null; render(); },
+  drop(id, bin) {
+    const m = state.mix, x = MIXES.find(y => y[0] === id); if (!x || m.placed[id]) return;
+    const ok = (bin === 'sol') === x[2]; m.last = { id, ok }; m.sel = null;
+    if (ok) { m.placed[id] = bin; if (Object.keys(m.placed).length === MIXES.length) emit('sortedmix'); }
+    render(); $('#drawer').scrollTop = 0;
+  }
+};
+
+// ================= 5. What makes it dissolve faster? (the fair test planner, as in Seed Lab) =================
+// The four things that could change. The first value of each is how every beaker starts.
+const FV = {
+  temp: { name: 'Water temperature', the: 'the water temperature', opts: [['20', '🌡️ 20 °C'], ['10', '❄️ 10 °C'], ['40', '♨️ 40 °C'], ['60', '🔥 60 °C']], num: true, unit: '°C', short: v => `${v} °C` },
+  stir: { name: 'Stirring', the: 'stirring', opts: [['yes', '🌀 Stirred'], ['no', '✋ Not stirred']], short: v => v === 'yes' ? 'stirred' : 'not stirred' },
+  grain: { name: 'Size of the grains', the: 'the size of the grains', opts: [['gran', '🍚 Granulated'], ['lump', '🧊 Sugar lumps'], ['icing', '☁️ Icing sugar']], short: v => ({ gran: 'granulated', lump: 'lumps', icing: 'icing sugar' })[v] },
+  water: { name: 'Amount of water', the: 'the amount of water', opts: [['100', '100 mL'], ['50', '50 mL'], ['200', '200 mL']], num: true, unit: 'mL', short: v => `${v} mL` }
+};
+const FORDER = ['temp', 'stir', 'grain', 'water'];
+const fstart = () => ({ temp: '20', stir: 'yes', grain: 'gran', water: '100' });
+// The values in order, for charts and tables (numbers from small to big)
+const fvals = k => { const v = FV[k].opts.map(o => o[0]); return FV[k].num ? v.slice().sort((a, b) => a - b) : v; };
+const fname = (k, v) => FV[k].opts.find(o => o[0] === v)[1];
+// How long a spoonful (5 g) of sugar takes to dissolve, in seconds. Made up, but the patterns are real:
+// warmer, stirred and smaller grains are all much faster; the amount of water makes only a small difference.
+const FT_TIME = b => 40 * { 10: 1.7, 20: 1, 40: .55, 60: .35 }[b.temp] * (b.stir === 'no' ? 4 : 1) * { lump: 3, gran: 1, icing: .35 }[b.grain] * { 50: 1.15, 100: 1, 200: .92 }[b.water];
+const MEASURE = [['time', 'The time it takes for the sugar to dissolve', true], ['taste', 'How sweet the water tastes', false, 'Never taste anything in a science experiment! And sweetness would not tell you how <b>fast</b> it dissolved.'],
+  ['colour', 'The colour of the water', false, 'Sugar water stays colourless, so the colour would not change.']];
+const EQUIP = [
+  ['watch', '⏱️', 'Stopwatch', 'need', 'To time how long the sugar takes to dissolve.'],
+  ['thermo', '🌡️', 'Thermometer', 'need', 'To check the temperature of the water.'],
+  ['jug', '🥛', 'Measuring jug', 'need', 'To measure the amount of water.'],
+  ['spoon', '🥄', 'Spoon', 'either', 'To add the same amount of sugar each time.'],
+  ['balance', '⚖️', 'Balance', 'either', 'To weigh exactly the same mass of sugar each time. A level spoonful is nearly as good.'],
+  ['magnet', '🧲', 'Magnet', 'no', 'Sugar is not magnetic. You don\'t need a magnet.'],
+  ['ruler', '📏', 'Ruler', 'no', 'You are measuring time, not length.'],
+  ['torch', '🔦', 'Torch', 'no', 'You can see the sugar without a torch.']
+];
+const RISKS = [['burn', 'Hot water from the kettle could burn someone.', true], ['slip', 'Spilled water could make someone slip.', true], ['break', 'A glass beaker near the edge of the table could fall and break.', true],
+  ['sugar', 'We could run out of sugar.', false, 'That is a nuisance, but it can\'t hurt anyone.']];
+const REDUCE = [['burn', 'An adult pours the hot water.'], ['break', 'Keep the beakers away from the edge.'], ['slip', 'Mop up spills straight away.']];
+const FT_ACTS = [['ignore', 'Rub it out and leave it off the chart', false, 'Scientists never hide results they don\'t like! Keep it in the table, and check it.'],
+  ['repeat', 'Do that test again, to check', true, ''], ['change', 'Change the conclusion because of it', false, 'It is only one result. The other two tries agree with each other. Check it first.']];
+const FT_STEPS = ['Plan', 'Set up', 'Equipment', 'Safety', 'Predict', 'Measure', 'Results', 'Odd result', 'Conclude'];
+// Each prediction and conclusion: [value, sentence]. The first one is what really happens.
+const FT_CLAIMS = {
+  temp: [['up', 'The hotter the water, the faster the sugar dissolves.'], ['down', 'The hotter the water, the slower the sugar dissolves.'], ['same', 'The temperature makes no real difference.']],
+  stir: [['up', 'Stirred sugar dissolves faster.'], ['down', 'Sugar that is not stirred dissolves faster.'], ['same', 'Stirring makes no real difference.']],
+  grain: [['up', 'The smaller the grains, the faster the sugar dissolves.'], ['down', 'The bigger the grains, the faster the sugar dissolves.'], ['same', 'The size of the grains makes no real difference.']],
+  water: [['same', 'The amount of water makes only a small difference.'], ['up', 'The more water, the much faster the sugar dissolves.'], ['down', 'The more water, the much slower the sugar dissolves.']]
+};
+const FT_WHY = {
+  temp: [['In warm water, the particles move faster. The sugar particles break away and spread out more quickly.', true], ['Hot water melts the sugar.', false, 'Melting needs a solid on its own, heated until it turns into a liquid. Here the sugar <b>dissolves</b> in the water.'], ['Warm water has more water in it.', false, 'Each beaker had the same amount of water.']],
+  stir: [['Stirring moves the sugar around, so it meets fresh water all the time.', true], ['Stirring makes the water hotter.', false, 'Stirring hardly changes the temperature.'], ['Stirring breaks the spoon.', false, 'Think about what stirring does to the sugar and the water.']],
+  grain: [['Small grains have more of their outside touching the water, so they dissolve faster.', true], ['Small grains are a different kind of sugar.', false, 'It is the same sugar, just in different sized pieces.'], ['Big lumps melt first.', false, 'The sugar does not melt: it dissolves.']],
+  water: [['There is plenty of water for one spoonful in every beaker, so more water hardly helps.', true], ['Water slows sugar down.', false, 'Look at your results: the times were all quite close.'], ['More water is colder.', false, 'All the water was the same temperature.']]
+};
+const freshFt = () => ({ step: 0, iv: null, dv: null, dvWrong: [], keeps: {}, keepsSaid: null, beakers: [], sel: 0, kit: {}, kitSaid: null, risks: {}, risksSaid: null, red: {}, redWrong: {},
+  pred: null, therm: '', jug: '', readSaid: null, ran: false, running: false, oddTap: null, oddFound: false, act: null, actWrong: [], repeated: false, chart: null, chartWrong: [], claim: null, claimWrong: [], why: null, whyWrong: [] });
+state.ft = freshFt();
+const FT = {
+  n: () => state.ft.beakers.length,
+  // Which other things are different between the beakers (empty if the test is fair)
+  unfair() { const t = state.ft; return FORDER.filter(k => k !== t.iv && new Set(t.beakers.map(b => b[k])).size > 1); },
+  // Three tries for each beaker. One try is odd: someone started the stopwatch late, so the time is too short.
+  times() {
+    const t = state.ft; return t.beakers.map((b, i) => { const base = FT_TIME(b), wob = [1, 1.06, .95];
+      return wob.map((f, r) => { if (i === 1 && r === 1 && !t.repeated) return Math.max(3, Math.round(base * .45)); return Math.max(3, Math.round(base * f + (i % 2 ? 1 : 0))); }); });
+  },
+  odd: [1, 1],
+  means() { return FT.times().map(r => Math.round(r.reduce((a, b) => a + b, 0) / r.length)); },
+  // The beakers, sorted in order of the thing being changed (for tables and charts)
+  order() { const t = state.ft, vs = fvals(t.iv); return t.beakers.map((b, i) => i).sort((a, b) => vs.indexOf(t.beakers[a][t.iv]) - vs.indexOf(t.beakers[b][t.iv])); },
+  letter: i => String.fromCharCode(65 + i),
+  setIv(k) { const t = state.ft; t.iv = k; t.beakers = FV[k].opts.map(() => fstart()); t.sel = 0; },
+  // Pictures
+  beakersG(w, h, top, narrow, show) {
+    const t = state.ft, n = FT.n(), cw = (w - 20) / n, bw = Math.min(cw * .6, (h - top) * .35), bh = bw * 1.1, base = top + (h - top) * .62, means = t.ran ? FT.means() : null;
+    let o = `<rect y="${base}" width="${w}" height="${h - base}" fill="#c9a77c"/><rect y="${base}" width="${w}" height="6" fill="#a8835a"/>`;
+    t.beakers.forEach((b, i) => {
+      const cx = 10 + cw * (i + .5), on = t.step === 1 && t.sel === i, hot = +b.temp >= 40, lvl = { 50: .35, 100: .55, 200: .8 }[b.water];
+      const left = show == null ? 1 : clamp(1 - show / (means ? means[i] : 1));
+      o += `<g${t.step === 1 ? ` class="tapme" data-act="ftbeaker" data-v="${i}"` : ''}><rect x="${cx - cw / 2 + 4}" y="${top + 6}" width="${cw - 8}" height="${h - top - 12}" rx="14" fill="${on ? '#fff8db' : 'transparent'}" stroke="${on ? 'var(--yellow)' : 'transparent'}" stroke-width="4"/>`;
+      o += beakerG(cx, base, bw, bh, { liq: hot ? '#d4ecff' : +b.temp <= 10 ? '#a9d4ff' : '#bfe3ff', lvl, grains: left > 0 ? { col: '#fff3c4', n: Math.round((b.grain === 'lump' ? 6 : 22) * left) } : null });
+      if (b.grain === 'lump' && left > 0) o += [0, 1].map(k => `<rect x="${cx - 12 + k * 14}" y="${base - 14}" width="11" height="11" fill="#fffaf0" stroke="#c9b98a"/>`).join('');
+      if (b.stir === 'yes' && show != null && left > 0) o += stirG(cx, base, bw, bh);
+      if (hot) o += `<path class="scent" d="M${cx} ${base - bh * lvl - 6} q6 -8 0 -16 t0 -16" stroke="#c9d6ea" stroke-width="3" fill="none"/>`;
+      o += `<text x="${cx}" y="${top + 26}" text-anchor="middle" class="glabel">Beaker ${FT.letter(i)}</text>`;
+      FORDER.forEach((k, r) => o += `<text x="${cx}" y="${base + 22 + r * (narrow ? 13 : 17)}" text-anchor="middle" style="font-size:${narrow ? 10.5 : 13.5}px;font-weight:${k === t.iv ? 700 : 500};fill:${k === t.iv ? 'var(--blue)' : 'var(--muted)'}">${FV[k].short(b[k])}</text>`);
+      if (show != null) { const s = Math.min(show, means[i]); o += `<rect x="${cx - 34}" y="${top + 36}" width="68" height="26" rx="8" fill="#1d2340"/><text x="${cx}" y="${top + 55}" text-anchor="middle" style="font-family:'Courier New',monospace;font-weight:700;font-size:16px;fill:${s >= means[i] ? '#7dff9a' : '#fff'}">⏱ ${Math.floor(s)} s</text>`; }
+      o += '</g>';
+    });
+    return o;
+  },
+  // A thermometer and a measuring jug to read
+  readingsG(w, h, top, narrow) {
+    const t = state.ft, tb = FT.readBeaker(), b = t.beakers[tb], tShow = +b.temp - 1, vol = +t.beakers[0].water;
+    const th = (h - top) * .7, tx = w * .27, ty = top + (h - top) * .12, lo = 0, hi = 70, y = v => ty + th - (v - lo) / (hi - lo) * th;
+    let o = `<text x="${tx}" y="${top + 24}" text-anchor="middle" class="glabel">🌡️ Beaker ${FT.letter(tb)}</text>`;
+    o += `<rect x="${tx - 9}" y="${ty - 10}" width="18" height="${th + 14}" rx="9" fill="#fff" stroke="#8a93ad" stroke-width="2"/><circle cx="${tx}" cy="${ty + th + 14}" r="16" fill="#e33" stroke="#8a93ad" stroke-width="2"/>`;
+    o += `<rect x="${tx - 4}" y="${y(tShow)}" width="8" height="${ty + th + 6 - y(tShow)}" fill="#e33"/>`;
+    for (let v = lo; v <= hi; v += 2) o += `<path d="M${tx + 10} ${y(v)} h${v % 10 ? 7 : 14}" stroke="#1d2340" stroke-width="${v % 10 ? 1 : 2}"/>` + (v % 10 ? '' : `<text x="${tx + 30}" y="${y(v) + 5}" style="font-size:${narrow ? 11 : 14}px;font-weight:600">${v} °C</text>`);
+    // The jug: marks every 10 mL, numbers every 50 mL
+    const jx = w * .68, jw = Math.min(w * .22, 150), jh = (h - top) * .62, jb = top + (h - top) * .82, max = 250, jy = v => jb - v / max * jh;
+    o += `<text x="${jx}" y="${top + 24}" text-anchor="middle" class="glabel">🥛 Water for beaker A</text>`;
+    o += `<rect x="${jx - jw / 2}" y="${jy(vol)}" width="${jw}" height="${jb - jy(vol)}" fill="#bfe3ff"/><path d="M${jx - jw / 2} ${jb - jh - 10} V${jb} H${jx + jw / 2} V${jb - jh - 10}" fill="none" stroke="#7d8db0" stroke-width="3"/>`;
+    for (let v = 10; v <= max; v += 10) o += `<path d="M${jx - jw / 2} ${jy(v)} h${v % 50 ? 10 : 20}" stroke="#1d2340" stroke-width="${v % 50 ? 1 : 2}"/>` + (v % 50 ? '' : `<text x="${jx - jw / 2 + 24}" y="${jy(v) + 5}" style="font-size:${narrow ? 11 : 13}px;font-weight:600">${v}</text>`);
+    o += `<text x="${jx}" y="${jb + 22}" text-anchor="middle" class="gsmall">mL</text>`;
+    return o;
+  },
+  readBeaker() { const t = state.ft; return t.beakers.reduce((m, b, i) => +b.temp > +t.beakers[m].temp ? i : m, 0); },
+  // A dot plot of the three tries for each beaker: the odd one stands out
+  dotsG(w, h, top, narrow) {
+    const t = state.ft, tm = FT.times(), ord = FT.order(), max = Math.max(...tm.flat()) * 1.15, L = narrow ? 46 : 66, B = h - (narrow ? 50 : 60), T = top + 40, sx = (w - L - 20) / ord.length, y = v => B - v / max * (B - T);
+    let o = `<rect width="${w}" height="${h}" fill="#fff"/><line x1="${L}" x2="${L}" y1="${T - 10}" y2="${B}" stroke="var(--ink)" stroke-width="2"/><line x1="${L}" x2="${w - 16}" y1="${B}" y2="${B}" stroke="var(--ink)" stroke-width="2"/>`;
+    const stepv = max > 200 ? 50 : max > 80 ? 20 : 10;
+    for (let v = 0; v <= max; v += stepv) o += `<text x="${L - 8}" y="${y(v) + 5}" text-anchor="end" class="gsmall">${v}</text><line x1="${L}" x2="${w - 16}" y1="${y(v)}" y2="${y(v)}" stroke="#eef1f8"/>`;
+    o += `<text transform="translate(${narrow ? 12 : 18} ${(T + B) / 2}) rotate(-90)" text-anchor="middle" class="gsmall">Time to dissolve (s)</text>`;
+    ord.forEach((i, k) => { const cx = L + sx * (k + .5);
+      tm[i].forEach((v, r) => { const odd = i === FT.odd[0] && r === FT.odd[1] && !t.repeated, hit = t.oddFound && odd;
+        o += `<g class="tapme" data-act="ftodd" data-v="${i}-${r}"><circle cx="${cx + (r - 1) * 14}" cy="${y(v)}" r="${hit ? 10 : 8}" fill="${hit ? 'var(--coral)' : 'var(--blue)'}" stroke="#fff" stroke-width="2"/><circle cx="${cx + (r - 1) * 14}" cy="${y(v)}" r="18" fill="transparent"/></g>`; });
+      o += `<text x="${cx}" y="${B + 20}" text-anchor="middle" class="gsmall">${FV[t.iv].short(t.beakers[i][t.iv])}</text>`; });
+    return o;
+  },
+  // The chart of the averages: a line graph or a bar chart
+  chartG(w, h, top, narrow, type) {
+    const t = state.ft, me = FT.means(), ord = FT.order(), max = Math.max(...me) * 1.2, L = narrow ? 46 : 66, B = h - (narrow ? 50 : 60), T = top + 40, sx = (w - L - 20) / ord.length, y = v => B - v / max * (B - T);
+    let o = `<rect width="${w}" height="${h}" fill="#fff"/><line x1="${L}" x2="${L}" y1="${T - 10}" y2="${B}" stroke="var(--ink)" stroke-width="2"/><line x1="${L}" x2="${w - 16}" y1="${B}" y2="${B}" stroke="var(--ink)" stroke-width="2"/>`;
+    const stepv = max > 200 ? 50 : max > 80 ? 20 : 10;
+    for (let v = 0; v <= max; v += stepv) o += `<text x="${L - 8}" y="${y(v) + 5}" text-anchor="end" class="gsmall">${v}</text><line x1="${L}" x2="${w - 16}" y1="${y(v)}" y2="${y(v)}" stroke="#eef1f8"/>`;
+    o += `<text transform="translate(${narrow ? 12 : 18} ${(T + B) / 2}) rotate(-90)" text-anchor="middle" class="gsmall">Average time to dissolve (s)</text>`;
+    const pts = ord.map((i, k) => [L + sx * (k + .5), y(me[i]), me[i], i]);
+    if (type === 'line') o += `<polyline points="${pts.map(p => p[0] + ',' + p[1]).join(' ')}" fill="none" stroke="var(--blue)" stroke-width="4"/>` + pts.map(p => `<circle cx="${p[0]}" cy="${p[1]}" r="7" fill="var(--blue)" stroke="#fff" stroke-width="2"/>`).join('');
+    else o += pts.map(p => `<rect x="${p[0] - sx * .3}" y="${p[1]}" width="${sx * .6}" height="${B - p[1]}" fill="var(--blue)"/>`).join('');
+    o += pts.map(p => `<text x="${p[0]}" y="${p[1] - 12}" text-anchor="middle" class="glabel">${p[2]} s</text><text x="${p[0]}" y="${B + 20}" text-anchor="middle" class="gsmall">${FV[t.iv].short(t.beakers[p[3]][t.iv])}</text>`).join('');
+    o += `<text x="${(L + w) / 2}" y="${B + 42}" text-anchor="middle" class="glabel">${FV[t.iv].name}</text>`;
+    return o;
+  },
+  stage() {
+    const t = state.ft, { w, h, narrow } = stageSize(), top = narrow ? 40 : 50;
+    let o = `<rect width="${w}" height="${h}" fill="#eef4fb"/>`, say = '', tag = `🧪 ${FT_STEPS[t.step]}`;
+    if (t.step <= 1 && !t.iv) { o += `<text x="${w / 2}" y="${h / 2}" text-anchor="middle" class="glabel" style="font-size:${narrow ? 16 : 22}px">🥄 Does sugar dissolve faster if…?</text>`; say = 'Choose what to change.'; }
+    else if (t.step === 2) { say = 'Choose the equipment you need.';
+      const items = EQUIP.filter(e => t.kit[e[0]]), cw = Math.min(110, (w - 20) / Math.max(4, items.length));
+      o += `<rect y="${h * .62}" width="${w}" height="${h * .38}" fill="#c9a77c"/><text x="${w / 2}" y="${top + 34}" text-anchor="middle" class="glabel">On your bench:</text>`;
+      o += items.map((e, k) => `<text x="${w / 2 + (k - (items.length - 1) / 2) * cw}" y="${h * .6}" text-anchor="middle" style="font-size:${narrow ? 34 : 54}px">${e[1]}</text><text x="${w / 2 + (k - (items.length - 1) / 2) * cw}" y="${h * .6 + 24}" text-anchor="middle" class="gsmall">${e[2]}</text>`).join('') || `<text x="${w / 2}" y="${h * .5}" text-anchor="middle" class="gsmall">Nothing yet</text>`; }
+    else if (t.step === 3) { say = 'What could go wrong?';
+      o += `<rect y="${h * .58}" width="${w * .8}" height="16" fill="#a8835a"/><rect x="${w * .05}" y="${h * .58 + 16}" width="12" height="${h * .42}" fill="#a8835a"/><rect x="${w * .73}" y="${h * .58 + 16}" width="12" height="${h * .42}" fill="#a8835a"/>`;
+      o += `<text x="${w * .2}" y="${h * .57}" text-anchor="middle" style="font-size:${narrow ? 44 : 70}px">🫖</text>${beakerG(w * .77, h * .58, Math.min(70, w * .1), Math.min(80, w * .11), { liq: '#bfe3ff' })}`;
+      o += `<ellipse cx="${w * .55}" cy="${h * .93}" rx="${w * .12}" ry="12" fill="#9fd0ff" opacity=".8"/><text x="${w * .55}" y="${h * .9}" text-anchor="middle" class="gsmall">a puddle</text>`;
+      o += `<text x="${w * .2}" y="${h * .65}" text-anchor="middle" class="gsmall">hot water</text><text x="${w * .77}" y="${h * .54 - Math.min(80, w * .11)}" text-anchor="middle" class="gsmall">at the edge!</text>`; }
+    else if (t.step === 5 && !t.ran && !t.running) { say = 'Read the thermometer and the jug.'; o += FT.readingsG(w, h, top, narrow); }
+    else if (t.step === 7) { say = t.oddFound ? 'You found the odd result.' : 'Tap the dot that does not fit.'; tag = '📈 Dot plot'; o += FT.dotsG(w, h, top, narrow); }
+    else if (t.step === 8 && t.chart && t.chart === FT.chartType()) { say = `How ${FV[t.iv].the} affects the time`; tag = t.chart === 'line' ? '📈 Line graph' : '📊 Bar chart'; o += FT.chartG(w, h, top, narrow, t.chart); }
+    else { o += FT.beakersG(w, h, top, narrow, t.running ? FT.clock : t.ran ? 1e9 : null);
+      say = t.step === 1 ? 'Tap a beaker to set it up.' : t.running ? 'The stopwatches are running…' : t.ran ? 'How long did each one take?' : t.iv ? `You are changing ${FV[t.iv].the}.` : ''; }
+    return `<div class="lay-top"><span class="scaletag">${tag}</span><div class="readout">${say}</div></div><svg id="ftSvg" viewBox="0 0 ${w} ${h}" aria-label="A fair test on dissolving sugar">${o}</svg>`;
+  },
+  chartType: () => FV[state.ft.iv].num ? 'line' : 'bar',
+  run() {
+    const t = state.ft, me = FT.means(), end = Math.max(...me), t0 = performance.now();
+    t.running = true; FT.clock = 0; render();
+    const tick = now => { FT.clock = (now - t0) / 3000 * end; if (state.view !== 'speed') { t.running = false; return; }
+      if (FT.clock < end) { renderStage(); requestAnimationFrame(tick); } else { t.running = false; t.ran = true; t.step = 6; render(); $('#drawer').scrollTop = 0; } };
+    requestAnimationFrame(tick);
+  },
+  drawer() {
+    const t = state.ft, V = t.iv && FV[t.iv];
+    const bar = `<div class="steps">${FT_STEPS.map((s, k) => `<span class="${k === t.step ? 'now' : k < t.step ? 'done' : ''}">${k < t.step ? '✔' : k + 1} ${s}</span>`).join('')}</div>`;
+    const next = (txt, ok = true) => `<div class="checkbar"><button class="btn go" data-act="ftnext"${ok ? '' : ' disabled'}>${txt} ▶</button></div>`;
+    if (t.step === 0) {
+      const keepList = t.iv ? [...FORDER.filter(k => k !== t.iv).map(k => [k, FV[k].name, true]), ['sugar', 'The amount of sugar (1 spoonful)', true], ['time', 'The time it takes', false, 'That is what you <b>measure</b>, so it can\'t stay the same!'], [t.iv, V.name, false, `${V.name} is what you are <b>changing</b>!`]] : [];
+      const dvOk = t.dv === 'time', bad = MEASURE.find(m => m[0] === t.dv && !m[2]);
+      return `<div class="card">${bar}<h2>⏱️ What makes it dissolve faster?</h2><p>Plan a <b>fair test</b>: change one thing, and keep everything else the same.</p></div>
+        <div class="card"><h3>1. What will you <b>change</b>?</h3><p class="muted">This is the <span class="term">independent variable</span>: the one thing you change.</p>
+          <div class="stops">${FORDER.map(k => `<button class="opt${t.iv === k ? ' on' : ''}" data-act="ftiv" data-v="${k}">${FV[k].opts[0][1].split(' ')[0]} ${FV[k].name}</button>`).join('')}</div></div>
+        <div class="card wq"><h3>2. What will you <b>measure</b>?</h3><p class="muted">This is the <span class="term">dependent variable</span>: what you measure.</p>
+          ${MEASURE.map(([id, txt]) => `<button class="opt${t.dv === id && dvOk ? ' done' : t.dvWrong.includes(id) ? ' wrong' : ''}" data-act="ftdv" data-v="${id}"${t.dvWrong.includes(id) ? ' disabled' : ''}>${txt}</button>`).join('')}
+          ${bad ? `<p class="spot">💡 ${bad[3]}</p>` : ''}</div>
+        ${t.iv ? `<div class="card${t.keepsSaid === 'ok' ? ' says good' : ''}"><h3>3. What will you keep the <b>same</b>?</h3><p class="muted">These are the <span class="term">control variables</span>. Tick every one.</p>
+          <div class="keeps">${keepList.map(([id, txt]) => `<label class="keep"><input type="checkbox" data-keep="${id}"${t.keeps[id] ? ' checked' : ''}${t.keepsSaid === 'ok' ? ' disabled' : ''}> ${txt}</label>`).join('')}</div>
+          ${Array.isArray(t.keepsSaid) ? `<ul class="spot">${t.keepsSaid.map(m => `<li>${m}</li>`).join('')}</ul>` : ''}
+          ${t.keepsSaid === 'ok' ? '<p class="job">Yes! Keep all of these the same.</p>' : `<div class="navrow" style="margin-top:6px"><button class="btn" data-act="ftkeeps">✔ Check</button></div>`}</div>` : ''}
+        ${next('Next: set up the beakers', t.iv && dvOk && t.keepsSaid === 'ok')}`;
+    }
+    if (t.step === 1) {
+      const b = t.beakers[t.sel], vals = t.beakers.map(x => x[t.iv]), dup = new Set(vals).size < vals.length;
+      return `<div class="card">${bar}<h3>Set up the beakers</h3><p>Each beaker has a spoonful of sugar. Give each one a different <b>${lc(V.name)}</b>. You decide what to do with everything else!</p>
+          <div class="stops">${t.beakers.map((_, i) => `<button class="opt${t.sel === i ? ' on' : ''}" data-act="ftbeaker" data-v="${i}">Beaker ${FT.letter(i)}</button>`).join('')}</div></div>
+        <div class="card"><h3>Beaker ${FT.letter(t.sel)}</h3>${FORDER.map(k => `<div class="varrow"><span>${FV[k].name}${k === t.iv ? ' <b class="tag">changing</b>' : ''}</span><div class="stops">${FV[k].opts.map(([v, l]) => `<button class="opt sm${b[k] === v ? ' on' : ''}" data-act="ftset" data-k="${k}" data-v="${v}">${l}</button>`).join('')}</div></div>`).join('')}</div>
+        ${dup ? `<div class="card says"><p>💡 Two beakers have the same ${lc(V.name)}. Give each beaker a different one.</p></div>` : ''}
+        ${next('Next: equipment', !dup)}`;
+    }
+    if (t.step === 2) {
+      return `${Array.isArray(t.kitSaid) ? `<div class="card says"><h3>🔎 Check your equipment</h3><ul>${t.kitSaid.map(m => `<li>${m}</li>`).join('')}</ul></div>` : t.kitSaid === 'ok' ? '<div class="card says good"><h3>✅ Good choice!</h3><p>You have everything you need, and nothing you don\'t.</p></div>' : ''}
+        <div class="card">${bar}<h3>🧰 Choose your equipment</h3><p>Tap each thing you need from the shelf.</p>
+          <div class="seedcards">${EQUIP.map(([id, em, nm]) => `<button class="seedcard${t.kit[id] ? ' sel' : ''}" data-act="ftkit" data-v="${id}"${t.kitSaid === 'ok' ? ' disabled' : ''}><span style="font-size:30px">${em}</span><span>${nm}</span></button>`).join('')}</div></div>
+        ${t.kitSaid === 'ok' ? `<div class="card"><ul class="icons" style="margin:0">${EQUIP.filter(e => t.kit[e[0]]).map(e => `<li><span class="em">${e[1]}</span><span><b>${e[2]}</b>: ${e[4]}</span></li>`).join('')}</ul></div>${next('Next: safety')}`
+          : `<div class="checkbar"><button class="btn go" data-act="ftkitcheck">✔ Check my equipment</button></div>`}`;
+    }
+    if (t.step === 3) {
+      const risksOk = t.risksSaid === 'ok', allRed = RISKS.filter(r => r[2]).every(r => t.red[r[0]] === r[0]);
+      return `<div class="card${risksOk ? ' says good' : ''}">${bar}<h3>⚠️ What could go wrong?</h3><p>Some beakers have warm water from a kettle. Tick every <b>risk</b>: a way someone could get hurt.</p>
+          <div class="keeps">${RISKS.map(([id, txt]) => `<label class="keep"><input type="checkbox" data-risk="${id}"${t.risks[id] ? ' checked' : ''}${risksOk ? ' disabled' : ''}> ${txt}</label>`).join('')}</div>
+          ${Array.isArray(t.risksSaid) ? `<ul class="spot">${t.risksSaid.map(m => `<li>${m}</li>`).join('')}</ul>` : ''}
+          ${risksOk ? '' : '<div class="navrow" style="margin-top:6px"><button class="btn" data-act="ftrisks">✔ Check</button></div>'}</div>
+        ${risksOk ? `<div class="card wq"><h3>🛡️ How can we make each one safer?</h3>${RISKS.filter(r => r[2]).map(([id, txt]) => `<p style="margin-top:8px"><b>${txt}</b></p>${choices('ftred', REDUCE.map(([rid, rt]) => [`${id}:${rid}`, rt]), t.red[id] ? `${id}:${t.red[id]}` : null, (t.redWrong[id] || []).map(x => `${id}:${x}`), `${id}:${id}`)}`).join('')}</div>` : ''}
+        ${risksOk && allRed ? next('Next: predict') : ''}`;
+    }
+    if (t.step === 4) {
+      const opts = FT_CLAIMS[t.iv];
+      return `<div class="card wq">${bar}<h3>🤔 Predict</h3><p>What do you think will happen?</p>${predict('ftpred', opts, t.pred)}</div>${next('Next: measure', !!t.pred)}`;
+    }
+    if (t.step === 5) {
+      if (t.running) return `<div class="card">${bar}<h3>⏱️ Timing…</h3><p>Each stopwatch stops when all the sugar in that beaker has dissolved.</p></div>`;
+      const tb = FT.readBeaker(), tShow = +t.beakers[tb].temp - 1, vol = +t.beakers[0].water, ok = t.readSaid === 'ok';
+      return `<div class="card">${bar}<h3>📏 Measure carefully</h3><p>Read the scales on the picture.</p>
+          <div class="ansrow">🌡️ Beaker ${FT.letter(tb)} is <input class="numin${ok ? ' ok' : ''}" id="ftTherm" inputmode="decimal" value="${esc(t.therm)}"${ok ? ' disabled' : ''}> °C</div>
+          <p class="muted">Read it to the nearest degree. Each small mark is 2 °C.</p>
+          <div class="ansrow">🥛 Beaker A has <input class="numin${ok ? ' ok' : ''}" id="ftJug" inputmode="decimal" value="${esc(t.jug)}"${ok ? ' disabled' : ''}> mL of water</div>
+          <p class="muted">Each small mark is 10 mL.</p>
+          ${Array.isArray(t.readSaid) ? `<ul class="spot">${t.readSaid.map(m => `<li>${m}</li>`).join('')}</ul>` : ''}
+          ${ok ? `<p class="job">✅ Well read! ${tShow !== +t.beakers[tb].temp ? `The thermometer says ${tShow} °C. That is close enough to ${t.beakers[tb].temp} °C: real readings are never perfect.` : ''}</p>` : '<div class="navrow"><button class="btn" data-act="ftread">✔ Check my readings</button></div>'}</div>
+        ${ok ? `<div class="checkbar"><button class="btn go" data-act="ftrun">⏱️ Start the stopwatches</button></div>` : ''}`;
+    }
+    const tm = FT.times(), ord = FT.order(), unfair = FT.unfair();
+    const table = `<table class="gtable"><tr><th>Beaker</th><th>${V.name}</th><th>Try 1</th><th>Try 2</th><th>Try 3</th></tr>
+      ${ord.map(i => `<tr><td>${FT.letter(i)}</td><td>${FV[t.iv].short(t.beakers[i][t.iv])}</td>${tm[i].map((v, r) => `<td${t.step === 7 && t.oddFound && i === FT.odd[0] && r === FT.odd[1] && !t.repeated ? ' style="color:var(--coral);font-weight:700"' : ''}>${v} s${t.repeated && i === FT.odd[0] && r === FT.odd[1] ? ' <span class="muted">(repeat)</span>' : ''}</td>`).join('')}</tr>`).join('')}</table>`;
+    if (t.step === 6) {
+      if (unfair.length) return `<div class="card says"><h3>🤔 Your test was not fair</h3><p>You changed ${V.the}, but <b>${unfair.map(k => FV[k].the).join('</b> and <b>')}</b> ${unfair.length > 1 ? 'were' : 'was'} different too.</p>
+          <p>So you <b>can't tell</b> which change made the sugar dissolve faster or slower.</p>
+          <details class="teach" style="font-size:15px;color:var(--ink)"><summary>💡 Stuck? Show a hint</summary><p>Change <b>only</b> ${V.the}. Make everything else the same in every beaker.</p></details>
+          <div class="navrow"><button class="btn go" data-act="ftfix">🔧 Fix my plan</button></div></div>
+        <div class="card">${bar}<h3>📋 Results</h3>${table}</div>`;
+      return `<div class="card">${bar}<h3>📋 Results</h3><p>You did each test <b>3 times</b>, so you can check that the results agree.</p>${table}
+          <p class="muted">Everything else was the same: ${FORDER.filter(k => k !== t.iv).map(k => FV[k].short(t.beakers[0][k])).join(', ')}.</p></div>
+        ${next('Next: look for an odd result')}`;
+    }
+    if (t.step === 7) {
+      const act = FT_ACTS.find(a => a[0] === t.act), oi = FT.odd[0];
+      return `<div class="card">${bar}<h3>🔍 Which result does not fit?</h3><p>The three tries for each beaker should be close. Tap the dot on the chart (a <span class="term">dot plot</span>) that is very different from the other two.</p>
+          ${t.oddTap && !t.oddFound ? '<p class="spot">💡 That one is close to the others in its group. Look for a dot that is far away from its two partners.</p>' : ''}
+          ${t.oddFound ? `<p class="job">Yes! Beaker ${FT.letter(oi)}, try 2 was much quicker than the other two tries. Someone started the stopwatch late! A result that does not fit is called an <span class="term">anomalous result</span>.</p>` : ''}</div>
+        ${t.oddFound ? `<div class="card wq"><h3>What should you do about it?</h3>${choices('ftact', FT_ACTS.map(a => [a[0], a[1]]), t.act, t.actWrong, 'repeat')}
+          ${act && !act[2] ? `<p class="spot">💡 ${act[3]}</p>` : ''}${t.repeated ? '<p class="job">🔁 You did it again, and this time it agrees with the other two tries.</p>' : ''}</div>` : ''}
+        <div class="card"><h3>📋 Results</h3>${table}</div>${next('Next: conclusion', t.repeated)}`;
+    }
+    // Step 9: choose a chart, then write a conclusion with sentence starters
+    const right = FT.chartType(), claims = FT_CLAIMS[t.iv], why = FT_WHY[t.iv], whyRight = String(why.findIndex(w => w[1]));
+    const chartOk = t.chart === right, claimOk = t.claim === claims[0][0], whyOk = t.why === whyRight, me = FT.means();
+    return `<div class="card wq">${bar}<h3>1. Which chart?</h3><p>Which kind of chart shows your results best?</p>
+        ${choices('ftchart', [['line', '📈 A line graph'], ['bar', '📊 A bar chart']], t.chart, t.chartWrong, right)}
+        ${t.chart && !chartOk ? `<p class="spot">💡 ${right === 'line' ? `${V.name} is measured in <b>numbers</b> (${FV[t.iv].unit}), so the points can be joined with a line.` : `${V.name} has <b>separate groups</b>, not numbers on a scale. Use bars.`}</p>` : ''}
+        ${chartOk ? `<p class="job">${right === 'line' ? 'Yes! A line graph, because the thing you changed is measured in numbers.' : 'Yes! A bar chart, because the thing you changed has separate groups.'}</p>` : ''}</div>
+      ${chartOk ? `<div class="card"><h3>📋 Averages</h3><table class="gtable"><tr><th>${V.name}</th><th>Average time</th></tr>${FT.order().map(i => `<tr><td>${FV[t.iv].short(t.beakers[i][t.iv])}</td><td><b>${me[i]} s</b></td></tr>`).join('')}</table><p class="muted">The average: add the 3 tries and divide by 3.</p></div>
+        <div class="card wq"><h3>2. Conclusion</h3><p>Finish the sentence. <b>We found that…</b></p>${choices('ftclaim', claims.map(([v, s]) => [v, `…${lc(s)}`]), t.claim, t.claimWrong, claims[0][0])}
+          ${t.claim && !claimOk ? '<p class="spot">💡 Look at your chart again. Which way do the times go?</p>' : ''}</div>` : ''}
+      ${claimOk ? `<div class="card wq"><h3>3. Why?</h3><p><b>This is because…</b></p>${choices('ftwhy', why.map((w, k) => [String(k), w[0]]), t.why, t.whyWrong, whyRight)}
+        ${t.why != null && !whyOk ? `<p class="spot">💡 ${why[+t.why][2]}</p>` : ''}</div>` : ''}
+      ${whyOk ? `<div class="science"><b>🔬 The science</b>We found that ${lc(claims[0][1])} This is because ${lc(why[+whyRight][0])}
+          <p class="muted" style="margin-top:6px">You predicted: ${lc(claims.find(c => c[0] === t.pred)[1])} ${t.pred === claims[0][0] ? '✅' : '❌'}</p></div>
+        <div class="card"><button class="btn" data-act="ftreset">↺ Plan a new test</button></div>` : ''}`;
+  }
+};
+
+// ================= 6. Separation station =================
+// The equipment on the shelf: [id, emoji, name]
+const TOOLS = [['sieve', '🥣', 'Sieve'], ['filter', '🔻', 'Filter paper and funnel'], ['magnet', '🧲', 'Magnet'], ['evap', '🍽️', 'Evaporating dish'], ['lid', '🧊', 'Cold lid']];
+// The tasks: [id, mixture, goal, the right tool(s)]
+const TASKS = [
+  ['rice', 'Rice and flour', 'Get the rice out of the flour.', ['sieve']],
+  ['sand', 'Sand and water', 'Get the sand out of the water.', ['filter']],
+  ['iron', 'Iron filings and sand', 'Get the iron filings out of the sand.', ['magnet']],
+  ['salt', 'Salt water', 'Get the salt back.', ['evap', 'lid']],
+  ['water', 'Salt water', 'Get the water back too.', ['lid']],
+  ['triple', 'Sand, salt and water', 'Get the sand and the salt back. (2 steps!)', ['filter', 'evap']]
+];
+// What happens with each tool: task → tool → [works?, what happens]
+const SEPSAY = {
+  rice: { sieve: [1, 'The flour falls through the small holes. The rice grains are too big, so they stay in the sieve.'], filter: [0, 'Filter paper is for separating a solid from a <b>liquid</b>. There is no liquid here.'], magnet: [0, 'Rice and flour are not magnetic. Nothing happens.'], evap: [0, 'There is no water to evaporate.'], lid: [0, 'There is no water to evaporate.'] },
+  sand: { filter: [1, 'The water runs through the tiny holes in the filter paper. The sand grains are too big, so they stay on the paper.'], sieve: [0, 'Most sand grains are smaller than the holes in a kitchen sieve, so they go through with the water.'], magnet: [0, 'Sand is not magnetic. Nothing happens.'], evap: [0, 'You would get the sand back, but the water would go into the air. Filtering keeps both.'], lid: [0, 'That would work in the end, but it takes days. Filtering takes a minute.'] },
+  iron: { magnet: [1, 'Iron is <b>magnetic</b>. The iron filings jump onto the magnet. The sand stays behind.'], sieve: [0, 'Iron filings and sand grains are about the same size, so they all go through.'], filter: [0, 'There is no liquid here.'], evap: [0, 'There is no water to evaporate.'], lid: [0, 'There is no water to evaporate.'] },
+  salt: { evap: [1, 'The water <b>evaporates</b>: it turns into a gas and goes into the air. The salt is left behind in the dish.'], lid: [1, 'The water evaporates and the salt is left behind in the dish. And the cold lid catches the water too!'], filter: [0, 'The salt went straight through the filter paper! Look at the zoomed-in view: the salt particles are much smaller than the holes.'], sieve: [0, 'Everything goes through. Dissolved salt particles are far too small for a sieve.'], magnet: [0, 'Salt is not magnetic. Nothing happens.'] },
+  water: { lid: [1, 'The water evaporates. When the water vapour touches the cold lid, it <b>condenses</b> (turns back into liquid water). The drops run down and drip into the second dish. Salt in one dish, water in the other!'], evap: [0, 'You got the salt back, but the water went off into the air. How could you catch it?'], filter: [0, 'The salt goes straight through the filter paper with the water.'], sieve: [0, 'Everything goes through the sieve.'], magnet: [0, 'Salt is not magnetic. Nothing happens.'] },
+  triple: {}
+};
+const freshSep = () => ({ task: 'rice', tool: null, last: null, done: {}, t: 0, step: 0, tripleSaid: null, filterZoom: false });
+state.sep = freshSep();
+const SEP = {
+  task: () => TASKS.find(x => x[0] === state.sep.task),
+  // Does this task need the time-lapse? (evaporating takes days)
+  slow: () => { const s = state.sep; return s.last && s.last.ok && ['evap', 'lid'].includes(s.last.tool); },
+  stage() {
+    const s = state.sep, T = SEP.task(), { w, h, narrow } = stageSize(), top = narrow ? 40 : 50, L = s.last;
+    const cx = w * (L && L.ok ? .3 : .5), base = top + (h - top) * .74, bw = Math.min(w * (narrow ? .32 : .2), (h - top) * .38), bh = bw * 1.05, rr = rng(9);
+    let o = `<rect width="${w}" height="${h}" fill="#eef4fb"/><rect y="${base}" width="${w}" height="${h - base}" fill="#c9a77c"/><rect y="${base}" width="${w}" height="6" fill="#a8835a"/>`, say = T[2];
+    const k = clamp(s.t / 100), days = Math.round(k * 5);
+    // The mixture to start with
+    const mixG = (x, task) => task === 'rice' ? dishG(x, base, bw * 1.3, '#fffaf0', 26) + Array.from({ length: 12 }, () => `<ellipse cx="${(x - bw * .4 + rr() * bw * .8).toFixed(1)}" cy="${(base - bw * .2 - rr() * bw * .06).toFixed(1)}" rx="5" ry="2.4" fill="#fff" stroke="#c9b98a"/>`).join('')
+      : task === 'iron' ? dishG(x, base, bw * 1.3, '#d9b26f', 22) + Array.from({ length: 16 }, () => `<rect x="${(x - bw * .4 + rr() * bw * .8).toFixed(1)}" y="${(base - bw * .22 - rr() * bw * .06).toFixed(1)}" width="5" height="1.6" fill="#555"/>`).join('')
+      : beakerG(x, base, bw, bh, { liq: '#bfe3ff', lvl: .6, sed: task === 'sand' || task === 'triple' ? { col: '#d9b26f', h: .12 } : null });
+    if (!L || !L.ok || T[0] === 'triple' && s.step < 2) {
+      o += mixG(w * .5, T[0] === 'triple' && s.step === 1 ? 'salt' : T[0]);
+      o += `<text x="${w * .5}" y="${base + 26}" text-anchor="middle" class="glabel">${T[0] === 'triple' && s.step === 1 ? 'Salt water (the sand is out)' : T[1]}</text>`;
+      if (T[0] === 'triple' && s.step === 1) o += `<text x="${w * .16}" y="${base + 26}" text-anchor="middle" class="glabel">Sand ✓</text><text x="${w * .16}" y="${base - 10}" text-anchor="middle" style="font-size:30px">🏖️</text>`;
+      if (L && !L.ok && L.tool === 'filter' && (T[0] === 'salt' || T[0] === 'water')) {
+        // Filtering salt water: zoomed in, the salt particles pass straight through the holes in the paper
+        const R = Math.min(w * .2, (h - top) * .33), zx = w * .78, zy = top + (h - top) * .42, hole = R * .34;
+        let ex = `<rect x="${zx - R}" y="${zy - R * .12}" width="${2 * R}" height="${R * .24}" fill="#e8dcc8"/>` + [-1, 0, 1].map(j => `<rect x="${zx + j * R * .62 - hole / 2}" y="${zy - R * .14}" width="${hole}" height="${R * .28}" fill="#fff"/>`).join('');
+        ex += [[-.62, -.6], [0, -.3], [.62, .5], [-.62, .45], [0, .75], [.3, -.7]].map(([a, b]) => `<circle cx="${zx + a * R}" cy="${zy + b * R}" r="${R / 14}" fill="#f4f4f4" stroke="rgba(0,0,0,.6)" stroke-width="2"/>`).join('');
+        // A grain of sand, for comparison: far too big to fit through a hole
+        ex += `<circle cx="${zx + R * .31}" cy="${zy - R * .14 - hole * .7}" r="${hole * .72}" fill="#d9b26f" stroke="#8a6a3a" stroke-width="2"/>`;
+        o += zoomCircle(zx, zy, R, 'liquid', '#7fb2ff', ex) + zoomLabel(zx, zy + R + 18, 'Salt particles go through the holes.') + zoomLabel(zx, zy + R + 36, 'A grain of sand is too big: it stays on top.') + zoomLabel(zx, zy - R - 10, '🔍 Filter paper, zoomed in');
+        o += `<g transform="translate(${zx - R - 30} ${zy})"><text x="0" y="0" text-anchor="middle" style="font-size:22px">⬇️</text></g>`;
+      }
+    } else {
+      // It worked: the result
+      const rx = w * .7;
+      if (T[0] === 'rice') o += dishG(cx, base, bw * 1.2, '#fffaf0', 0) + Array.from({ length: 12 }, () => `<ellipse cx="${(cx - bw * .4 + rr() * bw * .8).toFixed(1)}" cy="${(base - bw * .2).toFixed(1)}" rx="5" ry="2.4" fill="#fff" stroke="#c9b98a"/>`).join('') + dishG(rx, base, bw * 1.2, '#fffaf0', 30)
+        + `<text x="${cx}" y="${base + 26}" text-anchor="middle" class="glabel">Rice (in the sieve)</text><text x="${rx}" y="${base + 26}" text-anchor="middle" class="glabel">Flour</text>`;
+      if (T[0] === 'iron') o += `<text x="${cx}" y="${base - bw * .5}" text-anchor="middle" style="font-size:${bw * .6}px">🧲</text>` + Array.from({ length: 16 }, () => `<rect x="${(cx - bw * .25 + rr() * bw * .5).toFixed(1)}" y="${(base - bw * .32 + rr() * bw * .06).toFixed(1)}" width="5" height="1.6" fill="#555"/>`).join('') + dishG(rx, base, bw * 1.2, '#d9b26f', 22)
+        + `<text x="${cx}" y="${base + 26}" text-anchor="middle" class="glabel">Iron filings</text><text x="${rx}" y="${base + 26}" text-anchor="middle" class="glabel">Sand</text>`;
+      if (T[0] === 'sand' || (T[0] === 'triple' && s.step >= 1 && L.tool === 'filter')) {
+        // A funnel with filter paper over a beaker: the sand stays on the paper, the liquid drips through
+        const fy = base - bh - 20;
+        o += beakerG(cx, base, bw, bh, { liq: '#bfe3ff', lvl: .5 }) + `<path d="M${cx - bw * .6} ${fy - bw * .55} L${cx} ${fy + bw * .1} L${cx + bw * .6} ${fy - bw * .55}Z" fill="#f4efe4" stroke="#8a93ad" stroke-width="2"/><rect x="${cx - 4}" y="${fy + bw * .05}" width="8" height="${bw * .35}" fill="#c9d0e4"/>`
+          + `<path d="M${cx - bw * .32} ${fy - bw * .25} L${cx} ${fy + bw * .02} L${cx + bw * .32} ${fy - bw * .25}Z" fill="#d9b26f"/><circle class="glow" cx="${cx}" cy="${fy + bw * .45}" r="3" fill="#7fb2ff"/>`
+          + `<text x="${cx}" y="${base + 26}" text-anchor="middle" class="glabel">${T[0] === 'triple' ? 'Sand on the paper; salt water below' : 'Sand on the paper; water below'}</text>`;
+      }
+      if (['evap', 'lid'].includes(L.tool) && (T[0] !== 'triple' || s.step >= 2)) {
+        // Evaporating, as a time-lapse: the water level drops and salt crystals appear
+        const dw = bw * 1.4, dx = T[0] === 'triple' ? w * .5 : cx, lid = L.tool === 'lid', dd = dw * .3;
+        // A deep dish; fill (0–1) is how much liquid is in it
+        const bowl = (x, fill, col) => `<path d="M${x - dw / 2} ${base - dd} Q${x} ${base + dd * .55} ${x + dw / 2} ${base - dd}" fill="#eef1f8" stroke="#8a93ad" stroke-width="2.5"/>`
+          + (fill > .02 ? `<path d="M${x - dw / 2 * (.3 + .62 * fill)} ${base - dd * (.15 + .78 * fill)} Q${x} ${base + dd * .5} ${x + dw / 2 * (.3 + .62 * fill)} ${base - dd * (.15 + .78 * fill)}Z" fill="${col}"/>` : '');
+        o += bowl(dx, 1 - k, '#bfe3ff');
+        o += Array.from({ length: Math.round(k * 30) }, () => `<rect x="${(dx - dw * .22 + rr() * dw * .44).toFixed(1)}" y="${(base - dd * .22 - rr() * dd * .25).toFixed(1)}" width="5" height="5" fill="#fff" stroke="#9aa3b5" stroke-width=".8"/>`).join('');
+        if (!lid) o += k < 1 ? [0, 1, 2].map(j => `<path class="scent" style="animation-delay:${j * .6}s" d="M${dx + (j - 1) * dw * .2} ${base - dw * .3} q6 -8 0 -16 t0 -16" stroke="#9fc4ef" stroke-width="3" fill="none"/>`).join('') : '';
+        else {
+          // The cold lid: tilted over the dish, drops run down it and drip into a second dish
+          const lx1 = dx - dw * .6, ly1 = base - dd - dw * .55, lx2 = dx + dw * .85, ly2 = base - dd - dw * .2, d2 = dx + dw * 1.05;
+          o += `<path d="M${lx1} ${ly1} L${lx2} ${ly2}" stroke="#9fd0ff" stroke-width="10" stroke-linecap="round"/><text x="${(lx1 + lx2) / 2}" y="${(ly1 + ly2) / 2 - 12}" text-anchor="middle" class="gsmall">❄️ cold lid</text>`;
+          o += [.3, .55, .8].map(f => `<circle cx="${lx1 + (lx2 - lx1) * f}" cy="${ly1 + (ly2 - ly1) * f + 7}" r="${2 + k * 2}" fill="#5aa0ff"/>`).join('');
+          o += `<g transform="translate(${d2} 0) scale(.75 1) translate(${-d2} 0)">${bowl(d2, k * .8, '#bfe3ff')}</g>`;
+          if (k > 0 && k < 1) o += `<circle class="glow" cx="${lx2 + 2}" cy="${ly2 + 14}" r="4" fill="#5aa0ff"/>`;
+          o += `<text x="${d2}" y="${base + 26}" text-anchor="middle" class="glabel">Water</text>`;
+        }
+        o += `<text x="${dx}" y="${base + 26}" text-anchor="middle" class="glabel">${k >= 1 ? 'Salt' : 'Salt water'}</text>`;
+        if (T[0] === 'triple') o += `<text x="${w * .16}" y="${base + 26}" text-anchor="middle" class="glabel">Sand ✓</text><text x="${w * .16}" y="${base - 10}" text-anchor="middle" style="font-size:30px">🏖️</text>`;
+        say = k >= 1 ? 'Day 5: all the water has gone.' : `Day ${days}: the water is evaporating.`;
+      }
+    }
+    return `<div class="lay-top"><span class="scaletag">⚗️ ${T[1]}</span><div class="readout">${say}</div></div>
+      <svg id="sepSvg" viewBox="0 0 ${w} ${h}" aria-label="Separating a mixture">${o}</svg>`;
+  },
+  drawer() {
+    const s = state.sep, T = SEP.task(), L = s.last, slow = SEP.slow(), k = s.t;
+    const tasks = `<div class="card"><h2>⚗️ Separation station</h2><p>A <span class="term">mixture</span> can be separated again. Choose a job, then choose the right equipment from the shelf.</p>
+      <div class="stops">${TASKS.map(([id, , goal]) => `<button class="opt sm${s.task === id ? ' on' : s.done[id] ? ' done' : ''}" data-act="stask" data-v="${id}">${s.done[id] ? '✔ ' : ''}${goal.replace(' (2 steps!)', '')}</button>`).join('')}</div></div>`;
+    const triple = T[0] === 'triple';
+    const shelf = `<div class="card"><h3>🧰 The shelf</h3><p class="muted">${triple ? (s.step === 0 ? 'Step 1: what will you do first?' : s.step === 1 ? 'Step 2: the salt water went through. Now what?' : '') : `Which will ${lc(T[2])}`}</p>
+      <div class="seedcards">${TOOLS.map(([id, em, nm]) => `<button class="seedcard${L && L.tool === id ? ' sel' : ''}" data-act="stool" data-v="${id}"${slow && !(triple && s.step === 1) ? ' disabled' : ''}><span style="font-size:30px">${em}</span><span>${nm}</span></button>`).join('')}</div></div>`;
+    const res = L ? `<div class="card says${L.ok ? ' good' : ''}"><h3>${L.ok ? '✅ It worked!' : '💡 Not quite'}</h3><p>${L.msg}</p></div>` : '';
+    const lapse = slow && (!triple || s.step >= 2) ? `<div class="card"><h3>⏩ Time-lapse</h3><p class="muted">Evaporating at room temperature takes days. Move the slider.</p>
+      <div class="slide"><span>💧</span><input type="range" id="stl" min="0" max="100" value="${k}" aria-label="Days"><span>🧂</span></div>
+      <p class="muted">⚠️ In a school lab, salt water is often heated to make it faster. That needs an <b>adult</b>, and everyone wears <b>goggles</b>.</p></div>` : '';
+    const back = s.done.salt || s.done.water || s.done.triple ? `<div class="science"><b>🔬 The science</b>We got the <b>solute</b> (salt) back${s.done.water ? ', and the <b>solvent</b> (water) too' : ''}. So dissolving is <span class="term">reversible</span>: it can be changed back.</div>` : '';
+    return `${res}${lapse}${s.tripleSaid ? `<div class="card says"><p>💡 ${s.tripleSaid}</p><div class="navrow"><button class="btn" data-act="stask" data-v="triple">↺ Start again</button></div></div>` : ''}${shelf}${back}${tasks}`;
+  },
+  use(tool) {
+    const s = state.sep, T = SEP.task();
+    s.tripleSaid = null;
+    if (T[0] === 'triple') {
+      if (s.step === 0) {
+        if (tool === 'filter') { s.step = 1; s.last = { tool, ok: true, msg: 'Good start! The sand stays on the filter paper. The salt is dissolved, so it goes through the paper with the water. Now get the salt back.' }; }
+        else if (tool === 'evap' || tool === 'lid') { s.last = null; s.tripleSaid = 'Oh no! The water evaporated, but now the salt and the sand are mixed up together in the dish. What should you do <b>first</b>?'; }
+        else s.last = { tool, ok: false, msg: { sieve: 'The sand and the salt water both go through the sieve.', magnet: 'Nothing here is magnetic.' }[tool] };
+      } else if (s.step === 1) {
+        if (tool === 'evap' || tool === 'lid') { s.step = 2; s.t = 0; s.last = { tool, ok: true, msg: 'The sand is on the filter paper. Now the water evaporates and the salt is left behind. Move the slider.' }; }
+        else s.last = { tool, ok: false, msg: tool === 'filter' ? 'The salt is dissolved, so it goes straight through the filter paper again.' : 'That won\'t get dissolved salt out of water.' };
+      }
+      render(); $('#drawer').scrollTop = 0; return;
+    }
+    const r = SEPSAY[T[0]][tool]; s.t = 0;
+    s.last = { tool, ok: !!r[0], msg: r[1] };
+    if (r[0] && !['evap', 'lid'].includes(tool)) SEP.finish(T[0]);
+    render(); $('#drawer').scrollTop = 0;
+  },
+  // A job is done; the cold lid also gets the salt back
+  finish(id) { const s = state.sep; s.done[id] = true; if (id === 'water') s.done.salt = true; emit('separated', { id, tool: s.last && s.last.tool }); render(); }
+};
+
+// ================= Views =================
+const VIEWS = {
+  beaker: { label: '🧪 <span class="tl">Beaker</span>', name: 'The beaker', ...BK },
+  mass: { label: '⚖️ <span class="tl">Where?</span>', name: 'Where did it go?', ...MASS },
+  full: { label: '🥄 <span class="tl">Full up</span>', name: 'Keep adding', ...FULL },
+  mix: { label: '🥣 <span class="tl">Mixtures</span>', name: 'Solution or just a mixture?', ...MIX },
+  speed: { label: '⏱️ <span class="tl">Faster?</span>', name: 'What makes it dissolve faster?', ...FT },
+  sep: { label: '⚗️ <span class="tl">Separate</span>', name: 'Separation station', ...SEP }
+};
+
+// ================= Missions =================
+// core: one of the three missions for a 45-minute lesson
+const MISSIONS = [
+  { id: 'dissolve', core: true, icon: '🧪', title: 'Will it dissolve?', task: 'Test every solid in <b>water</b> and in <b>cooking oil</b>. That is 10 tests!',
+    hint: 'Choose a solid and a liquid, predict, add a spoonful and stir. Use the results table to see what is left.',
+    setup() { state.view = 'beaker'; state.beaker = freshBeaker(); }, on: ev => ev === 'tested',
+    win: () => 'Salt, sugar and coffee dissolve in water, but not in oil. Sand and chalk don\'t dissolve in either. Whether something dissolves depends on the <b>solid</b> and the <b>liquid</b>.' },
+  { id: 'mass', icon: '⚖️', title: 'It\'s still there!', task: 'Use the balance to prove that dissolved salt has <b>not</b> disappeared.',
+    hint: 'Weigh the water and the salt, predict, stir, then look at the balance again.',
+    setup() { state.view = 'mass'; state.mass = freshMass(); }, on: ev => ev === 'mass',
+    win: () => 'The mass stayed the same, so the salt is still there. Its particles are spread out between the water particles.' },
+  { id: 'full', icon: '🥄', title: 'Full up', task: 'Find out how much sugar dissolves in <b>cold</b> water and in <b>warm</b> water.',
+    hint: 'Keep adding spoonfuls until one will not dissolve. Then try the other water.',
+    setup() { state.view = 'full'; state.full = freshFull(); }, on: ev => ev === 'full',
+    win: () => 'Warm water dissolved more sugar than cold water. In the end, no more will dissolve, and the extra sits at the bottom.' },
+  { id: 'mix', core: true, icon: '🥣', title: 'Solution or mixture?', task: 'Sort all 7 into <b>solutions</b> and <b>other mixtures</b>.',
+    hint: 'A solution is see-through, with no bits, no layer and no cloud. It can still be coloured!',
+    setup() { state.view = 'mix'; state.mix = freshMix(); }, on: ev => ev === 'sortedmix',
+    win: () => 'All solutions are mixtures, but not all mixtures are solutions.' },
+  { id: 'speed', icon: '⏱️', title: 'Speed it up', task: 'Plan and run a <b>fair test</b>: what makes sugar dissolve faster? Finish with a conclusion.',
+    hint: 'Change only one thing. Make everything else the same in every beaker.',
+    setup() { state.view = 'speed'; state.ft = freshFt(); }, on: ev => ev === 'concluded',
+    win: () => 'A fair test, a chart and a conclusion. That is how scientists find out what makes a difference.' },
+  { id: 'odd', icon: '🔍', title: 'The odd one out', task: 'Run a fair test, then find the result that does not fit, and decide what to do about it.',
+    hint: 'After the results, look at the dot plot. Which dot is far from its two partners?',
+    setup() { state.view = 'speed'; state.ft = freshFt(); }, on: ev => ev === 'repeated',
+    win: () => 'You found the <b>anomalous result</b> and did that test again to check it. Repeating makes results more reliable.' },
+  { id: 'salt', core: true, icon: '🧂', title: 'Get the salt back', task: 'In the <b>Separation station</b>, get the salt back from salt water.',
+    hint: 'Can the filter paper catch dissolved salt? What happens to water left in a dish?',
+    setup() { state.view = 'sep'; state.sep = freshSep(); state.sep.task = 'salt'; }, on: ev => ev === 'separated' && state.sep.done.salt,
+    win: () => 'The water evaporated and the salt was left behind. Dissolving is <b>reversible</b>: we got the solute back.' },
+  { id: 'water', icon: '🧊', title: 'Get the water back too', task: 'Get <b>both</b> the salt and the water back from salt water.',
+    hint: 'The water goes into the air as it evaporates. What could catch it and turn it back into liquid?',
+    setup() { state.view = 'sep'; state.sep = freshSep(); state.sep.task = 'water'; }, on: ev => ev === 'separated' && state.sep.done.water,
+    win: () => 'The water evaporated, then <b>condensed</b> on the cold lid and dripped into the other dish. Solute and solvent, both back!' },
+  { id: 'tools', icon: '🧲', title: 'Sieve, filter, magnet', task: 'Separate rice from flour, sand from water, and iron filings from sand.',
+    hint: 'Think about the size of the bits, whether there is a liquid, and what is magnetic.',
+    setup() { state.view = 'sep'; state.sep = freshSep(); }, on: () => ['rice', 'sand', 'iron'].every(x => state.sep.done[x]),
+    win: () => 'A sieve for big and small bits, a filter for a solid in a liquid, and a magnet for iron. The right tool for each mixture!' },
+  { id: 'triple', icon: '🏆', title: 'Triple trouble', task: 'Separate a mixture of <b>sand, salt and water</b>. You will need 2 steps.',
+    hint: 'What should you do first, so the sand is not left mixed up with the salt?',
+    setup() { state.view = 'sep'; state.sep = freshSep(); state.sep.task = 'triple'; }, on: ev => ev === 'separated' && state.sep.done.triple,
+    win: () => 'Filter first to catch the sand, then evaporate to get the salt. Three things, separated!' }
+];
+function emit(ev, data = {}) {
+  if (state.mission == null) return;
+  const i = state.mission, m = MISSIONS[i];
+  if (!m.on(ev, data)) return;
+  stopMission();
+  if (!state.done.includes(m.id)) { state.done.push(m.id); store.set('dl-done', state.done); }
+  updateStars();
+  setTimeout(() => {
+    $('#winTitle').textContent = `${m.icon} Mission complete!`;
+    $('#winText').innerHTML = m.win(data);
+    $('#winNext').style.display = i < MISSIONS.length - 1 ? '' : 'none';
+    $('#winPractise').style.display = i < MISSIONS.length - 1 ? 'none' : '';
+    $('#winNext').dataset.i = i + 1;
+    $('#winModal').classList.remove('hidden'); confetti();
+  }, 1200);
+}
+function startMission(i) {
+  closeModals();
+  state.mission = i; MISSIONS[i].setup();
+  location.hash = 'view=' + state.view;
+  const m = MISSIONS[i];
+  $('#bannerKicker').textContent = `Mission ${i + 1} of ${MISSIONS.length}: ${m.title}`;
+  $('#bannerText').innerHTML = m.task; $('#bannerHint').innerHTML = m.hint;
+  $('#bannerHint').classList.add('hidden'); $('#hintBtn').textContent = '💡 Show a hint';
+  $('#banner').classList.remove('hidden');
+  render(); $('#drawer').scrollTop = 0;
+}
+function stopMission() { state.mission = null; $('#banner').classList.add('hidden'); fitBanner(); }
+function fitBanner() { $('#drawer').style.paddingTop = state.mission == null ? '' : `${$('#banner').offsetHeight + 18}px`; }
+function updateStars() { $('#starCount').textContent = `${state.done.filter(id => MISSIONS.some(m => m.id === id)).length}/${MISSIONS.length} ⭐`; }
+function closeModals() { document.querySelectorAll('.modal').forEach(m => m.classList.add('hidden')); }
+function closeAll() { closeModals(); maybeHelp(); }
+function confetti() {
+  const em = ['⭐', '🌟', '🧂', '💧', '🎉'];
+  for (let i = 0; i < 30; i++) {
+    const s = document.createElement('span'); s.className = 'confetti'; s.textContent = em[i % em.length];
+    s.style.left = `${Math.random() * 100}vw`; s.style.animationDuration = `${2 + Math.random() * 2}s`; s.style.animationDelay = `${Math.random() * .6}s`;
+    document.body.appendChild(s); setTimeout(() => s.remove(), 5000);
+  }
+}
+
+// ================= Help, key words and Real life =================
+const OBJ = {
+  '5Cp.01': 'Know that the ability of a solid to dissolve and the ability of a liquid to act as a solvent are properties of the solid and liquid.',
+  '5Cc.02': 'Understand that dissolving is a reversible process and investigate how to separate the solvent and solute after a solution is formed.',
+  '5Cc.03': 'Investigate and describe the process of dissolving (using the terms solute, solvent, solution), and relate it to making a mixture.',
+  '5Cm.01': 'Use the particle model to describe solids, liquids (including solutions) and gases.',
+  '5TWSp.03': 'Make predictions, referring to relevant scientific knowledge and understanding within familiar and unfamiliar contexts.',
+  '5TWSp.04': 'Plan fair test investigations, identifying the independent, dependent and control variables.',
+  '5TWSp.05': 'Describe risks when planning practical work and consider how to minimise them.',
+  '5TWSc.03': 'Choose equipment to carry out an investigation and use it appropriately.',
+  '5TWSc.05': 'Take appropriately accurate measurements.',
+  '5TWSc.06': 'Carry out practical work safely.',
+  '5TWSa.02': 'Describe patterns in results, including identifying any anomalous results.',
+  '5TWSa.05': 'Present and interpret results using tables, bar charts, dot plots and line graphs.',
+  '5TWSm.01': 'Know that a model presents an object, process or idea in a way that shows some of the important features.'
+};
+const MAIN = ['5Cp.01', '5Cc.02', '5Cc.03'], SUPPORT = ['5Cm.01', '5TWSp.03', '5TWSp.04', '5TWSp.05', '5TWSc.03', '5TWSc.05', '5TWSc.06', '5TWSa.02', '5TWSa.05', '5TWSm.01'];
+const HELP = {
+  beaker: { q: 'Which solids <b>dissolve</b>? Does it depend on the liquid?', steps: ['Choose a <b>solid</b> and a <b>liquid</b>.', '<b>Predict</b>: will it dissolve?', 'Add a spoonful and stir. Watch the beaker <b>and</b> the particles.', 'Test every solid in water and in oil.'],
+    look: 'A solution is <b>see-through</b>, but it can be coloured. Cloudy means it has <b>not</b> dissolved.', codes: ['5Cc.03', '5Cp.01', '5Cm.01', '5TWSp.03', '5TWSm.01'] },
+  mass: { q: 'When salt dissolves, where does it go?', steps: ['Weigh the water, then weigh the salt.', '<b>Predict</b> the mass after stirring.', 'Stir it in and read the balance.'],
+    look: 'Add the two masses together. What do you get?', codes: ['5Cc.03', '5Cm.01', '5TWSc.05', '5TWSp.03'] },
+  full: { q: 'How much sugar can dissolve in water? Does warm water hold more?', steps: ['<b>Predict</b> first.', 'Add spoonfuls one at a time until no more will dissolve.', 'Try cold water, then warm water. Then try salt.'],
+    look: 'When no more will dissolve, the extra sits at the bottom.', codes: ['5Cp.01', '5TWSp.03'] },
+  mix: { q: 'Is every mixture a solution?', steps: ['<b>Predict</b> first.', 'Tap a mixture, then tap its box. Or drag it.', 'Solutions go in the inner box.'],
+    look: 'A solution is see-through, with no bits, no layer and no cloud.', codes: ['5Cc.03'] },
+  speed: { q: 'What makes sugar dissolve faster?', steps: ['Choose <b>one</b> thing to change, what to measure, and what to keep the same.', 'Set up the beakers, choose equipment and plan for safety.', '<b>Predict</b>, measure, then run the test.', 'Find the odd result, choose a chart and write a conclusion.'],
+    look: 'Change only <b>one</b> thing. If you change two, you can\'t tell which one made the difference.', codes: ['5TWSp.03', '5TWSp.04', '5TWSp.05', '5TWSc.03', '5TWSc.05', '5TWSc.06', '5TWSa.02', '5TWSa.05'] },
+  sep: { q: 'How can we separate a mixture, and get a dissolved solid back?', steps: ['Choose a job.', 'Choose the right equipment from the shelf.', 'For evaporating, use the <b>time-lapse</b> slider.'],
+    look: 'Filter paper can\'t catch dissolved salt: its particles are far too small.', codes: ['5Cc.02', '5Cm.01', '5TWSc.06'] }
+};
+const MODEL = {
+  beaker: [['🥄', 'Every test here uses one spoonful. In real life, if you add lots of a solid, some of it might not dissolve.']],
+  mass: [['⚖️', 'A real balance might be a gram out. Here the numbers are exact.']],
+  full: [['🥄', 'Real spoonfuls are never exactly the same size, so your class might get slightly different numbers.']],
+  mix: [['🟤', 'Muddy water is a mix of lots of things. A tiny bit of the mud may dissolve, but most of it does not.']],
+  speed: [['⏱️', 'The times here are made up to show the pattern. Real times depend on your sugar, your spoon and how you stir.']],
+  sep: [['⏩', 'Evaporating at room temperature takes days. In a school lab, an adult may heat it to make it faster, and everyone wears goggles.'], ['🕳️', 'The holes in filter paper are far too small to see.']],
+  all: [['🔬', 'Real particles are far too small to see, even with a microscope.'], ['🎨', 'The particles are drawn as coloured balls to tell them apart. Real particles have no colour.'],
+    ['⏩', 'Dissolving and evaporating are speeded up here.'], ['🎲', 'In a real experiment, results are never perfectly the same each time.']]
+};
+const helpSeen = new Set();
+let autoHelp = true, welcomed = false;
+function showHelp() {
+  const H = HELP[state.view], V = VIEWS[state.view];
+  helpSeen.add(state.view);
+  const core = MISSIONS.map((m, i) => m.core ? `${i + 1} (${m.title})` : null).filter(Boolean);
+  $('#helpBody').innerHTML = `<h2 id="helpTitle">${V.label.replace(/<[^>]+>/g, '').split(' ')[0]} ${V.name}</h2>
+    ${welcomed ? '' : '<p class="welcome">Welcome to Dissolving Lab!</p>'}
+    <h3>🔬 The big question</h3><p>${H.q}</p>
+    <h3>👆 What to do</h3><ol>${H.steps.map(s => `<li>${s}</li>`).join('')}</ol>
+    <p><b>💡 Look out for:</b> ${H.look}</p>
+    <p>📖 Tap <b>Words</b> at the top to see what the key words mean.</p>
+    <p>🚀 Try the <b>Missions</b> to win stars!</p>
+    <details class="teach"><summary>For teachers</summary>${H.codes.map(c => `<p><b>${c}</b> ${OBJ[c]}</p>`).join('')}
+      <h4>⏱ A 45-minute lesson</h4><p>Start with the three <b>Lesson</b> missions: ${core.join(', ')}.</p>
+      <h4>All of Dissolving Lab's objectives</h4><p>Main: ${MAIN.join(', ')}. Supporting: ${SUPPORT.join(', ')}.</p></details>`;
+  welcomed = true;
+  $('#helpModal').classList.remove('hidden');
+}
+function maybeHelp() { if (!autoHelp || helpSeen.has(state.view) || document.querySelector('.modal:not(.hidden)')) return; showHelp(); }
+
+function renderStage() { $('#stage').innerHTML = VIEWS[state.view].stage(); }
+function render() {
+  const v = VIEWS[state.view];
+  $('#tabs').innerHTML = Object.entries(VIEWS).map(([id, x]) =>
+    `<button class="btn${id === state.view ? ' active' : ''}" data-act="view" data-view="${id}" title="${x.name}" aria-label="${x.name}">${x.label}</button>`).join('');
+  const keep = $('#drawer').scrollTop, same = render.last === state.view;
+  $('#drawer').innerHTML = v.drawer();
+  renderStage();
+  if (same) $('#drawer').scrollTop = keep;
+  render.last = state.view;
+  fitBanner();
+  maybeHelp();
+}
+
+// ================= Actions =================
+const top0 = () => { $('#drawer').scrollTop = 0; };
+const ACTIONS = {
+  view(el) { closeModals(); state.view = el.dataset.view; location.hash = 'view=' + state.view; render(); top0(); },
+  // The beaker
+  bsolid(el) { const b = state.beaker; b.solid = el.dataset.v; b.step = b.done[key(b.solid, b.liquid)] ? 'settled' : 'predict'; render(); top0(); },
+  bliquid(el) { const b = state.beaker; b.liquid = el.dataset.v; if (b.solid) b.step = b.done[key(b.solid, b.liquid)] ? 'settled' : 'predict'; render(); },
+  bpred(el) { const b = state.beaker; b.pred[key(b.solid, b.liquid)] = el.dataset.v; render(); },
+  badd() { state.beaker.step = 'added'; render(); },
+  bstir() { const b = state.beaker; b.step = 'stirred'; b.done[key(b.solid, b.liquid)] = true; render(); top0(); if (Object.keys(b.done).length === 10) emit('tested'); },
+  bwait() { state.beaker.step = 'settled'; render(); },
+  // Where did it go?
+  msolid(el) { state.mass.solid = el.dataset.v; render(); },
+  mn(el) { state.mass.n = +el.dataset.v; render(); },
+  mstep() { state.mass.step++; render(); top0(); },
+  mpred(el) { state.mass.pred = el.dataset.v; render(); },
+  mwhere(el) { const m = state.mass; m.where = el.dataset.v; if (m.where !== 'there' && !m.whereWrong.includes(m.where)) m.whereWrong.push(m.where); render(); if (m.where === 'there') emit('mass'); },
+  mreset() { state.mass = freshMass(); render(); top0(); },
+  // Keep adding
+  fsolid(el) { Object.assign(state.full, { solid: el.dataset.v, n: 0 }); render(); },
+  ftemp(el) { Object.assign(state.full, { temp: el.dataset.v, n: 0 }); render(); },
+  fpred(el) { state.full.pred = el.dataset.v; render(); },
+  fadd(el) { const f = state.full, cap = CAP[f.solid][f.temp]; f.n = Math.min(f.n + +el.dataset.v, cap + 3);
+    if (f.n > cap) f.found[key(f.solid, f.temp)] = true; render(); top0();
+    if (f.found['sugar-cold'] && f.found['sugar-warm']) emit('full'); },
+  freset() { state.full.n = 0; render(); },
+  // Solution or mixture?
+  xpred(el) { state.mix.pred = el.dataset.v; render(); },
+  xreset() { state.mix = { ...freshMix(), pred: state.mix.pred }; render(); },
+  // The fair test
+  ftiv(el) { const t = state.ft; FT.setIv(el.dataset.v); t.keeps = {}; t.keepsSaid = null; render(); },
+  ftdv(el) { const t = state.ft, m = MEASURE.find(x => x[0] === el.dataset.v); t.dv = m[0]; if (!m[2] && !t.dvWrong.includes(m[0])) t.dvWrong.push(m[0]); render(); },
+  ftkeeps() {
+    const t = state.ft, msgs = [], list = [...FORDER.filter(k => k !== t.iv).map(k => [k, FV[k].name, true]), ['sugar', 'the amount of sugar', true], ['time', '', false, 'The time it takes is what you <b>measure</b>, so it can\'t stay the same!'], [t.iv, '', false, `${FV[t.iv].name} is what you are <b>changing</b>, so it can't stay the same!`]];
+    list.forEach(([id, n, yes, why]) => { if (yes && !t.keeps[id]) msgs.push(`You also need to keep <b>${lc(n)}</b> the same.`); if (!yes && t.keeps[id]) msgs.push(why); });
+    t.keepsSaid = msgs.length ? msgs.slice(0, 3) : 'ok'; render();
+  },
+  ftnext() { state.ft.step++; render(); top0(); },
+  ftbeaker(el) { state.ft.sel = +el.dataset.v; render(); },
+  ftset(el) { const t = state.ft; t.beakers[t.sel][el.dataset.k] = el.dataset.v; render(); },
+  ftkit(el) { const t = state.ft, id = el.dataset.v; t.kit[id] = !t.kit[id]; t.kitSaid = null; render(); },
+  ftkitcheck() {
+    const t = state.ft, msgs = [];
+    EQUIP.filter(e => e[3] === 'need' && !t.kit[e[0]]).forEach(e => msgs.push(`You need a <b>${lc(e[2])}</b>. ${e[4]}`));
+    if (!t.kit.spoon && !t.kit.balance) msgs.push('How will you add the same amount of sugar each time?');
+    EQUIP.filter(e => e[3] === 'no' && t.kit[e[0]]).forEach(e => msgs.push(`<b>${e[2]}</b>: ${e[4]}`));
+    t.kitSaid = msgs.length ? msgs : 'ok'; render(); top0();
+  },
+  ftrisks() { const t = state.ft, msgs = []; RISKS.forEach(([id, , yes, why]) => { if (yes && !t.risks[id]) msgs.push('There is another risk. Look at the picture again.'); if (!yes && t.risks[id]) msgs.push(why); });
+    t.risksSaid = msgs.length ? [...new Set(msgs)] : 'ok'; render(); },
+  ftred(el) { const t = state.ft, [id, rid] = el.dataset.v.split(':'); if (rid === id) t.red[id] = rid; else (t.redWrong[id] = t.redWrong[id] || []).push(rid); render(); },
+  ftpred(el) { state.ft.pred = el.dataset.v; render(); },
+  ftread() {
+    const t = state.ft, tb = FT.readBeaker(), tShow = +t.beakers[tb].temp - 1, vol = +t.beakers[0].water, msgs = [], a = num(t.therm), b = num(t.jug);
+    if (!(Math.abs(a - tShow) <= 1)) msgs.push(isNaN(a) ? 'Type the thermometer reading.' : 'Look at the thermometer again. Find the top of the red line, then the nearest number below it, and count the small marks (2 °C each).');
+    if (!(Math.abs(b - vol) <= 5)) msgs.push(isNaN(b) ? 'Type the measuring jug reading.' : 'Look at the jug again. Read the number at the top of the water. Each small mark is 10 mL.');
+    t.readSaid = msgs.length ? msgs : 'ok'; render();
+  },
+  ftrun() { FT.run(); },
+  ftfix() { Object.assign(state.ft, { step: 1, ran: false, running: false }); render(); top0(); },
+  ftodd(el) { const t = state.ft; if (t.step !== 7 || t.oddFound) return; t.oddTap = el.dataset.v; if (t.oddTap === FT.odd.join('-')) t.oddFound = true; render(); top0(); },
+  ftact(el) { const t = state.ft; t.act = el.dataset.v; if (t.act === 'repeat') { t.repeated = true; emit('repeated'); } else if (!t.actWrong.includes(t.act)) t.actWrong.push(t.act); render(); },
+  ftchart(el) { const t = state.ft; t.chart = el.dataset.v; if (t.chart !== FT.chartType() && !t.chartWrong.includes(t.chart)) t.chartWrong.push(t.chart); render(); },
+  ftclaim(el) { const t = state.ft; t.claim = el.dataset.v; if (t.claim !== FT_CLAIMS[t.iv][0][0] && !t.claimWrong.includes(t.claim)) t.claimWrong.push(t.claim); render(); },
+  ftwhy(el) { const t = state.ft; t.why = el.dataset.v; if (!FT_WHY[t.iv][+t.why][1]) { if (!t.whyWrong.includes(t.why)) t.whyWrong.push(t.why); } else emit('concluded'); render(); },
+  ftreset() { state.ft = freshFt(); render(); top0(); },
+  // Separation station
+  stask(el) { Object.assign(state.sep, { task: el.dataset.v, last: null, step: 0, t: 0, tripleSaid: null }); render(); top0(); },
+  stool(el) { SEP.use(el.dataset.v); },
+  // Missions and pop-ups
+  missions() {
+    $('#missionList').innerHTML = MISSIONS.map((m, i) => `<button class="mission-item${state.done.includes(m.id) ? ' done' : ''}" data-act="startMission" data-i="${i}">
+      <span class="em">${m.icon}</span><span class="t">${i + 1}. ${m.title}</span>${m.core ? '<span class="core">⏱ Lesson</span>' : ''}<span class="star">⭐</span></button>`).join('');
+    $('#missionsModal').classList.remove('hidden');
+  },
+  startMission(el) { startMission(+el.dataset.i); },
+  nextMission(el) { startMission(+el.dataset.i); },
+  stopMission() { stopMission(); },
+  hint() { const h = $('#bannerHint'); h.classList.toggle('hidden'); $('#hintBtn').textContent = h.classList.contains('hidden') ? '💡 Show a hint' : '💡 Hide the hint'; fitBanner(); },
+  resetStars() { state.done = []; store.set('dl-done', []); updateStars(); ACTIONS.missions(); },
+  closeModals() { closeAll(); },
+  help() { closeModals(); showHelp(); },
+  words() { $('#wordsList').innerHTML = KEYWORDS.map(([em, w, m]) => `<li><span class="em">${em}</span><span><b>${w}</b>: ${m}</span></li>`).join(''); $('#wordsModal').classList.remove('hidden'); },
+  model() {
+    $('#modelTab').textContent = `${VIEWS[state.view].label.replace(/<[^>]+>/g, '').split(' ')[0]} ${VIEWS[state.view].name}`;
+    $('#modelList').innerHTML = [...MODEL[state.view], ...MODEL.all].map(([em, t]) => `<li><span class="em">${em}</span><span>${t}</span></li>`).join('');
+    $('#modelModal').classList.remove('hidden');
+  }
+};
+const num = v => parseFloat(String(v).replace(',', '.'));
+document.addEventListener('click', e => {
+  if (DND.skipClick) { DND.skipClick = false; return; }
+  const v = VIEWS[state.view], drag = e.target.closest('[data-drag]');
+  if (drag && v.pick) { v.pick(drag.dataset.drag); return; }
+  const drop = e.target.closest('[data-drop]'), sel = v.sel && v.sel();
+  if (drop && sel) { v.drop(sel, drop.dataset.drop); return; }
+  const el = e.target.closest('[data-act]');
+  if (el && !el.disabled && ACTIONS[el.dataset.act]) ACTIONS[el.dataset.act](el);
+});
+// Ticked and typed answers are kept, so they survive the drawer being redrawn
+document.addEventListener('change', e => {
+  const t = state.ft, d = e.target.dataset;
+  if (d.keep) { t.keeps[d.keep] = e.target.checked; t.keepsSaid = null; }
+  if (d.risk) { t.risks[d.risk] = e.target.checked; t.risksSaid = null; }
+});
+document.addEventListener('input', e => {
+  const id = e.target.id;
+  if (id === 'ftTherm') state.ft.therm = e.target.value;
+  if (id === 'ftJug') state.ft.jug = e.target.value;
+  // The evaporating time-lapse redraws only the picture, so the slider keeps working while it is dragged
+  if (id === 'stl') {
+    const s = state.sep, T = SEP.task(); s.t = +e.target.value; renderStage();
+    if (s.t >= 100) { const id2 = T[0], lid = s.last && s.last.tool === 'lid';
+      if (!s.done[id2] || (lid && !s.done.water)) { if (lid) s.done.water = true; SEP.finish(id2); } }
+  }
+});
+document.querySelectorAll('.modal').forEach(m => m.addEventListener('click', e => { if (e.target === m) closeAll(); }));
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeAll(); });
+let resizeT;
+addEventListener('resize', () => { fitBanner(); clearTimeout(resizeT); resizeT = setTimeout(renderStage, 120); });
+
+// ================= Start =================
+// Test hooks: #view=speed  ·  #mission=4  ·  #nohelp=1  ·  #task=triple (separation)
+const hp = new URLSearchParams(location.hash.slice(1));
+if (VIEWS[hp.get('view')]) state.view = hp.get('view');
+if (hp.has('nohelp')) autoHelp = false;
+if (TASKS.some(x => x[0] === hp.get('task'))) state.sep.task = hp.get('task');
+updateStars();
+if (MISSIONS[hp.get('mission')]) startMission(+hp.get('mission'));
+else render();
+</script>
+<script>
+  // Offline support: saves the whole Science Hub on this device the first time any page is opened (see ../sw.js)
+  if ('serviceWorker' in navigator) addEventListener('load', () => navigator.serviceWorker.register('../sw.js').catch(() => {}));
+</script>
+</body>
+</html>

@@ -529,7 +529,7 @@ const EC = {
 // ================= Dissolving =================
 // [name, dissolves?, colour of its particles, what you see]
 const DIS = {
-  salt:   ['Salt', true, '#f2f2f2', 'It dissolves. The water looks clear again, but the salt is still there: you could taste it, or evaporate the water to get it back.'],
+  salt:   ['Salt', true, '#f2f2f2', 'It dissolves. The water looks clear again, but the salt is still there: evaporate the water and the salt is left behind.'],
   sugar:  ['Sugar', true, '#ffe9b0', 'It dissolves. The water looks clear, but the sugar is still there, spread out between the water particles.'],
   coffee: ['Instant coffee', true, '#7a4a2a', 'It dissolves. The water turns brown, but it is still see-through, with no bits: a solution.'],
   sand:   ['Sand', false, '#d9b26f', 'It does not dissolve. The sand sinks to the bottom.'],
@@ -879,7 +879,9 @@ const VIEWS = {
       const table = tested ? `<div class="card"><h3>📋 Results</h3><table class="gtable"><tr><th>Substance</th><th>You predicted</th><th>Dissolved?</th></tr>
           ${DORDER.filter(x => d.stirred[x]).map(x => `<tr><td>${DIS[x][0]}</td><td>${d.pred[x] ? 'yes' : 'no'}</td><td>${DIS[x][1] ? '✅ yes' : '❌ no'}</td></tr>`).join('')}</table><p class="muted">${tested} of 6 tested.</p></div>` : '';
       const end = tested === 6 ? `<div class="science"><b>🔬 The science</b><p>Salt, sugar and instant coffee <b>dissolve</b> in water. Their particles spread out between the water particles to make a <b>solution</b>. A solution is a liquid: you can see through it, with no bits.</p><p>Sand, oil and pepper do <b>not</b> dissolve. Water can dissolve a <b>range</b> of substances, but not everything.</p></div>` : '';
-      return `${chooser}${end}${step}${table}`;
+      const more = `<div class="card"><h3>🧂 Find out more about dissolving</h3><p>Try oil as well as water, prove the salt is still there, and get it back again.</p>
+          <div class="navrow"><a class="btn primary" href="../dissolving-lab/index.html#view=beaker">🧪 Go to Dissolving Lab ▶</a></div></div>`;
+      return `${chooser}${end}${step}${table}${more}`;
     }
   },
   gas: {
