@@ -91,6 +91,10 @@
     .figure.imgfig img { max-height: 42vh; }
     .venn { width: min(100%, calc(42vh * 1.58)); }
     .qscroll { overflow: visible; }
+    /* On a phone the question takes the height it needs and the page scrolls. (Squeezed into one screen, a tall
+       list of long items to place could cover the places they go.) */
+    .qlayout.single .qside { max-height: none; }
+    .qscroll, .qpool { flex: none; overflow: visible; }
   }
   /* ---------- Question ---------- */
   .progress { display: flex; gap: 5px; margin: 4px 0 12px; flex-wrap: wrap; }
