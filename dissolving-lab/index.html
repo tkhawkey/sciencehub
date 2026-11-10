@@ -420,9 +420,12 @@ const SOLIDS = {
   sugar: ['Sugar', '🍬', '#ffe7a3', true, false],
   sand: ['Sand', '🏖️', '#d9b26f', false, false],
   chalk: ['Chalk', '🖍️', '#fbfbf6', false, false],
-  coffee: ['Instant coffee', '☕', '#7a4a2a', true, false]
+  coffee: ['Instant coffee', '☕', '#7a4a2a', true, false],
+  // Candle wax (not crayon: the colour powder in crayons can make them sink). It floats on water. It only dissolves in HOT oil,
+  // and comes back out as the oil cools, so in cold cooking oil it does not dissolve.
+  wax: ['Candle wax', '🕯️', '#fdf6e3', false, false]
 };
-const SORDER = ['salt', 'sugar', 'sand', 'chalk', 'coffee'];
+const SORDER = ['salt', 'sugar', 'sand', 'chalk', 'coffee', 'wax'];
 // Liquids: [name, emoji, colour in the beaker, colour of its particles]
 const LIQUIDS = { water: ['Water', '💧', '#bfe3ff', '#7fb2ff'], oil: ['Cooking oil', '🫒', '#f6dc7a', '#f2c94c'] };
 const KEYWORDS = [
@@ -451,6 +454,7 @@ function beakerG(cx, base, bw, bh, o = {}) {
   }
   if (o.sed) { const sh = bh * o.sed.h;
     g += `<path d="M${x0} ${base} V${base - sh * .8} Q${cx} ${base - sh * 1.2} ${x0 + bw} ${base - sh * .8} V${base}Z" fill="${o.sed.col}"/>` + Array.from({ length: 24 }, () => `<circle cx="${(x0 + 4 + rr() * (bw - 8)).toFixed(1)}" cy="${(base - 2 - rr() * sh * .7).toFixed(1)}" r="1.5" fill="rgba(0,0,0,.25)"/>`).join(''); }
+  if (o.flakes) g += Array.from({ length: o.flakes.n }, (_, k) => { const x = x0 + 6 + rr() * (bw - 22), y = lvl - 4 + rr() * 6; return `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="14" height="5" rx="2" fill="${o.flakes.col}" stroke="#8a7a55" stroke-width="1.3" transform="rotate(${(k * 23) % 30 - 15} ${x.toFixed(1)} ${y.toFixed(1)})"/>`; }).join('');
   if (o.grains) g += Array.from({ length: o.grains.n }, (_, k) => { const x = x0 + 6 + rr() * (bw - 12), y = base - 3 - rr() * Math.min(10, 2 + o.grains.n / 6); return `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="4.5" height="4.5" fill="${o.grains.col}" stroke="rgba(0,0,0,.35)" stroke-width=".8" transform="rotate(${(k * 37) % 90} ${x.toFixed(1)} ${y.toFixed(1)})"/>`; }).join('');
   // The glass, with a lip and a few measuring marks
   g += `<path d="M${x0 - 4} ${top} L${x0} ${top + 6} V${base} H${x0 + bw} V${top + 6} L${x0 + bw + 4} ${top}" fill="none" stroke="#7d8db0" stroke-width="3" stroke-linejoin="round"/>`;
@@ -488,6 +492,7 @@ const BK = {
   result(s, l) {
     const S = SOLIDS[s], L = LIQUIDS[l], yes = l === 'water' ? S[3] : S[4];
     if (yes) return `<b>${S[0]}</b> dissolved. ${S[0]} is the <span class="term">solute</span>, ${lc(L[0])} is the <span class="term">solvent</span>, and together they make a <span class="term">solution</span>.${s === 'coffee' ? ' The solution is brown, but you can still see through it. A solution can be coloured.' : ' You can see right through it, and the solid has gone from sight.'}`;
+    if (s === 'wax') return `<b>Candle wax</b> did not dissolve in ${lc(L[0])}. You can still see the bits of wax${l === 'water' ? ': they <b>float</b> on top, because wax is lighter than water' : ''}. This is a <span class="term">mixture</span>, but not a solution.`;
     if (s === 'chalk') return `<b>Chalk</b> did not dissolve in ${lc(L[0])}. The ${lc(L[0])} went <b>cloudy</b>: tiny bits of chalk are floating in it. Cloudy means it has <b>not</b> dissolved. Wait, and the bits settle at the bottom.`;
     if (l === 'oil' && S[3]) return `<b>${S[0]}</b> did not dissolve in cooking oil. The grains just sit at the bottom. But ${lc(S[0])} <b>does</b> dissolve in water!`;
     return `<b>${S[0]}</b> did not dissolve in ${lc(L[0])}. You can still see it at the bottom. This is a <span class="term">mixture</span>, but not a solution.`;
@@ -504,17 +509,18 @@ const BK = {
     if (S && mixed) {
       if (yes && b.solid === 'coffee') bo.liq = '#d9b48a';
       else if (!yes && b.solid === 'chalk') { if (st === 'stirred') bo.cloud = 1; else bo.sed = { col: S[2], h: .06 }; }
+      else if (!yes && b.solid === 'wax') bo.flakes = { col: S[2], n: 18 };
       else if (!yes && b.solid === 'sand') bo.sed = { col: S[2], h: .09 };
       else if (!yes) bo.grains = { col: S[2], n: 26 };
     }
-    if (S && st === 'added') { if (b.solid === 'sand') bo.sed = { col: S[2], h: .07 }; else bo.grains = { col: S[2], n: 26 }; }
+    if (S && st === 'added') { if (b.solid === 'wax') bo.flakes = { col: S[2], n: 18 }; else if (b.solid === 'sand') bo.sed = { col: S[2], h: .07 }; else bo.grains = { col: S[2], n: 26 }; }
     o += beakerG(g.cx, g.base, g.bw, g.bh, bo);
     if (S && st === 'predict') o += spoonG(g.cx + g.bw * .1, g.base - g.bh - 30, S[2], g.narrow ? .7 : 1);
     if (st === 'added') o += stirG(g.cx, g.base, g.bw, g.bh);
     o += `<text x="${g.cx}" y="${g.base + (g.narrow ? 20 : 28)}" text-anchor="middle" class="glabel">${S && st !== 'predict' ? `${L[0]} + ${lc(S[0])}` : L[0]}</text>`;
     // The same beaker, zoomed in to its particles
     let extra = '', mix = null;
-    if (S && (st === 'added' || (mixed && !yes))) extra = clump(g.zx, g.zy, g.R, S[2], st === 'stirred' && b.solid === 'chalk' ? 'spread' : 'bottom');
+    if (S && (st === 'added' || (mixed && !yes))) extra = clump(g.zx, g.zy, g.R, S[2], b.solid === 'wax' ? 'top' : st === 'stirred' && b.solid === 'chalk' ? 'spread' : 'bottom');
     if (S && mixed && yes) mix = { n: 10, col: S[2] };
     o += zoomCircle(g.zx, g.zy, g.R, 'liquid', L[3], extra, mix);
     o += zoomLabel(g.zx, g.zy - g.R - 12, '🔍 Zoomed in: each circle is a particle');
@@ -542,10 +548,11 @@ const BK = {
     }
     const table = n ? `<div class="card"><h3>📋 Results</h3><table class="gtable"><tr><th>Solid</th><th>💧 Water</th><th>🫒 Oil</th></tr>
       ${SORDER.map(s => `<tr><td>${SOLIDS[s][1]} ${SOLIDS[s][0]}</td>${['water', 'oil'].map(l => `<td>${b.done[key(s, l)] ? (l === 'water' ? SOLIDS[s][3] : SOLIDS[s][4]) ? '✅ dissolves' : '❌ no' : '<span class="muted">?</span>'}</td>`).join('')}</tr>`).join('')}</table>
-      <p class="muted">${n} of 10 tested.</p></div>` : '';
+      <p class="muted">${n} of ${SORDER.length * 2} tested.</p></div>` : '';
     const both = SORDER.filter(s => SOLIDS[s][3] && b.done[key(s, 'water')] && b.done[key(s, 'oil')]).length;
     const sci = both ? `<div class="science"><b>🔬 The science</b>${both > 1 ? 'Salt, sugar and coffee' : 'Some solids'} dissolve in water, but <b>not</b> in cooking oil. So whether something dissolves depends on the <b>solid</b> and on the <b>liquid</b>. Being able to dissolve is a <b>property</b> of a solid. Being able to dissolve things is a property of a liquid.</div>` : '';
-    return `${step}${pick}${sci}${table}<a class="seelab" href="../particle-playground/index.html#view=dis">🔬 More about particles in Particle Playground ▶</a>`;
+    const oilT = SORDER.some(s => b.done[key(s, 'oil')]) ? `<div class="card"><h3>🫒 Oil can dissolve things too</h3><p>Water is not the only solvent. Put some paprika (a red spice) in cooking oil, and the oil turns <b>orange</b>. The colour from the paprika dissolves in the oil. In water, it hardly dissolves at all. Cooks use this to make chilli oil.</p></div>` : '';
+    return `${step}${pick}${sci}${oilT}${table}<a class="seelab" href="../particle-playground/index.html#view=dis">🔬 More about particles in Particle Playground ▶</a>`;
   }
 };
 
@@ -1080,10 +1087,10 @@ const VIEWS = {
 // ================= Missions =================
 // core: one of the three missions for a 45-minute lesson
 const MISSIONS = [
-  { id: 'dissolve', core: true, icon: '🧪', title: 'Will it dissolve?', task: 'Test every solid in <b>water</b> and in <b>cooking oil</b>. That is 10 tests!',
+  { id: 'dissolve', core: true, icon: '🧪', title: 'Will it dissolve?', task: 'Test every solid in <b>water</b> and in <b>cooking oil</b>. That is 12 tests!',
     hint: 'Choose a solid and a liquid, predict, add a spoonful and stir. Use the results table to see what is left.',
     setup() { state.view = 'beaker'; state.beaker = freshBeaker(); }, on: ev => ev === 'tested',
-    win: () => 'Salt, sugar and coffee dissolve in water, but not in oil. Sand and chalk don\'t dissolve in either. Whether something dissolves depends on the <b>solid</b> and the <b>liquid</b>.' },
+    win: () => 'Salt, sugar and coffee dissolve in water, but not in oil. Sand, chalk and candle wax don\'t dissolve in either. Other things, like the colour in paprika, do dissolve in oil. Whether something dissolves depends on the <b>solid</b> and the <b>liquid</b>.' },
   { id: 'mass', icon: '⚖️', title: 'It\'s still there!', task: 'Use the balance to prove that dissolved salt has <b>not</b> disappeared.',
     hint: 'Weigh the water and the salt, predict, stir, then look at the balance again.',
     setup() { state.view = 'mass'; state.mass = freshMass(); }, on: ev => ev === 'mass',
@@ -1247,7 +1254,7 @@ const ACTIONS = {
   bliquid(el) { const b = state.beaker; b.liquid = el.dataset.v; if (b.solid) b.step = b.done[key(b.solid, b.liquid)] ? 'settled' : 'predict'; render(); },
   bpred(el) { const b = state.beaker; b.pred[key(b.solid, b.liquid)] = el.dataset.v; render(); },
   badd() { state.beaker.step = 'added'; render(); },
-  bstir() { const b = state.beaker; b.step = 'stirred'; b.done[key(b.solid, b.liquid)] = true; render(); top0(); if (Object.keys(b.done).length === 10) emit('tested'); },
+  bstir() { const b = state.beaker; b.step = 'stirred'; b.done[key(b.solid, b.liquid)] = true; render(); top0(); if (Object.keys(b.done).length === SORDER.length * 2) emit('tested'); },
   bwait() { state.beaker.step = 'settled'; render(); },
   // Where did it go?
   msolid(el) { state.mass.solid = el.dataset.v; render(); },

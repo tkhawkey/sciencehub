@@ -1,7 +1,7 @@
 /* Question bank: Dissolving and separating (Cambridge Primary Science 5Cp.01, 5Cc.02, 5Cc.03)
    Each question is one object. "type" says which activity it is – see the engine (index.html) for the formats.
    In "sentence" questions the right choice is written first (the engine shuffles them).
-   Facts match the Dissolving Lab explorer: salt, sugar and instant coffee dissolve in water but not in cooking oil; sand and chalk
+   Facts match the Dissolving Lab explorer: salt, sugar and instant coffee dissolve in water but not in cooking oil; sand, chalk and candle wax
    don't dissolve; the mass stays the same; warm water dissolves sugar faster and dissolves more of it; filter paper can't remove
    dissolved salt; evaporating gets the salt back, and a cold lid gets the water back too. Plain words only: no "suspension",
    "saturated" or "solubility". Children never taste anything. */
@@ -38,7 +38,7 @@ window.BANKS.push({
       { t: 'Sand and water', em: '🏖️', g: 1 }, { t: 'Chalk and water', em: '🖍️', g: 1 }, { t: 'Muddy water', em: '🟤', g: 1 }, { t: 'Oil and water', em: '🫒', g: 1 }],
     explain: 'A solution is see-through, with no bits, layer or cloud. All solutions are mixtures, but not all mixtures are solutions.' },
   { type: 'sort', prompt: 'Does it dissolve in water?', groups: ['✅ Dissolves', '❌ Does not dissolve'],
-    items: [{ t: 'Salt', em: '🧂', g: 0 }, { t: 'Sugar', em: '🍬', g: 0 }, { t: 'Instant coffee', em: '☕', g: 0 }, { t: 'Sand', em: '🏖️', g: 1 }, { t: 'Chalk', em: '🖍️', g: 1 }],
+    items: [{ t: 'Salt', em: '🧂', g: 0 }, { t: 'Sugar', em: '🍬', g: 0 }, { t: 'Instant coffee', em: '☕', g: 0 }, { t: 'Sand', em: '🏖️', g: 1 }, { t: 'Chalk', em: '🖍️', g: 1 }, { t: 'Candle wax', em: '🕯️', g: 1 }],
     explain: 'Chalk makes water cloudy, but cloudy means it has not dissolved. Leave it, and the chalk settles at the bottom.' },
 
   // ---------- Fill the gaps ----------
@@ -59,6 +59,7 @@ window.BANKS.push({
       { s: 'Filter paper can take the salt out of salt water.', a: false, why: 'The salt particles are much smaller than the holes, so they go straight through.' },
       { s: 'A solution can be coloured.', a: true, why: 'Coffee is a brown solution. You can still see through it.' },
       { s: 'Everything that dissolves in water also dissolves in oil.', a: false, why: 'Salt and sugar dissolve in water, but not in cooking oil.' },
+      { s: 'Nothing dissolves in cooking oil.', a: false, why: 'Some things do. The colour in paprika dissolves in oil and turns it orange.' },
     ] },
   { type: 'tf', prompt: 'True or false?',
     statements: [
@@ -66,6 +67,7 @@ window.BANKS.push({
       { s: 'Stirring makes sugar dissolve faster.', a: true, why: 'Stirring moves the sugar around, so it meets fresh water.' },
       { s: 'If water goes cloudy, the solid has dissolved.', a: false, why: 'Cloudy means tiny bits are floating in it: it has not dissolved.' },
       { s: 'Sand dissolves in water if you stir it for long enough.', a: false, why: 'Sand never dissolves in water. It sinks to the bottom.' },
+      { s: 'Candle wax floats on water.', a: true, why: 'Wax is lighter than water. It does not dissolve: you can still see the bits on top.' },
       { s: 'You can find out if salt is in water by tasting it.', a: false, why: 'Never taste anything in a science experiment. Evaporate the water instead, and see if salt is left behind.' },
     ] },
 
