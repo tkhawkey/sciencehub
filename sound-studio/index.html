@@ -450,9 +450,53 @@ const AU = {
     this.live = [];
   },
   // The instruments
-  pluck: (f, v) => AU.play([[f, 1, 'triangle'], [f * 2, .3], [f * 3, .12]], v, { dur: 2.4, lp: 3200 }),
+  // A plucked string, worked out the way a real string behaves (the "Karplus–Strong" method): a burst of noise goes round
+  // a loop one string-length long, and each time round it gets a little smoother and quieter, just like a string ringing.
+  // A hard pluck starts with a brighter, bigger burst: louder, but the same pitch.
+  pluck(f, v, dur = 3) {
+    if (!AU.ctx || AU.muted) return null;
+    const c = AU.ctx, sr = c.sampleRate, n = Math.round(sr * dur), buf = c.createBuffer(1, n, sr), d = buf.getChannelData(0);
+    const L = sr / f, N = Math.floor(L), frac = L - N, soft = v < .55;
+    let seed = Math.round(f * 13) || 1; const rnd = () => (seed = seed * 16807 % 2147483647) / 1073741823.5 - 1;
+    // The first trip round the loop: noise, smoothed for a gentle pluck (a soft finger) or left bright for a hard one
+    let prev = 0; for (let i = 0; i <= N && i < n; i++) { const x = rnd(); prev = soft ? prev * .6 + x * .4 : x; d[i] = prev; }
+    // Low strings ring longer than high ones, as on a real guitar
+    const keep = Math.min(.9995, Math.pow(.001, 1 / (f * Math.min(8, 4 + 300 / f))));
+    for (let i = N + 1; i < n; i++) {
+      const a = d[i - N] * (1 - frac) + d[i - N - 1] * frac, b = d[i - N - 1] * (1 - frac) + (i - N - 2 >= 0 ? d[i - N - 2] : 0) * frac;
+      d[i] = keep * .5 * (a + b);
+    }
+    let peak = 0; for (let i = 0; i < n; i++) peak = Math.max(peak, Math.abs(d[i])); for (let i = 0; i < n; i++) d[i] /= peak || 1;
+    for (let i = 0; i < sr * .003; i++) d[i] *= i / (sr * .003);          // a soft start: no click
+    for (let i = n - sr * .1; i < n; i++) d[i] *= (n - i) / (sr * .1);     // a soft end
+    return AU.playBuf(buf, v);
+  },
+  // Play a sound that has already been worked out, at a safe volume
+  playBuf(buf, v) {
+    const c = AU.ctx, t = c.currentTime + .02, src = c.createBufferSource(), g = c.createGain();
+    src.buffer = buf; g.gain.value = .1 + .65 * clamp(v); src.connect(g); g.connect(AU.out); src.start(t);
+    const h = { g }; AU.live.push(h); src.onended = () => { AU.live = AU.live.filter(x => x !== h); }; return h;
+  },
   drum: (f, v) => AU.play([[f, 1, 'sine', 1.5], [f * 1.59, .45], [f * 2.14, .25]], v, { dur: .9, attack: .006, noise: { f: 900, g: .25 * v, dur: .05 } }),
-  twang: (f, v) => AU.play([[f, 1, 'sawtooth'], [f * 2, .3, 'triangle']], v, { dur: 1.3, lp: Math.max(500, f * 5), attack: .008 }),
+  // A ruler twang, as it really sounds: each time the ruler vibrates, it rattles against the desk edge with a little knock.
+  // Few vibrations per second → a slow rattle (brrrr); many → a buzz. The knocks fade away as the ruler slows down.
+  ruler(vps, v, dur = 1.5) {
+    if (!AU.ctx || AU.muted) return null;
+    const c = AU.ctx, sr = c.sampleRate, n = Math.round(sr * dur), buf = c.createBuffer(1, n, sr), d = buf.getChannelData(0), period = sr / vps;
+    let seed = 7; const rnd = () => (seed = seed * 16807 % 2147483647) / 1073741823.5 - 1;
+    const knock = Math.min(period * .85, sr * .014);
+    for (let k = 0; k * period < n; k++) {
+      const s0 = Math.round(k * period), a = Math.exp(-(k * period / sr) / .42);
+      for (let i = 0; i < knock && s0 + i < n; i++) { const e = Math.exp(-i / (knock / 3.5)); d[s0 + i] += a * e * (.65 * Math.sin(2 * Math.PI * 520 * i / sr) + .35 * Math.sin(2 * Math.PI * 1300 * i / sr) + .25 * rnd()); }
+    }
+    for (let i = 0; i < sr * .04; i++) d[i] += Math.exp(-i / (sr * .007)) * rnd() * .5;   // the "thwack" of letting go
+    let peak = 0; for (let i = 0; i < n; i++) peak = Math.max(peak, Math.abs(d[i])); for (let i = 0; i < n; i++) d[i] /= peak || 1;
+    const t = c.currentTime + .02, src = c.createBufferSource(), g = c.createGain(), lp = c.createBiquadFilter();
+    src.buffer = buf; lp.type = 'lowpass'; lp.frequency.value = 3500;
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.08 + .6 * clamp(v), t + .003);
+    src.connect(lp); lp.connect(g); g.connect(AU.out); src.start(t);
+    const h = { g }; AU.live.push(h); src.onended = () => { AU.live = AU.live.filter(x => x !== h); }; return h;
+  },
   tap: (f, v) => AU.play([[f, 1], [f * 2.76, .25]], v, { dur: 1.1, attack: .005 }),
   blow: (f, v) => AU.play([[f, 1], [f * 2, .12]], v, { dur: 1.6, attack: .18, hold: .9, noise: { f, q: 6, g: .25, dur: 1.6 } }),
   hum: (f, v) => AU.play([[f, 1, 'triangle'], [f * 2, .2]], v, { dur: 3, attack: .2, hold: 2.3, lp: 900 }),
@@ -520,7 +564,7 @@ const MAKERS = {
     parts: { skin: 'The drum skin', side: 'The side of the drum', rice: 'The rice' },
     wrong: { side: 'The side holds the drum together. Look for the part that you hit.', rice: 'The rice jumps, but only because the skin under it is moving. What makes the rice jump?' },
     found: 'Yes! The <b>skin</b> vibrates. You can\'t see it move, but the rice jumps because of it.', stop: 'You put your hand flat on the skin. It stops vibrating. The rice stops jumping, and the sound stops.' },
-  ruler: { name: 'Ruler on a desk', em: '📏', f: 140, v: .6, ms: 2600, play: v => AU.twang(140, v), hand: [235, 140],
+  ruler: { name: 'Ruler on a desk', em: '📏', f: 140, v: .6, ms: 2600, play: v => AU.ruler(60, v), hand: [235, 140],
     parts: { over: 'The end of the ruler', desk: 'The desk', hand: 'Your hand' },
     wrong: { desk: 'The desk stays still. Which part moves up and down?', hand: 'Your hand holds the ruler still on the desk. Which part moves?' },
     found: 'Yes! The part of the ruler over the edge vibrates: up and down, very quickly.', stop: 'You hold the end of the ruler. It stops vibrating, and the twang stops.' },
@@ -767,7 +811,7 @@ const DRUM = {
 // Vibrations per second for a plastic 30 cm ruler, worked out from how bendy plastic is: about 0.6 ÷ (overhang in metres)².
 // 5 cm → 240, 10 cm → 60, 15 cm → 27, 20 cm → 15, 25 cm → 10. Pushing it down further makes bigger vibrations, not faster ones.
 const vpsOf = (cm, k = 1) => Math.round(.6 / Math.pow(cm / 100, 2) * k);
-// The computer can't play 10 vibrations per second as a note you can hear, so the note it plays goes up and down in the same direction
+// For the sound picture: how high the twang sounds (it goes up and down in the same direction as the vibrations per second)
 const twangF = vps => 90 * Math.pow(vps / 10, .55);
 const PUSH = [['A little', .3, 6], ['Medium', .6, 11], ['A lot', .95, 18]];
 const freshRul = () => ({ over: 15, push: 1, last: null, seen: {}, count: 0 });
@@ -808,7 +852,7 @@ const RUL = {
   twang() {
     const r = state.rul, vps = vpsOf(r.over), v = PUSH[r.push][1];
     r.last = { over: r.over, push: r.push, vps }; r.seen[r.over] = vps; r.count = 0;
-    AU.twang(twangF(vps), v); ring('rul', 4000, true);
+    AU.ruler(vps, v); ring('rul', 4000, true);
     if (r.over >= 18 && !state.pred.rul?.long) (state.pred.rul = state.pred.rul || {}).long = true;
     if (r.over <= 10 && state.pred.rul?.long) tried('rul');
     render();
@@ -861,11 +905,11 @@ const BOT = {
     const pw = Math.min(w - 20, 320), ph = narrow ? 44 : 58;
     if (h - base > ph + 80) o += picBox((w - pw) / 2, h - ph - 24, pw, ph, onL ? .15 + L.rank * .18 : null, .55, '🖼️ Sound picture', onL ? '' : 'Tap a bottle');
     say = b.mode === 'tap' ? '🥄 Tap a bottle with a spoon.' : '🌬️ Blow across the top of a bottle.';
-    return `<div class="lay-top"><span class="scaletag">🍾 Bottle band</span><div class="readout">${say}</div></div><svg viewBox="0 0 ${w} ${h}" aria-label="Five bottles with different amounts of water">${o}</svg>`;
+    return `<div class="lay-top"><span class="scaletag">🧴 Bottle band</span><div class="readout">${say}</div></div><svg viewBox="0 0 ${w} ${h}" aria-label="Five bottles with different amounts of water">${o}</svg>`;
   },
   drawer() {
     const b = state.bot, P = state.pred.bot || {};
-    const modes = `<div class="card"><h2>🍾 Bottle band</h2><p>Five bottles with different amounts of water. You can <b>tap</b> them or <b>blow</b> across the top.</p>
+    const modes = `<div class="card"><h2>🧴 Bottle band</h2><p>Five bottles with different amounts of water. You can <b>tap</b> them or <b>blow</b> across the top.</p>
       <div class="navrow" style="margin-top:6px">${[['tap', '🥄 Tap'], ['blow', '🌬️ Blow'], ['match', '🎯 Match the note']].map(([m, t]) => `<button class="btn${b.mode === m ? ' active' : ''}" data-act="bmode" data-v="${m}">${t}</button>`).join('')}</div></div>`;
     if (b.mode === 'tap') return `${modes}<div class="card says"><h3>🥄 Tapping</h3><p>Tap each bottle. When you tap, the <b>glass and the water</b> vibrate.</p><p class="muted">Tapped: ${Object.keys(b.tapped).length} of 5</p></div>
       ${Object.keys(b.tapped).length >= 3 ? '<div class="science"><b>🔬 The science</b>Tapping: the bottle and the water vibrate. <b>More water</b> is heavier, so it vibrates more slowly: the note is <b>lower</b>.</div>' : ''}
@@ -1078,7 +1122,7 @@ const INV = {
   run() {
     const t = state.inv, t0 = performance.now();
     t.running = true; t.clock = 0; render();
-    if (t.q === 'drum') AU.drum(110, .5); else AU.twang(twangF(30), .4);
+    if (t.q === 'drum') AU.drum(110, .5); else AU.ruler(vpsOf(15), .4);
     clearInterval(INV.timer);
     INV.timer = setInterval(() => {
       if (state.inv !== t || !t.running) { clearInterval(INV.timer); return; }
@@ -1166,7 +1210,7 @@ const VIEWS = {
   gtr: { label: '🎸 <span class="tl">Guitar</span>', name: 'Guitar string', ...GTR },
   drum: { label: '🥁 <span class="tl">Drum</span>', name: 'Drum', ...DRUM },
   rul: { label: '📏 <span class="tl">Ruler</span>', name: 'Ruler twang', ...RUL },
-  bot: { label: '🍾 <span class="tl">Bottles</span>', name: 'Bottle band', ...BOT },
+  bot: { label: '🧴 <span class="tl">Bottles</span>', name: 'Bottle band', ...BOT },
   pat: { label: '🔍 <span class="tl">Pattern</span>', name: 'Spot the pattern', ...PAT },
   inv: { label: '🔬 <span class="tl">Investigate</span>', name: 'Investigation', ...INV }
 };
@@ -1209,7 +1253,7 @@ const MISSIONS = [
     hint: 'Does pushing it down further make it higher, or just louder? Try changing the overhang.',
     setup() { state.view = 'rul'; state.rul = freshRul(); }, on: (ev, d) => ev === 'ruler' && d.over === 5,
     win: () => 'The shortest overhang (5 cm) vibrates the fastest: about 240 times a second! More vibrations per second make a higher note.' },
-  { id: 'bottle', icon: '🍾', title: 'Bottle surprise', task: '<b>Predict</b>, then blow across all 5 bottles. Was your prediction right?',
+  { id: 'bottle', icon: '🧴', title: 'Bottle surprise', task: '<b>Predict</b>, then blow across all 5 bottles. Was your prediction right?',
     hint: 'When you blow, the air inside vibrates, not the water. Which bottle has the least air?',
     setup() { state.view = 'bot'; state.bot = { ...freshBot(), mode: 'blow' }; delete state.pred.bot; }, on: ev => ev === 'blown',
     win: () => `${state.pred.bot?.pick === 'most' ? 'Your prediction was right! ' : 'A surprise! '}Blowing: the bottle with the most water (and the least air) makes the highest note. Tapping goes the other way.` },
@@ -1306,7 +1350,7 @@ const MODEL = {
   gtr: [['🎸', 'A real guitar has six strings. Here there is one string, so you can change one thing at a time.']],
   drum: [['🥁', 'Real rice jumps about in all directions. Here it just jumps up and down.']],
   rul: [['📏', 'The numbers are for a plastic ruler. A wooden or metal ruler would give different numbers, but the same pattern.']],
-  bot: [['🍾', 'Real bottles are all a little different, so your notes might not match these exactly.']],
+  bot: [['🧴', 'Real bottles are all a little different, so your notes might not match these exactly.']],
   pat: [['🎻', 'Real instruments can play many notes. Here each one plays just one note, to show the pattern.']],
   inv: [['🎲', 'The results here are made up to show the pattern. Real results are never perfectly the same each time.']],
   all: [['🐢', 'Real vibrations are far too fast to see, often hundreds every second. The pictures show them in slow motion.'], ['🖼️', 'The sound picture is a drawing to show pitch and volume. You can\'t see sound in real life.'],
