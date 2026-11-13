@@ -1,0 +1,1493 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sound Studio</title>
+<meta name="description" content="How are sounds made? What makes a sound high or low, loud or quiet? An interactive tool for Year 5 on sound, with sound pictures, instruments and a fair test.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ================= Shared look (matches Seed Lab and Dissolving Lab) ================= */
+  :root {
+    --ink: #1d2340; --muted: #5b6386; --soft: #eef2ff;
+    --yellow: #ffc83d; --blue: #3d7bff; --coral: #ff5f6d; --green: #22b07d; --orange: #f0892e; --grey: #8a93ad; --pink: #e85d9e;
+    --space: #070d24; --drawerW: 360px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: var(--space); color: var(--ink); font-family: 'Fredoka', system-ui, sans-serif; font-size: 17px; line-height: 1.35; -webkit-tap-highlight-color: transparent; }
+  body { display: flex; flex-direction: column; }
+  button, input, textarea { font: inherit; color: inherit; }
+  b { font-weight: 700; }
+  .btn { border: 0; border-radius: 14px; padding: 9px 14px; min-height: 44px; cursor: pointer; background: #fff; color: var(--ink); font-weight: 600; font-size: 16px; box-shadow: 0 3px 0 rgba(0,0,0,.18); }
+  .btn:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,.18); }
+  .btn.active { background: var(--yellow); }
+  .btn:focus-visible { outline: 3px solid var(--yellow); outline-offset: 2px; }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .btn.go { background: var(--green); color: #fff; font-size: 19px; flex: 1; }
+  .btn.primary { background: var(--green); color: #fff; }
+  a.btn { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
+  #drawer a.btn.go, #drawer a.btn.primary { color: #fff; }
+
+  /* ---------- Top bar ---------- */
+  .topbar { flex: none; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 8px 10px; background: rgba(7,13,36,.95); z-index: 15; }
+  .brand { color: #fff; font-size: 21px; font-weight: 700; margin-right: auto; white-space: nowrap; }
+  .hub-link { flex: none; display: grid; place-items: center; width: 38px; height: 38px; border-radius: 12px; text-decoration: none; font-size: 20px; background: rgba(255,255,255,.14); box-shadow: 0 3px 0 rgba(0,0,0,.25); transition: background .15s, transform .08s; }
+  .hub-link:hover { background: rgba(255,255,255,.26); }
+  .hub-link:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,.25); }
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+  .btn.missions { background: var(--blue); color: #fff; }
+  .tabs .btn { padding: 9px 10px; }
+  /* Eight tabs: their words go first, leaving the icons */
+  @media (max-width: 1699px) {
+    .topbar .long { display: none; }
+    .brand { font-size: 18px; }
+    .topbar, .tabs { gap: 4px; }
+    .tabs .btn { padding: 9px 8px; font-size: 14.5px; }
+  }
+  @media (max-width: 1499px) { .tl { display: none; } .tabs .btn { font-size: 20px; padding: 6px 9px; } }
+
+  /* ---------- Main area: stage on the left, drawer on the right ---------- */
+  main { position: relative; flex: 1; min-height: 0; }
+  #stage { position: absolute; top: 0; bottom: 0; left: 0; right: var(--drawerW); overflow: hidden; background: #eef4fb; display: flex; align-items: center; justify-content: center; }
+  #stage > svg { width: 100%; height: 100%; display: block; touch-action: none; user-select: none; -webkit-user-select: none; }
+  #drawer { position: absolute; top: 0; right: 0; bottom: 0; width: var(--drawerW); background: #dfe6ff; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+  .card { background: #fff; border-radius: 16px; padding: 12px 14px; }
+  .card h2 { margin: 0 0 4px; font-size: 21px; line-height: 1.2; }
+  .card h3 { margin: 0 0 6px; font-size: 17px; }
+  .card p { margin: 4px 0; }
+  .muted { color: var(--muted); font-size: 14.5px; }
+  .term { background: #fff3c4; border-radius: 6px; padding: 0 4px; font-weight: 600; }
+  .navrow { display: flex; gap: 8px; flex-wrap: wrap; }
+  .opt { border: 2px solid #d3dbf7; background: #fff; border-radius: 12px; padding: 6px 10px; min-height: 44px; font-weight: 600; font-size: 15px; cursor: pointer; }
+  .opt.on { background: var(--yellow); border-color: #e0a800; }
+  .opt.wrong { background: #ffe0e3; border-color: var(--coral); }
+  .opt.done, .opt.done:disabled { background: #c9f2df; border-color: var(--green); opacity: 1; }
+  .opt:disabled { opacity: .45; cursor: default; }
+  .opt.sm { font-size: 14px; padding: 4px 8px; }
+  .stops { display: flex; flex-wrap: wrap; gap: 6px; }
+  .spot { background: #fff3c4; border-radius: 12px; padding: 8px 10px; margin-top: 6px !important; }
+  .job { font-size: 16px; background: #c9f2df; border-radius: 12px; padding: 8px 10px; }
+  .says { border: 3px solid var(--yellow); }
+  .says.good { border-color: var(--green); background: #effbf5; }
+  .says ul { margin: 6px 0 0; padding-left: 20px; }
+  .wq .opt { display: block; width: 100%; text-align: left; margin-top: 6px; }
+  .checkbar { position: sticky; bottom: -10px; z-index: 2; display: flex; margin: 0 -10px; padding: 6px 10px 10px; background: #dfe6ff; }
+  .slide { display: flex; align-items: center; gap: 8px; margin: 6px 0; }
+  .slide input[type=range] { flex: 1; min-height: 44px; accent-color: var(--coral); }
+  .lay-top { position: absolute; top: 8px; left: 10px; right: 10px; display: flex; gap: 8px; align-items: flex-start; flex-wrap: wrap; pointer-events: none; z-index: 2; }
+  .scaletag { background: var(--blue); color: #fff; font-weight: 700; border-radius: 10px; padding: 5px 10px; font-size: 15px; white-space: nowrap; }
+  .readout { background: #fff; border-radius: 12px; padding: 5px 10px; font-size: 15px; line-height: 1.3; box-shadow: 0 3px 8px rgba(0,0,0,.12); }
+  .tapme { cursor: pointer; }
+  .icons { list-style: none; padding: 0; margin: 0 0 14px; }
+  .icons li { display: flex; gap: 10px; padding: 6px 0; line-height: 1.35; }
+  .icons .em { font-size: 24px; width: 32px; flex: none; text-align: center; }
+  .linkbtn { border: 0; background: none; color: var(--blue); font-weight: 600; cursor: pointer; padding: 4px 0; font-size: 15px; min-height: 32px; }
+  a.linkbtn { display: inline-flex; align-items: center; text-decoration: none; }
+
+  /* ---------- Chips: tap one, then tap where it goes – or drag it there ---------- */
+  .chip { display: inline-flex; align-items: center; justify-content: center; gap: 4px; border: 2px solid #d3dbf7; background: #fff; border-radius: 12px; padding: 4px 12px; min-height: 44px; font-weight: 600; font-size: 15px; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
+  .chip.sel { background: var(--yellow); border-color: #e0a800; }
+  .chip-ghost { position: fixed; z-index: 30; pointer-events: none; transform: translate(-50%, -50%) rotate(-3deg); box-shadow: 0 8px 18px rgba(0,0,0,.3); opacity: .95; }
+  .bank { display: flex; flex-wrap: wrap; gap: 6px; }
+  .bank:empty::before { content: 'All placed!'; color: var(--muted); font-size: 15px; }
+  .mrow { display: flex; align-items: center; gap: 8px; margin: 6px 0; }
+  .mrow > span { flex: 1; font-size: 15px; line-height: 1.25; }
+  .mslot { flex: none; width: 118px; min-height: 44px; border: 2px dashed #b7c3ea; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; background: #f7f9ff; cursor: pointer; text-align: center; padding: 2px 4px; }
+  .mslot.ready { border-color: #e0a800; background: #fffbea; }
+  .mslot.over { border-style: solid; border-color: var(--green); }
+  .mslot.ok { border-style: solid; border-color: var(--green); background: #c9f2df; cursor: default; }
+  .mslot.bad { border-style: solid; border-color: var(--coral); background: #ffe0e3; }
+  svg .slot.over rect { stroke: var(--green); stroke-width: 4; }
+  svg .slot.ready rect { stroke: #e0a800; }
+
+  /* ---------- Sorting into two boxes ---------- */
+  .sortwrap { position: absolute; inset: 0; display: flex; flex-direction: column; gap: 8px; padding: 50px 8px 8px; }
+  .pool { flex: 1; min-height: 0; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; align-content: start; grid-auto-rows: max-content; padding: 4px; }
+  .pcard { position: relative; display: flex; flex-direction: column; border: 3px solid #fff; background: #fff; border-radius: 14px; padding: 0; overflow: hidden; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; font-weight: 700; font-size: 15px; box-shadow: 0 3px 0 rgba(0,0,0,.12); text-align: center; }
+  .pcard img, .pcard .ph { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; display: block; pointer-events: none; }
+  .pcard .ph { display: grid; place-items: center; font-size: 46px; background: #e6f3e0; }
+  .pcard .ph svg { width: 60%; height: auto; }
+  .pcard > span { padding: 4px 6px; }
+  .pcard.sel { border-color: var(--yellow); box-shadow: 0 0 0 3px var(--yellow); }
+  .pcard.look { border-color: var(--blue); }
+  .bins { flex: none; height: 40%; min-height: 130px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .bin { border: 3px dashed #b7c3ea; border-radius: 16px; background: #fff; padding: 6px; display: flex; flex-direction: column; gap: 4px; overflow-y: auto; cursor: pointer; }
+  .bin h3 { margin: 0; font-size: 18px; text-align: center; pointer-events: none; }
+  .bin .bsub { text-align: center; font-size: 13.5px; color: var(--muted); font-weight: 600; pointer-events: none; }
+  .bin.ready { border-color: var(--yellow); background: #fffbea; }
+  .bin.over { border-style: solid; border-color: var(--green); background: #effbf5; }
+  .bin .in { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; }
+  .mini { width: 66px; display: flex; flex-direction: column; align-items: center; font-size: 12px; font-weight: 600; text-align: center; line-height: 1.1; pointer-events: none; }
+  .mini img, .mini .ph { width: 58px; height: 44px; object-fit: cover; border-radius: 8px; display: grid; place-items: center; font-size: 28px; background: #e6f3e0; }
+  .mini .ph svg { width: 34px; height: 34px; }
+  .photo { position: relative; border-radius: 14px; overflow: hidden; background: #e6f3e0; }
+  .photo img { width: 100%; display: block; }
+  .photo .ph { display: grid; place-items: center; font-size: 80px; aspect-ratio: 4 / 3; }
+  .pcard .credit, .mini .credit { display: none; }
+  .credit { position: absolute; right: 6px; bottom: 6px; background: rgba(0,0,0,.55); color: #fff; font-size: 11px; padding: 2px 6px; border-radius: 6px; max-width: calc(100% - 12px); }
+
+  /* ---------- The fair test (as in Seed Lab) ---------- */
+  .steps { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
+  .steps span { font-size: 12.5px; font-weight: 700; padding: 3px 8px; border-radius: 10px; background: var(--soft); color: var(--muted); }
+  .steps span.now { background: var(--yellow); color: var(--ink); }
+  .steps span.done { background: #c9f2df; color: #147a55; }
+  .varrow { margin: 8px 0; }
+  .varrow > span { display: block; font-weight: 700; font-size: 14.5px; margin-bottom: 4px; }
+  .tag { background: var(--yellow); border-radius: 8px; padding: 1px 6px; font-size: 12px; }
+  .keeps { display: grid; gap: 4px; margin-top: 6px; }
+  .keep { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 4px 8px; border-radius: 10px; background: var(--soft); font-size: 15px; cursor: pointer; }
+  .keep input { width: 22px; height: 22px; flex: none; accent-color: var(--green); }
+  ul.spot { padding-left: 28px; }
+  .seedcards { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 6px; }
+  .seedcard { display: flex; flex-direction: column; align-items: center; gap: 2px; border: 2px solid #d3dbf7; background: #fff; border-radius: 12px; padding: 6px 4px; min-height: 44px; font-weight: 600; font-size: 13.5px; line-height: 1.15; cursor: pointer; text-align: center; }
+  .seedcard.sel { background: var(--yellow); border-color: #e0a800; }
+  .seedcard:disabled { opacity: .6; cursor: default; }
+  .gtable { width: 100%; border-collapse: collapse; font-size: 15px; margin: 6px 0; }
+  .gtable th { text-align: left; font-size: 13.5px; color: var(--muted); padding: 2px 4px; }
+  .gtable td { border-top: 1px solid #e1e6f5; padding: 5px 4px; }
+  .numin { width: 90px; min-height: 44px; font-size: 20px; text-align: center; border: 2px solid #c3cdf2; border-radius: 12px; padding: 4px; background: #fff; }
+  .numin:focus { outline: 3px solid var(--yellow); border-color: #e0a800; }
+  .numin.ok { border-color: var(--green); background: #effbf5; }
+  .ansrow { display: flex; align-items: center; gap: 8px; margin: 8px 0 4px; font-weight: 600; flex-wrap: wrap; }
+  .wsmall { font-family: 'Fredoka', system-ui, sans-serif; font-size: 13px; font-weight: 600; fill: var(--ink); paint-order: stroke; stroke: #fff; stroke-width: 4px; stroke-linejoin: round; }
+  /* ---------- Sound Studio: the mute button, always on show ---------- */
+  .btn.mute { background: var(--green); color: #fff; min-width: 52px; font-size: 18px; }
+  .btn.mute.off { background: var(--coral); }
+  /* ---------- Vibrations (shown in slow motion) ---------- */
+  .vibY { animation: flipY var(--d, .1s) ease-in-out infinite alternate; }
+  @keyframes flipY { from { transform: scaleY(1); } to { transform: scaleY(-1); } }
+  .shakeX { animation: shakeX var(--d, .05s) ease-in-out infinite alternate; }
+  @keyframes shakeX { from { transform: translateX(calc(-1 * var(--a, 2px))); } to { transform: translateX(var(--a, 2px)); } }
+  .shakeY { animation: shakeY var(--d, .05s) ease-in-out infinite alternate; }
+  @keyframes shakeY { from { transform: translateY(calc(-1 * var(--a, 2px))); } to { transform: translateY(var(--a, 2px)); } }
+  .rock { animation: rock var(--d, .1s) ease-in-out infinite alternate; }
+  @keyframes rock { from { transform: rotate(calc(-1 * var(--a, 8deg))); } to { transform: rotate(var(--a, 8deg)); } }
+  .jump { animation: jump var(--d, .2s) ease-out infinite alternate; }
+  @keyframes jump { from { transform: translateY(0); } to { transform: translateY(calc(-1 * var(--a, 10px))); } }
+  /* ---------- Mystery sounds: four boxes in a 2 × 2 grid ---------- */
+  .mystwrap .pool { flex: 0 1 auto; max-height: 40%; }
+  .bins.grid4 { flex: 1 1 auto; height: auto; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
+  .mini.wide { width: 104px; }
+  .mini .wpic { display: block; }
+  /* ---------- Spot the pattern: a row of places, lowest to highest ---------- */
+  .patwrap .pool { flex: 0 1 auto; max-height: 45%; }
+  .prow { flex: 0 0 auto; height: min(52%, 270px); display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; align-items: stretch; min-height: 150px; }
+  .pslot { border: 3px dashed #b7c3ea; border-radius: 16px; background: #fff; padding: 6px; display: flex; flex-direction: column; gap: 6px; cursor: pointer; }
+  .pslot .plab { text-align: center; font-weight: 700; font-size: 15px; pointer-events: none; }
+  .pslot .pempty { flex: 1; display: grid; place-items: center; font-size: 30px; color: #c6d0f2; pointer-events: none; }
+  .pslot.ready { border-color: var(--yellow); background: #fffbea; }
+  .pslot.over { border-style: solid; border-color: var(--green); }
+  .pslot.ok { border-style: solid; border-color: var(--green); background: #effbf5; }
+  .pslot.bad { border-style: solid; border-color: var(--coral); background: #ffe0e3; }
+  .pslot .pcard .ph { aspect-ratio: auto; height: 70px; }
+  @media (max-width: 760px) { .mystwrap, .patwrap { padding-top: 68px; } .btn.mute { min-width: 0; } .topbar > .btn { font-size: 16px; } }
+  /* Small phones: the home button is enough, so the title makes room for the sound button */
+  @media (max-width: 440px) { .brand { display: none; } .hub-link { margin-right: auto; } }
+  @media (max-width: 760px) {
+    .mini.wide { width: 74px; } .mini.wide .wpic { width: 70px; } .prow { gap: 4px; min-height: 110px; } .pslot { padding: 3px; } .pslot .plab { font-size: 11px; } .pslot .pcard .ph { height: 44px; } }
+
+  /* ---------- Pictures drawn on the stage ---------- */
+  .glabel { font-family: 'Fredoka', system-ui, sans-serif; font-size: 16px; font-weight: 700; fill: var(--ink); }
+  .gsmall { font-family: 'Fredoka', system-ui, sans-serif; font-size: 13px; font-weight: 600; fill: var(--muted); }
+  .part:hover > path, .part:hover > ellipse { filter: brightness(1.08); }
+  .bob { animation: bob 1.4s ease-in-out infinite alternate; }
+  @keyframes bob { to { transform: translateY(-8px); } }
+  .puff { animation: puff 1.6s ease-out infinite; }
+  @keyframes puff { from { opacity: 1; transform: translate(0, 0); } to { opacity: 0; transform: translate(var(--dx), var(--dy)); } }
+  .glow { animation: glow 1.2s ease-in-out infinite alternate; }
+  @keyframes glow { from { opacity: .35; } to { opacity: .9; } }
+  .scent { animation: rise 2.4s ease-in infinite; }
+  @keyframes rise { from { transform: translateY(0); opacity: 0; } 20% { opacity: .9; } to { transform: translateY(-40px); opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { .bob, .puff, .glow, .scent { animation: none; } }
+
+  /* ---------- Missions and pop-ups ---------- */
+  .banner { position: absolute; top: 10px; right: 10px; width: calc(var(--drawerW) - 20px); z-index: 6; background: #fff; border: 3px solid var(--yellow); border-radius: 16px; padding: 9px 44px 9px 14px; box-shadow: 0 6px 16px rgba(0,0,0,.18); }
+  .banner.hidden { display: none; }
+  .banner .kicker { font-size: 12.5px; font-weight: 700; color: var(--blue); text-transform: uppercase; letter-spacing: .04em; }
+  .banner .close { position: absolute; top: 6px; right: 6px; border: 0; background: var(--soft); border-radius: 50%; width: 32px; height: 32px; cursor: pointer; }
+  .banner .hint { margin-top: 4px; color: var(--muted); font-size: 15px; }
+  .banner .hint.hidden { display: none; }
+  .modal { position: fixed; inset: 0; background: rgba(5,10,30,.6); display: flex; align-items: center; justify-content: center; z-index: 20; padding: 16px; }
+  .modal.hidden { display: none; }
+  .modal-box { position: relative; background: #fff; border-radius: 24px; padding: 20px; width: min(580px, 100%); max-height: calc(100vh - 32px); overflow-y: auto; }
+  .modal-box h2 { margin: 0 0 8px; font-size: 25px; }
+  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+  .mission-list { display: grid; gap: 8px; margin-bottom: 14px; }
+  .mission-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; min-height: 52px; border-radius: 16px; background: var(--soft); border: 0; text-align: left; cursor: pointer; font-size: 16px; }
+  .mission-item .em { font-size: 25px; } .mission-item .t { flex: 1; font-weight: 600; }
+  .mission-item .star { font-size: 21px; filter: grayscale(1); opacity: .35; }
+  .mission-item.done .star { filter: none; opacity: 1; }
+  .core { background: var(--yellow); color: var(--ink); border-radius: 8px; padding: 1px 7px; font-size: 12.5px; font-weight: 700; white-space: nowrap; }
+  .win-emoji { font-size: 56px; text-align: center; }
+  .win-text { font-size: 17.5px; line-height: 1.5; margin-bottom: 14px; }
+  .confetti { position: fixed; top: -40px; font-size: 26px; z-index: 40; pointer-events: none; animation: fall linear forwards; }
+  @keyframes fall { to { transform: translateY(110vh) rotate(540deg); } }
+  .modal-x {
+    position: sticky; top: 0; float: right; z-index: 2;
+    width: 52px; height: 52px; margin: -6px -6px 6px 12px; padding: 0;
+    border: 0; border-radius: 50%; cursor: pointer;
+    background: var(--coral); color: #fff; font-size: 26px; font-weight: 700; line-height: 1;
+    display: grid; place-items: center; box-shadow: 0 3px 0 rgba(0,0,0,.2);
+    transition: transform .08s, filter .15s;
+  }
+  .modal-x:hover { filter: brightness(1.08); }
+  .modal-x:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,.2); }
+  .modal-x:focus-visible { outline: 3px solid var(--yellow); outline-offset: 2px; }
+  .science { background: #fff6d6; border: 3px solid var(--yellow); border-radius: 16px; padding: 10px 14px; margin: 8px 0; }
+  .science > b:first-child { display: block; font-size: 14px; text-transform: uppercase; letter-spacing: .04em; color: #8a5a00; margin-bottom: 2px; }
+  .seelab { display: flex; align-items: center; gap: 8px; background: #e7f7ee; border-radius: 12px; padding: 8px 10px; font-weight: 600; color: #0b6644; text-decoration: none; min-height: 44px; }
+  .help-body h3 { margin: 12px 0 4px; font-size: 17px; }
+  .help-body p { margin: 4px 0; line-height: 1.4; }
+  .help-body ol { margin: 4px 0; padding-left: 24px; line-height: 1.4; }
+  .help-body ol li { margin: 3px 0; }
+  .help-body .welcome { font-weight: 700; color: var(--blue); }
+  details.teach { margin: 12px 0; font-size: 13px; color: var(--muted); }
+  details.teach summary { cursor: pointer; font-weight: 600; min-height: 32px; }
+  details.teach p { margin: 4px 0; }
+  details.teach h4 { margin: 8px 0 2px; font-size: 13px; color: var(--ink); }
+
+  /* ---------- Narrow screens: stage on top, drawer below ---------- */
+  @media (max-width: 760px) {
+    :root { --drawerW: 0px; }
+    #stage { bottom: 42%; right: 0; }
+    #drawer { top: 58%; width: 100%; }
+    .banner { top: calc(58% + 8px); left: 8px; right: 8px; width: auto; }
+    .brand { font-size: 17px; }
+    .topbar > .btn { padding: 5px 7px; }
+    .brand { font-size: 15px; white-space: normal; line-height: 1.05; max-width: 82px; }
+    /* The eight tabs get a row of their own, under the title and buttons */
+    .tabs { order: 9; width: 100%; justify-content: space-between; gap: 3px; }
+    .tabs .btn { flex: 1; font-size: 18px; padding: 4px 0; min-height: 40px; }
+    .readout, .scaletag { font-size: 13px; padding: 3px 7px; }
+    .glabel { font-size: 12px; } .gsmall { font-size: 10.5px; }
+    .sortwrap { padding-top: 40px; gap: 5px; }
+    .pool { grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); gap: 5px; }
+    .pcard { font-size: 12px; } .pcard .ph { font-size: 30px; }
+    .bins { min-height: 100px; gap: 5px; }
+    .bin h3 { font-size: 14px; } .bin .bsub { display: none; }
+    .mini { width: 46px; font-size: 10px; } .mini img, .mini .ph { width: 42px; height: 32px; font-size: 20px; }
+    .mslot { width: 96px; font-size: 14px; }
+  }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a class="hub-link" href="../index.html" title="Back to the Science Hub" aria-label="Back to the Science Hub">🏠</a>
+  <div class="brand">🎵 Sound Studio</div>
+  <div class="tabs" id="tabs"></div>
+  <button class="btn missions" data-act="missions" title="Missions">🚀 <span class="long">Missions </span><span id="starCount"></span></button>
+  <button class="btn" data-act="words" title="Key words">📖<span class="long"> Words</span></button>
+  <button class="btn" data-act="model" title="How is this model different from real life?">🤔<span class="long"> Real life?</span></button>
+  <button class="btn" id="helpBtn" data-act="help" aria-label="How to use">❓</button>
+  <button class="btn mute" id="muteBtn" data-act="mute" aria-label="Sound on or off"></button>
+</div>
+<main>
+  <div id="stage"></div>
+  <div id="drawer"></div>
+  <div id="banner" class="banner hidden" role="status">
+    <div class="kicker" id="bannerKicker"></div>
+    <div id="bannerText"></div>
+    <button class="linkbtn" data-act="hint" id="hintBtn">💡 Show a hint</button>
+    <div class="hint hidden" id="bannerHint"></div>
+    <button class="close" data-act="stopMission" aria-label="Stop this mission">✖</button>
+  </div>
+</main>
+<div id="missionsModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="missionsTitle">
+  <div class="modal-box">
+    <button class="modal-x" data-act="closeModals" aria-label="Close">✕</button>
+    <h2 id="missionsTitle">🚀 Missions</h2>
+    <p class="muted" style="margin-top:-4px">Short of time? Start with the <span class="core">⏱ Lesson</span> missions.</p>
+    <div class="mission-list" id="missionList"></div>
+    <div class="modal-actions"><button class="btn" data-act="resetStars">Reset stars</button><button class="btn primary" data-act="closeModals">Close</button></div>
+  </div>
+</div>
+<div id="modelModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modelTitle">
+  <div class="modal-box">
+    <button class="modal-x" data-act="closeModals" aria-label="Close">✕</button>
+    <h2 id="modelTitle">🤔 How is this model different from real life?</h2>
+    <p class="muted" id="modelTab" style="margin:-4px 0 8px;font-weight:600"></p>
+    <p style="margin-top:0">A <span class="term">model</span> shows some important features of something real – but not everything.</p>
+    <ul class="icons" id="modelList"></ul>
+    <div class="modal-actions"><button class="btn primary" data-act="closeModals">Got it!</button></div>
+  </div>
+</div>
+<div id="wordsModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="wordsTitle">
+  <div class="modal-box">
+    <button class="modal-x" data-act="closeModals" aria-label="Close">✕</button>
+    <h2 id="wordsTitle">📖 Key words</h2>
+    <ul class="icons" id="wordsList"></ul>
+    <div class="modal-actions"><button class="btn primary" data-act="closeModals">Got it!</button></div>
+  </div>
+</div>
+<div id="winModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="winTitle">
+  <div class="modal-box">
+    <button class="modal-x" data-act="closeModals" aria-label="Close">✕</button>
+    <div class="win-emoji">⭐</div>
+    <h2 id="winTitle" style="text-align:center">Mission complete!</h2>
+    <div class="win-text" id="winText"></div>
+    <div class="modal-actions"><button class="btn" data-act="closeModals">Keep exploring</button><a class="btn primary" id="winPractise" href="../practice/index.html#sound">✏️ Practise this</a><button class="btn primary" id="winNext" data-act="nextMission">Next mission ▶</button></div>
+  </div>
+</div>
+<div id="helpModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+  <div class="modal-box">
+    <button class="modal-x" data-act="closeModals" aria-label="Close">✕</button>
+    <div class="help-body" id="helpBody"></div>
+    <div class="modal-actions"><a class="btn" href="../practice/index.html#sound">✏️ Practise this</a><button class="btn primary" data-act="closeModals">Let's go! 🚀</button></div>
+  </div>
+</div>
+
+<script>
+// ================= Utilities =================
+const $ = (s, r = document) => r.querySelector(s);
+// Saved progress; private windows can block storage, so failures are ignored
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+};
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+const stageSize = () => { const st = $('#stage'), w = st.clientWidth || 900, h = st.clientHeight || 600; return { w, h, narrow: w < 560 }; };
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+const mix = (c1, c2, t) => { const p = c => [1, 3, 5].map(k => parseInt(c.slice(k, k + 2), 16)), a = p(c1), b = p(c2);
+  return '#' + a.map((v, k) => Math.round(v + (b[k] - v) * clamp(t)).toString(16).padStart(2, '0')).join(''); };
+const lc = t => t[0].toLowerCase() + t.slice(1);
+const cap = t => t[0].toUpperCase() + t.slice(1);
+// A question with choices: wrong ones turn red and stay disabled, the right one turns green
+const choices = (act, opts, chosen, wrongs, right) => opts.map(([v, t]) => `<button class="opt${chosen === v && v === right ? ' done' : wrongs.includes(v) ? ' wrong' : ''}" data-act="${act}" data-v="${v}"${wrongs.includes(v) || chosen === right ? ' disabled' : ''}>${t}</button>`).join('');
+// A prediction: no right or wrong yet, just the child's choice
+const predict = (act, opts, chosen) => opts.map(([v, t]) => `<button class="opt${chosen === v ? ' on' : ''}" data-act="${act}" data-v="${v}"${chosen ? ' disabled' : ''}>${t}</button>`).join('');
+
+// ================= Drag or tap =================
+// Anything with data-drag can be picked up; anything with data-drop can take it.
+// A tap picks it up (the view's pick), a second tap on a drop place puts it there (the view's drop).
+// Dragging does the same in one go.
+const DND = { start: null, ghost: null, over: null, skipClick: false };
+document.addEventListener('pointerdown', e => {
+  const el = e.target.closest('[data-drag]');
+  if (!el || e.button > 0 || el.matches(':disabled')) return;
+  DND.start = { el, id: el.dataset.drag, x: e.clientX, y: e.clientY, moved: false };
+});
+document.addEventListener('pointermove', e => {
+  const d = DND.start; if (!d) return;
+  if (!d.moved) {
+    if (Math.hypot(e.clientX - d.x, e.clientY - d.y) < 10) return;
+    d.moved = true;
+    const v = VIEWS[state.view], html = v.ghost && v.ghost(d.id);
+    let g;
+    if (html) { g = document.createElement('div'); g.className = 'chip'; g.innerHTML = html; }
+    else { g = d.el.cloneNode(true); g.style.width = d.el.offsetWidth + 'px'; }
+    g.classList.add('chip-ghost'); g.removeAttribute('data-drag');
+    document.body.appendChild(g); DND.ghost = g;
+  }
+  DND.ghost.style.left = e.clientX + 'px'; DND.ghost.style.top = e.clientY + 'px';
+  const over = document.elementFromPoint(e.clientX, e.clientY)?.closest('[data-drop]');
+  if (over !== DND.over) { DND.over?.classList.remove('over'); over?.classList.add('over'); DND.over = over; }
+});
+function endDrag(e) {
+  const d = DND.start; DND.start = null;
+  if (!d || !d.moved) return;
+  DND.ghost?.remove(); DND.ghost = null; DND.over?.classList.remove('over'); DND.over = null;
+  DND.skipClick = true; setTimeout(() => DND.skipClick = false, 0);
+  const over = e && document.elementFromPoint(e.clientX, e.clientY)?.closest('[data-drop]');
+  const v = VIEWS[state.view];
+  if (over && v.drop) v.drop(d.id, over.dataset.drop);
+}
+document.addEventListener('pointerup', endDrag);
+document.addEventListener('pointercancel', () => endDrag(null));
+
+
+// A repeatable random number generator, so the same picture comes back every time (from Particle Playground)
+function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+// ================= Sound (Web Audio: no sound files) =================
+// Safety: a low master volume, a limiter, soft starts (no clicks or bangs) and a big mute button.
+// Browsers only allow sound after a tap, so the sound system wakes up on the first tap.
+const AU = {
+  ctx: null, out: null, live: [], MAX: .28, muted: store.get('ss-mute', false),
+  init() {
+    if (this.ctx) { if (this.ctx.state === 'suspended') this.ctx.resume(); return; }
+    const C = window.AudioContext || window.webkitAudioContext; if (!C) return;
+    try {
+      const c = this.ctx = new C(), lim = c.createDynamicsCompressor();
+      lim.threshold.value = -20; lim.knee.value = 6; lim.ratio.value = 12; lim.attack.value = .003; lim.release.value = .25;
+      this.out = c.createGain(); this.out.gain.value = this.muted ? 0 : this.MAX;
+      this.out.connect(lim); lim.connect(c.destination);
+    } catch { this.ctx = null; }
+  },
+  setMute(m) { this.muted = m; store.set('ss-mute', m); if (this.out) this.out.gain.setTargetAtTime(m ? 0 : this.MAX, this.ctx.currentTime, .03); if (m) this.stopAll(); },
+  // parts: [[how many vibrations per second, how loud compared with the first, wave shape, start a bit higher?]]
+  // vol 0–1. o: { dur, attack, hold (stay steady before dying away), lp (soften the top), noise (a little breath or hit) }
+  play(parts, vol, o = {}) {
+    if (!this.ctx || this.muted) return null;
+    const c = this.ctx, t = c.currentTime + .02, dur = o.dur || 1.5, att = o.attack || .012, peak = .08 + .6 * clamp(vol), g = c.createGain();
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(peak, t + att);
+    if (o.hold) { g.gain.setValueAtTime(peak, t + att + o.hold); g.gain.linearRampToValueAtTime(0, t + dur); }
+    else g.gain.exponentialRampToValueAtTime(.0005, t + dur);
+    g.connect(this.out);
+    let into = g;
+    if (o.lp) { const f = c.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = o.lp; f.connect(g); into = f; }
+    const srcs = parts.map(([fr, rel, type = 'sine', drop]) => {
+      const s = c.createOscillator(), sg = c.createGain(); s.type = type;
+      s.frequency.setValueAtTime(fr * (drop || 1), t); if (drop) s.frequency.exponentialRampToValueAtTime(fr, t + .09);
+      if (o.wobble) { const l = c.createOscillator(), lg = c.createGain(); l.frequency.value = o.wobble; lg.gain.value = fr * .02; l.connect(lg); lg.connect(s.frequency); l.start(t); l.stop(t + dur + .05); }
+      sg.gain.value = rel; s.connect(sg); sg.connect(into); s.start(t); s.stop(t + dur + .05); return s;
+    });
+    if (o.noise) {
+      const len = Math.round(c.sampleRate * Math.min(dur, o.noise.dur || .06)), buf = c.createBuffer(1, len, c.sampleRate), d = buf.getChannelData(0);
+      for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (o.noise.dur > .3 ? 1 : 1 - i / len);
+      const n = c.createBufferSource(), bp = c.createBiquadFilter(), ng = c.createGain(); n.buffer = buf;
+      bp.type = 'bandpass'; bp.frequency.value = o.noise.f || 1500; bp.Q.value = o.noise.q || 1; ng.gain.value = o.noise.g || .4;
+      n.connect(bp); bp.connect(ng); ng.connect(g); n.start(t);
+    }
+    const h = { g }; this.live.push(h);
+    srcs[0].onended = () => { this.live = this.live.filter(x => x !== h); };
+    return h;
+  },
+  stopAll() {
+    if (!this.ctx) return; const t = this.ctx.currentTime;
+    this.live.forEach(h => { try { h.g.gain.cancelScheduledValues(t); h.g.gain.setValueAtTime(h.g.gain.value, t); h.g.gain.linearRampToValueAtTime(0, t + .06); } catch {} });
+    this.live = [];
+  },
+  // The instruments
+  pluck: (f, v) => AU.play([[f, 1, 'triangle'], [f * 2, .3], [f * 3, .12]], v, { dur: 2.4, lp: 3200 }),
+  drum: (f, v) => AU.play([[f, 1, 'sine', 1.5], [f * 1.59, .45], [f * 2.14, .25]], v, { dur: .9, attack: .006, noise: { f: 900, g: .25 * v, dur: .05 } }),
+  twang: (f, v) => AU.play([[f, 1, 'sawtooth'], [f * 2, .3, 'triangle']], v, { dur: 1.3, lp: Math.max(500, f * 5), attack: .008 }),
+  tap: (f, v) => AU.play([[f, 1], [f * 2.76, .25]], v, { dur: 1.1, attack: .005 }),
+  blow: (f, v) => AU.play([[f, 1], [f * 2, .12]], v, { dur: 1.6, attack: .18, hold: .9, noise: { f, q: 6, g: .25, dur: 1.6 } }),
+  hum: (f, v) => AU.play([[f, 1, 'triangle'], [f * 2, .2]], v, { dur: 3, attack: .2, hold: 2.3, lp: 900 }),
+  fork: (f, v) => AU.play([[f, 1]], v, { dur: 3.5, attack: .01 }),
+  bell: (f, v) => AU.play([[f, 1], [f * 2, .4], [f * 2.76, .3], [f * 5.4, .1]], v, { dur: 3, attack: .005 }),
+  speaker: (f, v) => { AU.play([[f, 1, 'triangle']], v, { dur: 3, attack: .1, hold: 2.4, lp: 1200 }); }
+};
+// Wake the sound up on the first tap (and again if the browser put it to sleep)
+document.addEventListener('pointerdown', () => AU.init(), true);
+
+// ================= Pitch, volume and sound pictures =================
+// Pitch level 0–1 from vibrations per second (80 → 0, 1000 → 1). Volume is 0–1.
+const pl = f => clamp(Math.log2(f / 80) / Math.log2(1000 / 80));
+const pitchWord = p => p >= .6 ? 'high' : p <= .35 ? 'low' : 'middle';
+const volWord = v => v >= .55 ? 'loud' : 'quiet';
+const capt = (p, v, noun = 'note') => `${cap(pitchWord(p))}, ${volWord(v)} ${noun}`;
+// A sound picture: taller waves for louder, waves closer together for higher. p = null draws silence.
+function wavePath(x, y, w, hh, p, v) {
+  if (p == null) return `M${x} ${y} H${x + w}`;
+  const n = 1.5 + p * 8.5, A = hh * (.12 + .88 * clamp(v)), steps = 160;
+  let d = '';
+  for (let i = 0; i <= steps; i++) { const t = i / steps; d += `${i ? 'L' : 'M'}${(x + t * w).toFixed(1)} ${(y - Math.sin(t * n * 2 * Math.PI) * A).toFixed(1)}`; }
+  return d;
+}
+// A sound picture in a box, drawn on the stage, with its caption underneath
+function picBox(x, y, w, h, p, v, title = '🖼️ Sound picture', capTxt) {
+  const mid = y + 22 + (h - 40) / 2;
+  return `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="14" fill="#fff" stroke="#c6d0f2" stroke-width="2"/>
+    <text x="${x + 10}" y="${y + 17}" class="gsmall">${title}</text>
+    <line x1="${x + 10}" x2="${x + w - 10}" y1="${mid}" y2="${mid}" stroke="#e1e6f5" stroke-width="1.5"/>
+    <path d="${wavePath(x + 10, mid, w - 20, (h - 44) / 2, p, v)}" fill="none" stroke="var(--blue)" stroke-width="3" stroke-linejoin="round"/>
+    <text x="${x + w / 2}" y="${y + h + 18}" text-anchor="middle" class="glabel">${capTxt ?? (p == null ? 'No sound' : capt(p, v))}</text>`;
+}
+// The same picture as a small HTML picture (for cards and boxes)
+const wavePic = (p, v, w = 120, h = 46) => `<svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" aria-hidden="true" class="wpic"><line x1="2" x2="${w - 2}" y1="${h / 2}" y2="${h / 2}" stroke="#e1e6f5"/><path d="${wavePath(2, h / 2, w - 4, h / 2 - 3, p, v)}" fill="none" stroke="var(--blue)" stroke-width="2.5"/></svg>`;
+
+// Sounds that are playing: their moving parts are drawn vibrating until the time is up
+const RING = {}, RINGT = {};
+function ring(id, ms, full = false) {
+  RING[id] = performance.now() + ms; clearTimeout(RINGT[id]);
+  RINGT[id] = setTimeout(() => { delete RING[id]; if (full) render(); else renderStage(); }, ms);
+}
+const ringing = id => RING[id] > performance.now();
+function hush() { AU.stopAll(); Object.keys(RING).forEach(k => { delete RING[k]; clearTimeout(RINGT[k]); }); clearInterval(RUL.timer); }
+// A slow-motion label on the stage
+// On phones it moves down and to the right, out of the way of the caption
+const slowTag = (x, y) => { const { w, narrow } = stageSize(); return narrow ? `<text x="${w - 8}" y="110" text-anchor="end" class="glabel" style="fill:var(--coral)">🐢 Slow motion</text>` : `<text x="${x}" y="${y}" class="glabel" style="fill:var(--coral)">🐢 Slow motion</text>`; };
+// A "predict first" card, used in several views. P = { q, opts: [[value, text]], right, after: what to try }
+function predCard(id, P) {
+  const s = state.pred[id] || {};
+  if (!s.pick) return `<div class="card says wq"><h3>🤔 Predict first</h3><p>${P.q}</p>${predict('pred', P.opts.map(([v, t]) => [`${id}:${v}`, t]), null)}</div>`;
+  if (!s.tried) return `<div class="card says"><h3>🤔 You predicted</h3><p>${P.opts.find(o => o[0] === s.pick)[1]}</p><p class="muted">Now ${P.after}</p></div>`;
+  return `<div class="card says${s.pick === P.right ? ' good' : ''}"><h3>${s.pick === P.right ? '✅ Your prediction was right!' : '❌ Not what you predicted'}</h3><p>${P.result}</p></div>`;
+}
+const tried = id => { const s = state.pred[id]; if (s && s.pick && !s.tried) { s.tried = true; return true; } return false; };
+
+// ================= 1. What's vibrating? =================
+// Each sound maker: what it is, its sound, which parts you can tap (the first one vibrates), and where the stopping hand goes
+const MAKERS = {
+  guitar: { name: 'Guitar string', em: '🎸', f: 196, v: .6, ms: 3200, play: v => AU.pluck(196, v), hand: [170, 160],
+    parts: { string: 'The string', body: 'The wooden body', peg: 'The tuning peg' },
+    wrong: { body: 'The body makes the sound louder, but it is not where the sound starts. Which part moves when you pluck?', peg: 'The peg makes the string tighter or looser. It does not move when you pluck.' },
+    found: 'Yes! The <b>string</b> vibrates: it moves backwards and forwards very quickly.', stop: 'You put your hand on the string. It stops vibrating, and the sound stops.' },
+  drum: { name: 'Drum with rice', em: '🥁', f: 110, v: .7, ms: 2400, play: v => AU.drum(110, v), hand: [190, 110],
+    parts: { skin: 'The drum skin', side: 'The side of the drum', rice: 'The rice' },
+    wrong: { side: 'The side holds the drum together. Look for the part that you hit.', rice: 'The rice jumps, but only because the skin under it is moving. What makes the rice jump?' },
+    found: 'Yes! The <b>skin</b> vibrates. You can\'t see it move, but the rice jumps because of it.', stop: 'You put your hand flat on the skin. It stops vibrating. The rice stops jumping, and the sound stops.' },
+  ruler: { name: 'Ruler on a desk', em: '📏', f: 140, v: .6, ms: 2600, play: v => AU.twang(140, v), hand: [235, 140],
+    parts: { over: 'The end of the ruler', desk: 'The desk', hand: 'Your hand' },
+    wrong: { desk: 'The desk stays still. Which part moves up and down?', hand: 'Your hand holds the ruler still on the desk. Which part moves?' },
+    found: 'Yes! The part of the ruler over the edge vibrates: up and down, very quickly.', stop: 'You hold the end of the ruler. It stops vibrating, and the twang stops.' },
+  fork: { name: 'Tuning fork in water', em: '🍴', f: 440, v: .35, ms: 3600, play: v => AU.fork(440, v), hand: [150, 150],
+    parts: { prongs: 'The two prongs', handle: 'The handle', water: 'The water' },
+    wrong: { handle: 'You hold the handle. It hardly moves. Look at the two long prongs.', water: 'The water splashes, but only because something is moving in it. What is touching the water?' },
+    found: 'Yes! The <b>prongs</b> vibrate. They move too fast to see, but they make the water splash.', stop: 'You hold the prongs. They stop vibrating, and the sound stops.' },
+  speaker: { name: 'Speaker with paper bits', em: '🔈', f: 220, v: .55, ms: 3200, play: v => AU.speaker(220, v), hand: [150, 115],
+    parts: { cone: 'The round cone', box: 'The box', bits: 'The bits of paper' },
+    wrong: { box: 'The box holds the speaker. Look at the top, where the bits of paper are.', bits: 'The paper jumps, but only because the part under it is moving. What is under the paper?' },
+    found: 'Yes! The <b>cone</b> vibrates. That is how every speaker makes sound.', stop: 'You press gently on the cone. It stops vibrating, and the sound stops. (Ask an adult before you touch a real speaker.)' },
+  bell: { name: 'Hand bell', em: '🔔', f: 880, v: .65, ms: 3200, play: v => AU.bell(880, v), hand: [190, 160],
+    parts: { bell: 'The metal bell', handle: 'The handle', clapper: 'The clapper' },
+    wrong: { handle: 'You hold the handle. It does not ring. Which part rings?', clapper: 'The clapper hits the bell. Then something else keeps vibrating. What?' },
+    found: 'Yes! The <b>metal bell</b> vibrates after the clapper hits it.', stop: 'You put your hand on the bell. It stops vibrating, and the ringing stops.' },
+  throat: { name: 'Your throat', em: '🧒', f: 150, v: .35, ms: 3000, play: v => AU.hum(150, v), hand: null, stopBtn: '🤐 Stop humming',
+    parts: { throat: 'Inside your throat', mouth: 'Your mouth', hand: 'Your hand' },
+    wrong: { mouth: 'The sound comes out of your mouth, but the vibration starts lower down. Where does your hand feel it?', hand: 'Your hand feels the vibration, but your hand is not making it. What is under your hand?' },
+    found: 'Yes! Your <b>voice box</b>, inside your throat, vibrates when you hum. Put your hand on your throat and hum: you can feel it!', stop: 'You stop humming. Your voice box stops vibrating, and the sound stops.' }
+};
+const MORDER = ['guitar', 'drum', 'ruler', 'fork', 'speaker', 'bell', 'throat'];
+// A tappable part: its drawing, plus a bigger see-through area that is easier to hit
+const part = (id, inner, hit = '') => `<g class="tapme part" data-act="vpart" data-v="${id}">${inner}${hit}</g>`;
+const vib = (cls, origin, d, a, inner) => `<g class="${cls}" style="transform-origin:${origin};--d:${d}s;--a:${a}">${inner}</g>`;
+// The drawings, each in a box 300 wide and 260 high. on: vibrating now; v: how big the vibrations are
+const MDRAW = {
+  guitar(on, v) {
+    const A = on ? 6 + 20 * v : 0;
+    return part('body', `<ellipse cx="80" cy="150" rx="70" ry="64" fill="#c98a4a" stroke="#7a4a1a" stroke-width="3"/><ellipse cx="160" cy="150" rx="48" ry="50" fill="#c98a4a" stroke="#7a4a1a" stroke-width="3"/><circle cx="125" cy="150" r="20" fill="#4a2a10"/><rect x="40" y="136" width="9" height="28" fill="#3a2a1a"/>`)
+      + `<rect x="196" y="140" width="92" height="20" fill="#8a5a2a"/>${[220, 245, 268].map(x => `<line x1="${x}" x2="${x}" y1="140" y2="160" stroke="#d9d9d9" stroke-width="2"/>`).join('')}`
+      + part('peg', `<rect x="284" y="128" width="16" height="44" rx="5" fill="#6b4420"/><circle cx="292" cy="122" r="8" fill="#e6e6e6" stroke="#888" stroke-width="2"/>`, `<circle cx="292" cy="140" r="22" fill="transparent"/>`)
+      + part('string', vib(on ? 'vibY' : '', '0px 150px', .07, 0, `<path d="M45 150 Q166 ${150 + A} 288 150" fill="none" stroke="#f2f2f2" stroke-width="3.5"/><path d="M45 150 Q166 ${150 + A} 288 150" fill="none" stroke="#999" stroke-width="1.2"/>`), `<path d="M45 150 H288" stroke="transparent" stroke-width="28"/>`);
+  },
+  drum(on, v) {
+    const rice = [[110, 118], [130, 126], [150, 114], [170, 124], [190, 116], [140, 108], [165, 132], [120, 130], [185, 128], [100, 124]];
+    return part('side', `<path d="M50 120 V205 A100 28 0 0 0 250 205 V120" fill="#d9534f" stroke="#7a2a28" stroke-width="3"/>${[70, 110, 150, 190, 230].map((x, k) => `<path d="M${x} ${k % 2 ? 140 : 142} L${x + 20} 205" stroke="#f6efe0" stroke-width="2"/>`).join('')}`)
+      + part('skin', vib(on ? 'shakeY' : '', '150px 120px', .05, `${1 + 2 * v}px`, `<ellipse cx="150" cy="120" rx="100" ry="28" fill="#f6efe0" stroke="#8a7a55" stroke-width="3"/>`))
+      + part('rice', rice.map(([x, y], k) => vib(on ? 'jump' : '', '0 0', (.18 + (k % 3) * .04).toFixed(2), `${8 + 34 * v}px`, `<ellipse cx="${x}" cy="${y}" rx="6" ry="3" fill="#fffdf5" stroke="#6b5a35" stroke-width="1.2" stroke-width="1"/>`)).join(''), rice.map(([x, y]) => `<circle cx="${x}" cy="${y}" r="7" fill="transparent"/>`).join(''));
+  },
+  ruler(on, v) {
+    return part('desk', `<rect x="0" y="150" width="160" height="110" fill="#c9a77c"/><rect x="0" y="150" width="160" height="8" fill="#a8835a"/>`)
+      + `<rect x="20" y="140" width="140" height="10" fill="#7fc2ff" stroke="#3d7bff" stroke-width="1.5"/>`
+      + part('over', vib(on ? 'rock' : '', '160px 145px', .06, `${4 + 10 * v}deg`, `<rect x="158" y="140" width="132" height="10" fill="#7fc2ff" stroke="#3d7bff" stroke-width="1.5"/>${[175, 195, 215, 235, 255, 275].map(x => `<line x1="${x}" x2="${x}" y1="140" y2="145" stroke="#1d2340"/>`).join('')}`), `<rect x="160" y="120" width="130" height="50" fill="transparent"/>`)
+      + part('hand', `<text x="85" y="148" text-anchor="middle" style="font-size:46px">✋</text>`);
+  },
+  fork(on, v) {
+    const drops = [[128, 200], [136, 192], [164, 194], [172, 201], [150, 196]];
+    return part('water', `<path d="M60 206 H240 L228 252 H72 Z" fill="#bfe3ff" stroke="#7d8db0" stroke-width="3"/><path d="M60 206 H240" stroke="#7fb2ff" stroke-width="3"/>`)
+      + (on ? drops.map(([x, y], k) => vib('jump', '0 0', (.16 + k * .03).toFixed(2), `${10 + 14 * v}px`, `<circle cx="${x}" cy="${y}" r="3.5" fill="#7fb2ff"/>`)).join('') : '')
+      + part('handle', `<rect x="144" y="12" width="12" height="80" rx="5" fill="#9aa6c7" stroke="#6b7590" stroke-width="2"/>`, `<rect x="134" y="10" width="32" height="84" fill="transparent"/>`)
+      + part('prongs', vib(on ? 'shakeX' : '', '150px 90px', .04, '2px', `<path d="M130 212 V112 Q130 90 150 90 Q170 90 170 112 V212" fill="none" stroke="#b8c2dc" stroke-width="10"/><path d="M130 212 V112 Q130 90 150 90 Q170 90 170 112 V212" fill="none" stroke="#6b7590" stroke-width="2"/>`), `<rect x="118" y="88" width="64" height="126" fill="transparent"/>`);
+  },
+  speaker(on, v) {
+    const bits = [[110, 132], [135, 140], [160, 128], [185, 138], [150, 146], [125, 126], [178, 126]];
+    return part('box', `<rect x="70" y="140" width="160" height="100" rx="8" fill="#3b3f52"/><circle cx="96" cy="222" r="5" fill="#7dff9a"/>`)
+      + part('cone', vib(on ? 'shakeY' : '', '150px 140px', .045, `${1 + 2 * v}px`, `<ellipse cx="150" cy="140" rx="72" ry="20" fill="#5b6075" stroke="#2a2d3b" stroke-width="3"/><ellipse cx="150" cy="140" rx="46" ry="12" fill="#6b7088"/><ellipse cx="150" cy="140" rx="16" ry="5" fill="#2a2d3b"/>`))
+      + part('bits', bits.map(([x, y], k) => vib(on ? 'jump' : '', '0 0', (.15 + (k % 3) * .05).toFixed(2), `${8 + 26 * v}px`, `<rect x="${x - 5}" y="${y - 3}" width="10" height="6" fill="${['#ffc83d', '#ff5f6d', '#22b07d'][k % 3]}" transform="rotate(${k * 25} ${x} ${y})"/>`)).join(''), bits.map(([x, y]) => `<circle cx="${x}" cy="${y}" r="8" fill="transparent"/>`).join(''));
+  },
+  bell(on, v) {
+    return part('handle', `<rect x="140" y="14" width="20" height="84" rx="8" fill="#8a5a2a" stroke="#5a3a1a" stroke-width="2"/>`, `<rect x="130" y="10" width="40" height="90" fill="transparent"/>`)
+      + part('bell', vib(on ? 'shakeX' : '', '150px 100px', .03, '1.5px', `<path d="M92 208 Q98 118 150 96 Q202 118 208 208 Z" fill="#f2c94c" stroke="#a07a10" stroke-width="3"/><ellipse cx="150" cy="208" rx="58" ry="10" fill="#e0b030" stroke="#a07a10" stroke-width="3"/>`))
+      + part('clapper', `<line x1="150" y1="120" x2="150" y2="210" stroke="#6b7590" stroke-width="3"/><circle cx="150" cy="216" r="10" fill="#6b7590"/>`, `<circle cx="150" cy="216" r="18" fill="transparent"/>`);
+  },
+  throat(on, v) {
+    return `<rect x="85" y="226" width="130" height="34" rx="14" fill="#3d7bff"/>`
+      + part('throat', `<rect x="124" y="126" width="52" height="104" fill="#f1c27d"/>` + vib(on ? 'shakeX' : '', '150px 176px', .05, '1.5px', `<ellipse cx="150" cy="176" rx="14" ry="9" fill="#e59866" stroke="#b9653a" stroke-width="2"/>`), `<rect x="114" y="140" width="72" height="80" fill="transparent"/>`)
+      + `<circle cx="150" cy="78" r="56" fill="#f1c27d"/><path d="M96 66 Q150 0 204 66 Q190 34 150 30 Q110 34 96 66Z" fill="#5a3a1a"/><circle cx="130" cy="74" r="5" fill="#1d2340"/><circle cx="170" cy="74" r="5" fill="#1d2340"/>`
+      + part('mouth', `<path d="M136 104 Q150 ${on ? 112 : 108} 164 104" fill="none" stroke="#b03030" stroke-width="4" stroke-linecap="round"/>`, `<circle cx="150" cy="106" r="16" fill="transparent"/>`)
+      + (on ? [0, 1, 2].map(k => `<text x="${200 + k * 18}" y="${100 - k * 22}" class="puff" style="--dx:16px;--dy:-26px;animation-delay:${k * .5}s;font-size:22px;fill:var(--blue)">♪</text>`).join('') : '')
+      + part('hand', `<text x="214" y="196" text-anchor="middle" style="font-size:46px">🤚</text>`);
+  }
+};
+const freshVib = () => ({ id: 'guitar', heard: {}, found: {}, stopped: {}, wrong: null, justStopped: false });
+const VIB = {
+  stage() {
+    const s = state.vib, M = MAKERS[s.id], { w, h, narrow } = stageSize(), top = narrow ? 40 : 50, on = ringing('vib');
+    const picH = narrow ? 64 : 84, pw = Math.min(w - 20, 300), k = Math.min((w - 20) / 300, (h - top - picH - 46) / 260), ox = (w - 300 * k) / 2, oy = top + 4;
+    let o = `<rect width="${w}" height="${h}" fill="#eef4fb"/>`;
+    o += `<g transform="translate(${ox} ${oy}) scale(${k})">${MDRAW[s.id](on, M.v)}`;
+    if (s.justStopped && M.hand) o += `<text x="${M.hand[0]}" y="${M.hand[1]}" text-anchor="middle" style="font-size:44px">✋</text>`;
+    o += '</g>';
+    if (on) o += slowTag(10, top + 26);
+    o += picBox((w - pw) / 2, h - picH - 26, pw, picH, on ? pl(M.f) : null, M.v);
+    const say = on ? `${M.name}: ${capt(pl(M.f), M.v)}.${s.heard[s.id] && !s.found[s.id] ? ' What is vibrating?' : ''}` : s.justStopped ? 'No vibration, no sound.' : !s.heard[s.id] ? 'Tap ▶ to make the sound.' : !s.found[s.id] ? 'Tap the part that is vibrating.' : 'Make the sound again, then stop it.';
+    return `<div class="lay-top"><span class="scaletag">${M.em} ${M.name}</span><div class="readout">${say}</div></div><svg viewBox="0 0 ${w} ${h}" aria-label="${M.name}">${o}</svg>`;
+  },
+  drawer() {
+    const s = state.vib, M = MAKERS[s.id], nf = MORDER.filter(id => s.found[id]).length, ns = Object.keys(s.stopped).length, on = ringing('vib');
+    const list = `<div class="card"><h2>〰️ What's vibrating?</h2><p>Every sound is made by something that <span class="term">vibrates</span>: it moves backwards and forwards very quickly.</p>
+      <div class="stops" style="margin-top:6px">${MORDER.map(id => `<button class="opt sm${s.id === id ? ' on' : ''}${s.found[id] && s.id !== id ? ' done' : ''}" data-act="vpick" data-v="${id}">${MAKERS[id].em} ${MAKERS[id].name}${s.found[id] ? ' ✅' : ''}</button>`).join('')}</div>
+      <p class="muted">Found: ${nf} of ${MORDER.length} · Stopped: ${ns}</p></div>`;
+    let now = `<div class="card says"><h3>${M.em} ${M.name}</h3>`;
+    if (!s.heard[s.id]) now += `<p>Make the sound. Watch the picture: it is in <b>slow motion</b>.</p>`;
+    else if (!s.found[s.id]) now += `<p>Which part is <b>vibrating</b>? Tap it on the picture.</p>${s.wrong ? `<p class="spot">💡 ${M.wrong[s.wrong]}</p>` : ''}`;
+    else now += `<p class="job">${M.found}</p>${s.justStopped ? `<p class="job">✋ ${M.stop}</p>` : `<p>Now make the sound again, then <b>stop</b> it.</p>`}`;
+    now += `<div class="navrow" style="margin-top:6px"><button class="btn go" data-act="vplay">▶ ${s.id === 'throat' ? 'Hum' : 'Make the sound'}</button>
+      ${s.found[s.id] ? `<button class="btn" data-act="vstop"${on ? '' : ' disabled'}>${M.stopBtn || '✋ Stop the sound'}</button>` : ''}</div></div>`;
+    const sci = ns ? `<div class="science"><b>🔬 The science</b>When the vibrating part stops, the sound stops too. <b>No vibration, no sound.</b></div>` : '';
+    return `${now}${sci}${list}`;
+  }
+};
+
+// ================= 2. Sound pictures =================
+// Mystery sounds: [id, emoji, name, pitch 0–1, volume 0–1, how to play it]
+const MYST = [
+  ['squeak', '🐭', 'A mouse squeaks', .9, .2, () => AU.play([[1500, 1]], .2, { dur: .5, attack: .02, hold: .25, wobble: 18 })],
+  ['horn', '🚢', 'A ship\'s horn', .12, 1, () => AU.play([[90, 1, 'sawtooth'], [135, .5, 'sawtooth']], 1, { dur: 1.8, attack: .15, hold: 1.2, lp: 700 })],
+  ['whistle', '📯', 'A loud whistle', .92, .95, () => AU.play([[1800, 1]], .95, { dur: .9, attack: .03, hold: .6, wobble: 30 })],
+  ['thunder', '🌩️', 'Thunder far away', .05, .2, () => AU.play([[55, 1], [70, .6]], .25, { dur: 2.2, attack: .3, noise: { f: 120, q: .7, g: .8, dur: 2 } })],
+  ['recorder', '🪈', 'A recorder, played softly', .8, .2, () => AU.play([[880, 1], [1760, .1]], .2, { dur: 1.2, attack: .08, hold: .8 })],
+  ['bigdrum', '🥁', 'A big drum, hit hard', .1, .95, () => AU.drum(80, .95)],
+  ['bass', '🎻', 'A double bass, plucked gently', .15, .25, () => AU.pluck(70, .25)],
+  ['bellhard', '🔔', 'A school bell, rung hard', .85, .9, () => AU.bell(1100, .9)]
+];
+const BOXES = [['hl', '⬆️ High', '🔊 Loud'], ['hq', '⬆️ High', '🤫 Quiet'], ['ll', '⬇️ Low', '🔊 Loud'], ['lq', '⬇️ Low', '🤫 Quiet']];
+const boxOf = m => (m[3] >= .5 ? 'h' : 'l') + (m[4] >= .55 ? 'l' : 'q');
+const freshPics = () => ({ mode: 'make', p: .5, v: .7, made: {}, placed: {}, sel: null, wrong: null, order: shuffle(MYST.map(m => m[0])) });
+const playMade = () => { const s = state.pics, f = 80 * Math.pow(1000 / 80, s.p); AU.play([[f, 1, 'triangle'], [f * 2, .2]], s.v, { dur: 1.2, attack: .03, hold: .6, lp: 2500 }); };
+const PICS = {
+  sel: () => state.pics.mode === 'mystery' ? state.pics.sel : null,
+  pick(id) { const s = state.pics; if (s.placed[id]) return; s.sel = id; s.wrong = null; MYST.find(m => m[0] === id)[5](); render(); },
+  drop(id, box) {
+    const s = state.pics, m = MYST.find(x => x[0] === id); if (!m || s.placed[id]) return;
+    if (boxOf(m) === box) { s.placed[id] = box; s.sel = null; s.wrong = null; }
+    else s.wrong = { id, box };
+    render();
+    if (Object.keys(s.placed).length === MYST.length) emit('mystery');
+  },
+  stage() {
+    const s = state.pics, { w, h, narrow } = stageSize();
+    if (s.mode === 'mystery') {
+      const pool = s.order.filter(id => !s.placed[id]).map(id => { const m = MYST.find(x => x[0] === id);
+        return `<button class="pcard${s.sel === id ? ' sel' : ''}" data-drag="${id}"><div class="ph" style="background:#e8eeff">${m[1]}</div><span>${m[2]}</span></button>`; }).join('');
+      const boxes = BOXES.map(([b, a, c]) => `<div class="bin${s.sel ? ' ready' : ''}" data-drop="${b}"><h3>${a} · ${c}</h3>
+        <div class="in">${MYST.filter(m => s.placed[m[0]] === b).map(m => `<div class="mini wide"><span style="font-size:22px">${m[1]}</span>${wavePic(m[3], m[4], 96, 34)}<span>${m[2]}</span></div>`).join('')}</div></div>`).join('');
+      const say = s.wrong ? `Not quite. ${(() => { const m = MYST.find(x => x[0] === s.wrong.id), ok = boxOf(m); return ok[0] !== s.wrong.box[0] ? `Listen again: is it <b>high</b> or <b>low</b>?` : `Listen again: is it <b>loud</b> or <b>quiet</b>?`; })()}` : s.sel ? 'Now tap the box it belongs in. Or drag it.' : 'Tap a sound to hear it. Then put it in a box.';
+      return `<div class="lay-top"><span class="scaletag">🎧 Mystery sounds</span><div class="readout">${say}</div></div>
+        <div class="sortwrap mystwrap"><div class="pool">${pool}</div><div class="bins grid4">${boxes}</div></div>`;
+    }
+    const top = narrow ? 40 : 50, pw = Math.min(w - 40, 560), ph = Math.min(h * .42, 220), f = Math.round(80 * Math.pow(1000 / 80, s.p));
+    let o = `<rect width="${w}" height="${h}" fill="#eef4fb"/>` + picBox((w - pw) / 2, top + 20, pw, ph, s.p, s.v, '🖼️ Your sound picture');
+    // Two small pictures that show high is not the same as loud
+    const sw = Math.min((w - 60) / 2, 240), sh = Math.min(h * .2, 100), y2 = top + ph + 80;
+    if (y2 + sh + 30 < h) o += picBox(w / 2 - sw - 10, y2, sw, sh, .9, .15, '🐭 A mouse squeak') + picBox(w / 2 + 10, y2, sw, sh, .1, .95, '🚢 A ship\'s horn');
+    return `<div class="lay-top"><span class="scaletag">🖼️ Sound pictures</span><div class="readout">Taller waves: <b>louder</b>. Waves closer together: <b>higher</b>.</div></div><svg viewBox="0 0 ${w} ${h}" aria-label="A sound picture">${o}</svg>`;
+  },
+  drawer() {
+    const s = state.pics, n = Object.keys(s.placed).length;
+    const modes = `<div class="card"><h2>🖼️ Sound pictures</h2><p>A <span class="term">sound picture</span> is a drawing that shows a sound's <span class="term">pitch</span> (how high or low it is) and its <span class="term">volume</span> (how loud or quiet it is).</p>
+      <div class="navrow" style="margin-top:6px"><button class="btn${s.mode === 'make' ? ' active' : ''}" data-act="pmode" data-v="make">🎚️ Make a sound</button><button class="btn${s.mode === 'mystery' ? ' active' : ''}" data-act="pmode" data-v="mystery">🎧 Mystery sounds</button></div></div>`;
+    if (s.mode === 'mystery') return `${modes}<div class="card says"><h3>🎧 Mystery sounds</h3><p>Tap a sound to hear it. Is it <b>high</b> or <b>low</b>? Is it <b>loud</b> or <b>quiet</b>? Put it in the right box.</p><p class="muted">Placed: ${n} of ${MYST.length}</p></div>
+      ${n === MYST.length ? '<div class="science"><b>🔬 The science</b>A mouse squeak is <b>high</b> but <b>quiet</b>. A ship\'s horn is <b>low</b> but <b>loud</b>. High does not mean loud! Pitch and volume are two different things.</div>' : ''}
+      ${n ? `<div class="card"><button class="btn" data-act="preset">↺ Start again</button></div>` : ''}`;
+    return `${modes}<div class="card"><h3>🎚️ Make a sound</h3>
+      <div class="slide"><span>⬇️ Low</span><input type="range" id="pp" min="0" max="1" step=".05" value="${s.p}" aria-label="Pitch"><span>⬆️ High</span></div>
+      <div class="slide"><span>🤫 Quiet</span><input type="range" id="pv" min="0" max="1" step=".05" value="${s.v}" aria-label="Volume"><span>🔊 Loud</span></div>
+      <div class="navrow"><button class="btn go" data-act="pplay">▶ Play it</button></div>
+      <p class="muted" style="margin-top:6px">Try these:</p><div class="stops">${[['.9', '.15', '⬆️ High, 🤫 quiet'], ['.1', '.95', '⬇️ Low, 🔊 loud'], ['.9', '.95', '⬆️ High, 🔊 loud'], ['.1', '.15', '⬇️ Low, 🤫 quiet']].map(([p, v, t]) => `<button class="opt sm" data-act="ppre" data-p="${p}" data-v="${v}">${t}</button>`).join('')}</div></div>
+      <div class="science"><b>⚠️ Watch out!</b><b>High</b> does not mean <b>loud</b>. A mouse squeak is high but quiet. A ship's horn is low but loud. Pitch and volume are two different things.</div>`;
+  }
+};
+
+// ================= 3. Guitar string =================
+const TIGHT = [['Loose', .8], ['Medium', 1], ['Tight', 1.2]], THICK = [['Thin', 1.4], ['Medium', 1], ['Thick', .7]];
+const freshGtr = () => ({ tight: 1, thick: 1, len: 100, last: null, n: 0 });
+const gtrF = g => 196 * TIGHT[g.tight][1] * THICK[g.thick][1] * 100 / g.len;
+// A pitch and a volume meter, side by side
+const meters = (x, y, hh, p, v) => {
+  const bar = (bx, val, lab, lo, hi, col) => `<rect x="${bx}" y="${y}" width="26" height="${hh}" rx="8" fill="#fff" stroke="#c6d0f2" stroke-width="2"/>`
+    + (val == null ? '' : `<rect x="${bx + 3}" y="${y + hh - 3 - (hh - 6) * clamp(val)}" width="20" height="${(hh - 6) * clamp(val)}" rx="5" fill="${col}"/>`)
+    + `<text x="${bx + 13}" y="${y - 8}" text-anchor="middle" class="gsmall">${lab}</text><text x="${bx + 32}" y="${y + 12}" class="gsmall">${hi}</text><text x="${bx + 32}" y="${y + hh}" class="gsmall">${lo}</text>`;
+  return bar(x, p, 'Pitch', 'low', 'high', 'var(--blue)') + bar(x + 84, v, 'Volume', 'quiet', 'loud', 'var(--coral)');
+};
+const PRED_G = { q: 'If you pluck the string <b>harder</b>, what will happen to the note?', opts: [['louder', '🔊 It will be louder'], ['higher', '⬆️ It will be higher'], ['both', '🔊⬆️ Louder and higher']], right: 'louder',
+  after: 'pluck gently, then pluck hard. Watch the meters.', result: 'Plucking harder makes the string vibrate <b>more</b>, so the note is <b>louder</b>. The pitch stays the same.' };
+const GTR = {
+  stage() {
+    const g = state.gtr, { w, h, narrow } = stageSize(), top = narrow ? 40 : 50, on = ringing('gtr'), L = g.last;
+    const x0 = 30, x1 = w - (narrow ? 30 : 150), y = top + (h - top) * .38, fx = x0 + (x1 - x0) * g.len / 100, sw = [2, 3.5, 6][g.thick];
+    const A = on && L ? 5 + 26 * L.v * g.len / 100 : 0, d = L ? clamp(30 / L.f, .03, .3) : .1;
+    let o = `<rect width="${w}" height="${h}" fill="#eef4fb"/><rect x="${x0 - 10}" y="${y - 30}" width="${x1 - x0 + 40}" height="60" rx="8" fill="#a8743f"/>`;
+    // Frets: fret k is (1 − 2^(−k/12)) of the way from the nut (on the right) to the bridge (on the left)
+    for (let k = 1; k <= 12; k++) { const fx2 = x1 - (x1 - x0) * (1 - Math.pow(2, -k / 12)); o += `<line x1="${fx2}" x2="${fx2}" y1="${y - 30}" y2="${y + 30}" stroke="#d9d9d9" stroke-width="2"/>`; }
+    o += `<rect x="${x0 - 6}" y="${y - 22}" width="8" height="44" fill="#3a2a1a"/><rect x="${x1 + 4}" y="${y - 30}" width="26" height="60" rx="6" fill="#6b4420"/>`;
+    o += `<g transform="rotate(${[-25, 0, 25][g.tight]} ${x1 + 17} ${y - 44})"><rect x="${x1 + 7}" y="${y - 54}" width="20" height="20" rx="4" fill="#e6e6e6" stroke="#888" stroke-width="2"/><line x1="${x1 + 17}" x2="${x1 + 17}" y1="${y - 52}" y2="${y - 36}" stroke="#888" stroke-width="2"/></g>`;
+    o += `<text x="${x1 + 17}" y="${y - 62}" text-anchor="middle" class="gsmall">${TIGHT[g.tight][0].toLowerCase()}</text>`;
+    // The part between the finger and the bridge vibrates; the part past the finger stays still
+    if (g.len < 100) o += `<line x1="${fx}" x2="${x1 + 6}" y1="${y}" y2="${y}" stroke="#bbb" stroke-width="${sw}"/>`;
+    o += vib(on ? 'vibY' : '', `0px ${y}px`, d.toFixed(3), 0, `<path d="M${x0} ${y} Q${(x0 + fx) / 2} ${y + A} ${fx} ${y}" fill="none" stroke="#e8e8e8" stroke-width="${sw + 1.5}"/><path d="M${x0} ${y} Q${(x0 + fx) / 2} ${y + A} ${fx} ${y}" fill="none" stroke="#8a8a8a" stroke-width="${Math.max(1, sw - 2)}"/>`);
+    if (g.len < 100) o += `<text x="${fx}" y="${y - 6}" text-anchor="middle" style="font-size:${narrow ? 30 : 40}px">👇</text>`;
+    o += `<text x="${(x0 + fx) / 2}" y="${y + 52}" text-anchor="middle" class="gsmall">This part vibrates: ${g.len === 100 ? 'the whole string' : `${g.len}% of the string`}</text>`;
+    if (on) o += slowTag(10, top + 26);
+    const pw = Math.min(w - (narrow ? 20 : 220), 360), ph = narrow ? 64 : 84, py = h - ph - 30;
+    o += L ? picBox(10, py, pw, ph, on ? pl(L.f) : null, L.v, '🖼️ Sound picture', on ? capt(pl(L.f), L.v) : 'Pluck it again') : picBox(10, py, pw, ph, null, 0, '🖼️ Sound picture', 'Pluck the string');
+    if (!narrow) o += meters(w - 160, py, ph, L && on ? pl(L.f) : null, L && on ? L.v : null);
+    return `<div class="lay-top"><span class="scaletag">🎸 Guitar string</span><div class="readout">${L ? (on ? capt(pl(L.f), L.v) : 'Change something, then pluck again.') : 'Pluck the string.'}</div></div><svg viewBox="0 0 ${w} ${h}" aria-label="A guitar string">${o}</svg>`;
+  },
+  drawer() {
+    const g = state.gtr;
+    return `${predCard('gtr', PRED_G)}<div class="card"><h2>🎸 Guitar string</h2><p>Change the string, then pluck it. Listen, and watch the <b>sound picture</b>.</p>
+      <div class="varrow"><span>🔧 How tight is the string?</span><div class="stops">${TIGHT.map(([t], k) => `<button class="opt sm${g.tight === k ? ' on' : ''}" data-act="gset" data-k="tight" data-v="${k}">${t}</button>`).join('')}</div></div>
+      <div class="varrow"><span>〰️ How thick is the string?</span><div class="stops">${THICK.map(([t], k) => `<button class="opt sm${g.thick === k ? ' on' : ''}" data-act="gset" data-k="thick" data-v="${k}">${t}</button>`).join('')}</div></div>
+      <div class="varrow"><span>👇 Where is your finger? (how long the vibrating part is)</span><div class="slide"><span>Short</span><input type="range" id="glen" min="50" max="100" step="5" value="${g.len}" aria-label="Length of the vibrating string"><span>Long</span></div></div>
+      <div class="navrow"><button class="btn go" data-act="gpluck" data-v="0">🤏 Pluck gently</button><button class="btn go" data-act="gpluck" data-v="1" style="background:var(--coral)">💪 Pluck hard</button></div></div>
+      ${g.n >= 3 ? '<div class="science"><b>🔬 The science</b><b>Tighter</b>, <b>shorter</b> or <b>thinner</b> strings vibrate faster, so the note is <b>higher</b>. Plucking <b>harder</b> makes bigger vibrations, so the note is <b>louder</b>, but not higher.</div>' : ''}`;
+  }
+};
+
+// ================= 4. Drum =================
+const DSIZE = [['Small', 1.4, .62], ['Medium', 1, .8], ['Big', .65, 1]], DTIGHT = [['Loose', .8], ['Medium', 1], ['Tight', 1.25]];
+const freshDrum = () => ({ size: 1, tight: 1, last: null, n: 0 });
+const drumF = d => 150 * DSIZE[d.size][1] * DTIGHT[d.tight][1];
+const PRED_D = { q: 'Which drum will make the <b>lowest</b> note?', opts: [['big', '🥁 The big drum'], ['small', '🪘 The small drum'], ['same', '🟰 They will sound the same']], right: 'big',
+  after: 'hit the small drum, then the big drum.', result: 'The <b>big</b> drum makes the lowest note. A big skin vibrates more slowly, so the note is lower.' };
+const DRUM = {
+  stage() {
+    const d = state.drum, { w, h, narrow } = stageSize(), top = narrow ? 40 : 50, on = ringing('drum'), L = d.last;
+    const R = Math.min(w * .32, (h - top) * .36) * DSIZE[d.size][2], cx = narrow ? w / 2 : w * .42, sy = top + (h - top) * .42, ry = R * .28, bh = R * .7;
+    let o = `<rect width="${w}" height="${h}" fill="#eef4fb"/>`;
+    o += `<path d="M${cx - R} ${sy} V${sy + bh} A${R} ${ry} 0 0 0 ${cx + R} ${sy + bh} V${sy}" fill="#d9534f" stroke="#7a2a28" stroke-width="3"/>`;
+    for (let k = 0; k < 6; k++) { const x = cx - R + (k + .5) * 2 * R / 6; o += `<path d="M${x - R / 8} ${sy + ry * .8} L${x + R / 8} ${sy + bh + ry * .5}" stroke="#f6efe0" stroke-width="2"/><rect x="${x - 4}" y="${sy + bh * .45}" width="8" height="${8 + d.tight * 4}" rx="2" fill="#c9cfdc"/>`; }
+    o += vib(on ? 'shakeY' : '', `${cx}px ${sy}px`, .05, `${L ? 1 + 2 * L.v : 1}px`, `<ellipse cx="${cx}" cy="${sy}" rx="${R}" ry="${ry}" fill="#f6efe0" stroke="#8a7a55" stroke-width="3"/>`);
+    const rr = rng(4);
+    for (let k = 0; k < 14; k++) { const a = rr() * Math.PI * 2, q = Math.sqrt(rr()) * .8, x = cx + Math.cos(a) * R * q, y = sy + Math.sin(a) * ry * q;
+      o += vib(on ? 'jump' : '', '0 0', (.16 + (k % 4) * .04).toFixed(2), `${L ? 6 + 60 * L.v : 0}px`, `<ellipse cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" rx="6" ry="3" fill="#fffdf5" stroke="#6b5a35" stroke-width="1.2"/>`); }
+    o += `<text x="${cx}" y="${sy + bh + ry + 24}" text-anchor="middle" class="gsmall">${DSIZE[d.size][0]} drum · ${DTIGHT[d.tight][0].toLowerCase()} skin</text>`;
+    if (on) o += slowTag(10, top + 26);
+    const pw = Math.min(w - (narrow ? 20 : 220), 360), ph = narrow ? 60 : 80, py = h - ph - 28;
+    o += picBox(10, py, pw, ph, L && on ? pl(L.f) : null, L ? L.v : 0, '🖼️ Sound picture', L ? (on ? capt(pl(L.f), L.v) : 'Hit it again') : 'Hit the drum');
+    if (!narrow) o += meters(w - 160, py, ph, L && on ? pl(L.f) : null, L && on ? L.v : null);
+    return `<div class="lay-top"><span class="scaletag">🥁 Drum</span><div class="readout">${L && on ? `${capt(pl(L.f), L.v)}. The rice ${L.v > .5 ? 'jumps high!' : 'hardly jumps.'}` : 'Hit the drum. Watch the rice.'}</div></div><svg viewBox="0 0 ${w} ${h}" aria-label="A drum with rice on it">${o}</svg>`;
+  },
+  drawer() {
+    const d = state.drum;
+    return `${predCard('drum', PRED_D)}<div class="card"><h2>🥁 Drum</h2><p>There is rice on the drum skin. The rice shows you how the skin moves.</p>
+      <div class="varrow"><span>📏 How big is the drum?</span><div class="stops">${DSIZE.map(([t], k) => `<button class="opt sm${d.size === k ? ' on' : ''}" data-act="dset" data-k="size" data-v="${k}">${t}</button>`).join('')}</div></div>
+      <div class="varrow"><span>🔧 How tight is the skin?</span><div class="stops">${DTIGHT.map(([t], k) => `<button class="opt sm${d.tight === k ? ' on' : ''}" data-act="dset" data-k="tight" data-v="${k}">${t}</button>`).join('')}</div></div>
+      <div class="navrow"><button class="btn go" data-act="dhit" data-v="0">🤏 Hit gently</button><button class="btn go" data-act="dhit" data-v="1" style="background:var(--coral)">💪 Hit hard</button></div></div>
+      ${d.n >= 3 ? '<div class="science"><b>🔬 The science</b>Hit <b>harder</b>: the skin makes bigger vibrations, so the sound is <b>louder</b> and the rice jumps higher. A <b>bigger</b> drum makes a <b>lower</b> note. A <b>tighter</b> skin makes a <b>higher</b> note.</div>' : ''}`;
+  }
+};
+
+// ================= 5. Ruler twang =================
+// Vibrations per second for a plastic 30 cm ruler, worked out from how bendy plastic is: about 0.6 ÷ (overhang in metres)².
+// 5 cm → 240, 10 cm → 60, 15 cm → 27, 20 cm → 15, 25 cm → 10. Pushing it down further makes bigger vibrations, not faster ones.
+const vpsOf = (cm, k = 1) => Math.round(.6 / Math.pow(cm / 100, 2) * k);
+// The computer can't play 10 vibrations per second as a note you can hear, so the note it plays goes up and down in the same direction
+const twangF = vps => 90 * Math.pow(vps / 10, .55);
+const PUSH = [['A little', .3, 6], ['Medium', .6, 11], ['A lot', .95, 18]];
+const freshRul = () => ({ over: 15, push: 1, last: null, seen: {}, count: 0 });
+const PRED_R = { q: 'If you make the part over the edge <b>shorter</b>, what will happen to the note?', opts: [['higher', '⬆️ It will be higher'], ['lower', '⬇️ It will be lower'], ['same', '🟰 It will not change']], right: 'higher',
+  after: 'twang the ruler with a long overhang, then a short one.', result: 'A <b>shorter</b> overhang vibrates <b>faster</b>: more vibrations per second, so the note is <b>higher</b>.' };
+const RUL = {
+  timer: null,
+  stage() {
+    const r = state.rul, { w, h, narrow } = stageSize(), top = narrow ? 40 : 50, on = ringing('rul'), L = r.last;
+    const edge = w * (narrow ? .38 : .34), cmPx = Math.min((w - edge - 20) / 27, (h - top) / 16), y = top + (h - top) * .42, len = r.over * cmPx;
+    const ang = PUSH[(L || r).push][2], vps = L ? L.vps : vpsOf(r.over), d = clamp(2 / vps, .04, .4);
+    let o = `<rect width="${w}" height="${h}" fill="#eef4fb"/><rect x="0" y="${y + 6}" width="${edge}" height="${h - y}" fill="#c9a77c"/><rect x="0" y="${y + 6}" width="${edge}" height="8" fill="#a8835a"/>`;
+    o += `<rect x="${edge - (30 - r.over) * cmPx}" y="${y - 4}" width="${(30 - r.over) * cmPx}" height="10" fill="#7fc2ff" stroke="#3d7bff" stroke-width="1.5"/>`;
+    o += `<text x="${edge - (30 - r.over) * cmPx / 2}" y="${y - 2}" text-anchor="middle" style="font-size:${narrow ? 34 : 50}px">✋</text>`;
+    o += vib(on ? 'rock' : '', `${edge}px ${y + 1}px`, d.toFixed(3), `${ang}deg`, `<rect x="${edge - 2}" y="${y - 4}" width="${len + 2}" height="10" fill="#7fc2ff" stroke="#3d7bff" stroke-width="1.5"/>${Array.from({ length: r.over }, (_, k) => `<line x1="${edge + (k + 1) * cmPx}" x2="${edge + (k + 1) * cmPx}" y1="${y - 4}" y2="${y + (k % 5 === 4 ? 4 : 0)}" stroke="#1d2340"/>`).join('')}`);
+    // The overhang, measured
+    o += `<path d="M${edge} ${y + 26} h${len}" stroke="var(--coral)" stroke-width="2"/><path d="M${edge} ${y + 20} v12 M${edge + len} ${y + 20} v12" stroke="var(--coral)" stroke-width="2"/><text x="${edge + len / 2}" y="${y + 46}" text-anchor="middle" class="glabel" style="fill:var(--coral)">${r.over} cm over the edge</text>`;
+    if (!on) o += `<path d="M${edge + len - 4} ${y - 34} v22" stroke="var(--muted)" stroke-width="2" marker-end="url(#ah)"/><text x="${edge + len}" y="${y - 40}" text-anchor="middle" class="gsmall">push down: ${PUSH[r.push][0].toLowerCase()}</text>`;
+    if (on) o += slowTag(10, top + 26);
+    // The counter: one second of vibrating, slowed down to four seconds
+    const cx = narrow ? w / 2 : w * .78, cy = y + (narrow ? 70 : 90);
+    if (L) o += `<rect x="${cx - 100}" y="${cy}" width="200" height="64" rx="12" fill="#1d2340"/><text x="${cx}" y="${cy + 20}" text-anchor="middle" style="font-size:12.5px;font-weight:600;fill:#c6d0f2">Vibrations in 1 second</text><text id="vpsCount" x="${cx}" y="${cy + 52}" text-anchor="middle" style="font-family:'Courier New',monospace;font-weight:700;font-size:28px;fill:#7dff9a">${on ? r.count : L.vps}</text>`;
+    const pw = Math.min(w - 20, 340), ph = narrow ? 56 : 74;
+    if (h - ph - 26 > cy + 80) o += picBox(10, h - ph - 26, pw, ph, L && on ? pl(twangF(L.vps)) : null, L ? PUSH[L.push][1] : 0, '🖼️ Sound picture', L ? (on ? capt(pl(twangF(L.vps)), PUSH[L.push][1]) : 'Twang it again') : 'Twang the ruler');
+    o += `<defs><marker id="ah" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 L10 5 L0 10z" fill="var(--muted)"/></marker></defs>`;
+    return `<div class="lay-top"><span class="scaletag">📏 Ruler twang</span><div class="readout">${L ? `${L.over} cm: <b>${L.vps} vibrations per second</b>.${on ? ' ' + capt(pl(twangF(L.vps)), PUSH[L.push][1]) + '.' : ''}` : 'Push the end down, then let go.'}</div></div><svg viewBox="0 0 ${w} ${h}" aria-label="A ruler over the edge of a desk">${o}</svg>`;
+  },
+  drawer() {
+    const r = state.rul, seen = Object.keys(r.seen).map(Number).sort((a, b) => a - b);
+    return `${predCard('rul', PRED_R)}<div class="card"><h2>📏 Ruler twang</h2><p>Hold the ruler on the desk. Push the end down, then let go: <b>twang!</b></p>
+      <div class="varrow"><span>↔️ How far over the edge?</span><div class="slide"><span>5 cm</span><input type="range" id="rover" min="5" max="25" step="1" value="${r.over}" aria-label="Overhang in centimetres"><span>25 cm</span></div><p class="muted" style="margin:0">Now: <b id="roverTxt">${r.over} cm</b></p></div>
+      <div class="varrow"><span>⬇️ How far do you push it down?</span><div class="stops">${PUSH.map(([t], k) => `<button class="opt sm${r.push === k ? ' on' : ''}" data-act="rset" data-v="${k}">${t}</button>`).join('')}</div></div>
+      <div class="navrow"><button class="btn go" data-act="rtwang">🤚 Let go: twang!</button></div></div>
+      ${seen.length ? `<div class="card"><h3>📋 Your results</h3><table class="gtable"><tr><th>Over the edge</th><th>Vibrations per second</th></tr>${seen.map(cm => `<tr><td>${cm} cm</td><td><b>${r.seen[cm]}</b></td></tr>`).join('')}</table></div>` : ''}
+      ${seen.length >= 3 ? '<div class="science"><b>🔬 The science</b>A <b>shorter</b> overhang vibrates <b>faster</b>: more vibrations per second, so the note is <b>higher</b>. Pushing it down <b>further</b> makes <b>bigger</b> vibrations, so the twang is <b>louder</b>, but not higher.</div>' : ''}
+      <p class="muted">Real vibrations are far too fast to see, so the picture is in slow motion: 1 second takes 4 seconds.</p>`;
+  },
+  twang() {
+    const r = state.rul, vps = vpsOf(r.over), v = PUSH[r.push][1];
+    r.last = { over: r.over, push: r.push, vps }; r.seen[r.over] = vps; r.count = 0;
+    AU.twang(twangF(vps), v); ring('rul', 4000, true);
+    if (r.over >= 18 && !state.pred.rul?.long) (state.pred.rul = state.pred.rul || {}).long = true;
+    if (r.over <= 10 && state.pred.rul?.long) tried('rul');
+    render();
+    const t0 = performance.now(); clearInterval(RUL.timer);
+    RUL.timer = setInterval(() => { const k = clamp((performance.now() - t0) / 4000); r.count = Math.floor(vps * k); const el = $('#vpsCount'); if (el) el.textContent = r.count; if (k >= 1) clearInterval(RUL.timer); }, 50);
+    emit('ruler', { over: r.over });
+  }
+};
+
+// ================= 6. Bottle band =================
+// How much of each bottle is water. Tapping: the glass and the water vibrate, so more water → lower.
+// Blowing: the air inside vibrates, so more water (less air) → higher.
+const LEVELS = [.1, .25, .4, .55, .7];
+const tapF = w => 700 * (1 - .75 * w), blowF = w => 170 / (1 - w);
+const rankWord = k => ['the lowest', 'low', 'in the middle', 'high', 'the highest'][k];
+const freshBot = () => ({ mode: 'tap', last: null, tapped: {}, blown: {}, target: null, mine: .4, matched: 0, said: null, heardTarget: false });
+const PRED_B = { q: 'When you <b>blow</b> across the top, which bottle will make the <b>highest</b> note?', opts: [['most', '💧💧 The one with the most water'], ['least', '💧 The one with the least water'], ['same', '🟰 They will all sound the same']], right: 'most',
+  after: 'blow across every bottle.', result: 'When you blow, the <b>air</b> inside vibrates. More water means less air, and a small amount of air vibrates faster. So the bottle with the <b>most water</b> makes the <b>highest</b> note. That is the opposite of tapping!' };
+const bottleG = (cx, base, bw, bh, w, on, how) => {
+  const neck = bw * .36, nh = bh * .22, body = bh - nh, wl = base - body * w / .85;
+  let inner = `<path d="M${cx - bw / 2} ${base - body} Q${cx - bw / 2} ${base - body - nh * .4} ${cx - neck / 2} ${base - bh + 4} V${base - bh} H${cx + neck / 2} V${base - bh + 4} Q${cx + bw / 2} ${base - body - nh * .4} ${cx + bw / 2} ${base - body} V${base - 6} Q${cx + bw / 2} ${base} ${cx + bw / 2 - 6} ${base} H${cx - bw / 2 + 6} Q${cx - bw / 2} ${base} ${cx - bw / 2} ${base - 6} Z" fill="rgba(220,240,255,.5)" stroke="#7d8db0" stroke-width="2.5"/>`;
+  inner += `<rect x="${cx - bw / 2 + 2}" y="${wl}" width="${bw - 4}" height="${base - wl - 2}" rx="4" fill="#7fb2ff" opacity=".8"/>`;
+  // The air inside, shown when blowing
+  if (how === 'blow') inner += `<rect x="${cx - bw / 2 + 4}" y="${base - body}" width="${bw - 8}" height="${wl - base + body - 2}" fill="#fff4b0" opacity="${on ? .9 : .35}"/>`;
+  let g = how === 'tap' && on ? vib('shakeX', `${cx}px ${base}px`, .04, '1.5px', inner) : inner;
+  if (how === 'blow' && on) g += [0, 1, 2].map(k => `<path class="puff" style="--dx:0px;--dy:${body * .3}px;animation-delay:${k * .3}s" d="M${cx - bw * .3} ${base - body + 8 + k * 10} q${bw * .15} -6 ${bw * .3} 0 t${bw * .3} 0" stroke="#e0a800" stroke-width="2.5" fill="none"/>`).join('');
+  return g;
+};
+const BOT = {
+  stage() {
+    const b = state.bot, { w, h, narrow } = stageSize(), top = narrow ? 40 : 50;
+    let o = `<rect width="${w}" height="${h}" fill="#eef4fb"/>`, say;
+    if (b.mode === 'match') {
+      const on = ringing('bmine'), onT = ringing('btarget'), bw = Math.min(w * .16, 90), bh = Math.min((h - top) * .55, bw * 3), base = top + (h - top) * .7;
+      o += `<rect y="${base}" width="${w}" height="${h - base}" fill="#c9a77c"/>` + bottleG(w * .3, base, bw, bh, b.mine, on, 'blow');
+      o += `<text x="${w * .3}" y="${base + 24}" text-anchor="middle" class="glabel">Your bottle</text>`;
+      o += `<text x="${w * .72}" y="${base - bh * .5}" text-anchor="middle" style="font-size:${narrow ? 50 : 80}px">❓</text><text x="${w * .72}" y="${base + 24}" text-anchor="middle" class="glabel">Mystery note</text>`;
+      const pw = Math.min(w * .44, 260), ph = narrow ? 50 : 64;
+      o += picBox(w * .3 - pw / 2, top + 6, pw, ph, b.heardMine ? pl(blowF(b.mine)) : null, .6, '🖼️ Yours', b.heardMine ? '' : 'Blow your bottle') + picBox(w * .72 - pw / 2, top + 6, pw, ph, b.heardTarget ? pl(blowF(b.target)) : null, .6, '🖼️ Mystery', b.heardTarget ? '' : 'Play it');
+      say = 'Change the water until your note matches.';
+      return `<div class="lay-top" style="top:auto;bottom:8px"><span class="scaletag">🎯 Match the note</span><div class="readout">${say}</div></div><svg viewBox="0 0 ${w} ${h}" aria-label="Your bottle and a mystery note">${o}</svg>`;
+    }
+    const n = LEVELS.length, cw = (w - 20) / n, bw = Math.min(cw * .6, 80), bh = Math.min((h - top) * .55, bw * 3.2), base = top + (h - top) * .7;
+    o += `<rect y="${base}" width="${w}" height="${h - base}" fill="#c9a77c"/>`;
+    LEVELS.forEach((lv, i) => { const cx = 10 + cw * (i + .5), on = ringing('b' + i), done = (b.mode === 'tap' ? b.tapped : b.blown)[i];
+      o += `<g class="tapme" data-act="bplay" data-v="${i}"><rect x="${cx - cw / 2 + 3}" y="${top + 4}" width="${cw - 6}" height="${h - top - 8}" rx="12" fill="${on ? '#fff8db' : 'transparent'}"/>${bottleG(cx, base, bw, bh, lv, on, b.mode)}
+        <text x="${cx}" y="${base + 24}" text-anchor="middle" class="glabel">${i + 1}${done ? ' ✓' : ''}</text></g>`; });
+    const L = b.last, onL = L && ringing('b' + L.i);
+    if (L && onL) o += `<text x="${w / 2}" y="${base + (narrow ? 44 : 52)}" text-anchor="middle" class="glabel" style="fill:var(--blue)">Bottle ${L.i + 1}: ${rankWord(L.rank)} note</text>`;
+    const pw = Math.min(w - 20, 320), ph = narrow ? 44 : 58;
+    if (h - base > ph + 80) o += picBox((w - pw) / 2, h - ph - 24, pw, ph, onL ? .15 + L.rank * .18 : null, .55, '🖼️ Sound picture', onL ? '' : 'Tap a bottle');
+    say = b.mode === 'tap' ? '🥄 Tap a bottle with a spoon.' : '🌬️ Blow across the top of a bottle.';
+    return `<div class="lay-top"><span class="scaletag">🍾 Bottle band</span><div class="readout">${say}</div></div><svg viewBox="0 0 ${w} ${h}" aria-label="Five bottles with different amounts of water">${o}</svg>`;
+  },
+  drawer() {
+    const b = state.bot, P = state.pred.bot || {};
+    const modes = `<div class="card"><h2>🍾 Bottle band</h2><p>Five bottles with different amounts of water. You can <b>tap</b> them or <b>blow</b> across the top.</p>
+      <div class="navrow" style="margin-top:6px">${[['tap', '🥄 Tap'], ['blow', '🌬️ Blow'], ['match', '🎯 Match the note']].map(([m, t]) => `<button class="btn${b.mode === m ? ' active' : ''}" data-act="bmode" data-v="${m}">${t}</button>`).join('')}</div></div>`;
+    if (b.mode === 'tap') return `${modes}<div class="card says"><h3>🥄 Tapping</h3><p>Tap each bottle. When you tap, the <b>glass and the water</b> vibrate.</p><p class="muted">Tapped: ${Object.keys(b.tapped).length} of 5</p></div>
+      ${Object.keys(b.tapped).length >= 3 ? '<div class="science"><b>🔬 The science</b>Tapping: the bottle and the water vibrate. <b>More water</b> is heavier, so it vibrates more slowly: the note is <b>lower</b>.</div>' : ''}
+      ${Object.keys(b.tapped).length >= 3 ? '<div class="card"><p>Now try <b>blowing</b>. Will it be the same?</p><button class="btn" data-act="bmode" data-v="blow">🌬️ Try blowing</button></div>' : ''}`;
+    if (b.mode === 'blow') {
+      if (!P.pick) return `${modes}${predCard('bot', PRED_B)}`;
+      return `${modes}${Object.keys(b.blown).length === 5 ? predCard('bot', PRED_B) : `<div class="card says"><h3>🌬️ Blowing</h3><p>You predicted: <b>${PRED_B.opts.find(o => o[0] === P.pick)[1]}</b>.</p><p>Blow across every bottle. When you blow, the <b>air inside</b> vibrates.</p><p class="muted">Blown: ${Object.keys(b.blown).length} of 5</p></div>`}
+        ${Object.keys(b.blown).length === 5 ? '<div class="science"><b>🔬 The science</b>Tapping: more water → <b>lower</b>. Blowing: more water → <b>higher</b>. They go in <b>opposite</b> directions, because a different thing vibrates: the glass and water, or the air.</div>' : ''}`;
+    }
+    const ok = b.said === 'ok';
+    return `${modes}<div class="card says"><h3>🎯 Match the note</h3><p>A mystery note was made by blowing across a bottle. Change the water in your bottle until your note is the same.</p>
+      <div class="navrow"><button class="btn" data-act="btarget">❓ Play the mystery note</button><button class="btn" data-act="bmine">🌬️ Blow my bottle</button></div>
+      <div class="slide"><span>💧 Less</span><input type="range" id="bmine" min="0" max=".8" step=".05" value="${b.mine}" aria-label="Water in your bottle"><span>💧💧 More</span></div>
+      ${b.said && !ok ? `<p class="spot">💡 ${b.said}</p>` : ''}${ok ? '<p class="job">🎉 A match! Here is a new mystery note.</p>' : ''}
+      <div class="navrow"><button class="btn go" data-act="bcheck">✔ Is it a match?</button></div><p class="muted">Matched: ${b.matched}</p></div>
+      <p class="muted">No sound? Compare the two sound pictures instead.</p>`;
+  },
+  play(i) {
+    const b = state.bot, lv = LEVELS[i];
+    if (b.mode === 'blow' && !(state.pred.bot || {}).pick) return;
+    const rank = b.mode === 'tap' ? LEVELS.length - 1 - i : i;
+    if (b.mode === 'tap') { AU.tap(tapF(lv), .5); b.tapped[i] = true; } else { AU.blow(blowF(lv), .5); b.blown[i] = true; }
+    b.last = { i, rank }; ring('b' + i, 1600); render();
+    if (b.mode === 'blow' && Object.keys(b.blown).length === 5) { tried('bot'); render(); emit('blown'); }
+  },
+  newTarget() { const b = state.bot, opts = LEVELS.filter(l => Math.abs(l - b.mine) > .12 && l !== b.target); b.target = opts[Math.floor(Math.random() * opts.length)]; b.heardTarget = false; }
+};
+
+// ================= 7. Spot the pattern =================
+// Families of instruments. Items: [id, name, size 0–1 (for the drawing), vibrations per second]. Listed lowest first.
+const FAMS = {
+  xylo: { name: 'Xylophone bars', em: '🎼', what: 'bar', items: [['x1', 'Longest bar', 1, 262], ['x2', 'Long bar', .87, 330], ['x3', 'Short bar', .76, 392], ['x4', 'Shortest bar', .62, 523]], play: f => AU.tap(f, .5),
+    why: 'A longer bar vibrates more slowly, so its note is lower.' },
+  pan: { name: 'Panpipes', em: '🎶', what: 'pipe', items: [['p1', 'Longest pipe', 1, 294], ['p2', 'Long pipe', .84, 349], ['p3', 'Short pipe', .7, 440], ['p4', 'Shortest pipe', .56, 523]], play: f => AU.blow(f, .45),
+    why: 'A longer pipe has more air inside. More air vibrates more slowly, so the note is lower.' },
+  rec: { name: 'Recorder holes', em: '🪈', what: 'rec', items: [['r1', 'All 7 holes covered', 7, 523], ['r2', '5 holes covered', 5, 659], ['r3', '3 holes covered', 3, 784], ['r4', '1 hole covered', 1, 988]], play: f => AU.play([[f, 1], [f * 2, .1]], .4, { dur: 1, attack: .06, hold: .6 }),
+    why: 'Covering more holes makes the column of vibrating air longer, so the note is lower.' },
+  drums: { name: 'Drums', em: '🥁', what: 'drum', items: [['d1', 'Biggest drum', 1, 80], ['d2', 'Big drum', .8, 110], ['d3', 'Small drum', .62, 150], ['d4', 'Smallest drum', .46, 210]], play: f => AU.drum(f, .6),
+    why: 'A bigger drum skin vibrates more slowly, so its note is lower.' },
+  strings: { name: 'Violin family', em: '🎻', what: 'vln', items: [['s1', 'Double bass', 1, 98], ['s2', 'Cello', .7, 131], ['s3', 'Viola', .42, 220], ['s4', 'Violin', .36, 330]], play: f => AU.pluck(f, .5),
+    why: 'A bigger instrument has longer, thicker strings. They vibrate more slowly, so the notes are lower.' }
+};
+const FORD = ['xylo', 'pan', 'rec', 'drums', 'strings'];
+const PATTERNS = [['big', 'The bigger or longer it is, the lower the note.', true], ['small', 'The bigger or longer it is, the higher the note.', false, 'Look at your lowest notes again. Are they the big ones or the small ones?'], ['none', 'The size makes no difference to the note.', false, 'Look at the order you made. Do you see sizes getting smaller as the notes get higher?']];
+// A small picture of one item
+function itemSvg(fam, it, sz = 60) {
+  const [, , s] = it, W = 80, H = 60;
+  let g = '';
+  if (fam === 'xylo') g = `<rect x="${40 - 36 * s}" y="22" width="${72 * s}" height="16" rx="4" fill="#e0a85a" stroke="#8a5a2a" stroke-width="2"/><circle cx="${40 - 28 * s}" cy="30" r="2" fill="#555"/><circle cx="${40 + 28 * s}" cy="30" r="2" fill="#555"/>`;
+  if (fam === 'pan') g = `<rect x="32" y="${56 - 52 * s}" width="16" height="${52 * s}" rx="4" fill="#c9a77c" stroke="#8a5a2a" stroke-width="2"/><ellipse cx="40" cy="${56 - 52 * s}" rx="8" ry="2.5" fill="#5a3a1a"/>`;
+  if (fam === 'rec') g = `<rect x="8" y="24" width="64" height="12" rx="6" fill="#f6efe0" stroke="#8a7a55" stroke-width="2"/>${Array.from({ length: 7 }, (_, k) => `<circle cx="${20 + k * 7.5}" cy="30" r="2.6" fill="${k < s ? '#1d2340' : '#fff'}" stroke="#555"/>`).join('')}`;
+  if (fam === 'drums') g = `<ellipse cx="40" cy="${30 - 10 * s}" rx="${36 * s}" ry="${10 * s}" fill="#f6efe0" stroke="#8a7a55" stroke-width="2"/><path d="M${40 - 36 * s} ${30 - 10 * s} V${30 + 12 * s} A${36 * s} ${10 * s} 0 0 0 ${40 + 36 * s} ${30 + 12 * s} V${30 - 10 * s}" fill="#d9534f" stroke="#7a2a28" stroke-width="2"/>`;
+  if (fam === 'strings') { const k = s, cy = 34; g = `<path d="M40 ${cy - 26 * k} V${cy - 30 * k - 6}" stroke="#5a3a1a" stroke-width="${2 + 2 * k}"/><ellipse cx="40" cy="${cy - 10 * k}" rx="${12 * k + 3}" ry="${11 * k + 2}" fill="#b5651d"/><ellipse cx="40" cy="${cy + 12 * k}" rx="${15 * k + 4}" ry="${14 * k + 3}" fill="#b5651d"/><line x1="40" x2="40" y1="${cy - 30 * k - 6}" y2="${cy + 22 * k}" stroke="#222" stroke-width="1"/>`; }
+  return `<svg viewBox="0 0 ${W} ${H}" width="${sz * W / H}" height="${sz}" aria-hidden="true">${g}</svg>`;
+}
+const freshPat = () => ({ fam: 'xylo', slots: {}, pool: {}, sel: null, checked: null, done: {}, pattern: null, patWrong: [] });
+const PAT = {
+  sel: () => state.pat.sel,
+  ensure() { const p = state.pat; if (!p.pool[p.fam]) { p.pool[p.fam] = shuffle(FAMS[p.fam].items.map(i => i[0])); p.slots[p.fam] = [null, null, null, null]; } },
+  pick(id) { const p = state.pat, F = FAMS[p.fam], it = F.items.find(i => i[0] === id); if (!it || p.done[p.fam]) return; p.sel = id; p.checked = null; F.play(it[3]); ring('pat', 900); render(); },
+  drop(id, slot) {
+    const p = state.pat, S = p.slots[p.fam], k = +slot; if (p.done[p.fam] || isNaN(k)) return;
+    const from = S.indexOf(id); if (from >= 0) S[from] = null;
+    if (S[k] && from >= 0) S[from] = S[k];
+    S[k] = id; p.sel = null; p.checked = null; render();
+  },
+  check() {
+    const p = state.pat, F = FAMS[p.fam], S = p.slots[p.fam], wrong = S.map((id, k) => id !== F.items[k][0]);
+    p.checked = wrong; if (!wrong.some(Boolean)) { p.done[p.fam] = true; emit('pattern'); }
+    render();
+  },
+  stage() {
+    PAT.ensure();
+    const p = state.pat, F = FAMS[p.fam], S = p.slots[p.fam], { narrow } = stageSize();
+    const card = (id, extra = '') => { const it = F.items.find(i => i[0] === id); return `<button class="pcard${p.sel === id ? ' sel' : ''}${extra}" data-drag="${id}"><div class="ph" style="background:#f3f0ff">${itemSvg(p.fam, it, narrow ? 34 : 50)}</div><span>${it[1]}</span></button>`; };
+    const pool = p.pool[p.fam].filter(id => !S.includes(id)).map(id => card(id)).join('');
+    const slots = S.map((id, k) => `<div class="pslot${p.sel ? ' ready' : ''}${p.checked ? (p.checked[k] ? ' bad' : ' ok') : ''}" data-drop="${k}"><div class="plab">${k === 0 ? '⬇️ Lowest' : k === 3 ? '⬆️ Highest' : k + 1}</div>${id ? card(id) : '<div class="pempty">?</div>'}</div>`).join('');
+    const say = p.done[p.fam] ? `✅ Right! ${F.why}` : p.checked ? 'Some are in the wrong place. Tap each one to listen again.' : p.sel ? 'Now tap a place in the row. Or drag it.' : 'Tap an instrument to hear it. Put them in order, lowest to highest.';
+    return `<div class="lay-top"><span class="scaletag">${F.em} ${F.name}</span><div class="readout">${say}</div></div>
+      <div class="sortwrap patwrap"><div class="pool">${pool}</div><div class="prow">${slots}</div></div>`;
+  },
+  drawer() {
+    PAT.ensure();
+    const p = state.pat, S = p.slots[p.fam], nd = Object.keys(p.done).length, full = S.every(Boolean), pt = PATTERNS.find(x => x[0] === p.pattern);
+    return `<div class="card"><h2>🔍 Spot the pattern</h2><p>Real instruments come in families. Put each family in order, from the <b>lowest</b> note to the <b>highest</b>.</p>
+        <div class="stops" style="margin-top:6px">${FORD.map(f => `<button class="opt sm${p.fam === f ? ' on' : ''}${p.done[f] && p.fam !== f ? ' done' : ''}" data-act="patfam" data-v="${f}">${FAMS[f].em} ${FAMS[f].name}${p.done[f] ? ' ✅' : ''}</button>`).join('')}</div>
+        <p class="muted">Done: ${nd} of ${FORD.length}</p></div>
+      ${p.done[p.fam] ? `<div class="card says good"><h3>✅ ${FAMS[p.fam].name}</h3><p>${FAMS[p.fam].why}</p></div>` : `<div class="card"><div class="navrow"><button class="btn go" data-act="patcheck"${full ? '' : ' disabled'}>✔ Check my order</button><button class="btn" data-act="patclear">↺ Start again</button></div></div>`}
+      ${nd ? `<div class="card wq"><h3>🤔 What is the pattern?</h3>${choices('patpat', PATTERNS.map(x => [x[0], x[1]]), p.pattern, p.patWrong, 'big')}${pt && !pt[2] ? `<p class="spot">💡 ${pt[3]}</p>` : ''}</div>` : ''}
+      <div class="science"><b>🔍 Pattern seeking</b>You looked at lots of examples to find a pattern. This is called <b>pattern seeking</b>. It is one of the five types of scientific enquiry:
+        <ul style="margin:4px 0 0;padding-left:20px"><li>research</li><li>fair testing</li><li>observing over time</li><li>identifying and classifying</li><li><b>pattern seeking</b></li></ul></div>`;
+  }
+};
+
+// ================= 8. Investigation (the fair test planner, as in Seed Lab and Dissolving Lab) =================
+// Two questions. Each has the things that could change (the first value of each is how every test starts),
+// what you could measure, what really happens, and one odd result.
+const QS = {
+  ruler: {
+    title: 'How does the ruler\'s overhang change the pitch?', em: '📏', thing: 'ruler', iv: 'over', n: 5,
+    vars: {
+      over: { name: 'Overhang (how far over the edge)', short: v => `${v} cm`, the: 'the overhang', unit: 'cm', num: true, opts: [['15', '15 cm'], ['5', '5 cm'], ['10', '10 cm'], ['20', '20 cm'], ['25', '25 cm']] },
+      push: { name: 'How far you push it down', short: v => `pushed ${v} cm`, the: 'how far you push it down', num: true, opts: [['2', '2 cm'], ['1', '1 cm'], ['4', '4 cm']] },
+      kind: { name: 'Which ruler', short: v => ({ plastic: 'plastic', wood: 'wooden', metal: 'metal' })[v], the: 'which ruler you use', opts: [['plastic', '📏 Plastic'], ['wood', '🪵 Wooden'], ['metal', '🔩 Metal']] }
+    },
+    order: ['over', 'push', 'kind'], extra: ['hold', 'How firmly you hold it on the desk'],
+    dv: [['vps', 'The number of vibrations per second (count them on a slow-motion video)', true], ['loud', 'How loud the twang is', false, 'That is the <b>volume</b>. The question is about <b>pitch</b>, and pitch depends on how fast the ruler vibrates.'], ['long', 'How long the ruler keeps moving', false, 'That does not tell you the pitch. Count how fast it vibrates.']],
+    dvName: 'Vibrations per second', unit: '', unitTxt: ' per second',
+    value: t => vpsOf(+t.over, { plastic: 1, wood: 1.5, metal: 1.25 }[t.kind]),
+    wobble: [1, 1.04, .97], odd: v => Math.round(v * .55), oddWhy: 'You lost count while counting the vibrations, so the number is too low.',
+    claims: [['down', 'The longer the overhang, the fewer vibrations per second, so the lower the note.'], ['up', 'The longer the overhang, the more vibrations per second, so the higher the note.'], ['same', 'The overhang makes no difference to the pitch.']],
+    why: [['A longer piece of ruler moves up and down more slowly. Fewer vibrations per second make a lower note.', true], ['A longer ruler is louder.', false, 'You measured how fast it vibrates, not how loud it is.'], ['The desk makes the sound.', false, 'The desk does not move. The ruler is what vibrates.']]
+  },
+  drum: {
+    title: 'Does hitting the drum harder make it louder?', em: '🥁', thing: 'drum', iv: 'hit', n: 3,
+    vars: {
+      hit: { name: 'How hard you hit it', short: v => ({ soft: 'gently', med: 'medium', hard: 'hard' })[v], the: 'how hard you hit it', opts: [['med', '👊 Medium'], ['soft', '🤏 Gently'], ['hard', '💥 Hard']], ord: ['soft', 'med', 'hard'] },
+      dist: { name: 'Distance to the sound meter', short: v => v === '0.5' ? '50 cm away' : `${v} m away`, the: 'the distance to the meter', num: true, opts: [['1', '1 m'], ['0.5', '50 cm'], ['2', '2 m']] },
+      kind: { name: 'Which drum', short: v => v === 'big' ? 'big drum' : 'small drum', the: 'which drum you use', opts: [['big', '🥁 Big drum'], ['small', '🪘 Small drum']] }
+    },
+    order: ['hit', 'dist', 'kind'], extra: ['stick', 'The same drumstick'],
+    dv: [['level', 'The sound level, on a sound level meter', true], ['pitch', 'How high the note is', false, 'That is the <b>pitch</b>. The question is about how <b>loud</b> it is.'], ['ears', 'Ask a friend how loud it sounded', false, 'Everyone hears a little differently. A sound level meter measures the same way every time.']],
+    dvName: 'Sound level (dB)', unit: ' dB', unitTxt: ' dB',
+    value: t => ({ soft: 62, med: 72, hard: 82 })[t.hit] + ({ '0.5': 6, '1': 0, '2': -6 })[t.dist] + (t.kind === 'big' ? 2 : 0),
+    wobble: [0, 1, -1], add: true, odd: v => v + 13, oddWhy: 'A door slammed during the reading, so the number is too high.',
+    claims: [['up', 'The harder you hit the drum, the louder the sound.'], ['down', 'The harder you hit the drum, the quieter the sound.'], ['same', 'How hard you hit makes no difference.']],
+    why: [['Hitting harder makes the drum skin vibrate more. Bigger vibrations make a louder sound.', true], ['Hitting harder makes the note higher.', false, 'Hitting harder changes the <b>volume</b>, not the pitch.'], ['The drumstick makes the sound.', false, 'The stick only starts the skin vibrating. The vibrating skin makes the sound.']]
+  }
+};
+const INV_STEPS = ['Question', 'Plan', 'Set up', 'Predict', 'Measure', 'Results', 'Odd result', 'Conclude'];
+const freshInv = () => ({ q: null, step: 0, iv: null, ivWrong: [], dv: null, dvWrong: [], keeps: {}, keepsSaid: null, tests: [], sel: 0, pred: null, ran: false, running: false, clock: 0,
+  oddTap: null, oddFound: false, act: null, actWrong: [], repeated: false, chart: null, chartWrong: [], claim: null, claimWrong: [], why: null, whyWrong: [] });
+const INV_ACTS = [['ignore', 'Rub it out and leave it off the chart', false, 'Scientists never hide results they don\'t like! Keep it in the table, and check it.'],
+  ['repeat', 'Do that test again, to check', true], ['change', 'Change the conclusion because of it', false, 'It is only one result. The other two tries agree with each other. Check it first.']];
+const INV = {
+  Q: () => QS[state.inv.q],
+  V: k => INV.Q().vars[k],
+  vals(k) { const V = INV.V(k), v = V.opts.map(o => o[0]); return V.ord || (V.num ? v.slice().sort((a, b) => a - b) : v); },
+  start() { const Q = INV.Q(); return Object.fromEntries(Q.order.map(k => [k, Q.vars[k].opts[0][0]])); },
+  unfair() { const t = state.inv, Q = INV.Q(); return Q.order.filter(k => k !== Q.iv && new Set(t.tests.map(b => b[k])).size > 1); },
+  // Three tries for each test. Test 2, try 2 is odd (until it is done again).
+  tries() { const t = state.inv, Q = INV.Q(); return t.tests.map((b, i) => { const v = Q.value(b);
+    return Q.wobble.map((f, r) => i === 1 && r === 1 && !t.repeated ? Q.odd(v) : Math.round(Q.add ? v + f : v * f)); }); },
+  means() { return INV.tries().map(r => Math.round(r.reduce((a, b) => a + b, 0) / 3)); },
+  order() { const t = state.inv, Q = INV.Q(), vs = INV.vals(Q.iv); return t.tests.map((_, i) => i).sort((a, b) => vs.indexOf(t.tests[a][Q.iv]) - vs.indexOf(t.tests[b][Q.iv])); },
+  chartType: () => INV.V(INV.Q().iv).num ? 'line' : 'bar',
+  // One test, drawn small: a ruler on a desk, or a drum with a sound meter
+  testG(i, cx, top, cw, h, show) {
+    const t = state.inv, b = t.tests[i], Q = INV.Q(), run = t.running, base = top + h * .55;
+    let o = '';
+    if (t.q === 'ruler') {
+      const cm = Math.min(cw * .7 / 25, h * .03), over = +b.over * cm, edge = cx - cw * .38, col = { plastic: '#7fc2ff', wood: '#d9a25a', metal: '#c9cfdc' }[b.kind];
+      o += `<rect x="${cx - cw / 2 + 4}" y="${base + 5}" width="${cw * .12}" height="${h * .25}" fill="#c9a77c"/><rect x="${cx - cw / 2 + 4}" y="${base}" width="${edge - cx + cw / 2 - 4}" height="5" fill="#7d6040"/>`;
+      o += `<rect x="${cx - cw / 2 + 4}" y="${base - 5}" width="${edge - cx + cw / 2 - 4}" height="6" fill="${col}"/>`;
+      o += vib(run ? 'rock' : '', `${edge}px ${base - 2}px`, clamp(1 / Q.value(b), .04, .3).toFixed(3), `${+b.push * 3}deg`, `<rect x="${edge - 1}" y="${base - 5}" width="${over}" height="6" fill="${col}" stroke="#555" stroke-width=".8"/>`);
+    } else {
+      const R = Math.min(cw * .26, h * .11) * (b.kind === 'big' ? 1 : .72), dpx = Math.min(cw * .35, 40) * +b.dist, dx = cx - cw * .2;
+      o += `<path d="M${dx - R} ${base - R * .5} V${base} A${R} ${R * .28} 0 0 0 ${dx + R} ${base} V${base - R * .5}" fill="#d9534f" stroke="#7a2a28" stroke-width="2"/>`;
+      o += vib(run ? 'shakeY' : '', `${dx}px ${base - R * .5}px`, .05, `${{ soft: 1, med: 2, hard: 3 }[b.hit]}px`, `<ellipse cx="${dx}" cy="${base - R * .5}" rx="${R}" ry="${R * .28}" fill="#f6efe0" stroke="#8a7a55" stroke-width="2"/>`);
+      const mx = Math.min(dx + R + 6 + dpx * .4, cx + cw / 2 - 18);
+      o += `<rect x="${mx - 13}" y="${base - 50}" width="26" height="40" rx="5" fill="#1d2340"/><rect x="${mx - 9}" y="${base - 45}" width="18" height="12" fill="#7dff9a"/><circle cx="${mx}" cy="${base - 22}" r="5" fill="#5b6386"/><text x="${mx}" y="${base + 4}" text-anchor="middle" style="font-size:11px;fill:var(--muted)">📟 meter</text>`;
+      o += `<path d="M${dx + R} ${base + 10} H${mx}" stroke="var(--coral)" stroke-width="1.5" stroke-dasharray="3 3"/>`;
+    }
+    o += `<text x="${cx}" y="${top + 22}" text-anchor="middle" class="glabel">Test ${i + 1}</text>`;
+    Q.order.forEach((k, r) => o += `<text x="${cx}" y="${base + (t.q === 'ruler' ? 40 : 50) + r * 16}" text-anchor="middle" style="font-size:12.5px;font-weight:${k === Q.iv ? 700 : 500};fill:${k === Q.iv ? 'var(--blue)' : 'var(--muted)'}">${Q.vars[k].short(b[k])}</text>`);
+    if (show != null) { const fin = INV.tries()[i][0], val = Math.min(fin, Math.round(fin * show)); o += `<rect x="${cx - 40}" y="${top + 30}" width="80" height="26" rx="8" fill="#1d2340"/><text x="${cx}" y="${top + 49}" text-anchor="middle" style="font-family:'Courier New',monospace;font-weight:700;font-size:15px;fill:${show >= 1 ? '#7dff9a' : '#fff'}">${val}${Q.unit}</text>`; }
+    return t.step === 2 ? `<g class="tapme" data-act="invsel" data-v="${i}"><rect x="${cx - cw / 2 + 2}" y="${top + 2}" width="${cw - 4}" height="${h - 4}" rx="12" fill="${t.sel === i ? '#fff8db' : 'transparent'}" stroke="${t.sel === i ? 'var(--yellow)' : 'transparent'}" stroke-width="3"/>${o}</g>` : o;
+  },
+  axes(w, h, top, narrow, max, label) {
+    const L = narrow ? 46 : 66, B = h - (narrow ? 50 : 60), T = top + 40, y = v => B - v / max * (B - T), stepv = max > 200 ? 50 : max > 80 ? 20 : 10;
+    let o = `<rect width="${w}" height="${h}" fill="#fff"/><line x1="${L}" x2="${L}" y1="${T - 10}" y2="${B}" stroke="var(--ink)" stroke-width="2"/><line x1="${L}" x2="${w - 16}" y1="${B}" y2="${B}" stroke="var(--ink)" stroke-width="2"/>`;
+    for (let v = 0; v <= max; v += stepv) o += `<text x="${L - 8}" y="${y(v) + 5}" text-anchor="end" class="gsmall">${v}</text><line x1="${L}" x2="${w - 16}" y1="${y(v)}" y2="${y(v)}" stroke="#eef1f8"/>`;
+    o += `<text transform="translate(${narrow ? 12 : 18} ${(T + B) / 2}) rotate(-90)" text-anchor="middle" class="gsmall">${label}</text>`;
+    return { o, L, B, T, y };
+  },
+  dotsG(w, h, top, narrow) {
+    const t = state.inv, Q = INV.Q(), tm = INV.tries(), ord = INV.order(), A = INV.axes(w, h, top, narrow, Math.max(...tm.flat()) * 1.15, Q.dvName), sx = (w - A.L - 20) / ord.length;
+    let o = A.o;
+    ord.forEach((i, k) => { const cx = A.L + sx * (k + .5);
+      tm[i].forEach((v, r) => { const odd = i === 1 && r === 1 && !t.repeated, hit = t.oddFound && odd;
+        o += `<g class="tapme" data-act="invodd" data-v="${i}-${r}"><circle cx="${cx + (r - 1) * 14}" cy="${A.y(v)}" r="${hit ? 10 : 8}" fill="${hit ? 'var(--coral)' : 'var(--blue)'}" stroke="#fff" stroke-width="2"/><circle cx="${cx + (r - 1) * 14}" cy="${A.y(v)}" r="18" fill="transparent"/></g>`; });
+      o += `<text x="${cx}" y="${A.B + 20}" text-anchor="middle" class="gsmall">${INV.V(Q.iv).short(t.tests[i][Q.iv])}</text>`; });
+    return o;
+  },
+  chartG(w, h, top, narrow, type) {
+    const t = state.inv, Q = INV.Q(), me = INV.means(), ord = INV.order(), A = INV.axes(w, h, top, narrow, Math.max(...me) * 1.2, `Average: ${lc(Q.dvName)}`), sx = (w - A.L - 20) / ord.length;
+    const pts = ord.map((i, k) => [A.L + sx * (k + .5), A.y(me[i]), me[i], i]);
+    let o = A.o;
+    if (type === 'line') o += `<polyline points="${pts.map(p => p[0] + ',' + p[1]).join(' ')}" fill="none" stroke="var(--blue)" stroke-width="4"/>` + pts.map(p => `<circle cx="${p[0]}" cy="${p[1]}" r="7" fill="var(--blue)" stroke="#fff" stroke-width="2"/>`).join('');
+    else o += pts.map(p => `<rect x="${p[0] - sx * .3}" y="${p[1]}" width="${sx * .6}" height="${A.B - p[1]}" fill="var(--blue)"/>`).join('');
+    o += pts.map(p => `<text x="${p[0]}" y="${p[1] - 12}" text-anchor="middle" class="glabel">${p[2]}${Q.unit}</text><text x="${p[0]}" y="${A.B + 20}" text-anchor="middle" class="gsmall">${INV.V(Q.iv).short(t.tests[p[3]][Q.iv])}</text>`).join('');
+    o += `<text x="${(A.L + w) / 2}" y="${A.B + 42}" text-anchor="middle" class="glabel">${INV.V(Q.iv).name}</text>`;
+    return o;
+  },
+  stage() {
+    const t = state.inv, { w, h, narrow } = stageSize(), top = narrow ? 40 : 50;
+    let o = `<rect width="${w}" height="${h}" fill="#eef4fb"/>`, say = '', tag = `🔬 ${INV_STEPS[t.step]}`;
+    if (!t.q) { o += `<text x="${w / 2}" y="${h / 2 - 20}" text-anchor="middle" style="font-size:${narrow ? 44 : 70}px">📏 🥁</text><text x="${w / 2}" y="${h / 2 + 30}" text-anchor="middle" class="glabel" style="font-size:${narrow ? 16 : 22}px">Choose a question to investigate.</text>`; say = 'Be a sound scientist!'; }
+    else if (t.step === 6) { say = t.oddFound ? 'You found the odd result.' : 'Tap the dot that does not fit.'; tag = '📈 Dot plot'; o += INV.dotsG(w, h, top, narrow); }
+    else if (t.step === 7 && t.chart && t.chart === INV.chartType()) { say = INV.Q().title; tag = t.chart === 'line' ? '📈 Line graph' : '📊 Bar chart'; o += INV.chartG(w, h, top, narrow, t.chart); }
+    else if (t.step < 2) { const Q = INV.Q(); o += `<text x="${w / 2}" y="${h / 2 - 20}" text-anchor="middle" style="font-size:${narrow ? 50 : 80}px">${Q.em}</text><text x="${w / 2}" y="${h / 2 + 30}" text-anchor="middle" class="glabel" style="font-size:${narrow ? 14 : 20}px">${Q.title}</text>`; say = 'Plan a fair test.'; }
+    else {
+      const n = t.tests.length, cw = (w - 20) / n, hh = h - top - 10;
+      t.tests.forEach((_, i) => o += INV.testG(i, 10 + cw * (i + .5), top, cw, hh, t.running ? t.clock : t.ran ? 1 : null));
+      say = t.step === 2 ? 'Tap a test to set it up.' : t.running ? (t.q === 'ruler' ? 'Counting the vibrations in slow motion…' : 'Reading the sound level meter…') : t.ran ? 'Here are the first readings.' : `You are changing ${INV.V(INV.Q().iv).the}.`;
+      if (t.running && t.q === 'ruler') o += slowTag(10, h - 14);
+    }
+    return `<div class="lay-top"><span class="scaletag">${tag}</span><div class="readout">${say}</div></div><svg viewBox="0 0 ${w} ${h}" aria-label="A sound investigation">${o}</svg>`;
+  },
+  run() {
+    const t = state.inv, t0 = performance.now();
+    t.running = true; t.clock = 0; render();
+    if (t.q === 'drum') AU.drum(110, .5); else AU.twang(twangF(30), .4);
+    clearInterval(INV.timer);
+    INV.timer = setInterval(() => {
+      if (state.inv !== t || !t.running) { clearInterval(INV.timer); return; }
+      if (state.view !== 'inv') { t.running = false; clearInterval(INV.timer); return; }
+      t.clock = clamp((performance.now() - t0) / 3000);
+      if (t.clock < 1) renderStage();
+      else { clearInterval(INV.timer); t.running = false; t.ran = true; t.step = 5; render(); $('#drawer').scrollTop = 0; }
+    }, 50);
+  },
+  drawer() {
+    const t = state.inv, Q = t.q && INV.Q(), V = Q && INV.V(Q.iv);
+    const bar = `<div class="steps">${INV_STEPS.map((s, k) => `<span class="${k === t.step ? 'now' : k < t.step ? 'done' : ''}">${k < t.step ? '✔' : k + 1} ${s}</span>`).join('')}</div>`;
+    const next = (txt, ok = true) => `<div class="checkbar"><button class="btn go" data-act="invnext"${ok ? '' : ' disabled'}>${txt} ▶</button></div>`;
+    if (t.step === 0) return `<div class="card">${bar}<h2>🔬 Investigation</h2><p>Choose a question. Then plan a <b>fair test</b>: change <b>one</b> thing, and keep everything else the same.</p></div>
+      <div class="card wq">${Object.entries(QS).map(([id, q]) => `<button class="opt${t.q === id ? ' on' : ''}" data-act="invq" data-v="${id}">${q.em} ${q.title}</button>`).join('')}</div>${next('Next: plan', !!t.q)}`;
+    if (t.step === 1) {
+      const ivOk = t.iv === Q.iv, dvOk = t.dv === Q.dv.find(d => d[2])[0], badDv = Q.dv.find(d => d[0] === t.dv && !d[2]);
+      const keepList = [...Q.order.filter(k => k !== Q.iv).map(k => [k, Q.vars[k].name]), Q.extra, ['dv', Q.dvName.replace(' (dB)', ''), false], [Q.iv, V.name, false]];
+      return `<div class="card">${bar}<h3>${Q.em} ${Q.title}</h3></div>
+        <div class="card wq"><h3>1. What will you <b>change</b>?</h3><p class="muted">This is the <span class="term">independent variable</span>: the one thing you change.</p>
+          ${Q.order.map(k => `<button class="opt${t.iv === k && ivOk ? ' done' : t.ivWrong.includes(k) ? ' wrong' : ''}" data-act="inviv" data-v="${k}"${t.ivWrong.includes(k) || ivOk ? ' disabled' : ''}>${Q.vars[k].name}</button>`).join('')}
+          ${t.iv && !ivOk ? `<p class="spot">💡 Read the question again. What does it ask about?</p>` : ''}</div>
+        ${ivOk ? `<div class="card wq"><h3>2. What will you <b>measure</b>?</h3><p class="muted">This is the <span class="term">dependent variable</span>: what you measure.</p>
+          ${Q.dv.map(([id, txt]) => `<button class="opt${t.dv === id && dvOk ? ' done' : t.dvWrong.includes(id) ? ' wrong' : ''}" data-act="invdv" data-v="${id}"${t.dvWrong.includes(id) || dvOk ? ' disabled' : ''}>${txt}</button>`).join('')}
+          ${badDv ? `<p class="spot">💡 ${badDv[3]}</p>` : ''}${dvOk && t.q === 'drum' ? '<p class="muted">A sound level meter shows a number in <b>dB</b> (decibels). A bigger number means a louder sound.</p>' : ''}</div>` : ''}
+        ${ivOk && dvOk ? `<div class="card${t.keepsSaid === 'ok' ? ' says good' : ''}"><h3>3. What will you keep the <b>same</b>?</h3><p class="muted">These are the <span class="term">control variables</span>. Tick every one.</p>
+          <div class="keeps">${keepList.map(([id, txt]) => `<label class="keep"><input type="checkbox" data-keep="${id}"${t.keeps[id] ? ' checked' : ''}${t.keepsSaid === 'ok' ? ' disabled' : ''}> ${txt}</label>`).join('')}</div>
+          ${Array.isArray(t.keepsSaid) ? `<ul class="spot">${t.keepsSaid.map(m => `<li>${m}</li>`).join('')}</ul>` : ''}
+          ${t.keepsSaid === 'ok' ? '<p class="job">Yes! Keep all of these the same.</p>' : '<div class="navrow" style="margin-top:6px"><button class="btn" data-act="invkeeps">✔ Check</button></div>'}</div>` : ''}
+        ${next('Next: set up the tests', ivOk && dvOk && t.keepsSaid === 'ok')}`;
+    }
+    if (t.step === 2) {
+      const b = t.tests[t.sel], vals = t.tests.map(x => x[Q.iv]), dup = new Set(vals).size < vals.length;
+      return `<div class="card">${bar}<h3>Set up the tests</h3><p>Give each test a different <b>${lc(V.name)}</b>. You decide what to do with everything else!</p>
+          <div class="stops">${t.tests.map((_, i) => `<button class="opt${t.sel === i ? ' on' : ''}" data-act="invsel" data-v="${i}">Test ${i + 1}</button>`).join('')}</div></div>
+        <div class="card"><h3>Test ${t.sel + 1}</h3>${Q.order.map(k => `<div class="varrow"><span>${Q.vars[k].name}${k === Q.iv ? ' <b class="tag">changing</b>' : ''}</span><div class="stops">${Q.vars[k].opts.map(([v, l]) => `<button class="opt sm${b[k] === v ? ' on' : ''}" data-act="invset" data-k="${k}" data-v="${v}">${l}</button>`).join('')}</div></div>`).join('')}</div>
+        ${dup ? `<div class="card says"><p>💡 Two tests have the same ${lc(V.name)}. Give each test a different one.</p></div>` : ''}
+        ${next('Next: predict', !dup)}`;
+    }
+    if (t.step === 3) return `<div class="card wq">${bar}<h3>🤔 Predict</h3><p>What do you think will happen? Use what you know about vibrations.</p>${predict('invpred', Q.claims, t.pred)}</div>${next('Next: measure', !!t.pred)}`;
+    if (t.step === 4) return `<div class="card">${bar}<h3>${t.q === 'ruler' ? '⏱️ Count the vibrations' : '📟 Read the meter'}</h3>
+        <p>${t.q === 'ruler' ? 'Each ruler is filmed in slow motion. Count how many times it vibrates in 1 second.' : 'Hit each drum and read the sound level meter.'}</p></div>
+      ${t.running ? '' : `<div class="checkbar"><button class="btn go" data-act="invrun">▶ Start</button></div>`}`;
+    const tm = INV.tries(), ord = INV.order(), unfair = INV.unfair();
+    const table = `<table class="gtable"><tr><th>${V.name.split(' (')[0]}</th><th>Try 1</th><th>Try 2</th><th>Try 3</th></tr>
+      ${ord.map(i => `<tr><td>${V.short(t.tests[i][Q.iv])}</td>${tm[i].map((v, r) => `<td${t.step === 6 && t.oddFound && i === 1 && r === 1 && !t.repeated ? ' style="color:var(--coral);font-weight:700"' : ''}>${v}${Q.unit}${t.repeated && i === 1 && r === 1 ? ' <span class="muted">(again)</span>' : ''}</td>`).join('')}</tr>`).join('')}</table><p class="muted">${Q.dvName}.</p>`;
+    if (t.step === 5) {
+      if (unfair.length) return `<div class="card says"><h3>🤔 Your test was not fair</h3><p>You changed ${V.the}, but <b>${unfair.map(k => Q.vars[k].the).join('</b> and <b>')}</b> ${unfair.length > 1 ? 'were' : 'was'} different too.</p>
+          <p>So you <b>can't tell</b> which change made the difference.</p>
+          <details class="teach" style="font-size:15px;color:var(--ink)"><summary>💡 Stuck? Show a hint</summary><p>Change <b>only</b> ${V.the}. Make everything else the same in every test.</p></details>
+          <div class="navrow"><button class="btn go" data-act="invfix">🔧 Fix my plan</button></div></div>
+        <div class="card">${bar}<h3>📋 Results</h3>${table}</div>`;
+      return `<div class="card">${bar}<h3>📋 Results</h3><p>You did each test <b>3 times</b>, so you can check that the results agree.</p>${table}
+        <p class="muted">Everything else was the same: ${Q.order.filter(k => k !== Q.iv).map(k => Q.vars[k].short(t.tests[0][k])).join(', ')}.</p></div>${next('Next: look for an odd result')}`;
+    }
+    if (t.step === 6) {
+      const act = INV_ACTS.find(a => a[0] === t.act);
+      return `<div class="card">${bar}<h3>🔍 Which result does not fit?</h3><p>The three tries for each test should be close. Tap the dot on the chart (a <span class="term">dot plot</span>) that is very different from the other two.</p>
+          ${t.oddTap && !t.oddFound ? '<p class="spot">💡 That one is close to the others in its group. Look for a dot that is far away from its two partners.</p>' : ''}
+          ${t.oddFound ? `<p class="job">Yes! ${V.short(t.tests[1][Q.iv])}, try 2 does not fit. ${Q.oddWhy} A result that does not fit is called an <span class="term">anomalous result</span>.</p>` : ''}</div>
+        ${t.oddFound ? `<div class="card wq"><h3>What should you do about it?</h3>${choices('invact', INV_ACTS.map(a => [a[0], a[1]]), t.act, t.actWrong, 'repeat')}
+          ${act && !act[2] ? `<p class="spot">💡 ${act[3]}</p>` : ''}${t.repeated ? '<p class="job">🔁 You did it again, and this time it agrees with the other two tries. Repeating makes results more reliable.</p>' : ''}</div>` : ''}
+        <div class="card"><h3>📋 Results</h3>${table}</div>${next('Next: conclusion', t.repeated)}`;
+    }
+    const right = INV.chartType(), whyRight = String(Q.why.findIndex(x => x[1])), chartOk = t.chart === right, claimOk = t.claim === Q.claims[0][0], whyOk = t.why === whyRight, me = INV.means();
+    return `<div class="card wq">${bar}<h3>1. Which chart?</h3><p>Which kind of chart shows your results best?</p>
+        ${choices('invchart', [['line', '📈 A line graph'], ['bar', '📊 A bar chart']], t.chart, t.chartWrong, right)}
+        ${t.chart && !chartOk ? `<p class="spot">💡 ${right === 'line' ? `The overhang is measured in <b>numbers</b> (cm), so the points can be joined with a line.` : `How hard you hit has <b>separate groups</b>, not numbers on a scale. Use bars.`}</p>` : ''}
+        ${chartOk ? `<p class="job">${right === 'line' ? 'Yes! A line graph, because the thing you changed is measured in numbers.' : 'Yes! A bar chart, because the thing you changed has separate groups.'}</p>` : ''}</div>
+      ${chartOk ? `<div class="card"><h3>📋 Averages</h3><table class="gtable"><tr><th>${V.name.split(' (')[0]}</th><th>Average</th></tr>${INV.order().map(i => `<tr><td>${V.short(t.tests[i][Q.iv])}</td><td><b>${me[i]}${Q.unitTxt}</b></td></tr>`).join('')}</table><p class="muted">The average: add the 3 tries and divide by 3.</p></div>
+        <div class="card wq"><h3>2. Conclusion</h3><p>Finish the sentence. <b>We found that…</b></p>${choices('invclaim', Q.claims.map(([v, s]) => [v, `…${lc(s)}`]), t.claim, t.claimWrong, Q.claims[0][0])}
+          ${t.claim && !claimOk ? '<p class="spot">💡 Look at your chart again. Which way do the numbers go?</p>' : ''}</div>` : ''}
+      ${claimOk ? `<div class="card wq"><h3>3. Why?</h3><p><b>This is because…</b></p>${choices('invwhy', Q.why.map((x, k) => [String(k), x[0]]), t.why, t.whyWrong, whyRight)}
+        ${t.why != null && !whyOk ? `<p class="spot">💡 ${Q.why[+t.why][2]}</p>` : ''}</div>` : ''}
+      ${whyOk ? `<div class="science"><b>🔬 Our conclusion</b>We found that ${lc(Q.claims[0][1])} This is because ${lc(Q.why[+whyRight][0])}
+          <p class="muted" style="margin-top:6px">You predicted: ${lc(Q.claims.find(c => c[0] === t.pred)[1])} ${t.pred === Q.claims[0][0] ? '✅' : '❌'}</p></div>
+        <div class="card"><button class="btn" data-act="invreset">↺ Investigate another question</button></div>` : ''}`;
+  }
+};
+
+// ================= Views =================
+const VIEWS = {
+  vib: { label: '〰️ <span class="tl">Vibrating?</span>', name: 'What\'s vibrating?', ...VIB },
+  pics: { label: '🖼️ <span class="tl">Pictures</span>', name: 'Sound pictures', ...PICS },
+  gtr: { label: '🎸 <span class="tl">Guitar</span>', name: 'Guitar string', ...GTR },
+  drum: { label: '🥁 <span class="tl">Drum</span>', name: 'Drum', ...DRUM },
+  rul: { label: '📏 <span class="tl">Ruler</span>', name: 'Ruler twang', ...RUL },
+  bot: { label: '🍾 <span class="tl">Bottles</span>', name: 'Bottle band', ...BOT },
+  pat: { label: '🔍 <span class="tl">Pattern</span>', name: 'Spot the pattern', ...PAT },
+  inv: { label: '🔬 <span class="tl">Investigate</span>', name: 'Investigation', ...INV }
+};
+
+// ================= State =================
+const state = { view: 'vib', mission: null, done: store.get('ss-done', []), pred: {},
+  vib: freshVib(), pics: freshPics(), gtr: freshGtr(), drum: freshDrum(), rul: freshRul(), bot: freshBot(), pat: freshPat(), inv: freshInv() };
+const KEYWORDS = [
+  ['〰️', 'vibrate', 'move backwards and forwards very quickly'],
+  ['⬆️', 'pitch', 'how high or low a sound is'],
+  ['🔊', 'volume', 'how loud or quiet a sound is'],
+  ['🖼️', 'sound picture', 'a drawing that shows a sound\'s pitch and volume'],
+  ['🔢', 'vibrations per second', 'how many times something moves backwards and forwards in one second. More vibrations per second make a higher note.']
+];
+
+// ================= Missions =================
+// core: one of the three missions for a 45-minute lesson
+const MISSIONS = [
+  { id: 'find', core: true, icon: '〰️', title: 'Find the vibration', task: 'Find the <b>vibrating part</b> in all 7 sound makers.',
+    hint: 'Make the sound and watch in slow motion. Which part moves backwards and forwards?',
+    setup() { state.view = 'vib'; state.vib = freshVib(); }, on: ev => ev === 'found',
+    win: () => 'Every sound was made by something vibrating: a string, a skin, a ruler, prongs, a cone, a bell and your voice box.' },
+  { id: 'stop', icon: '✋', title: 'Stop it!', task: 'Stop <b>3</b> sounds by stopping the vibration.',
+    hint: 'First find the vibrating part. Then make the sound again and press Stop while it is still vibrating.',
+    setup() { state.view = 'vib'; state.vib = { ...state.vib, stopped: {} }; }, on: (ev, d) => ev === 'stopped' && d.n >= 3,
+    win: () => 'When the vibration stops, the sound stops. No vibration, no sound!' },
+  { id: 'highquiet', core: true, icon: '🤫', title: 'High but quiet', task: 'Make a <b>high</b>, <b>quiet</b> note on the guitar.',
+    hint: 'Pluck gently for quiet. For high, make the string tighter, thinner or shorter.',
+    setup() { state.view = 'gtr'; state.gtr = freshGtr(); }, on: (ev, d) => ev === 'guitar' && d.p >= .6 && d.v < .55,
+    win: () => 'High does not mean loud! A note can be high <b>and</b> quiet. Pitch and volume are two different things.' },
+  { id: 'lowloud', icon: '🔊', title: 'Low but loud', task: 'Make a <b>low</b>, <b>loud</b> note on the drum.',
+    hint: 'Hit hard for loud. Which size of drum makes a low note? Which skin?',
+    setup() { state.view = 'drum'; state.drum = freshDrum(); }, on: (ev, d) => ev === 'drum' && d.p <= .35 && d.v >= .55,
+    win: () => 'Low does not mean quiet! A big drum hit hard makes a low, loud note.' },
+  { id: 'mystery', core: true, icon: '🎧', title: 'Mystery sounds', task: 'Put all 8 mystery sounds in the right box: <b>high or low</b>, <b>loud or quiet</b>.',
+    hint: 'Ask two questions about each sound. Is it high or low? Then: is it loud or quiet?',
+    setup() { state.view = 'pics'; state.pics = { ...freshPics(), mode: 'mystery' }; }, on: ev => ev === 'mystery',
+    win: () => 'You sorted every sound by its pitch <b>and</b> its volume. A mouse squeak is high but quiet. A ship\'s horn is low but loud.' },
+  { id: 'rocker', icon: '📏', title: 'Ruler rocker', task: 'Make the ruler\'s <b>highest</b> possible note.',
+    hint: 'Does pushing it down further make it higher, or just louder? Try changing the overhang.',
+    setup() { state.view = 'rul'; state.rul = freshRul(); }, on: (ev, d) => ev === 'ruler' && d.over === 5,
+    win: () => 'The shortest overhang (5 cm) vibrates the fastest: about 240 times a second! More vibrations per second make a higher note.' },
+  { id: 'bottle', icon: '🍾', title: 'Bottle surprise', task: '<b>Predict</b>, then blow across all 5 bottles. Was your prediction right?',
+    hint: 'When you blow, the air inside vibrates, not the water. Which bottle has the least air?',
+    setup() { state.view = 'bot'; state.bot = { ...freshBot(), mode: 'blow' }; delete state.pred.bot; }, on: ev => ev === 'blown',
+    win: () => `${state.pred.bot?.pick === 'most' ? 'Your prediction was right! ' : 'A surprise! '}Blowing: the bottle with the most water (and the least air) makes the highest note. Tapping goes the other way.` },
+  { id: 'match', icon: '🎯', title: 'Match the note', task: 'Match <b>3</b> mystery notes with your bottle.',
+    hint: 'Blowing: more water makes a higher note. Is your note too high or too low? Compare the sound pictures too.',
+    setup() { state.view = 'bot'; state.bot = { ...freshBot(), mode: 'match' }; BOT.newTarget(); }, on: (ev, d) => ev === 'matched' && d.n >= 3,
+    win: () => 'Three matches! You changed the amount of air in the bottle to change the pitch.' },
+  { id: 'pattern', icon: '🔍', title: 'Spot the pattern', task: 'Put all 5 instrument families in order, lowest to highest. Then find the pattern.',
+    hint: 'Tap each one to listen. Look at the sizes too: the long ones, the big ones…',
+    setup() { state.view = 'pat'; state.pat = freshPat(); }, on: () => FORD.every(f => state.pat.done[f]) && state.pat.pattern === 'big',
+    win: () => 'The bigger or longer it is, the lower the note. You found that by <b>pattern seeking</b>.' },
+  { id: 'scientist', icon: '🔬', title: 'Sound scientist', task: 'Finish an <b>investigation</b>, with a conclusion.',
+    hint: 'Change only one thing. Make everything else the same in every test.',
+    setup() { state.view = 'inv'; state.inv = freshInv(); }, on: ev => ev === 'concluded',
+    win: () => 'A fair test, an odd result found and checked, a chart and a conclusion. That is real science!' }
+];
+function emit(ev, data = {}) {
+  if (state.mission == null) return;
+  const i = state.mission, m = MISSIONS[i];
+  if (!m.on(ev, data)) return;
+  stopMission();
+  if (!state.done.includes(m.id)) { state.done.push(m.id); store.set('ss-done', state.done); }
+  updateStars();
+  setTimeout(() => {
+    $('#winTitle').textContent = `${m.icon} Mission complete!`;
+    $('#winText').innerHTML = m.win(data);
+    $('#winNext').style.display = i < MISSIONS.length - 1 ? '' : 'none';
+    $('#winPractise').style.display = i < MISSIONS.length - 1 ? 'none' : '';
+    $('#winNext').dataset.i = i + 1;
+    $('#winModal').classList.remove('hidden'); confetti();
+  }, 1600);
+}
+function startMission(i) {
+  closeModals(); hush();
+  state.mission = i; MISSIONS[i].setup();
+  location.hash = 'view=' + state.view;
+  const m = MISSIONS[i];
+  $('#bannerKicker').textContent = `Mission ${i + 1} of ${MISSIONS.length}: ${m.title}`;
+  $('#bannerText').innerHTML = m.task; $('#bannerHint').innerHTML = m.hint;
+  $('#bannerHint').classList.add('hidden'); $('#hintBtn').textContent = '💡 Show a hint';
+  $('#banner').classList.remove('hidden');
+  render(); $('#drawer').scrollTop = 0;
+}
+function stopMission() { state.mission = null; $('#banner').classList.add('hidden'); fitBanner(); }
+function fitBanner() { $('#drawer').style.paddingTop = state.mission == null ? '' : `${$('#banner').offsetHeight + 18}px`; }
+function updateStars() { $('#starCount').textContent = `${state.done.filter(id => MISSIONS.some(m => m.id === id)).length}/${MISSIONS.length} ⭐`; }
+function closeModals() { document.querySelectorAll('.modal').forEach(m => m.classList.add('hidden')); }
+function closeAll() { closeModals(); maybeHelp(); }
+function confetti() {
+  const em = ['⭐', '🌟', '🎵', '🎶', '🎉'];
+  for (let i = 0; i < 30; i++) {
+    const s = document.createElement('span'); s.className = 'confetti'; s.textContent = em[i % em.length];
+    s.style.left = `${Math.random() * 100}vw`; s.style.animationDuration = `${2 + Math.random() * 2}s`; s.style.animationDelay = `${Math.random() * .6}s`;
+    document.body.appendChild(s); setTimeout(() => s.remove(), 5000);
+  }
+}
+
+// ================= Help, key words and Real life =================
+const OBJ = {
+  '5Ps.01': 'Investigate how sounds are made by vibrating sources.',
+  '5Ps.02': 'Describe sounds in terms of high or low pitch and loud or quiet volume.',
+  '5Ps.03': 'Investigate how to change the volume and pitch of sounds.',
+  '5TWSm.01': 'Know that a model presents an object, process or idea in a way that shows some of the important features.',
+  '5TWSm.02': 'Use models, including diagrams, to represent and describe scientific phenomena and ideas.',
+  '5TWSp.02': 'Know the features of the five main types of scientific enquiry (research, fair testing, observing over time, identifying and classifying, and pattern seeking).',
+  '5TWSp.03': 'Make predictions, referring to relevant scientific knowledge and understanding within familiar and unfamiliar contexts.',
+  '5TWSp.04': 'Plan fair test investigations, identifying the independent, dependent and control variables.',
+  '5TWSc.04': 'Decide when observations and measurements need to be repeated to give more reliable data.',
+  '5TWSa.02': 'Describe patterns in results, including identifying any anomalous results.',
+  '5TWSa.05': 'Present and interpret results using tables, bar charts, dot plots and line graphs.'
+};
+const MAIN = ['5Ps.01', '5Ps.02', '5Ps.03'], SUPPORT = ['5TWSm.01', '5TWSm.02', '5TWSp.02', '5TWSp.03', '5TWSp.04', '5TWSc.04', '5TWSa.02', '5TWSa.05'];
+const HELP = {
+  vib: { q: 'How are sounds made?', steps: ['Choose a sound maker.', 'Make the sound. Watch the picture in <b>slow motion</b>.', 'Tap the part that is <b>vibrating</b>.', 'Make the sound again, then <b>stop</b> it.'],
+    look: 'When the vibration stops, the sound stops too.', codes: ['5Ps.01', '5TWSm.01'] },
+  pics: { q: 'How can we describe a sound?', steps: ['Move the sliders and play the sound. Watch the <b>sound picture</b> change.', 'Then try the <b>Mystery sounds</b>: high or low? Loud or quiet?'],
+    look: 'High does <b>not</b> mean loud. A sound can be high and quiet.', codes: ['5Ps.02', '5TWSm.02'] },
+  gtr: { q: 'How can we change the pitch and volume of a string?', steps: ['<b>Predict</b> first.', 'Change how tight, how thick and how long the string is.', 'Pluck gently, then hard. Watch the meters.'],
+    look: 'Plucking harder makes the note louder, but not higher.', codes: ['5Ps.03', '5Ps.01', '5TWSp.03'] },
+  drum: { q: 'How can we change the sound of a drum?', steps: ['<b>Predict</b> first.', 'Change the size of the drum and how tight the skin is.', 'Hit gently, then hard. Watch the rice.'],
+    look: 'The rice shows how much the skin is vibrating.', codes: ['5Ps.03', '5Ps.01', '5TWSp.03'] },
+  rul: { q: 'How does a ruler make a high or a low note?', steps: ['<b>Predict</b> first.', 'Change how far the ruler is over the edge.', 'Let go, and count the <b>vibrations per second</b>.'],
+    look: 'More vibrations per second make a higher note.', codes: ['5Ps.03', '5Ps.01', '5TWSp.03'] },
+  bot: { q: 'Why do bottles with water make different notes?', steps: ['<b>Tap</b> each bottle.', '<b>Predict</b>, then <b>blow</b> across each bottle.', 'Then try <b>Match the note</b>.'],
+    look: 'Tapping and blowing go in <b>opposite</b> directions. Think about what is vibrating.', codes: ['5Ps.03', '5TWSp.03'] },
+  pat: { q: 'Is there a pattern in how instruments sound?', steps: ['Choose a family of instruments.', 'Tap each one to hear it.', 'Put them in order, from lowest to highest. Then find the pattern.'],
+    look: 'Look at the size of each one, as well as listening.', codes: ['5TWSp.02', '5TWSa.02', '5Ps.03'] },
+  inv: { q: 'Can you plan and carry out a fair test about sound?', steps: ['Choose a question.', 'Choose <b>one</b> thing to change, what to measure, and what to keep the same.', '<b>Predict</b>, then measure 3 times.', 'Find the odd result, choose a chart and write a conclusion.'],
+    look: 'Change only <b>one</b> thing. If you change two, you can\'t tell which one made the difference.', codes: ['5TWSp.04', '5TWSp.03', '5TWSc.04', '5TWSa.02', '5TWSa.05'] }
+};
+const MODEL = {
+  vib: [['🐢', 'Real vibrations are far too fast to see, often hundreds every second. Here they are shown in slow motion.']],
+  pics: [['🖼️', 'A sound picture is a drawing to show pitch and volume. You can\'t see sound in real life.']],
+  gtr: [['🎸', 'A real guitar has six strings. Here there is one string, so you can change one thing at a time.']],
+  drum: [['🥁', 'Real rice jumps about in all directions. Here it just jumps up and down.']],
+  rul: [['📏', 'The numbers are for a plastic ruler. A wooden or metal ruler would give different numbers, but the same pattern.']],
+  bot: [['🍾', 'Real bottles are all a little different, so your notes might not match these exactly.']],
+  pat: [['🎻', 'Real instruments can play many notes. Here each one plays just one note, to show the pattern.']],
+  inv: [['🎲', 'The results here are made up to show the pattern. Real results are never perfectly the same each time.']],
+  all: [['🐢', 'Real vibrations are far too fast to see, often hundreds every second. The pictures show them in slow motion.'], ['🖼️', 'The sound picture is a drawing to show pitch and volume. You can\'t see sound in real life.'],
+    ['💻', 'The computer makes all the sounds, so they are not exactly like real instruments.'], ['👂', 'In real life, the sound travels through the air to our ears.']]
+};
+const helpSeen = new Set();
+let autoHelp = true, welcomed = false;
+function showHelp() {
+  const H = HELP[state.view], V = VIEWS[state.view];
+  helpSeen.add(state.view);
+  const core = MISSIONS.map((m, i) => m.core ? `${i + 1} (${m.title})` : null).filter(Boolean);
+  $('#helpBody').innerHTML = `<h2 id="helpTitle">${V.label.replace(/<[^>]+>/g, '').split(' ')[0]} ${V.name}</h2>
+    ${welcomed ? '' : '<p class="welcome">Welcome to Sound Studio!</p>'}
+    <h3>🔬 The big question</h3><p>${H.q}</p>
+    <h3>👆 What to do</h3><ol>${H.steps.map(s => `<li>${s}</li>`).join('')}</ol>
+    <p><b>💡 Look out for:</b> ${H.look}</p>
+    <p>🔊 Tap the <b>sound button</b> at the top to turn the sound on or off. No sound? Watch the pictures and read the words.</p>
+    <p>📖 Tap <b>Words</b> at the top to see what the key words mean.</p>
+    <p>🚀 Try the <b>Missions</b> to win stars!</p>
+    <details class="teach"><summary>For teachers</summary>${H.codes.map(c => `<p><b>${c}</b> ${OBJ[c]}</p>`).join('')}
+      <h4>⏱ A 45-minute lesson</h4><p>Start with the three <b>Lesson</b> missions: ${core.join(', ')}.</p>
+      <h4>All of Sound Studio's objectives</h4><p>Main: ${MAIN.join(', ')}. Supporting: ${SUPPORT.join(', ')}.</p>
+      <h4>🔈 Sound</h4><p>All sounds are made by the browser. The volume is capped and every sound starts softly. Everything is also shown as a picture and in words.</p></details>`;
+  welcomed = true;
+  $('#helpModal').classList.remove('hidden');
+}
+function maybeHelp() { if (!autoHelp || helpSeen.has(state.view) || document.querySelector('.modal:not(.hidden)')) return; showHelp(); }
+
+function renderStage() { $('#stage').innerHTML = VIEWS[state.view].stage(); }
+function renderMute() { const b = $('#muteBtn'); b.innerHTML = AU.muted ? '🔇<span class="long"> Sound off</span>' : '🔊<span class="long"> Sound on</span>'; b.classList.toggle('off', AU.muted); b.setAttribute('aria-pressed', AU.muted); }
+function render() {
+  const v = VIEWS[state.view];
+  $('#tabs').innerHTML = Object.entries(VIEWS).map(([id, x]) =>
+    `<button class="btn${id === state.view ? ' active' : ''}" data-act="view" data-view="${id}" title="${x.name}" aria-label="${x.name}">${x.label}</button>`).join('');
+  const keep = $('#drawer').scrollTop, same = render.last === state.view;
+  $('#drawer').innerHTML = v.drawer();
+  renderStage();
+  if (same) $('#drawer').scrollTop = keep;
+  render.last = state.view;
+  fitBanner();
+  maybeHelp();
+}
+
+// ================= Actions =================
+const top0 = () => { $('#drawer').scrollTop = 0; };
+const ACTIONS = {
+  view(el) { closeModals(); hush(); state.view = el.dataset.view; location.hash = 'view=' + state.view; render(); top0(); },
+  mute() { AU.init(); AU.setMute(!AU.muted); renderMute(); },
+  pred(el) { const [id, v] = el.dataset.v.split(':'); state.pred[id] = { ...(state.pred[id] || {}), pick: v }; render(); },
+  // What's vibrating?
+  vpick(el) { hush(); Object.assign(state.vib, { id: el.dataset.v, wrong: null, justStopped: false }); render(); top0(); },
+  vplay() { const s = state.vib, M = MAKERS[s.id]; s.heard[s.id] = true; s.justStopped = false; s.wrong = null; M.play(M.v); ring('vib', M.ms, true); render(); },
+  vpart(el) {
+    const s = state.vib, M = MAKERS[s.id], p = el.dataset.v, right = Object.keys(M.parts)[0];
+    if (!s.heard[s.id] || s.found[s.id]) return;
+    if (p === right) { s.found[s.id] = true; s.wrong = null; render(); if (MORDER.every(id => s.found[id])) emit('found'); }
+    else { s.wrong = p; render(); }
+  },
+  vstop() { const s = state.vib; if (!ringing('vib')) return; hush(); s.stopped[s.id] = true; s.justStopped = true; render(); emit('stopped', { n: Object.keys(s.stopped).length }); },
+  // Sound pictures
+  pmode(el) { hush(); state.pics.mode = el.dataset.v; state.pics.sel = null; render(); top0(); },
+  pplay() { playMade(); },
+  ppre(el) { Object.assign(state.pics, { p: +el.dataset.p, v: +el.dataset.v }); render(); playMade(); },
+  preset() { state.pics = { ...freshPics(), mode: 'mystery' }; render(); },
+  // Guitar
+  gset(el) { state.gtr[el.dataset.k] = +el.dataset.v; render(); },
+  gpluck(el) {
+    const g = state.gtr, f = gtrF(g), v = el.dataset.v === '1' ? .9 : .3;
+    g.last = { f, v }; g.n++; AU.pluck(f, v); ring('gtr', 2400);
+    if (v > .5) { g.hard = true; if (g.soft) tried('gtr'); } else g.soft = true;
+    render(); emit('guitar', { p: pl(f), v });
+  },
+  // Drum
+  dset(el) { state.drum[el.dataset.k] = +el.dataset.v; render(); },
+  dhit(el) {
+    const d = state.drum, f = drumF(d), v = el.dataset.v === '1' ? .9 : .3;
+    d.last = { f, v }; d.n++; AU.drum(f, v); ring('drum', 1800);
+    (d.sizes = d.sizes || {})[d.size] = true; if (d.sizes[0] && d.sizes[2]) tried('drum');
+    render(); emit('drum', { p: pl(f), v });
+  },
+  // Ruler
+  rset(el) { state.rul.push = +el.dataset.v; render(); },
+  rtwang() { RUL.twang(); },
+  // Bottles
+  bmode(el) { hush(); const b = state.bot; b.mode = el.dataset.v; b.last = null; b.said = null; if (b.mode === 'match' && b.target == null) BOT.newTarget(); render(); top0(); },
+  bplay(el) { BOT.play(+el.dataset.v); },
+  btarget() { const b = state.bot; AU.blow(blowF(b.target), .5); b.heardTarget = true; ring('btarget', 1600); renderStage(); },
+  bmine() { const b = state.bot; AU.blow(blowF(b.mine), .5); b.heardMine = true; ring('bmine', 1600); renderStage(); },
+  bcheck() {
+    const b = state.bot;
+    if (!b.heardTarget || !b.heardMine) { b.said = 'First play the mystery note, then blow your bottle.'; render(); return; }
+    const diff = b.mine - b.target;
+    if (Math.abs(diff) <= .051) { b.matched++; b.said = 'ok'; BOT.newTarget(); render(); emit('matched', { n: b.matched }); return; }
+    b.said = diff > 0 ? 'Your note is <b>higher</b> than the mystery note. Pour some water out.' : 'Your note is <b>lower</b> than the mystery note. Add some water.';
+    render();
+  },
+  // Pattern
+  patfam(el) { const p = state.pat; p.fam = el.dataset.v; p.sel = null; p.checked = null; render(); top0(); },
+  patcheck() { PAT.check(); },
+  patclear() { const p = state.pat; p.slots[p.fam] = [null, null, null, null]; p.sel = null; p.checked = null; render(); },
+  patpat(el) { const p = state.pat; p.pattern = el.dataset.v; if (p.pattern !== 'big' && !p.patWrong.includes(p.pattern)) p.patWrong.push(p.pattern); render(); if (p.pattern === 'big') emit('pattern'); },
+  // Investigation
+  invq(el) { const t = state.inv; if (t.q !== el.dataset.v) { state.inv = freshInv(); state.inv.q = el.dataset.v; } render(); },
+  invnext() { const t = state.inv; if (t.step === 1) { t.tests = Array.from({ length: INV.Q().n }, () => INV.start()); t.sel = 0; } t.step++; render(); top0(); },
+  inviv(el) { const t = state.inv, k = el.dataset.v; t.iv = k; if (k !== INV.Q().iv && !t.ivWrong.includes(k)) t.ivWrong.push(k); render(); },
+  invdv(el) { const t = state.inv, d = INV.Q().dv.find(x => x[0] === el.dataset.v); t.dv = d[0]; if (!d[2] && !t.dvWrong.includes(d[0])) t.dvWrong.push(d[0]); render(); },
+  invkeeps() {
+    const t = state.inv, Q = INV.Q(), msgs = [];
+    [...Q.order.filter(k => k !== Q.iv).map(k => [k, Q.vars[k].name]), Q.extra].forEach(([id, n]) => { if (!t.keeps[id]) msgs.push(`You also need to keep <b>${lc(n)}</b> the same.`); });
+    if (t.keeps.dv) msgs.push(`${Q.dvName.replace(' (dB)', '')} is what you <b>measure</b>, so it can't stay the same!`);
+    if (t.keeps[Q.iv]) msgs.push(`${INV.V(Q.iv).name} is what you are <b>changing</b>, so it can't stay the same!`);
+    t.keepsSaid = msgs.length ? msgs.slice(0, 3) : 'ok'; render();
+  },
+  invsel(el) { state.inv.sel = +el.dataset.v; render(); },
+  invset(el) { const t = state.inv; t.tests[t.sel][el.dataset.k] = el.dataset.v; render(); },
+  invpred(el) { state.inv.pred = el.dataset.v; render(); },
+  invrun() { INV.run(); },
+  invfix() { Object.assign(state.inv, { step: 2, ran: false, running: false }); render(); top0(); },
+  invodd(el) { const t = state.inv; if (t.step !== 6 || t.oddFound) return; t.oddTap = el.dataset.v; if (t.oddTap === '1-1') t.oddFound = true; render(); top0(); },
+  invact(el) { const t = state.inv; t.act = el.dataset.v; if (t.act === 'repeat') t.repeated = true; else if (!t.actWrong.includes(t.act)) t.actWrong.push(t.act); render(); },
+  invchart(el) { const t = state.inv; t.chart = el.dataset.v; if (t.chart !== INV.chartType() && !t.chartWrong.includes(t.chart)) t.chartWrong.push(t.chart); render(); },
+  invclaim(el) { const t = state.inv; t.claim = el.dataset.v; if (t.claim !== INV.Q().claims[0][0] && !t.claimWrong.includes(t.claim)) t.claimWrong.push(t.claim); render(); },
+  invwhy(el) { const t = state.inv; t.why = el.dataset.v; if (!INV.Q().why[+t.why][1]) { if (!t.whyWrong.includes(t.why)) t.whyWrong.push(t.why); } else emit('concluded'); render(); },
+  invreset() { state.inv = freshInv(); render(); top0(); },
+  // Missions and pop-ups
+  missions() {
+    $('#missionList').innerHTML = MISSIONS.map((m, i) => `<button class="mission-item${state.done.includes(m.id) ? ' done' : ''}" data-act="startMission" data-i="${i}">
+      <span class="em">${m.icon}</span><span class="t">${i + 1}. ${m.title}</span>${m.core ? '<span class="core">⏱ Lesson</span>' : ''}<span class="star">⭐</span></button>`).join('');
+    $('#missionsModal').classList.remove('hidden');
+  },
+  startMission(el) { startMission(+el.dataset.i); },
+  nextMission(el) { startMission(+el.dataset.i); },
+  stopMission() { stopMission(); },
+  hint() { const h = $('#bannerHint'); h.classList.toggle('hidden'); $('#hintBtn').textContent = h.classList.contains('hidden') ? '💡 Show a hint' : '💡 Hide the hint'; fitBanner(); },
+  resetStars() { state.done = []; store.set('ss-done', []); updateStars(); ACTIONS.missions(); },
+  closeModals() { closeAll(); },
+  help() { closeModals(); showHelp(); },
+  words() { $('#wordsList').innerHTML = KEYWORDS.map(([em, w, m]) => `<li><span class="em">${em}</span><span><b>${w}</b>: ${m}</span></li>`).join(''); $('#wordsModal').classList.remove('hidden'); },
+  model() {
+    $('#modelTab').textContent = `${VIEWS[state.view].label.replace(/<[^>]+>/g, '').split(' ')[0]} ${VIEWS[state.view].name}`;
+    $('#modelList').innerHTML = [...MODEL[state.view], ...MODEL.all.filter(a => !MODEL[state.view].some(b => b[1] === a[1]))].map(([em, t]) => `<li><span class="em">${em}</span><span>${t}</span></li>`).join('');
+    $('#modelModal').classList.remove('hidden');
+  }
+};
+document.addEventListener('click', e => {
+  if (DND.skipClick) { DND.skipClick = false; return; }
+  const v = VIEWS[state.view], drag = e.target.closest('[data-drag]');
+  if (drag && v.pick) { v.pick(drag.dataset.drag); return; }
+  const drop = e.target.closest('[data-drop]'), sel = v.sel && v.sel();
+  if (drop && sel) { v.drop(sel, drop.dataset.drop); return; }
+  const el = e.target.closest('[data-act]');
+  if (el && !el.disabled && ACTIONS[el.dataset.act]) ACTIONS[el.dataset.act](el);
+});
+// Ticked answers are kept, so they survive the drawer being redrawn
+document.addEventListener('change', e => { const d = e.target.dataset; if (d.keep) { state.inv.keeps[d.keep] = e.target.checked; state.inv.keepsSaid = null; } });
+// Sliders redraw only the picture, so they keep working while they are dragged
+document.addEventListener('input', e => {
+  const id = e.target.id, v = +e.target.value;
+  if (id === 'pp') { state.pics.p = v; renderStage(); }
+  if (id === 'pv') { state.pics.v = v; renderStage(); }
+  if (id === 'glen') { state.gtr.len = v; renderStage(); }
+  if (id === 'rover') { state.rul.over = v; $('#roverTxt').textContent = `${v} cm`; renderStage(); }
+  if (id === 'bmine') { state.bot.mine = v; state.bot.heardMine = false; state.bot.said = null; renderStage(); }
+});
+document.querySelectorAll('.modal').forEach(m => m.addEventListener('click', e => { if (e.target === m) closeAll(); }));
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeAll(); });
+let resizeT;
+addEventListener('resize', () => { fitBanner(); clearTimeout(resizeT); resizeT = setTimeout(renderStage, 120); });
+
+// ================= Start =================
+// Test hooks: #view=rul  ·  #mission=4  ·  #nohelp=1
+const hp = new URLSearchParams(location.hash.slice(1));
+if (VIEWS[hp.get('view')]) state.view = hp.get('view');
+if (hp.has('nohelp')) autoHelp = false;
+updateStars(); renderMute();
+if (MISSIONS[hp.get('mission')]) startMission(+hp.get('mission'));
+else render();
+</script>
+<script>
+  // Offline support: saves the whole Science Hub on this device the first time any page is opened (see ../sw.js)
+  if ('serviceWorker' in navigator) addEventListener('load', () => navigator.serviceWorker.register('../sw.js').catch(() => {}));
+</script>
+</body>
+</html>
