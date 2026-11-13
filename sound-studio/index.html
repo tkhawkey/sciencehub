@@ -456,20 +456,25 @@ const AU = {
   pluck(f, v, dur = 3) {
     if (!AU.ctx || AU.muted) return null;
     const c = AU.ctx, sr = c.sampleRate, n = Math.round(sr * dur), buf = c.createBuffer(1, n, sr), d = buf.getChannelData(0);
-    const L = sr / f, N = Math.floor(L), frac = L - N, soft = v < .55;
-    let seed = Math.round(f * 13) || 1; const rnd = () => (seed = seed * 16807 % 2147483647) / 1073741823.5 - 1;
-    // The first trip round the loop: noise, smoothed for a gentle pluck (a soft finger) or left bright for a hard one
-    let prev = 0; for (let i = 0; i <= N && i < n; i++) { const x = rnd(); prev = soft ? prev * .6 + x * .4 : x; d[i] = prev; }
     // Low strings ring longer than high ones, as on a real guitar
-    const keep = Math.min(.9995, Math.pow(.001, 1 / (f * Math.min(8, 4 + 300 / f))));
-    for (let i = N + 1; i < n; i++) {
-      const a = d[i - N] * (1 - frac) + d[i - N - 1] * frac, b = d[i - N - 1] * (1 - frac) + (i - N - 2 >= 0 ? d[i - N - 2] : 0) * frac;
-      d[i] = keep * .5 * (a + b);
-    }
+    AU.ks(d, sr, f, v < .55 ? .6 : 0, Math.min(8, 4 + 300 / f));
     let peak = 0; for (let i = 0; i < n; i++) peak = Math.max(peak, Math.abs(d[i])); for (let i = 0; i < n; i++) d[i] /= peak || 1;
     for (let i = 0; i < sr * .003; i++) d[i] *= i / (sr * .003);          // a soft start: no click
     for (let i = n - sr * .1; i < n; i++) d[i] *= (n - i) / (sr * .1);     // a soft end
     return AU.playBuf(buf, v);
+  },
+  // The string loop: fills d with a note of f vibrations per second that dies away to almost nothing in 'ring' seconds.
+  // soft 0–1 smooths the first burst (a soft finger, or a dull plastic ruler) so the note is less bright.
+  ks(d, sr, f, soft, ring) {
+    const n = d.length, L = sr / f, N = Math.floor(L), frac = L - N;
+    let seed = Math.round(f * 13) || 1; const rnd = () => (seed = seed * 16807 % 2147483647) / 1073741823.5 - 1;
+    let prev = 0; for (let i = 0; i <= N && i < n; i++) { prev = prev * soft + rnd() * (1 - soft); d[i] = prev; }
+    const keep = Math.min(.9995, Math.pow(.001, 1 / (f * ring)));
+    for (let i = N + 1; i < n; i++) {
+      const a = d[i - N] * (1 - frac) + d[i - N - 1] * frac, b = d[i - N - 1] * (1 - frac) + (i - N - 2 >= 0 ? d[i - N - 2] : 0) * frac;
+      d[i] = keep * .5 * (a + b);
+    }
+    return d;
   },
   // Play a sound that has already been worked out, at a safe volume
   playBuf(buf, v) {
@@ -490,7 +495,13 @@ const AU = {
       for (let i = 0; i < knock && s0 + i < n; i++) { const e = Math.exp(-i / (knock / 3.5)); d[s0 + i] += a * e * (.65 * Math.sin(2 * Math.PI * 520 * i / sr) + .35 * Math.sin(2 * Math.PI * 1300 * i / sr) + .25 * rnd()); }
     }
     for (let i = 0; i < sr * .04; i++) d[i] += Math.exp(-i / (sr * .007)) * rnd() * .5;   // the "thwack" of letting go
-    let peak = 0; for (let i = 0; i < n; i++) peak = Math.max(peak, Math.abs(d[i])); for (let i = 0; i < n; i++) d[i] /= peak || 1;
+    const norm = a => { let p = 0; for (let i = 0; i < a.length; i++) p = Math.max(p, Math.abs(a[i])); for (let i = 0; i < a.length; i++) a[i] /= p || 1; };
+    norm(d);
+    // A short overhang vibrates fast enough to make a note of its own: a dull twang (a ruler is duller than a string).
+    // m: how much of the sound is twang rather than rattle (none below 25 vibrations per second, all twang by about 115).
+    const m = clamp((vps - 25) / 90);
+    if (m > 0) { const tw = AU.ks(new Float32Array(n), sr, vps, .75, .9); norm(tw); for (let i = 0; i < n; i++) d[i] = d[i] * (1 - .8 * m) + tw[i] * m; norm(d); }
+    for (let i = n - Math.round(sr * .08); i < n; i++) d[i] *= (n - i) / (sr * .08);
     const t = c.currentTime + .02, src = c.createBufferSource(), g = c.createGain(), lp = c.createBiquadFilter();
     src.buffer = buf; lp.type = 'lowpass'; lp.frequency.value = 3500;
     g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.08 + .6 * clamp(v), t + .003);
