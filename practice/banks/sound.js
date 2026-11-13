@@ -27,7 +27,7 @@ window.BANKS.push({
     extra: ['lower', 'quieter'],
     explain: 'Pitch depends on how fast something vibrates. Volume depends on how big the vibrations are.' },
   { type: 'cloze', prompt: 'Fill the gaps about a guitar string.',
-    text: 'To make a guitar string play a higher note, make it {tighter}, {shorter} or {thinner}. To make the note louder, pluck it {harder}.',
+    text: 'Three ways to make a guitar string play a higher note: turn the peg to make the string {tighter}, press a finger on it to make the vibrating part {shorter}, or change to a {thinner} string. To make the note louder, pluck it {harder}.',
     extra: ['looser', 'longer'],
     explain: 'Tighter, shorter and thinner strings vibrate faster, so the note is higher.' },
 
@@ -39,7 +39,7 @@ window.BANKS.push({
 
   // ---------- Put in order ----------
   { type: 'order', prompt: 'Put these instruments in order, from the lowest notes to the highest.', first: 'Lowest', last: 'Highest',
-    items: ['Double bass', 'Cello', 'Viola', 'Violin'],
+    items: [{ t: 'Double bass', em: '🎻', size: 40 }, { t: 'Cello', em: '🎻', size: 31 }, { t: 'Viola', em: '🎻', size: 24 }, { t: 'Violin', em: '🎻', size: 19 }],
     explain: 'The bigger the instrument, the longer and thicker its strings, and the lower its notes.' },
   { type: 'order', prompt: 'Put these xylophone bars in order, from the lowest note to the highest.', first: 'Lowest', last: 'Highest',
     items: ['The longest bar', 'A long bar', 'A short bar', 'The shortest bar'],
@@ -60,7 +60,7 @@ window.BANKS.push({
       { s: 'A big drum makes a lower note than a small drum.', a: true, why: 'A bigger drum skin vibrates more slowly.' },
       { s: 'Hitting a drum harder makes the rice on it jump higher.', a: true, why: 'Hitting harder makes bigger vibrations, so the sound is louder and the rice jumps higher.' },
       { s: 'Tapping a bottle with more water in it makes a higher note.', a: false, why: 'When you tap, the glass and water vibrate. More water makes the note lower.' },
-      { s: 'You can usually see a guitar string vibrate as fast as it really moves.', a: false, why: 'Real vibrations are far too fast to see. They can be hundreds every second.' },
+      { s: 'You can count a guitar string\'s vibrations just by watching it.', a: false, why: 'You can see the string go blurry, but it moves backwards and forwards far too fast to count: often hundreds of times a second.' },
     ] },
 
   // ---------- Odd one out ----------

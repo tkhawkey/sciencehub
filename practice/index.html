@@ -297,9 +297,12 @@ function prepare(item) {
     case 'label':
       slots = item.labels.map((l, k) => ({ id: 's' + k, accept: l.text, x: l.x, y: l.y, px: l.px, py: l.py }));
       tokens = item.labels.map((l, k) => ({ id: 't' + k, text: l.text })).concat(extras); break;
-    case 'order':
-      slots = item.items.map((t, k) => ({ id: 's' + k, accept: t }));
-      tokens = item.items.map((t, k) => ({ id: 't' + k, text: t })); break;
+    case 'order': {
+      // Each item is words, or { t: words, em: a picture, size: how big to draw the picture (px) } to give a clue
+      const its = item.items.map(t => typeof t === 'string' ? { t } : t);
+      slots = its.map((it, k) => ({ id: 's' + k, accept: it.t }));
+      tokens = its.map((it, k) => ({ id: 't' + k, text: it.t, em: it.em, emSize: it.size })); break;
+    }
     case 'match':
       slots = item.pairs.map((p, k) => ({ id: 's' + k, accept: p[0], meaning: p[1] }));
       tokens = item.pairs.map((p, k) => ({ id: 't' + k, text: p[0] })).concat(extras); break;
@@ -351,7 +354,7 @@ function tokenRight(q, t) {
 function tokHTML(q, t) {
   const st = q.checked && q.placed[t.id] ? (q.revealed ? 'shown' : tokenRight(q, t) ? 'right' : 'wrong') : q.sel === t.id ? 'sel' : '';
   const mark = st === 'right' ? '<span class="mark">✔</span>' : st === 'wrong' ? '<span class="mark">✘</span>' : '';
-  return `<button class="tok ${st}" data-act="tok" data-id="${t.id}">${t.em ? `<span>${t.em}</span>` : ''}${esc(t.text)}${mark}</button>`;
+  return `<button class="tok ${st}" data-act="tok" data-id="${t.id}">${t.em ? `<span${t.emSize ? ` style="font-size:${t.emSize}px;line-height:1"` : ''}>${t.em}</span>` : ''}${esc(t.text)}${mark}</button>`;
 }
 const pool = q => `<div class="pool" aria-label="Words to place">${q.tokens.filter(t => !q.placed[t.id]).map(t => tokHTML(q, t)).join('')}</div>`;
 function slotHTML(q, s, extraCls = '', style = '') {

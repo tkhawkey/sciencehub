@@ -582,7 +582,7 @@ const MAKERS = {
   fork: { name: 'Tuning fork in water', em: '🍴', f: 440, v: .35, ms: 3600, play: v => AU.fork(440, v), hand: [150, 150],
     parts: { prongs: 'The two prongs', handle: 'The handle', water: 'The water' },
     wrong: { handle: 'You hold the handle. It hardly moves. Look at the two long prongs.', water: 'The water splashes, but only because something is moving in it. What is touching the water?' },
-    found: 'Yes! The <b>prongs</b> vibrate. They move too fast to see, but they make the water splash.', stop: 'You hold the prongs. They stop vibrating, and the sound stops.' },
+    found: 'Yes! The <b>prongs</b> vibrate. They move too fast to see clearly, but they make the water splash.', stop: 'You hold the prongs. They stop vibrating, and the sound stops.' },
   speaker: { name: 'Speaker with paper bits', em: '🔈', f: 220, v: .55, ms: 3200, play: v => AU.speaker(220, v), hand: [150, 115],
     parts: { cone: 'The round cone', box: 'The box', bits: 'The bits of paper' },
     wrong: { box: 'The box holds the speaker. Look at the top, where the bits of paper are.', bits: 'The paper jumps, but only because the part under it is moving. What is under the paper?' },
@@ -858,7 +858,7 @@ const RUL = {
       <div class="navrow"><button class="btn go" data-act="rtwang">🤚 Let go: twang!</button></div></div>
       ${seen.length ? `<div class="card"><h3>📋 Your results</h3><table class="gtable"><tr><th>Over the edge</th><th>Vibrations per second</th></tr>${seen.map(cm => `<tr><td>${cm} cm</td><td><b>${r.seen[cm]}</b></td></tr>`).join('')}</table></div>` : ''}
       ${seen.length >= 3 ? '<div class="science"><b>🔬 The science</b>A <b>shorter</b> overhang vibrates <b>faster</b>: more vibrations per second, so the note is <b>higher</b>. Pushing it down <b>further</b> makes <b>bigger</b> vibrations, so the twang is <b>louder</b>, but not higher.</div>' : ''}
-      <p class="muted">Real vibrations are far too fast to see, so the picture is in slow motion: 1 second takes 4 seconds.</p>`;
+      <p class="muted">Real vibrations are too fast to see clearly. You might see a blur, but you can't count them. So the picture is in slow motion: 1 second takes 4 seconds.</p>`;
   },
   twang() {
     const r = state.rul, vps = vpsOf(r.over), v = PUSH[r.push][1];
@@ -1356,7 +1356,7 @@ const HELP = {
     look: 'Change only <b>one</b> thing. If you change two, you can\'t tell which one made the difference.', codes: ['5TWSp.04', '5TWSp.03', '5TWSc.04', '5TWSa.02', '5TWSa.05'] }
 };
 const MODEL = {
-  vib: [['🐢', 'Real vibrations are far too fast to see, often hundreds every second. Here they are shown in slow motion.']],
+  vib: [['🐢', 'Real vibrations are too fast to see clearly, often hundreds every second. You might see a blur (a guitar string looks fuzzy), but not each movement. Here they are shown in slow motion.']],
   pics: [['🖼️', 'A sound picture is a drawing to show pitch and volume. You can\'t see sound in real life.']],
   gtr: [['🎸', 'A real guitar has six strings. Here there is one string, so you can change one thing at a time.']],
   drum: [['🥁', 'Real rice jumps about in all directions. Here it just jumps up and down.']],
@@ -1364,7 +1364,7 @@ const MODEL = {
   bot: [['🧴', 'Real bottles are all a little different, so your notes might not match these exactly.']],
   pat: [['🎻', 'Real instruments can play many notes. Here each one plays just one note, to show the pattern.']],
   inv: [['🎲', 'The results here are made up to show the pattern. Real results are never perfectly the same each time.']],
-  all: [['🐢', 'Real vibrations are far too fast to see, often hundreds every second. The pictures show them in slow motion.'], ['🖼️', 'The sound picture is a drawing to show pitch and volume. You can\'t see sound in real life.'],
+  all: [['🐢', 'Real vibrations are too fast to see clearly, often hundreds every second. You might see a blur (a guitar string looks fuzzy), but not each movement. The pictures show them in slow motion.'], ['🖼️', 'The sound picture is a drawing to show pitch and volume. You can\'t see sound in real life.'],
     ['💻', 'The computer makes all the sounds, so they are not exactly like real instruments.'], ['👂', 'In real life, the sound travels through the air to our ears.']]
 };
 const helpSeen = new Set();
