@@ -1049,7 +1049,9 @@ const SEP = {
       <div class="slide"><span>💧</span><input type="range" id="stl" min="0" max="100" value="${k}" aria-label="Days"><span>🧂</span></div>
       <p class="muted">⚠️ In a school lab, salt water is often heated to make it faster. That needs an <b>adult</b>, and everyone wears <b>goggles</b>.</p></div>` : '';
     const back = s.done.salt || s.done.water || s.done.triple ? `<div class="science"><b>🔬 The science</b>We got the <b>solute</b> (salt) back${s.done.water ? ', and the <b>solvent</b> (water) too' : ''}. So dissolving is <span class="term">reversible</span>: it can be changed back.</div>` : '';
-    return `${res}${lapse}${s.tripleSaid ? `<div class="card says"><p>💡 ${s.tripleSaid}</p><div class="navrow"><button class="btn" data-act="stask" data-v="triple">↺ Start again</button></div></div>` : ''}${shelf}${back}${tasks}`;
+    // The iron filings job links to Magnet Lab, to find out why the magnet works
+    const magnet = T[0] === 'iron' ? `<a class="seelab" href="../magnet-lab/index.html#view=bench">🧲 Why does the magnet work? Find out in Magnet Lab ▶</a>` : '';
+    return `${res}${magnet}${lapse}${s.tripleSaid ? `<div class="card says"><p>💡 ${s.tripleSaid}</p><div class="navrow"><button class="btn" data-act="stask" data-v="triple">↺ Start again</button></div></div>` : ''}${shelf}${back}${tasks}`;
   },
   use(tool) {
     const s = state.sep, T = SEP.task();

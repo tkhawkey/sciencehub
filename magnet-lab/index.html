@@ -1,0 +1,1200 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Magnet Lab</title>
+<meta name="description" content="Which things does a magnet pull? How can you tell a magnet from a magnetic material? How far does the pull reach, and which magnet is strongest? An interactive tool for Year 5 on magnets.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ================= Shared look (matches Seed Lab and Dissolving Lab) ================= */
+  :root {
+    --ink: #1d2340; --muted: #5b6386; --soft: #eef2ff;
+    --yellow: #ffc83d; --blue: #3d7bff; --coral: #ff5f6d; --green: #22b07d; --orange: #f0892e; --grey: #8a93ad; --pink: #e85d9e;
+    --space: #070d24; --drawerW: 360px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: var(--space); color: var(--ink); font-family: 'Fredoka', system-ui, sans-serif; font-size: 17px; line-height: 1.35; -webkit-tap-highlight-color: transparent; }
+  body { display: flex; flex-direction: column; }
+  button, input, textarea { font: inherit; color: inherit; }
+  b { font-weight: 700; }
+  .btn { border: 0; border-radius: 14px; padding: 9px 14px; min-height: 44px; cursor: pointer; background: #fff; color: var(--ink); font-weight: 600; font-size: 16px; box-shadow: 0 3px 0 rgba(0,0,0,.18); }
+  .btn:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,.18); }
+  .btn.active { background: var(--yellow); }
+  .btn:focus-visible { outline: 3px solid var(--yellow); outline-offset: 2px; }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .btn.go { background: var(--green); color: #fff; font-size: 19px; flex: 1; }
+  .btn.primary { background: var(--green); color: #fff; }
+  a.btn { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
+  #drawer a.btn.go, #drawer a.btn.primary { color: #fff; }
+
+  /* ---------- Top bar ---------- */
+  .topbar { flex: none; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 8px 10px; background: rgba(7,13,36,.95); z-index: 15; }
+  .brand { color: #fff; font-size: 21px; font-weight: 700; margin-right: auto; white-space: nowrap; }
+  .hub-link { flex: none; display: grid; place-items: center; width: 38px; height: 38px; border-radius: 12px; text-decoration: none; font-size: 20px; background: rgba(255,255,255,.14); box-shadow: 0 3px 0 rgba(0,0,0,.25); transition: background .15s, transform .08s; }
+  .hub-link:hover { background: rgba(255,255,255,.26); }
+  .hub-link:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,.25); }
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+  .btn.missions { background: var(--blue); color: #fff; }
+  .tabs .btn { padding: 9px 10px; }
+  /* Five tabs: their words go first, leaving the icons */
+  @media (max-width: 1399px) {
+    .topbar .long { display: none; }
+    .brand { font-size: 18px; }
+    .topbar, .tabs { gap: 4px; }
+    .tabs .btn { padding: 9px 8px; font-size: 14.5px; }
+  }
+  @media (max-width: 1180px) { .tl { display: none; } .tabs .btn { font-size: 20px; padding: 6px 9px; } }
+
+  /* ---------- Main area: stage on the left, drawer on the right ---------- */
+  main { position: relative; flex: 1; min-height: 0; }
+  #stage { position: absolute; top: 0; bottom: 0; left: 0; right: var(--drawerW); overflow: hidden; background: #eef4fb; display: flex; align-items: center; justify-content: center; }
+  #stage > svg { width: 100%; height: 100%; display: block; touch-action: none; user-select: none; -webkit-user-select: none; }
+  #drawer { position: absolute; top: 0; right: 0; bottom: 0; width: var(--drawerW); background: #dfe6ff; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+  .card { background: #fff; border-radius: 16px; padding: 12px 14px; }
+  .card h2 { margin: 0 0 4px; font-size: 21px; line-height: 1.2; }
+  .card h3 { margin: 0 0 6px; font-size: 17px; }
+  .card p { margin: 4px 0; }
+  .muted { color: var(--muted); font-size: 14.5px; }
+  .term { background: #fff3c4; border-radius: 6px; padding: 0 4px; font-weight: 600; }
+  .navrow { display: flex; gap: 8px; flex-wrap: wrap; }
+  .opt { border: 2px solid #d3dbf7; background: #fff; border-radius: 12px; padding: 6px 10px; min-height: 44px; font-weight: 600; font-size: 15px; cursor: pointer; }
+  .opt.on { background: var(--yellow); border-color: #e0a800; }
+  .opt.wrong { background: #ffe0e3; border-color: var(--coral); }
+  .opt.done, .opt.done:disabled { background: #c9f2df; border-color: var(--green); opacity: 1; }
+  .opt:disabled { opacity: .45; cursor: default; }
+  .opt.sm { font-size: 14px; padding: 4px 8px; }
+  .stops { display: flex; flex-wrap: wrap; gap: 6px; }
+  .spot { background: #fff3c4; border-radius: 12px; padding: 8px 10px; margin-top: 6px !important; }
+  .job { font-size: 16px; background: #c9f2df; border-radius: 12px; padding: 8px 10px; }
+  .says { border: 3px solid var(--yellow); }
+  .says.good { border-color: var(--green); background: #effbf5; }
+  .says ul { margin: 6px 0 0; padding-left: 20px; }
+  .wq .opt { display: block; width: 100%; text-align: left; margin-top: 6px; }
+  .checkbar { position: sticky; bottom: -10px; z-index: 2; display: flex; margin: 0 -10px; padding: 6px 10px 10px; background: #dfe6ff; }
+  .slide { display: flex; align-items: center; gap: 8px; margin: 6px 0; }
+  .slide input[type=range] { flex: 1; min-height: 44px; accent-color: var(--coral); }
+  .lay-top { position: absolute; top: 8px; left: 10px; right: 10px; display: flex; gap: 8px; align-items: flex-start; flex-wrap: wrap; pointer-events: none; z-index: 2; }
+  .scaletag { background: var(--blue); color: #fff; font-weight: 700; border-radius: 10px; padding: 5px 10px; font-size: 15px; white-space: nowrap; }
+  .readout { background: #fff; border-radius: 12px; padding: 5px 10px; font-size: 15px; line-height: 1.3; box-shadow: 0 3px 8px rgba(0,0,0,.12); }
+  .tapme { cursor: pointer; }
+  .icons { list-style: none; padding: 0; margin: 0 0 14px; }
+  .icons li { display: flex; gap: 10px; padding: 6px 0; line-height: 1.35; }
+  .icons .em { font-size: 24px; width: 32px; flex: none; text-align: center; }
+  .linkbtn { border: 0; background: none; color: var(--blue); font-weight: 600; cursor: pointer; padding: 4px 0; font-size: 15px; min-height: 32px; }
+  a.linkbtn { display: inline-flex; align-items: center; text-decoration: none; }
+
+  /* ---------- Chips: tap one, then tap where it goes – or drag it there ---------- */
+  .chip { display: inline-flex; align-items: center; justify-content: center; gap: 4px; border: 2px solid #d3dbf7; background: #fff; border-radius: 12px; padding: 4px 12px; min-height: 44px; font-weight: 600; font-size: 15px; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
+  .chip.sel { background: var(--yellow); border-color: #e0a800; }
+  .chip-ghost { position: fixed; z-index: 30; pointer-events: none; transform: translate(-50%, -50%) rotate(-3deg); box-shadow: 0 8px 18px rgba(0,0,0,.3); opacity: .95; }
+  .bank { display: flex; flex-wrap: wrap; gap: 6px; }
+  .bank:empty::before { content: 'All placed!'; color: var(--muted); font-size: 15px; }
+  .mrow { display: flex; align-items: center; gap: 8px; margin: 6px 0; }
+  .mrow > span { flex: 1; font-size: 15px; line-height: 1.25; }
+  .mslot { flex: none; width: 118px; min-height: 44px; border: 2px dashed #b7c3ea; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; background: #f7f9ff; cursor: pointer; text-align: center; padding: 2px 4px; }
+  .mslot.ready { border-color: #e0a800; background: #fffbea; }
+  .mslot.over { border-style: solid; border-color: var(--green); }
+  .mslot.ok { border-style: solid; border-color: var(--green); background: #c9f2df; cursor: default; }
+  .mslot.bad { border-style: solid; border-color: var(--coral); background: #ffe0e3; }
+  svg .slot.over rect { stroke: var(--green); stroke-width: 4; }
+  svg .slot.ready rect { stroke: #e0a800; }
+
+  /* ---------- Sorting into two boxes ---------- */
+  .sortwrap { position: absolute; inset: 0; display: flex; flex-direction: column; gap: 8px; padding: 50px 8px 8px; }
+  .pool { flex: 1; min-height: 0; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; align-content: start; grid-auto-rows: max-content; padding: 4px; }
+  .pcard { position: relative; display: flex; flex-direction: column; border: 3px solid #fff; background: #fff; border-radius: 14px; padding: 0; overflow: hidden; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; font-weight: 700; font-size: 15px; box-shadow: 0 3px 0 rgba(0,0,0,.12); text-align: center; }
+  .pcard img, .pcard .ph { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; display: block; pointer-events: none; }
+  .pcard .ph { display: grid; place-items: center; font-size: 46px; background: #e6f3e0; }
+  .pcard .ph svg { width: 60%; height: auto; }
+  .pcard > span { padding: 4px 6px; }
+  .pcard.sel { border-color: var(--yellow); box-shadow: 0 0 0 3px var(--yellow); }
+  .pcard.look { border-color: var(--blue); }
+  .bins { flex: none; height: 40%; min-height: 130px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .bin { border: 3px dashed #b7c3ea; border-radius: 16px; background: #fff; padding: 6px; display: flex; flex-direction: column; gap: 4px; overflow-y: auto; cursor: pointer; }
+  .bin h3 { margin: 0; font-size: 18px; text-align: center; pointer-events: none; }
+  .bin .bsub { text-align: center; font-size: 13.5px; color: var(--muted); font-weight: 600; pointer-events: none; }
+  .bin.ready { border-color: var(--yellow); background: #fffbea; }
+  .bin.over { border-style: solid; border-color: var(--green); background: #effbf5; }
+  .bin .in { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; }
+  .mini { width: 66px; display: flex; flex-direction: column; align-items: center; font-size: 12px; font-weight: 600; text-align: center; line-height: 1.1; pointer-events: none; }
+  .mini img, .mini .ph { width: 58px; height: 44px; object-fit: cover; border-radius: 8px; display: grid; place-items: center; font-size: 28px; background: #e6f3e0; }
+  .mini .ph svg { width: 34px; height: 34px; }
+  .photo { position: relative; border-radius: 14px; overflow: hidden; background: #e6f3e0; }
+  .photo img { width: 100%; display: block; }
+  .photo .ph { display: grid; place-items: center; font-size: 80px; aspect-ratio: 4 / 3; }
+  .pcard .credit, .mini .credit { display: none; }
+  .credit { position: absolute; right: 6px; bottom: 6px; background: rgba(0,0,0,.55); color: #fff; font-size: 11px; padding: 2px 6px; border-radius: 6px; max-width: calc(100% - 12px); }
+
+  /* ---------- The fair test (as in Seed Lab) ---------- */
+  .steps { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
+  .steps span { font-size: 12.5px; font-weight: 700; padding: 3px 8px; border-radius: 10px; background: var(--soft); color: var(--muted); }
+  .steps span.now { background: var(--yellow); color: var(--ink); }
+  .steps span.done { background: #c9f2df; color: #147a55; }
+  .varrow { margin: 8px 0; }
+  .varrow > span { display: block; font-weight: 700; font-size: 14.5px; margin-bottom: 4px; }
+  .tag { background: var(--yellow); border-radius: 8px; padding: 1px 6px; font-size: 12px; }
+  .keeps { display: grid; gap: 4px; margin-top: 6px; }
+  .keep { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 4px 8px; border-radius: 10px; background: var(--soft); font-size: 15px; cursor: pointer; }
+  .keep input { width: 22px; height: 22px; flex: none; accent-color: var(--green); }
+  ul.spot { padding-left: 28px; }
+  .seedcards { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 6px; }
+  .seedcard { display: flex; flex-direction: column; align-items: center; gap: 2px; border: 2px solid #d3dbf7; background: #fff; border-radius: 12px; padding: 6px 4px; min-height: 44px; font-weight: 600; font-size: 13.5px; line-height: 1.15; cursor: pointer; text-align: center; }
+  .seedcard.sel { background: var(--yellow); border-color: #e0a800; }
+  .seedcard:disabled { opacity: .6; cursor: default; }
+  .gtable { width: 100%; border-collapse: collapse; font-size: 15px; margin: 6px 0; }
+  .gtable th { text-align: left; font-size: 13.5px; color: var(--muted); padding: 2px 4px; }
+  .gtable td { border-top: 1px solid #e1e6f5; padding: 5px 4px; }
+  .numin { width: 90px; min-height: 44px; font-size: 20px; text-align: center; border: 2px solid #c3cdf2; border-radius: 12px; padding: 4px; background: #fff; }
+  .numin:focus { outline: 3px solid var(--yellow); border-color: #e0a800; }
+  .numin.ok { border-color: var(--green); background: #effbf5; }
+  .ansrow { display: flex; align-items: center; gap: 8px; margin: 8px 0 4px; font-weight: 600; flex-wrap: wrap; }
+  .wsmall { font-family: 'Fredoka', system-ui, sans-serif; font-size: 13px; font-weight: 600; fill: var(--ink); paint-order: stroke; stroke: #fff; stroke-width: 4px; stroke-linejoin: round; }
+  /* ---------- Magnet Lab: things moving when a magnet pulls or pushes them ---------- */
+  .slidein { animation: slidein .7s cubic-bezier(.5, 0, .9, .6) both; }
+  @keyframes slidein { from { transform: translateX(var(--dx, 0)); } to { transform: translateX(0); } }
+  .drop { animation: dropin .5s ease-out both; }
+  @keyframes dropin { from { transform: translateY(-60px); opacity: .3; } to { transform: translateY(0); opacity: 1; } }
+  .lifted { animation: lifted 2.6s ease-in-out both; }
+  @keyframes lifted { 0% { transform: translate(var(--x0), 0); } 35% { transform: translate(0, 0); } 60% { transform: translate(0, var(--ly)); } 80% { transform: translate(var(--bx), var(--ly)); } 100% { transform: translate(var(--bx), var(--by)); } }
+  .passed { animation: passed 2.6s ease-in-out both; }
+  @keyframes passed { 0% { transform: translate(var(--x0), 0); } 35% { transform: translate(0, 0); } 75% { transform: translate(var(--ax), 0); } 100% { transform: translate(var(--ax), var(--by)); } }
+  @media (prefers-reduced-motion: reduce) { .slidein, .drop, .lifted, .passed { animation-duration: .01s; } }
+  /* ---------- The test bench: the test at the top, the objects, then three boxes ---------- */
+  .testbox { flex: none; background: #fff; border-radius: 14px; overflow: hidden; }
+  .benchwrap .pool { flex: 1 1 auto; }
+  .bins.three { grid-template-columns: 1fr 1fr 1fr; height: 34%; }
+  @media (max-width: 760px) { .benchwrap { padding-top: 78px; } .bins.three .bin h3 { font-size: 12.5px; } }
+
+  /* ---------- Pictures drawn on the stage ---------- */
+  .glabel { font-family: 'Fredoka', system-ui, sans-serif; font-size: 16px; font-weight: 700; fill: var(--ink); }
+  .gsmall { font-family: 'Fredoka', system-ui, sans-serif; font-size: 13px; font-weight: 600; fill: var(--muted); }
+  .part:hover > path, .part:hover > ellipse { filter: brightness(1.08); }
+  .bob { animation: bob 1.4s ease-in-out infinite alternate; }
+  @keyframes bob { to { transform: translateY(-8px); } }
+  .puff { animation: puff 1.6s ease-out infinite; }
+  @keyframes puff { from { opacity: 1; transform: translate(0, 0); } to { opacity: 0; transform: translate(var(--dx), var(--dy)); } }
+  .glow { animation: glow 1.2s ease-in-out infinite alternate; }
+  @keyframes glow { from { opacity: .35; } to { opacity: .9; } }
+  .scent { animation: rise 2.4s ease-in infinite; }
+  @keyframes rise { from { transform: translateY(0); opacity: 0; } 20% { opacity: .9; } to { transform: translateY(-40px); opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { .bob, .puff, .glow, .scent { animation: none; } }
+
+  /* ---------- Missions and pop-ups ---------- */
+  .banner { position: absolute; top: 10px; right: 10px; width: calc(var(--drawerW) - 20px); z-index: 6; background: #fff; border: 3px solid var(--yellow); border-radius: 16px; padding: 9px 44px 9px 14px; box-shadow: 0 6px 16px rgba(0,0,0,.18); }
+  .banner.hidden { display: none; }
+  .banner .kicker { font-size: 12.5px; font-weight: 700; color: var(--blue); text-transform: uppercase; letter-spacing: .04em; }
+  .banner .close { position: absolute; top: 6px; right: 6px; border: 0; background: var(--soft); border-radius: 50%; width: 32px; height: 32px; cursor: pointer; }
+  .banner .hint { margin-top: 4px; color: var(--muted); font-size: 15px; }
+  .banner .hint.hidden { display: none; }
+  .modal { position: fixed; inset: 0; background: rgba(5,10,30,.6); display: flex; align-items: center; justify-content: center; z-index: 20; padding: 16px; }
+  .modal.hidden { display: none; }
+  .modal-box { position: relative; background: #fff; border-radius: 24px; padding: 20px; width: min(580px, 100%); max-height: calc(100vh - 32px); overflow-y: auto; }
+  .modal-box h2 { margin: 0 0 8px; font-size: 25px; }
+  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+  .mission-list { display: grid; gap: 8px; margin-bottom: 14px; }
+  .mission-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; min-height: 52px; border-radius: 16px; background: var(--soft); border: 0; text-align: left; cursor: pointer; font-size: 16px; }
+  .mission-item .em { font-size: 25px; } .mission-item .t { flex: 1; font-weight: 600; }
+  .mission-item .star { font-size: 21px; filter: grayscale(1); opacity: .35; }
+  .mission-item.done .star { filter: none; opacity: 1; }
+  .core { background: var(--yellow); color: var(--ink); border-radius: 8px; padding: 1px 7px; font-size: 12.5px; font-weight: 700; white-space: nowrap; }
+  .win-emoji { font-size: 56px; text-align: center; }
+  .win-text { font-size: 17.5px; line-height: 1.5; margin-bottom: 14px; }
+  .confetti { position: fixed; top: -40px; font-size: 26px; z-index: 40; pointer-events: none; animation: fall linear forwards; }
+  @keyframes fall { to { transform: translateY(110vh) rotate(540deg); } }
+  .modal-x {
+    position: sticky; top: 0; float: right; z-index: 2;
+    width: 52px; height: 52px; margin: -6px -6px 6px 12px; padding: 0;
+    border: 0; border-radius: 50%; cursor: pointer;
+    background: var(--coral); color: #fff; font-size: 26px; font-weight: 700; line-height: 1;
+    display: grid; place-items: center; box-shadow: 0 3px 0 rgba(0,0,0,.2);
+    transition: transform .08s, filter .15s;
+  }
+  .modal-x:hover { filter: brightness(1.08); }
+  .modal-x:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,.2); }
+  .modal-x:focus-visible { outline: 3px solid var(--yellow); outline-offset: 2px; }
+  .science { background: #fff6d6; border: 3px solid var(--yellow); border-radius: 16px; padding: 10px 14px; margin: 8px 0; }
+  .science > b:first-child { display: block; font-size: 14px; text-transform: uppercase; letter-spacing: .04em; color: #8a5a00; margin-bottom: 2px; }
+  .seelab { display: flex; align-items: center; gap: 8px; background: #e7f7ee; border-radius: 12px; padding: 8px 10px; font-weight: 600; color: #0b6644; text-decoration: none; min-height: 44px; }
+  .help-body h3 { margin: 12px 0 4px; font-size: 17px; }
+  .help-body p { margin: 4px 0; line-height: 1.4; }
+  .help-body ol { margin: 4px 0; padding-left: 24px; line-height: 1.4; }
+  .help-body ol li { margin: 3px 0; }
+  .help-body .welcome { font-weight: 700; color: var(--blue); }
+  details.teach { margin: 12px 0; font-size: 13px; color: var(--muted); }
+  details.teach summary { cursor: pointer; font-weight: 600; min-height: 32px; }
+  details.teach p { margin: 4px 0; }
+  details.teach h4 { margin: 8px 0 2px; font-size: 13px; color: var(--ink); }
+
+  /* ---------- Narrow screens: stage on top, drawer below ---------- */
+  @media (max-width: 760px) {
+    :root { --drawerW: 0px; }
+    #stage { bottom: 42%; right: 0; }
+    #drawer { top: 58%; width: 100%; }
+    .banner { top: calc(58% + 8px); left: 8px; right: 8px; width: auto; }
+    .brand { font-size: 17px; }
+    .topbar > .btn { padding: 5px 7px; }
+    .brand { font-size: 15px; white-space: normal; line-height: 1.05; max-width: 82px; }
+    /* The tabs get a row of their own, under the title and buttons */
+    .tabs { order: 9; width: 100%; justify-content: space-between; gap: 3px; }
+    .tabs .btn { flex: 1; font-size: 18px; padding: 4px 0; min-height: 40px; }
+    .readout, .scaletag { font-size: 13px; padding: 3px 7px; }
+    .glabel { font-size: 12px; } .gsmall { font-size: 10.5px; }
+    .sortwrap { padding-top: 40px; gap: 5px; }
+    .pool { grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); gap: 5px; }
+    .pcard { font-size: 12px; } .pcard .ph { font-size: 30px; }
+    .bins { min-height: 100px; gap: 5px; }
+    .bin h3 { font-size: 14px; } .bin .bsub { display: none; }
+    .mini { width: 46px; font-size: 10px; } .mini img, .mini .ph { width: 42px; height: 32px; font-size: 20px; }
+    .mslot { width: 96px; font-size: 14px; }
+  }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a class="hub-link" href="../index.html" title="Back to the Science Hub" aria-label="Back to the Science Hub">🏠</a>
+  <div class="brand">🧲 Magnet Lab</div>
+  <div class="tabs" id="tabs"></div>
+  <button class="btn missions" data-act="missions" title="Missions">🚀 <span class="long">Missions </span><span id="starCount"></span></button>
+  <button class="btn" data-act="words" title="Key words">📖<span class="long"> Words</span></button>
+  <button class="btn" data-act="model" title="How is this model different from real life?">🤔<span class="long"> Real life?</span></button>
+  <button class="btn" id="helpBtn" data-act="help" aria-label="How to use">❓</button>
+</div>
+<main>
+  <div id="stage"></div>
+  <div id="drawer"></div>
+  <div id="banner" class="banner hidden" role="status">
+    <div class="kicker" id="bannerKicker"></div>
+    <div id="bannerText"></div>
+    <button class="linkbtn" data-act="hint" id="hintBtn">💡 Show a hint</button>
+    <div class="hint hidden" id="bannerHint"></div>
+    <button class="close" data-act="stopMission" aria-label="Stop this mission">✖</button>
+  </div>
+</main>
+<div id="missionsModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="missionsTitle">
+  <div class="modal-box">
+    <button class="modal-x" data-act="closeModals" aria-label="Close">✕</button>
+    <h2 id="missionsTitle">🚀 Missions</h2>
+    <p class="muted" style="margin-top:-4px">Short of time? Start with the <span class="core">⏱ Lesson</span> missions.</p>
+    <div class="mission-list" id="missionList"></div>
+    <div class="modal-actions"><button class="btn" data-act="resetStars">Reset stars</button><button class="btn primary" data-act="closeModals">Close</button></div>
+  </div>
+</div>
+<div id="modelModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modelTitle">
+  <div class="modal-box">
+    <button class="modal-x" data-act="closeModals" aria-label="Close">✕</button>
+    <h2 id="modelTitle">🤔 How is this model different from real life?</h2>
+    <p class="muted" id="modelTab" style="margin:-4px 0 8px;font-weight:600"></p>
+    <p style="margin-top:0">A <span class="term">model</span> shows some important features of something real – but not everything.</p>
+    <ul class="icons" id="modelList"></ul>
+    <div class="modal-actions"><button class="btn primary" data-act="closeModals">Got it!</button></div>
+  </div>
+</div>
+<div id="wordsModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="wordsTitle">
+  <div class="modal-box">
+    <button class="modal-x" data-act="closeModals" aria-label="Close">✕</button>
+    <h2 id="wordsTitle">📖 Key words</h2>
+    <ul class="icons" id="wordsList"></ul>
+    <div class="modal-actions"><button class="btn primary" data-act="closeModals">Got it!</button></div>
+  </div>
+</div>
+<div id="winModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="winTitle">
+  <div class="modal-box">
+    <button class="modal-x" data-act="closeModals" aria-label="Close">✕</button>
+    <div class="win-emoji">⭐</div>
+    <h2 id="winTitle" style="text-align:center">Mission complete!</h2>
+    <div class="win-text" id="winText"></div>
+    <div class="modal-actions"><button class="btn" data-act="closeModals">Keep exploring</button><a class="btn primary" id="winPractise" href="../practice/index.html#magnets">✏️ Practise this</a><button class="btn primary" id="winNext" data-act="nextMission">Next mission ▶</button></div>
+  </div>
+</div>
+<div id="helpModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+  <div class="modal-box">
+    <button class="modal-x" data-act="closeModals" aria-label="Close">✕</button>
+    <div class="help-body" id="helpBody"></div>
+    <div class="modal-actions"><a class="btn" href="../practice/index.html#magnets">✏️ Practise this</a><button class="btn primary" data-act="closeModals">Let's go! 🚀</button></div>
+  </div>
+</div>
+
+<script>
+// ================= Utilities =================
+const $ = (s, r = document) => r.querySelector(s);
+// Saved progress; private windows can block storage, so failures are ignored
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+};
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+const stageSize = () => { const st = $('#stage'), w = st.clientWidth || 900, h = st.clientHeight || 600; return { w, h, narrow: w < 560 }; };
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+const mix = (c1, c2, t) => { const p = c => [1, 3, 5].map(k => parseInt(c.slice(k, k + 2), 16)), a = p(c1), b = p(c2);
+  return '#' + a.map((v, k) => Math.round(v + (b[k] - v) * clamp(t)).toString(16).padStart(2, '0')).join(''); };
+const lc = t => t[0].toLowerCase() + t.slice(1);
+const cap = t => t[0].toUpperCase() + t.slice(1);
+// A question with choices: wrong ones turn red and stay disabled, the right one turns green
+const choices = (act, opts, chosen, wrongs, right) => opts.map(([v, t]) => `<button class="opt${chosen === v && v === right ? ' done' : wrongs.includes(v) ? ' wrong' : ''}" data-act="${act}" data-v="${v}"${wrongs.includes(v) || chosen === right ? ' disabled' : ''}>${t}</button>`).join('');
+// A prediction: no right or wrong yet, just the child's choice
+const predict = (act, opts, chosen) => opts.map(([v, t]) => `<button class="opt${chosen === v ? ' on' : ''}" data-act="${act}" data-v="${v}"${chosen ? ' disabled' : ''}>${t}</button>`).join('');
+
+// ================= Drag or tap =================
+// Anything with data-drag can be picked up; anything with data-drop can take it.
+// A tap picks it up (the view's pick), a second tap on a drop place puts it there (the view's drop).
+// Dragging does the same in one go.
+const DND = { start: null, ghost: null, over: null, skipClick: false };
+document.addEventListener('pointerdown', e => {
+  const el = e.target.closest('[data-drag]');
+  if (!el || e.button > 0 || el.matches(':disabled')) return;
+  DND.start = { el, id: el.dataset.drag, x: e.clientX, y: e.clientY, moved: false };
+});
+document.addEventListener('pointermove', e => {
+  const d = DND.start; if (!d) return;
+  if (!d.moved) {
+    if (Math.hypot(e.clientX - d.x, e.clientY - d.y) < 10) return;
+    d.moved = true;
+    const v = VIEWS[state.view], html = v.ghost && v.ghost(d.id);
+    let g;
+    if (html) { g = document.createElement('div'); g.className = 'chip'; g.innerHTML = html; }
+    else { g = d.el.cloneNode(true); g.style.width = d.el.offsetWidth + 'px'; }
+    g.classList.add('chip-ghost'); g.removeAttribute('data-drag');
+    document.body.appendChild(g); DND.ghost = g;
+  }
+  DND.ghost.style.left = e.clientX + 'px'; DND.ghost.style.top = e.clientY + 'px';
+  const over = document.elementFromPoint(e.clientX, e.clientY)?.closest('[data-drop]');
+  if (over !== DND.over) { DND.over?.classList.remove('over'); over?.classList.add('over'); DND.over = over; }
+});
+function endDrag(e) {
+  const d = DND.start; DND.start = null;
+  if (!d || !d.moved) return;
+  DND.ghost?.remove(); DND.ghost = null; DND.over?.classList.remove('over'); DND.over = null;
+  DND.skipClick = true; setTimeout(() => DND.skipClick = false, 0);
+  const over = e && document.elementFromPoint(e.clientX, e.clientY)?.closest('[data-drop]');
+  const v = VIEWS[state.view];
+  if (over && v.drop) v.drop(d.id, over.dataset.drop);
+}
+document.addEventListener('pointerup', endDrag);
+document.addEventListener('pointercancel', () => endDrag(null));
+
+
+// A repeatable random number generator, so the same picture comes back every time (from Particle Playground)
+function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+// ================= Drawings =================
+// Magnets are drawn the way schools usually colour them: the north (N) end red, the south (S) end blue.
+const NCOL = '#ff5f6d', SCOL = '#3d7bff';
+// A bar magnet from (x, y), len long and th thick. flip puts N on the right.
+function barMag(x, y, len, th, flip = false) {
+  const a = flip ? [SCOL, 'S'] : [NCOL, 'N'], b = flip ? [NCOL, 'N'] : [SCOL, 'S'], fs = Math.min(th * .7, 26);
+  return `<rect x="${x}" y="${y}" width="${len / 2}" height="${th}" fill="${a[0]}" stroke="#1d2340" stroke-width="2"/><rect x="${x + len / 2}" y="${y}" width="${len / 2}" height="${th}" fill="${b[0]}" stroke="#1d2340" stroke-width="2"/>
+    <text x="${x + len * .25}" y="${y + th / 2 + fs * .36}" text-anchor="middle" style="font-weight:700;font-size:${fs}px;fill:#fff">${a[1]}</text><text x="${x + len * .75}" y="${y + th / 2 + fs * .36}" text-anchor="middle" style="font-weight:700;font-size:${fs}px;fill:#fff">${b[1]}</text>`;
+}
+// A grey bar that might be a magnet: you can't tell by looking
+const greyBar = (x, y, len, th, name) => `<rect x="${x}" y="${y}" width="${len}" height="${th}" rx="3" fill="#a9b1c6" stroke="#5b6386" stroke-width="2"/><text x="${x + len / 2}" y="${y + th / 2 + 7}" text-anchor="middle" style="font-weight:700;font-size:20px;fill:#1d2340">${name}</text>`;
+// A paperclip lying flat at (x, y), s long, turned by rot degrees
+const clipG = (x, y, s = 30, rot = 0, col = '#8a93ad') => `<g transform="translate(${x} ${y}) rotate(${rot}) scale(${s / 30})"><path d="M-12 -4 H10 A4 4 0 0 1 10 4 H-10 A2.6 2.6 0 0 1 -10 -1.2 H7" fill="none" stroke="${col}" stroke-width="1.8" stroke-linecap="round"/></g>`;
+// A force arrow, in the same style as Forces Playground: a thick line with a pointed head and a label
+function forceArrow(x, y, len, dir, label, col = '#e85d9e') {
+  if (len < 4) return '';
+  const [dx, dy] = { left: [-1, 0], right: [1, 0], up: [0, -1], down: [0, 1] }[dir], ex = x + dx * len, ey = y + dy * len, bx = ex - dx * 16, by = ey - dy * 16, px = -dy * 11, py = dx * 11;
+  return `<line x1="${x}" y1="${y}" x2="${bx}" y2="${by}" stroke="${col}" stroke-width="8" stroke-linecap="round"/><polygon points="${ex},${ey} ${bx + px},${by + py} ${bx - px},${by - py}" fill="${col}"/>`
+    + (label ? `<text x="${dir === 'left' || dir === 'right' ? (x + ex) / 2 : x + 22}" y="${dir === 'left' || dir === 'right' ? y - 14 : (y + ey) / 2}" text-anchor="${dir === 'left' || dir === 'right' ? 'middle' : 'start'}" class="wsmall" style="fill:${col}">${label}</text>` : '');
+}
+// Small pictures of the objects, each in a box 60 × 60
+const ICON = {
+  clip: () => clipG(30, 30, 46, -20),
+  nail: () => `<path d="M8 30 H46 L54 30 L46 27 V33 Z" fill="#8a93ad" stroke="#5b6386" stroke-width="1.5"/><rect x="6" y="23" width="5" height="14" rx="1" fill="#6b7590"/>`,
+  tin: () => `<text x="30" y="44" text-anchor="middle" style="font-size:38px">🥫</text>`,
+  alcan: () => `<rect x="20" y="10" width="20" height="42" rx="5" fill="#d7dde8" stroke="#8a93ad" stroke-width="1.5"/><rect x="20" y="20" width="20" height="18" fill="#22b07d"/><ellipse cx="30" cy="11" rx="8" ry="2.5" fill="#bfc6d6"/><rect x="28" y="7" width="5" height="3" rx="1" fill="#8a93ad"/>`,
+  copper: () => `<path d="M10 40 C10 20, 22 20, 22 34 C22 46, 34 46, 34 30 C34 16, 46 16, 46 32 C46 42, 52 42, 54 36" fill="none" stroke="#c46a2b" stroke-width="3.5" stroke-linecap="round"/>`,
+  ring: () => `<text x="30" y="44" text-anchor="middle" style="font-size:36px">💍</text>`,
+  ruler: () => `<text x="30" y="44" text-anchor="middle" style="font-size:36px">📏</text>`,
+  pencil: () => `<text x="30" y="44" text-anchor="middle" style="font-size:36px">✏️</text>`,
+  rubber: () => `<g transform="rotate(-15 30 30)"><rect x="12" y="20" width="36" height="20" rx="4" fill="#ff9fb8"/><rect x="30" y="20" width="18" height="20" rx="4" fill="#3d7bff"/><rect x="30" y="20" width="6" height="20" fill="#3d7bff"/></g>`,
+  scissors: () => `<text x="30" y="44" text-anchor="middle" style="font-size:36px">✂️</text>`,
+  fridge: () => `<rect x="12" y="12" width="36" height="36" rx="10" fill="#ffc83d" stroke="#c99400" stroke-width="2"/><circle cx="24" cy="26" r="3" fill="#1d2340"/><circle cx="36" cy="26" r="3" fill="#1d2340"/><path d="M22 35 Q30 42 38 35" fill="none" stroke="#1d2340" stroke-width="2.5" stroke-linecap="round"/>`,
+  cents: () => [[22, 34, 11], [36, 28, 10], [32, 42, 9]].map(([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r}" fill="#c46a2b" stroke="#8a4a1a" stroke-width="1.5"/>`).join(''),
+  gold: () => [[22, 34, 12], [37, 28, 11], [33, 43, 10]].map(([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r}" fill="#e3b341" stroke="#a07a10" stroke-width="1.5"/>`).join(''),
+  euros: () => `<circle cx="22" cy="32" r="14" fill="#e3b341" stroke="#a07a10" stroke-width="1.5"/><circle cx="22" cy="32" r="9" fill="#c9cfdc"/><circle cx="40" cy="30" r="13" fill="#c9cfdc" stroke="#6b7590" stroke-width="1.5"/><circle cx="40" cy="30" r="8.5" fill="#e3b341"/>`
+};
+const iconSvg = (id, size = 56) => `<svg viewBox="0 0 60 60" width="${size}" height="${size}" aria-hidden="true">${ICON[id]()}</svg>`;
+
+// ================= 1. Test bench =================
+// Each object: [name, what kind (magnet / mat = magnetic material / not), is it a metal?, what happens, extra note]
+const OBJS = {
+  clip: ['Paperclip', 'mat', true, 'pulled', 'Paperclips are made of steel. Steel is a magnetic material.'],
+  nail: ['Iron nail', 'mat', true, 'pulled', 'Iron is a magnetic material.'],
+  tin: ['Steel food can', 'mat', true, 'pulled', 'A "tin" can is mostly steel, so the magnet pulls it.'],
+  alcan: ['Aluminium drink can', 'not', true, 'none', 'Aluminium is a metal, but it is <b>not</b> magnetic.'],
+  copper: ['Copper wire', 'not', true, 'none', 'Copper is a metal, but it is <b>not</b> magnetic.'],
+  ring: ['Gold ring', 'not', true, 'none', 'Gold is a metal, but it is <b>not</b> magnetic.'],
+  ruler: ['Plastic ruler', 'not', false, 'none', 'Plastic is not magnetic.'],
+  pencil: ['Wooden pencil', 'not', false, 'none', 'Wood is not magnetic.'],
+  rubber: ['Rubber', 'not', false, 'none', 'Rubber is not magnetic.'],
+  scissors: ['Scissors', 'mat', true, 'pulled', 'The magnet pulls the steel blades, but not the plastic handles.'],
+  fridge: ['Fridge magnet', 'magnet', false, 'pulled', 'It is pulled, and it can pick up a paperclip by itself. It is a magnet!'],
+  cents: ['1, 2 and 5 cent coins', 'mat', true, 'pulled', 'These coins are steel inside, with a thin coat of copper. The steel is pulled.'],
+  gold: ['10, 20 and 50 cent coins', 'not', true, 'none', 'These coins are made of "Nordic gold", a mix of copper and other metals. It is not magnetic.'],
+  euros: ['1 and 2 euro coins', 'mat', true, 'weak', 'Only the middle part is pulled, and only a little. It has a thin layer of nickel inside. Nickel is a magnetic material.']
+};
+const OORDER = ['clip', 'nail', 'tin', 'alcan', 'copper', 'ring', 'ruler', 'pencil', 'rubber', 'scissors', 'fridge', 'cents', 'gold', 'euros'];
+const GROUPS = [['magnet', '🧲 Magnet', 'pulls magnetic materials itself'], ['mat', '📎 Magnetic material', 'pulled by a magnet'], ['not', '🚫 Not magnetic', 'not pulled at all']];
+const freshBench = () => ({ cur: null, sel: null, pred: {}, tested: {}, clipTest: {}, placed: {}, wrong: null, order: shuffle(OORDER) });
+const BENCH = {
+  sel: () => state.bench.sel,
+  pick(id) { const b = state.bench; if (b.placed[id]) return; b.sel = id; b.cur = id; b.wrong = null; render(); top0(); },
+  drop(id, g) {
+    const b = state.bench; if (!OBJS[id] || b.placed[id]) return;
+    if (!b.tested[id]) { b.wrong = { id, msg: 'Test it with the magnet first!' }; render(); return; }
+    if (g === 'magnet' && OBJS[id][3] !== 'none' && !b.clipTest[id]) { b.wrong = { id, msg: 'Is it a magnet? Check: can it pick up a paperclip by itself?' }; render(); return; }
+    if (OBJS[id][1] === g) { b.placed[id] = g; b.sel = null; b.wrong = null; }
+    else b.wrong = { id, msg: g === 'magnet' ? 'A magnet pulls magnetic materials by itself. Can it pick up a paperclip?' : g === 'not' ? 'The magnet pulled it, so it is not "not magnetic".' : OBJS[id][1] === 'magnet' ? 'It is pulled, yes. But it can also pick up a paperclip by itself. What does that make it?' : 'Did the magnet pull it? Look at the test again.' };
+    render();
+    const n = Object.keys(b.placed).length;
+    emit('placed', { n });
+  },
+  stage() {
+    const b = state.bench, { w, narrow } = stageSize(), id = b.cur, O = id && OBJS[id], res = id && b.tested[id];
+    // The test: the magnet on the left, the object on the right. Pulled things slide across.
+    const W = Math.max(280, w - 16), H = narrow ? 120 : 150, my = H / 2 + 6, mx = 16, mlen = Math.min(170, W * .32), far = mx + mlen + Math.min(260, W * .45), near = mx + mlen + 32;
+    let t = `<rect width="${W}" height="${H}" rx="14" fill="#fff"/><rect x="0" y="${H - 22}" width="${W}" height="22" fill="#c9a77c"/>` + barMag(mx, my - 18, mlen, 30, true);
+    if (O) {
+      const pulled = res && O[3] !== 'none', x = pulled ? (O[3] === 'weak' ? (near + far) / 2 : near) : far;
+      t += `<g class="${res && pulled ? 'slidein' : ''}" style="--dx:${far - x}px"><g transform="translate(${x - 28} ${my - 30})">${ICON[id]()}</g></g>`;
+      if (res && pulled) t += forceArrow(x - 4, my - 34, Math.min(70, x - mx - mlen - 6) * (O[3] === 'weak' ? .4 : 1), 'left', O[3] === 'weak' ? 'a weak pull' : 'magnet pull');
+      if (b.clipTest[id]) t += O[1] === 'magnet' ? clipG(x, my + 30, 28, 70) + `<text x="${x + 30}" y="${my + 30}" class="wsmall">picks up a clip!</text>` : `<text x="${x}" y="${my + 44}" text-anchor="middle" class="wsmall">no clip picked up</text>`;
+    } else t += `<text x="${(near + far) / 2 + 20}" y="${my + 4}" text-anchor="middle" class="glabel">Tap an object to test it</text>`;
+    const pool = b.order.filter(o => !b.placed[o]).map(o => `<button class="pcard${b.sel === o ? ' sel' : ''}${b.tested[o] ? ' look' : ''}" data-drag="${o}"><div class="ph" style="background:#eef2ff">${iconSvg(o, narrow ? 34 : 44)}</div><span>${OBJS[o][0]}${b.tested[o] ? ' ✓' : ''}</span></button>`).join('');
+    const bins = GROUPS.map(([g, n, sub]) => `<div class="bin${b.sel ? ' ready' : ''}" data-drop="${g}"><h3>${n}</h3><div class="bsub">${sub}</div><div class="in">${OORDER.filter(o => b.placed[o] === g).map(o => `<div class="mini"><span class="ph">${iconSvg(o, 30)}</span>${OBJS[o][0]}</div>`).join('')}</div></div>`).join('');
+    const say = b.wrong ? `💡 ${b.wrong.msg}` : !id ? 'Tap an object. Test it, then put it in a box.' : !res ? 'Predict first, then test it.' : 'Now put it in the right box. Tap the box, or drag the card.';
+    return `<div class="lay-top"><span class="scaletag">🧲 Test bench</span><div class="readout">${say}</div></div>
+      <div class="sortwrap benchwrap"><div class="testbox"><svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" preserveAspectRatio="xMinYMid meet" aria-label="A magnet testing an object">${t}</svg></div><div class="pool">${pool}</div><div class="bins three">${bins}</div></div>`;
+  },
+  drawer() {
+    const b = state.bench, id = b.cur, O = id && OBJS[id], n = Object.keys(b.placed).length, res = id && b.tested[id];
+    let now = '';
+    if (O && !b.placed[id]) {
+      now = `<div class="card says"><h3>${O[0]}</h3>`;
+      if (!b.pred[id]) now += `<p>🤔 <b>Predict:</b> will the magnet pull it?</p><div class="navrow">${predict('bpred', [['yes', '✅ Yes'], ['no', '❌ No']], null)}</div>`;
+      else if (!res) now += `<p>You predicted: <b>${b.pred[id] === 'yes' ? 'yes' : 'no'}</b>.</p><div class="navrow"><button class="btn go" data-act="btest">🧲 Bring the magnet near</button></div>`;
+      else {
+        const pulled = O[3] !== 'none', right = (b.pred[id] === 'yes') === pulled;
+        now += `<p class="job">${pulled ? (O[3] === 'weak' ? 'Pulled, but only a little.' : 'Pulled!') : 'Nothing happens.'} ${O[4]}</p><p class="muted">You predicted: ${b.pred[id]}. ${right ? '✅ Right!' : '❌ Not this time.'}</p>`;
+        if (pulled && !b.clipTest[id]) now += `<p>Is it a <b>magnet</b> itself? Check if it can pick up a paperclip.</p><div class="navrow"><button class="btn" data-act="bclip">📎 Can it pick up a paperclip?</button></div>`;
+        if (b.clipTest[id]) now += `<p class="job">${O[1] === 'magnet' ? '📎 Yes! It pulls a paperclip by itself, so it is a <b>magnet</b>.' : '📎 No. It is pulled by a magnet, but it does not pull things itself. It is a <b>magnetic material</b>.'}</p>`;
+        now += `<p><b>Now put it in a box.</b></p>`;
+      }
+      now += '</div>';
+    }
+    const metals = OORDER.filter(o => OBJS[o][2] && OBJS[o][1] === 'not' && b.placed[o]).length;
+    return `${now}<div class="card"><h2>🧲 Test bench</h2><p>Which things does a magnet pull? Test each one, then sort it into a box.</p>
+        <ul class="icons" style="margin:6px 0 0">${GROUPS.map(([g, nm, sub]) => `<li><span class="em">${nm.split(' ')[0]}</span><span><b>${nm.slice(nm.indexOf(' ') + 1)}</b>: ${g === 'magnet' ? 'an object that pulls magnetic materials, and can push or pull other magnets' : g === 'mat' ? 'a material that a magnet pulls, but which does not pull things itself' : 'a magnet does not pull it'}</span></li>`).join('')}</ul>
+        <p class="muted">Sorted: ${n} of ${OORDER.length}</p></div>
+      ${metals ? '<div class="science"><b>🔬 The science</b>Not all metals are magnetic! Only a few are: <b>iron</b>, <b>steel</b>, <b>nickel</b> and <b>cobalt</b>. Aluminium, copper and gold are not.</div>' : ''}
+      <a class="seelab" href="../dissolving-lab/index.html#view=sep&task=iron">🧂 Use a magnet to separate a mixture in Dissolving Lab ▶</a>`;
+  }
+};
+
+// ================= 2. Magnet or not? =================
+const freshWhich = () => ({ mode: 'poles', flip: false, pushed: null, magIs: Math.random() < .5 ? 'A' : 'B', nLeft: Math.random() < .5, bar: 'A', last: null, log: {}, answer: null, wrong: [] });
+const WHICH = {
+  // What happens when the N end of the known magnet comes near one end of a bar
+  result(bar, end) {
+    const s = state.which; if (bar !== s.magIs) return 'pull';
+    const endIsN = end === 'left' ? s.nLeft : !s.nLeft;
+    return endIsN ? 'push' : 'pull';
+  },
+  stage() {
+    const s = state.which, { w, h, narrow } = stageSize(), top = narrow ? 40 : 50;
+    let o = `<rect width="${w}" height="${h}" fill="#eef4fb"/>`, say;
+    const len = Math.min(w * .36, 240), th = Math.min(46, len * .2), y = top + (h - top) * .4;
+    if (s.mode === 'poles') {
+      const x1 = w * .5 - len - 30, gap = s.pushed === 'pull' ? 0 : s.pushed === 'push' ? Math.min(120, w * .12) : 50, x2 = w * .5 - 30 + gap;
+      o += barMag(x1, y, len, th, false);
+      o += `<g class="${s.pushed ? (s.pushed === 'push' ? 'slidein' : 'slidein') : ''}" style="--dx:${s.pushed === 'push' ? -(gap - 6) : 50}px">${barMag(x2, y, len, th, s.flip)}</g>`;
+      if (s.pushed === 'push') o += forceArrow(x2 + len / 2, y - 26, 60, 'right', 'push') + forceArrow(x1 + len / 2, y - 26, 60, 'left', 'push');
+      if (s.pushed === 'pull') o += forceArrow(x2 + len / 2, y - 26, 50, 'left', 'pull') + forceArrow(x1 + len / 2, y - 26, 50, 'right', 'pull');
+      const facing = s.flip ? 'S and S' : 'S and N';
+      o += `<text x="${w / 2}" y="${y + th + 50}" text-anchor="middle" class="glabel">The ends facing each other: ${facing}</text>`;
+      say = !s.pushed ? 'Push the magnets together.' : s.pushed === 'push' ? 'They <b>repel</b>: they push each other away!' : 'They <b>attract</b>: they pull together and stick.';
+      return `<div class="lay-top"><span class="scaletag">🧲 Meet the poles</span><div class="readout">${say}</div></div><svg viewBox="0 0 ${w} ${h}" aria-label="Two magnets">${o}</svg>`;
+    }
+    // Mystery bars: the chosen bar, with the test you just did
+    const L = s.last, bx = w / 2 - len / 2;
+    o += greyBar(bx, y, len, th, `Bar ${s.bar}`);
+    if (L && L.bar === s.bar) {
+      if (L.test === 'clips') {
+        const n = s.bar === s.magIs ? 5 : 0;
+        o += Array.from({ length: 4 }, (_, k) => clipG(bx + len * (.12 + k * .25), h - 40, 30, k * 30)).join('');
+        if (n) o += [[.05, 1], [.08, 2], [.92, 1], [.95, 2], [.9, 3]].map(([f, r]) => clipG(bx + len * f, y + th + 10 + r * 16, 26, 85 + r * 6)).join('');
+        o += `<text x="${w / 2}" y="${y - 20}" text-anchor="middle" class="glabel">${n ? 'It picks up paperclips!' : 'No paperclips. Nothing happens.'}</text>`;
+      } else {
+        const r = WHICH.result(s.bar, L.test), left = L.test === 'left', mlen = len * .7, gapX = r === 'push' ? 70 : 4;
+        const mx = left ? bx - gapX - mlen : bx + len + gapX;
+        o += `<g class="slidein" style="--dx:${(r === 'push' ? -1 : 1) * (left ? -40 : 40)}px">${barMag(mx, y + th * .15, mlen, th * .7, left)}</g>`;
+        o += forceArrow(left ? mx + mlen / 2 : mx + mlen / 2, y - 18, 50, (r === 'push') === left ? 'left' : 'right', r === 'push' ? 'push' : 'pull');
+        o += `<text x="${w / 2}" y="${y + th + 60}" text-anchor="middle" class="glabel">The N end of your magnet near the ${L.test} end: ${r === 'push' ? 'pushed away!' : 'pulled'}</text>`;
+      }
+    }
+    say = 'Which bar is a magnet? Do some tests.';
+    return `<div class="lay-top"><span class="scaletag">🔍 Which is the magnet?</span><div class="readout">${say}</div></div><svg viewBox="0 0 ${w} ${h}" aria-label="A grey bar being tested">${o}</svg>`;
+  },
+  drawer() {
+    const s = state.which;
+    const modes = `<div class="card"><h2>🔍 Magnet or not?</h2><div class="navrow"><button class="btn${s.mode === 'poles' ? ' active' : ''}" data-act="wmode" data-v="poles">🧲 Meet the poles</button><button class="btn${s.mode === 'bars' ? ' active' : ''}" data-act="wmode" data-v="bars">❓ Two grey bars</button></div></div>`;
+    if (s.mode === 'poles') return `${modes}<div class="card says"><h3>🧲 Meet the poles</h3><p>The two ends of a magnet are its <span class="term">poles</span>: <b style="color:${NCOL}">north (N)</b> and <b style="color:${SCOL}">south (S)</b>.</p>
+        <div class="navrow" style="margin-top:6px"><button class="btn" data-act="wflip">🔄 Turn the right magnet round</button><button class="btn go" data-act="wpush">🤝 Push them together</button></div></div>
+      ${s.pushed ? `<div class="science"><b>🔬 The science</b>Like poles (N and N, or S and S) <span class="term">repel</span>: they push away. Unlike poles (N and S) <span class="term">attract</span>: they pull together.</div>` : ''}
+      <div class="card"><p>Now try the <b>two grey bars</b>: one is a magnet, one is plain steel. Can you find out which?</p><button class="btn" data-act="wmode" data-v="bars">❓ Two grey bars ▶</button></div>`;
+    const row = b => { const L = s.log[b] || {}, cell = k => L[k] ? (L[k] === 'push' ? '<b style="color:var(--coral)">pushed away</b>' : L[k] === 'pull' ? 'pulled' : L[k] === 'yes' ? '<b>yes</b>' : 'no') : '<span class="muted">?</span>'; return `<tr><td><b>Bar ${b}</b></td><td>${cell('clips')}</td><td>${cell('left')}</td><td>${cell('right')}</td></tr>`; };
+    const ok = s.answer === s.magIs;
+    return `${modes}<div class="card says"><h3>❓ Which bar is the magnet?</h3><p>They look the same. One is a <b>magnet</b>. The other is plain <b>steel</b>.</p>
+        <div class="stops" style="margin:6px 0">${['A', 'B'].map(b => `<button class="opt${s.bar === b ? ' on' : ''}" data-act="wbar" data-v="${b}">Bar ${b}</button>`).join('')}</div>
+        <div class="wq"><button class="opt" data-act="wtest" data-v="clips">📎 Try to pick up paperclips with bar ${s.bar}</button><button class="opt" data-act="wtest" data-v="left">🧲 Bring your magnet's N end to the left end</button><button class="opt" data-act="wtest" data-v="right">🧲 Bring your magnet's N end to the right end</button></div></div>
+      <div class="card"><h3>📋 Results</h3><table class="gtable"><tr><th></th><th>Clips?</th><th>Left end</th><th>Right end</th></tr>${row('A')}${row('B')}</table></div>
+      <div class="card wq"><h3>🤔 Which bar is the magnet?</h3>${choices('wans', [['A', 'Bar A'], ['B', 'Bar B']], s.answer, s.wrong, s.magIs)}
+        ${s.answer && !ok ? '<p class="spot">💡 Look at your results. Did either bar push your magnet away? Only a magnet can do that.</p>' : ''}
+        ${ok ? `<p class="job">Yes! Bar ${s.magIs} is the magnet.</p>` : ''}</div>
+      ${ok ? `<div class="science"><b>🔬 The science</b>A <b>magnetic material</b> is pulled by <b>both</b> ends of a magnet. Only a <b>magnet</b> can be pushed away. <b>Repelling is the sure test.</b></div><div class="card"><button class="btn" data-act="wnew">↺ Try two new bars</button></div>` : ''}`;
+  }
+};
+
+// ================= 3. Feel the distance =================
+// Things you can put in the gap: [name, emoji, thickness in cm, colour]. Steel is different: the magnet pulls the steel itself.
+const WALLS = { none: ['Nothing', '⬜', 0, null], paper: ['Paper', '📄', .1, '#ffffff'], card: ['Card', '🟫', .3, '#d9b98a'], plastic: ['Plastic', '🧴', .4, '#9fd0ff'], wood: ['Wood', '🪵', 1, '#b5803f'], glass: ['Glass', '🪟', .5, '#cfeaff'], steel: ['Steel sheet', '🔩', .2, '#8a93ad'] };
+const WORDER = ['none', 'paper', 'card', 'plastic', 'wood', 'glass', 'steel'];
+const JUMP = 2.2;   // a paperclip jumps across when it is this close (cm) to this magnet
+// How hard the magnet pulls the clip, 0–1. It gets much stronger as the gap gets smaller.
+const pullAt = (d, wall) => clamp(4 / Math.pow(d + 1, 2)) * (wall === 'steel' ? .08 : 1);
+const freshDist = () => ({ mode: 'gap', d: 6, wall: 'none', jumped: false, through: {}, th: 5, rings: [], floatSaid: false });
+const DIST = {
+  stage() {
+    const s = state.dist, { w, h, narrow } = stageSize(), top = narrow ? 40 : 50;
+    let o = `<rect width="${w}" height="${h}" fill="#eef4fb"/>`, say = '', tag = '';
+    if (s.mode === 'gap') {
+      tag = '📏 Feel the distance';
+      const cm = Math.min((w - 80) / 22, 40), y = top + (h - top) * .42, mx = 20, mlen = cm * 7, face = mx + mlen, W = WALLS[s.wall];
+      const d = s.jumped ? W[2] : Math.max(s.d, W[2]), cx = face + d * cm + 26, f = s.jumped ? (s.wall === 'steel' ? 0 : 1) : pullAt(s.d, s.wall);
+      o += `<rect x="0" y="${y + 40}" width="${w}" height="${h - y}" fill="#c9a77c"/>` + barMag(mx, y - 20, mlen, 40, true);
+      if (W[3]) o += `<rect x="${face + 2}" y="${y - 40}" width="${Math.max(4, W[2] * cm)}" height="80" fill="${W[3]}" stroke="#5b6386" stroke-width="1.5" opacity=".95"/><text x="${face + 4 + W[2] * cm / 2}" y="${y - 48}" text-anchor="middle" class="wsmall">${W[0]}</text>`;
+      o += `<g class="${s.jumped ? 'slidein' : ''}" style="--dx:${(JUMP - W[2]) * cm}px">${clipG(cx, y, 56)}</g>`;
+      if (!s.jumped || s.wall !== 'steel') o += forceArrow(cx + 10, y - 34, 10 + 110 * f, 'left', 'magnet pull');
+      // The ruler along the bottom
+      for (let k = 0; k <= 15; k++) o += `<line x1="${face + k * cm}" x2="${face + k * cm}" y1="${y + 52}" y2="${y + (k % 5 ? 60 : 66)}" stroke="#1d2340" stroke-width="${k % 5 ? 1 : 2}"/>` + (k % 5 ? '' : `<text x="${face + k * cm}" y="${y + 82}" text-anchor="middle" class="gsmall">${k} cm</text>`);
+      // The force bar
+      const bx = w - 46, bh = Math.min(200, h - top - 80), by = top + 40;
+      o += `<rect x="${bx}" y="${by}" width="28" height="${bh}" rx="8" fill="#fff" stroke="#c6d0f2" stroke-width="2"/><rect x="${bx + 4}" y="${by + bh - 4 - (bh - 8) * f}" width="20" height="${(bh - 8) * f}" rx="5" fill="#e85d9e"/><text x="${bx + 14}" y="${by - 8}" text-anchor="middle" class="gsmall">Pull</text>`;
+      say = (s.jumped || (s.wall === 'steel' && s.d <= JUMP)) ? (s.wall === 'steel' ? 'The magnet pulls the steel sheet itself. The clip hardly feels it.' : `Snap! The clip jumped across${s.wall !== 'none' ? `, and the magnet holds it through the ${lc(W[0])}` : ''}.`) : `Gap: ${s.d} cm. ${f > .3 ? 'A strong pull!' : f > .12 ? 'The pull is getting stronger.' : 'Only a weak pull.'}`;
+    } else if (s.mode === 'thread') {
+      tag = '🧵 Floating paperclip';
+      const cm = Math.min((h - top) / 14, 34), table = h - 30, mx = w / 2, my = table - (s.th + 1.2) * cm - 60, holds = s.th <= 3, cy = holds ? my + 60 + s.th * cm * .5 : table - 6;
+      o += `<rect y="${table}" width="${w}" height="30" fill="#c9a77c"/><rect x="${mx + 90}" y="${top + 20}" width="12" height="${table - top - 20}" fill="#8a93ad"/><rect x="${mx - 20}" y="${my - 8}" width="122" height="10" fill="#8a93ad"/>`;
+      o += `<g transform="rotate(90 ${mx} ${my + 30})">${barMag(mx - 30, my + 15, 60, 30, true)}</g>`;
+      o += `<path d="M${mx} ${table} ${holds ? `L${mx} ${cy + 10}` : `Q${mx - 40} ${table - 4} ${mx - 20} ${table - 4}`}" stroke="#1d2340" stroke-width="1.5" fill="none"/><circle cx="${mx}" cy="${table}" r="3" fill="#1d2340"/>`;
+      o += holds ? clipG(mx, cy, 30, 90) + forceArrow(mx + 22, cy, 20 + 60 * pullAt(s.th, 'none'), 'up', 'magnet pull') : clipG(mx - 20, table - 6, 30, 0);
+      o += `<text x="${mx - 40}" y="${(my + 60 + cy) / 2}" text-anchor="end" class="glabel">gap: ${s.th} cm</text>`;
+      say = holds ? 'The clip floats in the air! The magnet pulls it up without touching it.' : 'Too far: the pull is too weak, and the clip falls.';
+    } else {
+      tag = '🧲 Floating rings';
+      const base = h - 30, px = w / 2, rw = Math.min(150, w * .32), rh = 22;
+      o += `<rect y="${base}" width="${w}" height="30" fill="#c9a77c"/><rect x="${px - rw / 2 - 20}" y="${base - 14}" width="${rw + 40}" height="14" fill="#8a5a2a"/><rect x="${px - 5}" y="${base - 14 - (base - top) * .62}" width="10" height="${(base - top) * .62}" fill="#ffc83d" stroke="#c99400"/>`;
+      const gaps = DIST.ringGaps(); let y = base - 14;
+      s.rings.forEach((r, i) => { y -= gaps[i] + rh;
+        const topN = r === 'N';
+        o += `<g class="${i === s.rings.length - 1 && DIST.justAdded ? 'drop' : ''}"><rect x="${px - rw / 2}" y="${y}" width="${rw}" height="${rh / 2}" fill="${topN ? NCOL : SCOL}" stroke="#1d2340" stroke-width="1.5"/><rect x="${px - rw / 2}" y="${y + rh / 2}" width="${rw}" height="${rh / 2}" fill="${topN ? SCOL : NCOL}" stroke="#1d2340" stroke-width="1.5"/>
+          <text x="${px - rw / 2 + 12}" y="${y + 10}" style="font-size:10px;font-weight:700;fill:#fff">${topN ? 'N' : 'S'}</text><text x="${px - rw / 2 + 12}" y="${y + rh - 2}" style="font-size:10px;font-weight:700;fill:#fff">${topN ? 'S' : 'N'}</text><rect x="${px - 6}" y="${y}" width="12" height="${rh}" fill="#ffc83d"/></g>`;
+        if (gaps[i] > 4) o += forceArrow(px + rw / 2 + 16, y + rh + 4, Math.min(gaps[i] + 20, 60), 'up', i === s.rings.length - 1 ? 'push' : '');
+      });
+      const fl = gaps.filter((g, i) => i > 0 && g > 4).length;
+      say = !s.rings.length ? 'Add a ring magnet to the pencil.' : fl ? `${fl} ring${fl > 1 ? 's are' : ' is'} floating!` : 'The rings are stuck together.';
+    }
+    return `<div class="lay-top"><span class="scaletag">${tag}</span><div class="readout">${say}</div></div><svg viewBox="0 0 ${w} ${h}" aria-label="${tag}">${o}</svg>`;
+  },
+  // The gap under each ring: a ring floats when its bottom pole is the same as the top pole of the ring below.
+  // The more rings above, the more they press down, so the lower gaps are smaller.
+  ringGaps() {
+    const R = state.dist.rings, n = R.length;
+    return R.map((top, i) => { if (i === 0) return 0; const below = R[i - 1], bottom = top === 'N' ? 'S' : 'N'; return bottom === below ? Math.max(14, 70 - (n - 1 - i) * 12) : 0; });
+  },
+  drawer() {
+    const s = state.dist, nt = Object.keys(s.through).length;
+    const modes = `<div class="card"><h2>📏 Feel the distance</h2><p>A magnet can pull without touching. How far away does the pull reach?</p>
+      <div class="navrow" style="margin-top:6px">${[['gap', '📎 Slide a clip'], ['thread', '🧵 Floating clip'], ['rings', '🧲 Floating rings']].map(([m, t]) => `<button class="btn${s.mode === m ? ' active' : ''}" data-act="dmode" data-v="${m}">${t}</button>`).join('')}</div></div>`;
+    if (s.mode === 'gap') return `${modes}<div class="card says"><h3>📎 Slide the clip closer</h3>
+        <div class="slide"><span>Close</span><input type="range" id="dgap" min="0" max="15" step=".5" value="${s.d}" aria-label="Gap in centimetres"${s.jumped ? ' disabled' : ''}><span>Far</span></div>
+        ${s.jumped ? '<div class="navrow"><button class="btn" data-act="dreset">↩️ Pull the clip back</button></div>' : '<p class="muted">Watch the <b>pull</b> bar and the arrow.</p>'}</div>
+      <div class="card"><h3>🧱 Put something in the gap</h3><div class="stops">${WORDER.map(k => `<button class="opt sm${s.wall === k ? ' on' : ''}${s.through[k] ? ' done' : ''}" data-act="dwall" data-v="${k}">${WALLS[k][1]} ${WALLS[k][0]}</button>`).join('')}</div>
+        <p class="muted">Pulled through: ${nt} ${nt === 1 ? 'material' : 'materials'}</p></div>
+      <div class="science"><b>🔬 The science</b>The magnet's pull is <b>stronger</b> when it is <b>closer</b>. It can pull through things that are not magnetic, like paper, card, plastic, wood and glass. A steel sheet is different: the magnet pulls the steel itself.</div>`;
+    if (s.mode === 'thread') return `${modes}<div class="card says"><h3>🧵 Floating paperclip</h3><p>A paperclip is tied to the table with a thread. A magnet is held above it.</p>
+        <div class="slide"><span>Close</span><input type="range" id="dth" min="1" max="8" step=".5" value="${s.th}" aria-label="Gap in centimetres"><span>Far</span></div>
+        <p class="muted">Find the biggest gap where the clip still floats.</p></div>`;
+    const n = s.rings.length;
+    return `${modes}<div class="card says"><h3>🧲 Floating rings</h3><p>Ring magnets have a pole on each flat side. Drop them onto a pencil.</p>
+        <div class="navrow" style="margin-top:6px"><button class="btn" data-act="dring" data-v="N"${n >= 5 ? ' disabled' : ''}>➕ Add a ring, <b style="color:${NCOL}">N</b> on top</button><button class="btn" data-act="dring" data-v="S"${n >= 5 ? ' disabled' : ''}>➕ Add a ring, <b style="color:${SCOL}">S</b> on top</button></div>
+        <div class="navrow" style="margin-top:6px"><button class="btn" data-act="dflip"${n ? '' : ' disabled'}>🔄 Turn the top ring over</button><button class="btn" data-act="doff"${n ? '' : ' disabled'}>➖ Take the top ring off</button></div></div>
+      ${DIST.ringGaps().some(g => g > 4) ? '<div class="science"><b>🔬 The science</b>When the same poles face each other, the rings <b>repel</b>. The push holds the ring up, without touching. Magnets push and pull over a distance.</div>' : ''}`;
+  }
+};
+
+// ================= 5. Magnets at work =================
+const USES = [['🧊', 'Fridge doors', 'A magnetic strip inside the door seal pulls on the steel fridge, so the door stays shut.'],
+  ['🗄️', 'Cupboard catches', 'A small magnet in the cupboard pulls on a steel plate on the door, so the door stays closed.'],
+  ['👜', 'Bag fastenings', 'Two small magnets hidden in the flap pull together and close the bag.'],
+  ['♻️', 'Recycling plants', 'A very strong magnet lifts steel cans out of the rubbish. Aluminium cans are left behind.']];
+const freshWork = () => ({ cans: shuffle(['s', 's', 's', 's', 's', 'a', 'a', 'a', 'a', 'a']), i: 0, pred: null, phase: 'wait', steel: 0, alu: 0, right: 0 });
+const canG = (kind, x, base, s = 1) => kind === 's'
+  ? `<g transform="translate(${x} ${base}) scale(${s})"><rect x="-18" y="-46" width="36" height="46" rx="3" fill="#c9cfdc" stroke="#6b7590" stroke-width="2"/><rect x="-18" y="-36" width="36" height="22" fill="#ff5f6d"/><text x="0" y="-20" text-anchor="middle" style="font-size:10px;font-weight:700;fill:#fff">BEANS</text></g>`
+  : `<g transform="translate(${x} ${base}) scale(${s})"><rect x="-12" y="-54" width="24" height="54" rx="5" fill="#d7dde8" stroke="#8a93ad" stroke-width="2"/><rect x="-12" y="-42" width="24" height="24" fill="#22b07d"/><text x="0" y="-26" text-anchor="middle" style="font-size:8px;font-weight:700;fill:#fff">FIZZ</text></g>`;
+const WORK = {
+  stage() {
+    const k = state.work, { w, h, narrow } = stageSize(), top = narrow ? 40 : 50, belt = top + (h - top) * .62, mx = w * .45, done = k.i >= k.cans.length;
+    let o = `<rect width="${w}" height="${h}" fill="#eef4fb"/>`;
+    o += `<rect x="0" y="${belt}" width="${w * .8}" height="16" rx="8" fill="#5b6386"/>${Array.from({ length: 12 }, (_, i) => `<circle cx="${12 + i * w * .8 / 12}" cy="${belt + 8}" r="5" fill="#8a93ad"/>`).join('')}`;
+    // The big magnet over the belt, and its crane
+    o += `<rect x="${mx - 4}" y="${top}" width="8" height="${(belt - top) * .3}" fill="#8a93ad"/><rect x="${mx - 50}" y="${top + (belt - top) * .3}" width="100" height="30" rx="6" fill="#1d2340"/><text x="${mx}" y="${top + (belt - top) * .3 + 20}" text-anchor="middle" style="font-size:13px;font-weight:700;fill:#ffc83d">🧲 BIG MAGNET</text>`;
+    // The two bins: steel (lifted out to the left of the magnet) and aluminium (at the end of the belt)
+    const sx = mx - Math.min(170, w * .25), ax = w * .9;
+    o += `<rect x="${sx - 45}" y="${h - 70}" width="90" height="60" rx="8" fill="#ffd9dc" stroke="${NCOL}" stroke-width="2"/><text x="${sx}" y="${h - 20}" text-anchor="middle" class="gsmall">Steel: ${k.steel}</text>`;
+    o += `<rect x="${ax - 45}" y="${h - 70}" width="90" height="60" rx="8" fill="#d6f5e6" stroke="var(--green)" stroke-width="2"/><text x="${ax}" y="${h - 20}" text-anchor="middle" class="gsmall">Aluminium: ${k.alu}</text>`;
+    if (!done) {
+      const c = k.cans[k.i];
+      if (k.phase === 'wait') o += canG(c, w * .12, belt);
+      else o += `<g class="${c === 's' ? 'lifted' : 'passed'}" style="--x0:${w * .12 - mx}px;--ly:${-(belt - top - (belt - top) * .3 - 40)}px;--bx:${sx - mx}px;--ax:${ax - mx}px;--by:${h - 20 - belt}px">${canG(c, mx, belt)}</g>`;
+      // The queue still to come
+      k.cans.slice(k.i + 1, k.i + 5).forEach((c2, j) => o += canG(c2, w * .12 - 40 - j * 34, belt, .6));
+    }
+    const say = done ? `All sorted! ${k.right} of ${k.cans.length} predictions right.` : k.phase === 'wait' ? 'Will the magnet lift this can? Predict, then run the belt.' : k.cans[k.i] === 's' ? 'The magnet lifts the steel can out!' : 'The magnet does not pull the aluminium can. It goes on.';
+    return `<div class="lay-top"><span class="scaletag">♻️ Recycling belt</span><div class="readout">${say}</div></div><svg viewBox="0 0 ${w} ${h}" aria-label="A recycling belt with a big magnet">${o}</svg>`;
+  },
+  drawer() {
+    const k = state.work, done = k.i >= k.cans.length;
+    const game = done ? `<div class="card says good"><h3>♻️ All sorted!</h3><p>Steel cans: <b>${k.steel}</b>. Aluminium cans: <b>${k.alu}</b>. Your predictions: <b>${k.right} of ${k.cans.length}</b> right.</p><button class="btn" data-act="wkreset">↺ Run it again</button></div>`
+      : `<div class="card says"><h3>♻️ Recycling robot</h3><p>Can ${k.i + 1} of ${k.cans.length}: ${k.cans[k.i] === 's' ? 'a <b>steel</b> food can' : 'an <b>aluminium</b> drink can'}.</p>
+        ${k.phase === 'wait' ? `<p>🤔 Will the big magnet lift it?</p><div class="navrow">${predict('wkpred', [['yes', '✅ Yes'], ['no', '❌ No']], k.pred)}</div><div class="navrow" style="margin-top:6px"><button class="btn go" data-act="wkrun"${k.pred ? '' : ' disabled'}>▶ Run the belt</button></div>`
+          : `<p class="job">${k.cans[k.i] === 's' ? 'Lifted out! Steel is a magnetic material.' : 'Left on the belt. Aluminium is not magnetic.'} ${(k.pred === 'yes') === (k.cans[k.i] === 's') ? '✅ You were right.' : '❌ Not what you predicted.'}</p><div class="navrow"><button class="btn go" data-act="wknext">Next can ▶</button></div>`}</div>`;
+    return `${game}<div class="card"><h2>🏭 Magnets at work</h2><ul class="icons" style="margin:6px 0 0">${USES.map(([em, t, d]) => `<li><span class="em">${em}</span><span><b>${t}</b>: ${d}</span></li>`).join('')}</ul></div>`;
+  }
+};
+
+// ================= 4. Strength test (the fair test planner, as in Seed Lab, Dissolving Lab and Sound Studio) =================
+const MAGS = { bar: 'Bar magnet', horse: 'Horseshoe magnet', ring: 'Ring magnet', fridge: 'Fridge magnet', neo: 'Small strong magnet' };
+// How each magnet does in each test, with standard paperclips. Made up, but the patterns are real:
+// the small strong (neodymium) magnet is the strongest and the big flat fridge magnet the weakest, so bigger is not always stronger.
+const POWER = { chain: { bar: 6, horse: 9, ring: 4, fridge: 1, neo: 14 }, jump: { bar: 2, horse: 2.5, ring: 1.5, fridge: .5, neo: 4 }, sheets: { bar: 12, horse: 18, ring: 8, fridge: 2, neo: 40 } };
+const BIGCLIP = { chain: .6, jump: .8, sheets: .7 };
+const DVS = { chain: ['How many paperclips it holds in a chain', 'Paperclips held', ' clips', 0], jump: ['How far away a paperclip jumps to it', 'Jump distance (cm)', ' cm', 1], sheets: ['How many sheets of paper it can hold a clip through', 'Sheets of paper', ' sheets', 0] };
+const magIcon = (kind, cx, cy, s = 1) => {
+  const g = { bar: barMag(-36, -10, 72, 20, false),
+    horse: `<path d="M-26 22 V-4 A26 26 0 0 1 26 -4 V22 H12 V-4 A12 12 0 0 0 -12 -4 V22 Z" fill="${NCOL}" stroke="#1d2340" stroke-width="2"/><rect x="-26" y="12" width="14" height="10" fill="#c9cfdc"/><rect x="12" y="12" width="14" height="10" fill="#c9cfdc"/>`,
+    ring: `<circle r="22" fill="#6b7590" stroke="#1d2340" stroke-width="2"/><circle r="9" fill="#eef4fb" stroke="#1d2340" stroke-width="2"/>`,
+    fridge: `<rect x="-24" y="-24" width="48" height="48" rx="12" fill="#ffc83d" stroke="#c99400" stroke-width="2"/><circle cx="-8" cy="-5" r="3" fill="#1d2340"/><circle cx="8" cy="-5" r="3" fill="#1d2340"/><path d="M-10 8 Q0 15 10 8" fill="none" stroke="#1d2340" stroke-width="2.5"/>`,
+    neo: `<ellipse rx="9" ry="4" cy="2" fill="#8a93ad"/><ellipse rx="9" ry="4" fill="#dfe4ee" stroke="#6b7590" stroke-width="1.5"/>` }[kind];
+  return `<g transform="translate(${cx} ${cy}) scale(${s})">${g}</g>`;
+};
+const QS = {
+  mag: {
+    title: 'Which magnet is the strongest?', em: '🧲', iv: 'kind', n: 5, chooseDv: true,
+    vars: {
+      kind: { name: 'Which magnet', short: v => MAGS[v].replace(' magnet', ''), the: 'which magnet you test', opts: Object.entries(MAGS).map(([k, v]) => [k, v]) },
+      clip: { name: 'Size of the paperclips', short: v => v === 'std' ? 'standard clips' : 'big clips', the: 'the size of the paperclips', opts: [['std', '📎 Standard'], ['big', '📎 Big']] }
+    },
+    order: ['kind', 'clip'], extra: ['hold', 'Hold the magnet the same way each time'],
+    dv: [['chain', DVS.chain[0], true], ['jump', DVS.jump[0], true], ['sheets', DVS.sheets[0], true], ['size', 'How big the magnet is', false, 'A bigger magnet is <b>not</b> always stronger! Measure what each magnet can <b>do</b>.'], ['colour', 'The colour of the magnet', false, 'The colour tells you nothing about how strong it is.']],
+    value: (t, b) => POWER[t.dv][b.kind] * (b.clip === 'big' ? BIGCLIP[t.dv] : 1),
+    claims: [['neo', 'The small strong magnet is the strongest. A bigger magnet is not always stronger.'], ['big', 'The biggest magnet is always the strongest.'], ['same', 'All the magnets are about the same strength.']],
+    why: [['Magnets are made of different materials. Some materials make much stronger magnets, so size is not everything.', true], ['Small things are always stronger.', false, 'The fridge magnet is not big either, but it was the weakest.'], ['It held the most paperclips.', false, 'That is what you measured, not <b>why</b>. Think about what the magnets are made of.']]
+  },
+  sheets: {
+    title: 'Does paper between the magnet and the clips change how many it holds?', em: '📄', iv: 'sheets', n: 5,
+    vars: {
+      sheets: { name: 'Sheets of paper in between', short: v => `${v} sheets`, the: 'the number of sheets', unit: 'sheets', num: true, opts: [['0', '0'], ['2', '2'], ['4', '4'], ['6', '6'], ['8', '8']] },
+      kind: { name: 'Which magnet', short: v => MAGS[v].replace(' magnet', ''), the: 'which magnet you use', opts: [['bar', 'Bar magnet'], ['horse', 'Horseshoe magnet']] },
+      clip: { name: 'Size of the paperclips', short: v => v === 'std' ? 'standard clips' : 'big clips', the: 'the size of the paperclips', opts: [['std', '📎 Standard'], ['big', '📎 Big']] }
+    },
+    order: ['sheets', 'kind', 'clip'], extra: ['hold', 'Hold the magnet the same way each time'],
+    dv: [['chain', DVS.chain[0], true], ['count', 'How many sheets of paper there are', false, 'That is what you <b>change</b>, not what you measure.'], ['size', 'How big the magnet is', false, 'The magnet stays the same. Measure what it can do.']],
+    value: (t, b) => POWER.chain[b.kind] * (b.clip === 'big' ? BIGCLIP.chain : 1) * Math.exp(-(+b.sheets) / 6),
+    claims: [['down', 'The more paper in between, the fewer clips the magnet holds.'], ['up', 'The more paper in between, the more clips the magnet holds.'], ['same', 'The paper makes no difference.']],
+    why: [['More paper puts the clips further from the magnet, and the pull is weaker further away.', true], ['Paper is magnetic, so it pulls the clips away.', false, 'Paper is not magnetic.'], ['Paper stops all of the pull.', false, 'The magnet still held some clips through 8 sheets. It can pull through paper.']]
+  }
+};
+const RISKS = [['pinch', 'Strong magnets can snap together and pinch your fingers.', true], ['phone', 'Magnets can damage phones, bank cards and screens.', true], ['swallow', 'Small magnets are dangerous if a young child swallows them.', true],
+  ['lose', 'We could lose some paperclips.', false, 'That is a nuisance, but it can\'t hurt anyone.']];
+const REDUCE = [['pinch', 'Slide strong magnets apart. Never let them snap together.'], ['phone', 'Keep magnets away from phones, bank cards and screens.'], ['swallow', 'Count the small magnets back into their box, and keep them away from younger children.']];
+const INV_STEPS = ['Question', 'Plan', 'Set up', 'Safety', 'Predict', 'Measure', 'Results', 'Odd result', 'Conclude'];
+const freshInv = () => ({ q: null, step: 0, iv: null, ivWrong: [], dv: null, dvWrong: [], keeps: {}, keepsSaid: null, tests: [], sel: 0, risks: {}, risksSaid: null, red: {}, redWrong: {}, pred: null, ran: false, running: false, clock: 0,
+  oddTap: null, oddFound: false, act: null, actWrong: [], repeated: false, chart: null, chartWrong: [], claim: null, claimWrong: [], why: null, whyWrong: [] });
+const INV_ACTS = [['ignore', 'Rub it out and leave it off the chart', false, 'Scientists never hide results they don\'t like! Keep it in the table, and check it.'],
+  ['repeat', 'Do that test again with a straight paperclip, to check', true], ['change', 'Change the conclusion because of it', false, 'It is only one result. The other two tries agree with each other. Check it first.']];
+const INV = {
+  Q: () => QS[state.inv.q],
+  V: k => INV.Q().vars[k],
+  D: () => DVS[state.inv.dv] || DVS.chain,
+  vals(k) { const V = INV.V(k), v = V.opts.map(o => o[0]); return V.num ? v.slice().sort((a, b) => a - b) : v; },
+  start() { const Q = INV.Q(); return Object.fromEntries(Q.order.map(k => [k, Q.vars[k].opts[0][0]])); },
+  unfair() { const t = state.inv, Q = INV.Q(); return Q.order.filter(k => k !== Q.iv && new Set(t.tests.map(b => b[k])).size > 1); },
+  round(v) { const dp = INV.D()[3]; return dp ? Math.round(v * 10) / 10 : Math.round(v); },
+  // The odd one is in the strongest test, try 2: a bent paperclip makes it far too small
+  oddAt() { const t = state.inv, Q = INV.Q(); let m = 0; t.tests.forEach((b, i) => { if (Q.value(t, b) > Q.value(t, t.tests[m])) m = i; }); return m; },
+  tries() { const t = state.inv, Q = INV.Q(), oi = INV.oddAt(), dp = INV.D()[3];
+    return t.tests.map((b, i) => { const v = Q.value(t, b);
+      return [0, 1, 2].map(r => { if (i === oi && r === 1 && !t.repeated) return INV.round(v * .4);
+        return Math.max(0, INV.round(dp ? v * [1, 1.1, .92][r] : v + [0, 1, -1][r] * (v >= 3 ? 1 : 0))); }); }); },
+  means() { return INV.tries().map(r => INV.round(r.reduce((a, b) => a + b, 0) / 3)); },
+  order() { const t = state.inv, Q = INV.Q(), vs = INV.vals(Q.iv); return t.tests.map((_, i) => i).sort((a, b) => vs.indexOf(t.tests[a][Q.iv]) - vs.indexOf(t.tests[b][Q.iv])); },
+  chartType: () => INV.V(INV.Q().iv).num ? 'line' : 'bar',
+  // One test: the magnet, and what it does (a chain of clips, a jump, or a pile of paper)
+  testG(i, cx, top, cw, h, show) {
+    const t = state.inv, b = t.tests[i], Q = INV.Q(), sc = Math.min(1.6, cw / 85), my = top + 50 + 22 * sc, dv = t.dv || 'chain';
+    let o = magIcon(b.kind, cx, my, sc) + `<text x="${cx}" y="${top + 22}" text-anchor="middle" class="glabel">Test ${i + 1}</text>`;
+    if (show != null) {
+      const fin = INV.tries()[i][0], val = show >= 1 ? fin : INV.round(fin * show), big = b.clip === 'big';
+      if (dv === 'chain') { const cl = big ? 30 : 24, n = Math.min(Math.floor(val), Math.floor((h - 200 - 22 * sc) / cl)); for (let k = 0; k < n; k++) o += clipG(cx, my + (b.kind === 'neo' ? 8 * sc : 24 * sc) + 12 + k * cl, big ? 36 : 29, 90); if (+b.sheets) o += `<rect x="${cx - 22}" y="${my + 22}" width="44" height="${Math.min(12, +b.sheets * 1.5)}" fill="#fff" stroke="#8a93ad"/>`; }
+      if (dv === 'jump') { const px = Math.min(cw * .8 / 8, 16); o += `<line x1="${cx - 20}" x2="${cx - 20 + 4 * px * 2}" y1="${my + 50}" y2="${my + 50}" stroke="#1d2340"/>` + clipG(cx - 20 + val * px * 2, my + 40, 28, 0); }
+      if (dv === 'sheets') o += `<rect x="${cx - 20}" y="${my + 30 + Math.max(0, 50 - val)}" width="40" height="${Math.min(50, val)}" fill="#fff" stroke="#8a93ad"/>` + clipG(cx, my + 92, 20, 0);
+      o += `<rect x="${cx - 42}" y="${top + h - 130}" width="84" height="26" rx="8" fill="#1d2340"/><text x="${cx}" y="${top + h - 112}" text-anchor="middle" style="font-family:'Courier New',monospace;font-weight:700;font-size:14px;fill:${show >= 1 ? '#7dff9a' : '#fff'}">${val}${INV.D()[2]}</text>`;
+    }
+    Q.order.forEach((k, r) => o += `<text x="${cx}" y="${top + h - 80 + r * 16}" text-anchor="middle" style="font-size:12.5px;font-weight:${k === Q.iv ? 700 : 500};fill:${k === Q.iv ? 'var(--blue)' : 'var(--muted)'}">${Q.vars[k].short(b[k])}</text>`);
+    return t.step === 2 ? `<g class="tapme" data-act="invsel" data-v="${i}"><rect x="${cx - cw / 2 + 2}" y="${top + 2}" width="${cw - 4}" height="${h - 4}" rx="12" fill="${t.sel === i ? '#fff8db' : 'transparent'}" stroke="${t.sel === i ? 'var(--yellow)' : 'transparent'}" stroke-width="3"/>${o}</g>` : o;
+  },
+  axes(w, h, top, narrow, max, label) {
+    const L = narrow ? 46 : 66, B = h - (narrow ? 50 : 60), T = top + 40, y = v => B - v / max * (B - T), stepv = max > 40 ? 10 : max > 16 ? 5 : max > 6 ? 2 : 1;
+    let o = `<rect width="${w}" height="${h}" fill="#fff"/><line x1="${L}" x2="${L}" y1="${T - 10}" y2="${B}" stroke="var(--ink)" stroke-width="2"/><line x1="${L}" x2="${w - 16}" y1="${B}" y2="${B}" stroke="var(--ink)" stroke-width="2"/>`;
+    for (let v = 0; v <= max; v += stepv) o += `<text x="${L - 8}" y="${y(v) + 5}" text-anchor="end" class="gsmall">${v}</text><line x1="${L}" x2="${w - 16}" y1="${y(v)}" y2="${y(v)}" stroke="#eef1f8"/>`;
+    o += `<text transform="translate(${narrow ? 12 : 18} ${(T + B) / 2}) rotate(-90)" text-anchor="middle" class="gsmall">${label}</text>`;
+    return { o, L, B, T, y };
+  },
+  dotsG(w, h, top, narrow) {
+    const t = state.inv, Q = INV.Q(), tm = INV.tries(), ord = INV.order(), oi = INV.oddAt(), A = INV.axes(w, h, top, narrow, Math.max(...tm.flat()) * 1.15, INV.D()[1]), sx = (w - A.L - 20) / ord.length;
+    let o = A.o;
+    ord.forEach((i, k) => { const cx = A.L + sx * (k + .5);
+      tm[i].forEach((v, r) => { const hit = t.oddFound && i === oi && r === 1 && !t.repeated;
+        o += `<g class="tapme" data-act="invodd" data-v="${i}-${r}"><circle cx="${cx + (r - 1) * 14}" cy="${A.y(v)}" r="${hit ? 10 : 8}" fill="${hit ? 'var(--coral)' : 'var(--blue)'}" stroke="#fff" stroke-width="2"/><circle cx="${cx + (r - 1) * 14}" cy="${A.y(v)}" r="18" fill="transparent"/></g>`; });
+      o += `<text x="${cx}" y="${A.B + 20}" text-anchor="middle" class="gsmall">${INV.V(Q.iv).short(t.tests[i][Q.iv])}</text>`; });
+    return o;
+  },
+  chartG(w, h, top, narrow, type) {
+    const t = state.inv, Q = INV.Q(), me = INV.means(), ord = INV.order(), A = INV.axes(w, h, top, narrow, Math.max(...me) * 1.2, `Average: ${lc(INV.D()[1])}`), sx = (w - A.L - 20) / ord.length;
+    const pts = ord.map((i, k) => [A.L + sx * (k + .5), A.y(me[i]), me[i], i]);
+    let o = A.o;
+    if (type === 'line') o += `<polyline points="${pts.map(p => p[0] + ',' + p[1]).join(' ')}" fill="none" stroke="var(--blue)" stroke-width="4"/>` + pts.map(p => `<circle cx="${p[0]}" cy="${p[1]}" r="7" fill="var(--blue)" stroke="#fff" stroke-width="2"/>`).join('');
+    else o += pts.map(p => `<rect x="${p[0] - sx * .3}" y="${p[1]}" width="${sx * .6}" height="${A.B - p[1]}" fill="var(--blue)"/>`).join('');
+    o += pts.map(p => `<text x="${p[0]}" y="${p[1] - 12}" text-anchor="middle" class="glabel">${p[2]}</text><text x="${p[0]}" y="${A.B + 20}" text-anchor="middle" class="gsmall">${INV.V(Q.iv).short(t.tests[p[3]][Q.iv])}</text>`).join('');
+    o += `<text x="${(A.L + w) / 2}" y="${A.B + 42}" text-anchor="middle" class="glabel">${INV.V(Q.iv).name}</text>`;
+    return o;
+  },
+  stage() {
+    const t = state.inv, { w, h, narrow } = stageSize(), top = narrow ? 40 : 50;
+    let o = `<rect width="${w}" height="${h}" fill="#eef4fb"/>`, say = '', tag = `💪 ${INV_STEPS[t.step]}`;
+    if (!t.q) { o += Object.keys(MAGS).map((k, i) => magIcon(k, w / 2 + (i - 2) * Math.min(110, w / 5.5), h / 2 - 20, narrow ? .7 : 1)).join('') + `<text x="${w / 2}" y="${h / 2 + 60}" text-anchor="middle" class="glabel" style="font-size:${narrow ? 15 : 21}px">Choose a question to investigate.</text>`; say = 'Which magnet is the strongest?'; }
+    else if (t.step === 3) { say = 'What could go wrong?'; o += `<text x="${w / 2}" y="${h / 2}" text-anchor="middle" style="font-size:${narrow ? 44 : 70}px">🤏 📱 💳 👶</text>`; }
+    else if (t.step === 7) { say = t.oddFound ? 'You found the odd result.' : 'Tap the dot that does not fit.'; tag = '📈 Dot plot'; o += INV.dotsG(w, h, top, narrow); }
+    else if (t.step === 8 && t.chart && t.chart === INV.chartType()) { say = INV.Q().title; tag = t.chart === 'line' ? '📈 Line graph' : '📊 Bar chart'; o += INV.chartG(w, h, top, narrow, t.chart); }
+    else if (t.step < 2) { const Q = INV.Q(); o += `<text x="${w / 2}" y="${h / 2 - 20}" text-anchor="middle" style="font-size:${narrow ? 50 : 80}px">${Q.em}</text><text x="${w / 2}" y="${h / 2 + 30}" text-anchor="middle" class="glabel" style="font-size:${narrow ? 14 : 19}px">${Q.title}</text>`; say = 'Plan a fair test.'; }
+    else {
+      const n = t.tests.length, cw = (w - 20) / n, hh = h - top - 10;
+      t.tests.forEach((_, i) => o += INV.testG(i, 10 + cw * (i + .5), top, cw, hh, t.running ? t.clock : t.ran ? 1 : null));
+      say = t.step === 2 ? 'Tap a test to set it up.' : t.running ? 'Measuring…' : t.ran ? 'Here are the first readings.' : `You are changing ${INV.V(INV.Q().iv).the}.`;
+    }
+    return `<div class="lay-top"><span class="scaletag">${tag}</span><div class="readout">${say}</div></div><svg viewBox="0 0 ${w} ${h}" aria-label="A magnet strength investigation">${o}</svg>`;
+  },
+  run() {
+    const t = state.inv, t0 = performance.now();
+    t.running = true; t.clock = 0; render();
+    clearInterval(INV.timer);
+    INV.timer = setInterval(() => {
+      if (state.inv !== t || !t.running) { clearInterval(INV.timer); return; }
+      if (state.view !== 'str') { t.running = false; clearInterval(INV.timer); return; }
+      t.clock = clamp((performance.now() - t0) / 2500);
+      if (t.clock < 1) renderStage();
+      else { clearInterval(INV.timer); t.running = false; t.ran = true; t.step = 6; render(); $('#drawer').scrollTop = 0; }
+    }, 50);
+  },
+  drawer() {
+    const t = state.inv, Q = t.q && INV.Q(), V = Q && INV.V(Q.iv), D = INV.D();
+    const bar = `<div class="steps">${INV_STEPS.map((s, k) => `<span class="${k === t.step ? 'now' : k < t.step ? 'done' : ''}">${k < t.step ? '✔' : k + 1} ${s}</span>`).join('')}</div>`;
+    const next = (txt, ok = true) => `<div class="checkbar"><button class="btn go" data-act="invnext"${ok ? '' : ' disabled'}>${txt} ▶</button></div>`;
+    if (t.step === 0) return `<div class="card">${bar}<h2>💪 Strength test</h2><p>Magnets can have different <span class="term">strengths</span>: how strongly they pull. Choose a question, then plan a <b>fair test</b>: change <b>one</b> thing, and keep everything else the same.</p></div>
+      <div class="card wq">${Object.entries(QS).map(([id, q]) => `<button class="opt${t.q === id ? ' on' : ''}" data-act="invq" data-v="${id}">${q.em} ${q.title}${id === 'sheets' ? ' <span class="muted">(shorter)</span>' : ''}</button>`).join('')}</div>${next('Next: plan', !!t.q)}`;
+    if (t.step === 1) {
+      const ivOk = t.iv === Q.iv, dvOk = Q.dv.some(d => d[0] === t.dv && d[2]), badDv = Q.dv.find(d => d[0] === t.dv && !d[2]);
+      const keepList = [...Q.order.filter(k => k !== Q.iv).map(k => [k, Q.vars[k].name]), Q.extra, ['dv', dvOk ? DVS[t.dv][1].replace(' (cm)', '') : 'What you measure'], [Q.iv, V.name]];
+      return `<div class="card">${bar}<h3>${Q.em} ${Q.title}</h3></div>
+        <div class="card wq"><h3>1. What will you <b>change</b>?</h3><p class="muted">This is the <span class="term">independent variable</span>: the one thing you change.</p>
+          ${Q.order.map(k => `<button class="opt${t.iv === k && ivOk ? ' done' : t.ivWrong.includes(k) ? ' wrong' : ''}" data-act="inviv" data-v="${k}"${t.ivWrong.includes(k) || ivOk ? ' disabled' : ''}>${Q.vars[k].name}</button>`).join('')}
+          ${t.iv && !ivOk ? '<p class="spot">💡 Read the question again. What does it ask about?</p>' : ''}</div>
+        ${ivOk ? `<div class="card wq"><h3>2. What will you <b>measure</b>?</h3><p class="muted">This is the <span class="term">dependent variable</span>: what you measure.${Q.chooseDv ? ' There is more than one good way!' : ''}</p>
+          ${Q.dv.map(([id, txt]) => `<button class="opt${t.dv === id && dvOk ? ' done' : t.dvWrong.includes(id) ? ' wrong' : ''}" data-act="invdv" data-v="${id}"${t.dvWrong.includes(id) || dvOk ? ' disabled' : ''}>${txt}</button>`).join('')}
+          ${badDv ? `<p class="spot">💡 ${badDv[3]}</p>` : ''}</div>` : ''}
+        ${ivOk && dvOk ? `<div class="card${t.keepsSaid === 'ok' ? ' says good' : ''}"><h3>3. What will you keep the <b>same</b>?</h3><p class="muted">These are the <span class="term">control variables</span>. Tick every one.</p>
+          <div class="keeps">${keepList.map(([id, txt]) => `<label class="keep"><input type="checkbox" data-keep="${id}"${t.keeps[id] ? ' checked' : ''}${t.keepsSaid === 'ok' ? ' disabled' : ''}> ${txt}</label>`).join('')}</div>
+          ${Array.isArray(t.keepsSaid) ? `<ul class="spot">${t.keepsSaid.map(m => `<li>${m}</li>`).join('')}</ul>` : ''}
+          ${t.keepsSaid === 'ok' ? '<p class="job">Yes! Keep all of these the same.</p>' : '<div class="navrow" style="margin-top:6px"><button class="btn" data-act="invkeeps">✔ Check</button></div>'}</div>` : ''}
+        ${next('Next: set up the tests', ivOk && dvOk && t.keepsSaid === 'ok')}`;
+    }
+    if (t.step === 2) {
+      const b = t.tests[t.sel], vals = t.tests.map(x => x[Q.iv]), dup = new Set(vals).size < vals.length;
+      return `<div class="card">${bar}<h3>Set up the tests</h3><p>Give each test a different <b>${lc(V.name)}</b>. You decide what to do with everything else!</p>
+          <div class="stops">${t.tests.map((_, i) => `<button class="opt${t.sel === i ? ' on' : ''}" data-act="invsel" data-v="${i}">Test ${i + 1}</button>`).join('')}</div></div>
+        <div class="card"><h3>Test ${t.sel + 1}</h3>${Q.order.map(k => `<div class="varrow"><span>${Q.vars[k].name}${k === Q.iv ? ' <b class="tag">changing</b>' : ''}</span><div class="stops">${Q.vars[k].opts.map(([v, l]) => `<button class="opt sm${b[k] === v ? ' on' : ''}" data-act="invset" data-k="${k}" data-v="${v}">${l}</button>`).join('')}</div></div>`).join('')}</div>
+        ${dup ? `<div class="card says"><p>💡 Two tests have the same ${lc(V.name)}. Give each test a different one.</p></div>` : ''}
+        ${next('Next: safety', !dup)}`;
+    }
+    if (t.step === 3) {
+      const risksOk = t.risksSaid === 'ok', allRed = RISKS.filter(r => r[2]).every(r => t.red[r[0]] === r[0]);
+      return `<div class="card${risksOk ? ' says good' : ''}">${bar}<h3>⚠️ What could go wrong?</h3><p>Some magnets are very strong. Tick every <b>risk</b>: a way someone could get hurt, or something could get damaged.</p>
+          <div class="keeps">${RISKS.map(([id, txt]) => `<label class="keep"><input type="checkbox" data-risk="${id}"${t.risks[id] ? ' checked' : ''}${risksOk ? ' disabled' : ''}> ${txt}</label>`).join('')}</div>
+          ${Array.isArray(t.risksSaid) ? `<ul class="spot">${t.risksSaid.map(m => `<li>${m}</li>`).join('')}</ul>` : ''}
+          ${risksOk ? '' : '<div class="navrow" style="margin-top:6px"><button class="btn" data-act="invrisks">✔ Check</button></div>'}</div>
+        ${risksOk ? `<div class="card wq"><h3>🛡️ How can we make each one safer?</h3>${RISKS.filter(r => r[2]).map(([id, txt]) => `<p style="margin-top:8px"><b>${txt}</b></p>${choices('invred', REDUCE.map(([rid, rt]) => [`${id}:${rid}`, rt]), t.red[id] ? `${id}:${t.red[id]}` : null, (t.redWrong[id] || []).map(x => `${id}:${x}`), `${id}:${id}`)}`).join('')}</div>` : ''}
+        ${risksOk && allRed ? next('Next: predict') : ''}`;
+    }
+    if (t.step === 4) return `<div class="card wq">${bar}<h3>🤔 Predict</h3><p>What do you think you will find? Use what you know about magnets.</p>${predict('invpred', Q.claims, t.pred)}</div>${next('Next: measure', !!t.pred)}`;
+    if (t.step === 5) return `<div class="card">${bar}<h3>📏 Measure</h3><p>Test each magnet. Measure: <b>${lc(D[0])}</b>.</p></div>${t.running ? '' : '<div class="checkbar"><button class="btn go" data-act="invrun">▶ Start</button></div>'}`;
+    const tm = INV.tries(), ord = INV.order(), unfair = INV.unfair(), oi = INV.oddAt();
+    const table = `<table class="gtable"><tr><th>${V.name}</th><th>Try 1</th><th>Try 2</th><th>Try 3</th></tr>
+      ${ord.map(i => `<tr><td>${V.short(t.tests[i][Q.iv])}</td>${tm[i].map((v, r) => `<td${t.step === 7 && t.oddFound && i === oi && r === 1 && !t.repeated ? ' style="color:var(--coral);font-weight:700"' : ''}>${v}${t.repeated && i === oi && r === 1 ? ' <span class="muted">(again)</span>' : ''}</td>`).join('')}</tr>`).join('')}</table><p class="muted">${D[1]}.</p>`;
+    if (t.step === 6) {
+      if (unfair.length) return `<div class="card says"><h3>🤔 Your test was not fair</h3><p>You changed ${V.the}, but <b>${unfair.map(k => Q.vars[k].the).join('</b> and <b>')}</b> ${unfair.length > 1 ? 'were' : 'was'} different too.</p>
+          <p>So you <b>can't tell</b> which change made the difference.</p>
+          <details class="teach" style="font-size:15px;color:var(--ink)"><summary>💡 Stuck? Show a hint</summary><p>Change <b>only</b> ${V.the}. Make everything else the same in every test.</p></details>
+          <div class="navrow"><button class="btn go" data-act="invfix">🔧 Fix my plan</button></div></div>
+        <div class="card">${bar}<h3>📋 Results</h3>${table}</div>`;
+      return `<div class="card">${bar}<h3>📋 Results</h3><p>You did each test <b>3 times</b>, so you can check that the results agree.</p>${table}
+        <p class="muted">Everything else was the same: ${Q.order.filter(k => k !== Q.iv).map(k => Q.vars[k].short(t.tests[0][k])).join(', ')}.</p></div>${next('Next: look for an odd result')}`;
+    }
+    if (t.step === 7) {
+      const act = INV_ACTS.find(a => a[0] === t.act);
+      return `<div class="card">${bar}<h3>🔍 Which result does not fit?</h3><p>The three tries for each test should be close. Tap the dot on the chart (a <span class="term">dot plot</span>) that is very different from the other two.</p>
+          ${t.oddTap && !t.oddFound ? '<p class="spot">💡 That one is close to the others in its group. Look for a dot that is far away from its two partners.</p>' : ''}
+          ${t.oddFound ? `<p class="job">Yes! ${V.short(t.tests[oi][Q.iv])}, try 2 does not fit. The paperclip was bent! A result that does not fit is called an <span class="term">anomalous result</span>.</p>` : ''}</div>
+        ${t.oddFound ? `<div class="card wq"><h3>What should you do about it?</h3>${choices('invact', INV_ACTS.map(a => [a[0], a[1]]), t.act, t.actWrong, 'repeat')}
+          ${act && !act[2] ? `<p class="spot">💡 ${act[3]}</p>` : ''}${t.repeated ? '<p class="job">🔁 You did it again, and this time it agrees with the other two tries. Repeating makes results more reliable.</p>' : ''}</div>` : ''}
+        <div class="card"><h3>📋 Results</h3>${table}</div>${next('Next: conclusion', t.repeated)}`;
+    }
+    const right = INV.chartType(), whyRight = String(Q.why.findIndex(x => x[1])), chartOk = t.chart === right, claimOk = t.claim === Q.claims[0][0], whyOk = t.why === whyRight, me = INV.means();
+    return `<div class="card wq">${bar}<h3>1. Which chart?</h3><p>Which kind of chart shows your results best?</p>
+        ${choices('invchart', [['line', '📈 A line graph'], ['bar', '📊 A bar chart']], t.chart, t.chartWrong, right)}
+        ${t.chart && !chartOk ? `<p class="spot">💡 ${right === 'line' ? 'The number of sheets is a <b>number</b>, so the points can be joined with a line.' : 'The magnets are <b>separate groups</b>, not numbers on a scale. Use bars.'}</p>` : ''}
+        ${chartOk ? `<p class="job">${right === 'line' ? 'Yes! A line graph, because the thing you changed is a number.' : 'Yes! A bar chart, because the thing you changed has separate groups.'}</p>` : ''}</div>
+      ${chartOk ? `<div class="card"><h3>📋 Averages</h3><table class="gtable"><tr><th>${V.name}</th><th>Average</th></tr>${ord.map(i => `<tr><td>${V.short(t.tests[i][Q.iv])}</td><td><b>${me[i]}${D[2]}</b></td></tr>`).join('')}</table><p class="muted">The average: add the 3 tries and divide by 3.</p></div>
+        <div class="card wq"><h3>2. Conclusion</h3><p>Finish the sentence. <b>We found that…</b></p>${choices('invclaim', Q.claims.map(([v, s]) => [v, `…${lc(s)}`]), t.claim, t.claimWrong, Q.claims[0][0])}
+          ${t.claim && !claimOk ? '<p class="spot">💡 Look at your chart again. Which one is the tallest? Which way do the numbers go?</p>' : ''}</div>` : ''}
+      ${claimOk ? `<div class="card wq"><h3>3. Why?</h3><p><b>This is because…</b></p>${choices('invwhy', Q.why.map((x, k) => [String(k), x[0]]), t.why, t.whyWrong, whyRight)}
+        ${t.why != null && !whyOk ? `<p class="spot">💡 ${Q.why[+t.why][2]}</p>` : ''}</div>` : ''}
+      ${whyOk ? `<div class="science"><b>🔬 Our conclusion</b>We found that ${lc(Q.claims[0][1])} This is because ${lc(Q.why[+whyRight][0])}
+          <p class="muted" style="margin-top:6px">You predicted: ${lc(Q.claims.find(c => c[0] === t.pred)[1])} ${t.pred === Q.claims[0][0] ? '✅' : '❌'}</p></div>
+        <div class="card"><button class="btn" data-act="invreset">↺ Investigate another question</button></div>` : ''}`;
+  }
+};
+
+// ================= Views =================
+const VIEWS = {
+  bench: { label: '🧲 <span class="tl">Test bench</span>', name: 'Test bench', ...BENCH },
+  which: { label: '🔍 <span class="tl">Magnet or not?</span>', name: 'Magnet or not?', ...WHICH },
+  dist: { label: '📏 <span class="tl">Distance</span>', name: 'Feel the distance', ...DIST },
+  str: { label: '💪 <span class="tl">Strength</span>', name: 'Strength test', ...INV },
+  work: { label: '🏭 <span class="tl">At work</span>', name: 'Magnets at work', ...WORK }
+};
+
+// ================= State =================
+const state = { view: 'bench', mission: null, done: store.get('ml-done', []),
+  bench: freshBench(), which: freshWhich(), dist: freshDist(), inv: freshInv(), work: freshWork() };
+const KEYWORDS = [
+  ['🧲', 'magnet', 'an object that pulls magnetic materials towards it, and can push or pull other magnets'],
+  ['📎', 'magnetic material', 'a material that a magnet pulls, but which does not pull things itself (iron, steel, nickel, cobalt)'],
+  ['🤝', 'attract', 'pull towards'],
+  ['🙅', 'repel', 'push away'],
+  ['🔴', 'poles', 'the two ends of a magnet, called north (N) and south (S)'],
+  ['💪', 'strength', 'how strongly a magnet pulls']
+];
+
+// ================= Missions =================
+const NONMAG_METALS = ['alcan', 'copper', 'ring', 'gold'];
+const MISSIONS = [
+  { id: 'test', core: true, icon: '🧲', title: 'Test everything', task: 'Test every object on the <b>test bench</b>, and sort it into the right box.',
+    hint: 'Predict, then bring the magnet near. If it is pulled, check: can it pick up a paperclip by itself?',
+    setup() { state.view = 'bench'; state.bench = freshBench(); }, on: (ev, d) => ev === 'placed' && d.n === OORDER.length,
+    win: () => 'Magnets, magnetic materials and things that are not magnetic: all sorted!' },
+  { id: 'metals', icon: '🥈', title: 'Not all metals', task: 'Find <b>3 metals</b> that are <b>not</b> magnetic.',
+    hint: 'Look for shiny metal things. Does the magnet pull every one of them?',
+    setup() { state.view = 'bench'; }, on: ev => ev === 'placed' && NONMAG_METALS.filter(o => state.bench.placed[o]).length >= 3,
+    win: () => 'Aluminium, copper and gold are metals, but they are not magnetic. Only iron, steel, nickel and cobalt are.' },
+  { id: 'coins', icon: '🪙', title: 'Coin check', task: 'Find out which <b>euro coins</b> the magnet pulls.',
+    hint: 'There are three groups of coins on the test bench. Test and sort all three.',
+    setup() { state.view = 'bench'; }, on: ev => ev === 'placed' && ['cents', 'gold', 'euros'].every(o => state.bench.placed[o]),
+    win: () => '1, 2 and 5 cent coins are pulled: they have steel inside. 10, 20 and 50 cent coins are not. 1 and 2 euro coins are pulled only a little, by their middle part.' },
+  { id: 'which', core: true, icon: '🔍', title: 'Which one is the magnet?', task: 'Two grey bars look the same. Find out which one is the <b>magnet</b>.',
+    hint: 'Bring your magnet\'s N end to each end of each bar. What can only a magnet do?',
+    setup() { state.view = 'which'; state.which = { ...freshWhich(), mode: 'bars' }; }, on: ev => ev === 'which',
+    win: () => 'Only a magnet can repel another magnet. Repelling is the sure test!' },
+  { id: 'repel', icon: '🙅', title: 'Push me away', task: 'Make two magnets <b>repel</b>.',
+    hint: 'Turn one magnet round, so the same poles face each other.',
+    setup() { state.view = 'which'; state.which = freshWhich(); }, on: ev => ev === 'repel',
+    win: () => 'Like poles repel: N and N, or S and S, push each other away.' },
+  { id: 'wall', core: true, icon: '🧱', title: 'Through the wall', task: 'Find <b>3 materials</b> the magnet can pull through.',
+    hint: 'Put something in the gap, then slide the paperclip closer. Does it still jump?',
+    setup() { state.view = 'dist'; state.dist = freshDist(); }, on: (ev, d) => ev === 'through' && d.n >= 3,
+    win: () => 'The magnet pulls through materials that are not magnetic. The pull acts over a distance, even through a wall of card or glass.' },
+  { id: 'float', icon: '🎈', title: 'Float!', task: 'Make <b>3 ring magnets</b> float on the pencil.',
+    hint: 'Each ring has a pole on each flat side. The same poles must face each other.',
+    setup() { state.view = 'dist'; state.dist = { ...freshDist(), mode: 'rings' }; }, on: ev => ev === 'float',
+    win: () => 'The rings push each other apart without touching. Magnets push and pull over a distance.' },
+  { id: 'strong', icon: '💪', title: 'Strongest magnet', task: 'Run a <b>fair test</b> and find the strongest magnet.',
+    hint: 'Change only the magnet. Use the same size of paperclips every time.',
+    setup() { state.view = 'str'; state.inv = freshInv(); }, on: ev => ev === 'concluded' && state.inv.q === 'mag',
+    win: () => 'The small strong magnet was the strongest. A bigger magnet is not always stronger!' },
+  { id: 'odd', icon: '🔍', title: 'The odd one out', task: 'In a strength test, find the result that does not fit, and decide what to do.',
+    hint: 'After the results, look at the dot plot. Which dot is far from its two partners?',
+    setup() { state.view = 'str'; state.inv = freshInv(); }, on: ev => ev === 'repeated',
+    win: () => 'A bent paperclip spoiled one result. You did that test again to check it. Repeating makes results more reliable.' },
+  { id: 'recycle', icon: '♻️', title: 'Recycling robot', task: 'Sort all <b>10 cans</b> on the recycling belt.',
+    hint: 'Which cans will the big magnet lift: steel or aluminium?',
+    setup() { state.view = 'work'; state.work = freshWork(); }, on: ev => ev === 'recycled',
+    win: () => 'The big magnet lifted out the steel cans. The aluminium cans went on. That is how real recycling plants sort cans.' }
+];
+function emit(ev, data = {}) {
+  if (state.mission == null) return;
+  const i = state.mission, m = MISSIONS[i];
+  if (!m.on(ev, data)) return;
+  stopMission();
+  if (!state.done.includes(m.id)) { state.done.push(m.id); store.set('ml-done', state.done); }
+  updateStars();
+  setTimeout(() => {
+    $('#winTitle').textContent = `${m.icon} Mission complete!`;
+    $('#winText').innerHTML = m.win(data);
+    $('#winNext').style.display = i < MISSIONS.length - 1 ? '' : 'none';
+    $('#winPractise').style.display = i < MISSIONS.length - 1 ? 'none' : '';
+    $('#winNext').dataset.i = i + 1;
+    $('#winModal').classList.remove('hidden'); confetti();
+  }, 1400);
+}
+function startMission(i) {
+  closeModals();
+  state.mission = i; MISSIONS[i].setup();
+  location.hash = 'view=' + state.view;
+  const m = MISSIONS[i];
+  $('#bannerKicker').textContent = `Mission ${i + 1} of ${MISSIONS.length}: ${m.title}`;
+  $('#bannerText').innerHTML = m.task; $('#bannerHint').innerHTML = m.hint;
+  $('#bannerHint').classList.add('hidden'); $('#hintBtn').textContent = '💡 Show a hint';
+  $('#banner').classList.remove('hidden');
+  render(); $('#drawer').scrollTop = 0;
+}
+function stopMission() { state.mission = null; $('#banner').classList.add('hidden'); fitBanner(); }
+function fitBanner() { $('#drawer').style.paddingTop = state.mission == null ? '' : `${$('#banner').offsetHeight + 18}px`; }
+function updateStars() { $('#starCount').textContent = `${state.done.filter(id => MISSIONS.some(m => m.id === id)).length}/${MISSIONS.length} ⭐`; }
+function closeModals() { document.querySelectorAll('.modal').forEach(m => m.classList.add('hidden')); }
+function closeAll() { closeModals(); maybeHelp(); }
+function confetti() {
+  const em = ['⭐', '🌟', '🧲', '📎', '🎉'];
+  for (let i = 0; i < 30; i++) {
+    const s = document.createElement('span'); s.className = 'confetti'; s.textContent = em[i % em.length];
+    s.style.left = `${Math.random() * 100}vw`; s.style.animationDuration = `${2 + Math.random() * 2}s`; s.style.animationDelay = `${Math.random() * .6}s`;
+    document.body.appendChild(s); setTimeout(() => s.remove(), 5000);
+  }
+}
+
+// ================= Help, key words and Real life =================
+const OBJ = {
+  '5Pe.01': 'Know the difference between a magnet and a magnetic material.',
+  '5Pe.02': 'Know that forces act over a distance between magnets, and between a magnet and a magnetic material.',
+  '5Pe.03': 'Know that magnets can have different magnetic strengths.',
+  '5TWSc.01': 'Sort, group and classify objects, materials and living things through testing, observation and using secondary information.',
+  '5TWSp.03': 'Make predictions, referring to relevant scientific knowledge and understanding within familiar and unfamiliar contexts.',
+  '5TWSp.04': 'Plan fair test investigations, identifying the independent, dependent and control variables.',
+  '5TWSp.05': 'Describe risks when planning practical work and consider how to minimise them.',
+  '5TWSc.04': 'Decide when observations and measurements need to be repeated to give more reliable data.',
+  '5TWSa.02': 'Describe patterns in results, including identifying any anomalous results.',
+  '5TWSa.05': 'Present and interpret results using tables, bar charts, dot plots and line graphs.',
+  '5TWSm.01': 'Know that a model presents an object, process or idea in a way that shows some of the important features.'
+};
+const MAIN = ['5Pe.01', '5Pe.02', '5Pe.03'], SUPPORT = ['5TWSc.01', '5TWSp.03', '5TWSp.04', '5TWSp.05', '5TWSc.04', '5TWSa.02', '5TWSa.05', '5TWSm.01'];
+const HELP = {
+  bench: { q: 'Which things does a magnet pull?', steps: ['Tap an object.', '<b>Predict</b>: will the magnet pull it?', 'Bring the magnet near. If it is pulled, check if it can pick up a paperclip by itself.', 'Put it in the right box.'],
+    look: 'Not all metals are magnetic!', codes: ['5Pe.01', '5TWSc.01', '5TWSp.03'] },
+  which: { q: 'How can you tell a magnet from a magnetic material?', steps: ['Meet the poles: push two magnets together, then turn one round.', 'Then test the two grey bars.', 'Decide which bar is the magnet.'],
+    look: 'Only a magnet can <b>repel</b>.', codes: ['5Pe.01', '5Pe.02'] },
+  dist: { q: 'Can a magnet pull without touching?', steps: ['Slide the paperclip closer. Watch the pull bar and the arrow.', 'Put different materials in the gap.', 'Try the floating paperclip and the floating rings.'],
+    look: 'The pull gets stronger as the gap gets smaller.', codes: ['5Pe.02', '5TWSm.01'] },
+  str: { q: 'Are all magnets the same strength?', steps: ['Choose a question.', 'Choose <b>one</b> thing to change, what to measure, and what to keep the same.', 'Think about safety, then <b>predict</b>.', 'Measure 3 times, find the odd result, choose a chart and write a conclusion.'],
+    look: 'A bigger magnet is not always stronger.', codes: ['5Pe.03', '5TWSp.04', '5TWSp.05', '5TWSp.03', '5TWSc.04', '5TWSa.02', '5TWSa.05'] },
+  work: { q: 'How do we use magnets?', steps: ['Read about magnets at work.', 'Run the recycling belt. <b>Predict</b> for each can.'],
+    look: 'Steel food cans and aluminium drink cans can look alike. The magnet tells them apart.', codes: ['5Pe.01', '5TWSp.03'] }
+};
+const MODEL = {
+  bench: [['🧲', 'The magnet here is drawn bigger to make it easy to see.']],
+  which: [['🔴', 'Real magnets are not always painted red and blue. Some have N and S marked, and some have no marks at all.']],
+  dist: [['➡️', 'You can\'t see a magnet\'s pull in real life. The pull bar and the arrows are drawings to show it.']],
+  str: [['📎', 'Real paperclips are not all exactly the same. That is one reason we repeat tests.'], ['🧲', 'Real magnets of the same kind can be different strengths. Your class may get different numbers.']],
+  work: [['🏭', 'A real recycling magnet is huge, and much stronger than a school magnet.']],
+  all: [['➡️', 'You can\'t see a magnet\'s pull in real life. The pull bar and the arrows are drawings to show it.'], ['🧲', 'Real magnets of the same kind can be different strengths.'],
+    ['📎', 'Real paperclips are not all exactly the same, which is one reason we repeat tests.'], ['🔍', 'The magnets here are drawn bigger to make them easy to see.']]
+};
+const helpSeen = new Set();
+let autoHelp = true, welcomed = false;
+function showHelp() {
+  const H = HELP[state.view], V = VIEWS[state.view];
+  helpSeen.add(state.view);
+  const core = MISSIONS.map((m, i) => m.core ? `${i + 1} (${m.title})` : null).filter(Boolean);
+  $('#helpBody').innerHTML = `<h2 id="helpTitle">${V.label.replace(/<[^>]+>/g, '').split(' ')[0]} ${V.name}</h2>
+    ${welcomed ? '' : '<p class="welcome">Welcome to Magnet Lab!</p>'}
+    <h3>🔬 The big question</h3><p>${H.q}</p>
+    <h3>👆 What to do</h3><ol>${H.steps.map(s => `<li>${s}</li>`).join('')}</ol>
+    <p><b>💡 Look out for:</b> ${H.look}</p>
+    <p>📖 Tap <b>Words</b> at the top to see what the key words mean.</p>
+    <p>🚀 Try the <b>Missions</b> to win stars!</p>
+    <details class="teach"><summary>For teachers</summary>${H.codes.map(c => `<p><b>${c}</b> ${OBJ[c]}</p>`).join('')}
+      <h4>⏱ A 45-minute lesson</h4><p>Start with the three <b>Lesson</b> missions: ${core.join(', ')}.</p>
+      <h4>All of Magnet Lab's objectives</h4><p>Main: ${MAIN.join(', ')}. Supporting: ${SUPPORT.join(', ')}.</p></details>`;
+  welcomed = true;
+  $('#helpModal').classList.remove('hidden');
+}
+function maybeHelp() { if (!autoHelp || helpSeen.has(state.view) || document.querySelector('.modal:not(.hidden)')) return; showHelp(); }
+
+function renderStage() { $('#stage').innerHTML = VIEWS[state.view].stage(); }
+function render() {
+  const v = VIEWS[state.view];
+  $('#tabs').innerHTML = Object.entries(VIEWS).map(([id, x]) =>
+    `<button class="btn${id === state.view ? ' active' : ''}" data-act="view" data-view="${id}" title="${x.name}" aria-label="${x.name}">${x.label}</button>`).join('');
+  const keep = $('#drawer').scrollTop, same = render.last === state.view;
+  $('#drawer').innerHTML = v.drawer();
+  renderStage();
+  if (same) $('#drawer').scrollTop = keep;
+  render.last = state.view;
+  fitBanner();
+  maybeHelp();
+}
+
+// ================= Actions =================
+const top0 = () => { $('#drawer').scrollTop = 0; };
+const ACTIONS = {
+  view(el) { closeModals(); state.view = el.dataset.view; location.hash = 'view=' + state.view; render(); top0(); },
+  // Test bench
+  bpred(el) { const b = state.bench; b.pred[b.cur] = el.dataset.v; render(); },
+  btest() { const b = state.bench; b.tested[b.cur] = true; b.wrong = null; render(); },
+  bclip() { const b = state.bench; b.clipTest[b.cur] = true; render(); },
+  // Magnet or not?
+  wmode(el) { state.which.mode = el.dataset.v; state.which.pushed = null; render(); top0(); },
+  wflip() { const s = state.which; s.flip = !s.flip; s.pushed = null; render(); },
+  wpush() { const s = state.which; s.pushed = s.flip ? 'push' : 'pull'; render(); if (s.pushed === 'push') emit('repel'); },
+  wbar(el) { state.which.bar = el.dataset.v; state.which.last = null; render(); },
+  wtest(el) {
+    const s = state.which, test = el.dataset.v, r = test === 'clips' ? (s.bar === s.magIs ? 'yes' : 'no') : WHICH.result(s.bar, test);
+    (s.log[s.bar] = s.log[s.bar] || {})[test] = r; s.last = { bar: s.bar, test }; render();
+    if (r === 'push') emit('repel');
+  },
+  wans(el) { const s = state.which; s.answer = el.dataset.v; if (s.answer !== s.magIs) { if (!s.wrong.includes(s.answer)) s.wrong.push(s.answer); } render(); if (s.answer === s.magIs) emit('which'); },
+  wnew() { state.which = { ...freshWhich(), mode: 'bars' }; render(); top0(); },
+  // Feel the distance
+  dmode(el) { state.dist.mode = el.dataset.v; DIST.justAdded = false; render(); top0(); },
+  dwall(el) { const s = state.dist; s.wall = el.dataset.v; s.jumped = false; s.d = 6; render(); },
+  dreset() { const s = state.dist; s.jumped = false; s.d = 6; render(); },
+  dring(el) { const s = state.dist; if (s.rings.length >= 5) return; s.rings.push(el.dataset.v); DIST.justAdded = true; render(); DIST.checkFloat(); },
+  dflip() { const s = state.dist; const n = s.rings.length; if (!n) return; s.rings[n - 1] = s.rings[n - 1] === 'N' ? 'S' : 'N'; DIST.justAdded = false; render(); DIST.checkFloat(); },
+  doff() { state.dist.rings.pop(); DIST.justAdded = false; render(); },
+  // Strength test
+  invq(el) { if (state.inv.q !== el.dataset.v) { state.inv = freshInv(); state.inv.q = el.dataset.v; } render(); },
+  invnext() { const t = state.inv; if (t.step === 1) { t.tests = Array.from({ length: INV.Q().n }, () => INV.start()); t.sel = 0; } t.step++; render(); top0(); },
+  inviv(el) { const t = state.inv, k = el.dataset.v; t.iv = k; if (k !== INV.Q().iv && !t.ivWrong.includes(k)) t.ivWrong.push(k); render(); },
+  invdv(el) { const t = state.inv, d = INV.Q().dv.find(x => x[0] === el.dataset.v); t.dv = d[0]; if (!d[2] && !t.dvWrong.includes(d[0])) t.dvWrong.push(d[0]); render(); },
+  invkeeps() {
+    const t = state.inv, Q = INV.Q(), msgs = [];
+    [...Q.order.filter(k => k !== Q.iv).map(k => [k, Q.vars[k].name]), Q.extra].forEach(([id, n]) => { if (!t.keeps[id]) msgs.push(`You also need to keep <b>${lc(n)}</b> the same.`); });
+    if (t.keeps.dv) msgs.push('That is what you <b>measure</b>, so it can\'t stay the same!');
+    if (t.keeps[Q.iv]) msgs.push(`${INV.V(Q.iv).name} is what you are <b>changing</b>, so it can't stay the same!`);
+    t.keepsSaid = msgs.length ? msgs.slice(0, 3) : 'ok'; render();
+  },
+  invsel(el) { state.inv.sel = +el.dataset.v; render(); },
+  invset(el) { const t = state.inv; t.tests[t.sel][el.dataset.k] = el.dataset.v; render(); },
+  invrisks() { const t = state.inv, msgs = []; RISKS.forEach(([id, , yes, why]) => { if (yes && !t.risks[id]) msgs.push('There is another risk. Think about fingers, phones and small children.'); if (!yes && t.risks[id]) msgs.push(why); });
+    t.risksSaid = msgs.length ? [...new Set(msgs)] : 'ok'; render(); },
+  invred(el) { const t = state.inv, [id, rid] = el.dataset.v.split(':'); if (rid === id) t.red[id] = rid; else (t.redWrong[id] = t.redWrong[id] || []).push(rid); render(); },
+  invpred(el) { state.inv.pred = el.dataset.v; render(); },
+  invrun() { INV.run(); },
+  invfix() { Object.assign(state.inv, { step: 2, ran: false, running: false }); render(); top0(); },
+  invodd(el) { const t = state.inv; if (t.step !== 7 || t.oddFound) return; t.oddTap = el.dataset.v; if (t.oddTap === `${INV.oddAt()}-1`) t.oddFound = true; render(); top0(); },
+  invact(el) { const t = state.inv; t.act = el.dataset.v; if (t.act === 'repeat') { t.repeated = true; emit('repeated'); } else if (!t.actWrong.includes(t.act)) t.actWrong.push(t.act); render(); },
+  invchart(el) { const t = state.inv; t.chart = el.dataset.v; if (t.chart !== INV.chartType() && !t.chartWrong.includes(t.chart)) t.chartWrong.push(t.chart); render(); },
+  invclaim(el) { const t = state.inv; t.claim = el.dataset.v; if (t.claim !== INV.Q().claims[0][0] && !t.claimWrong.includes(t.claim)) t.claimWrong.push(t.claim); render(); },
+  invwhy(el) { const t = state.inv; t.why = el.dataset.v; if (!INV.Q().why[+t.why][1]) { if (!t.whyWrong.includes(t.why)) t.whyWrong.push(t.why); } else emit('concluded'); render(); },
+  invreset() { state.inv = freshInv(); render(); top0(); },
+  // Magnets at work
+  wkpred(el) { state.work.pred = el.dataset.v; render(); },
+  wkrun() { const k = state.work; k.phase = 'moving'; render(); },
+  wknext() {
+    const k = state.work, c = k.cans[k.i];
+    if (c === 's') k.steel++; else k.alu++;
+    if ((k.pred === 'yes') === (c === 's')) k.right++;
+    k.i++; k.pred = null; k.phase = 'wait'; render();
+    if (k.i >= k.cans.length) emit('recycled');
+  },
+  wkreset() { state.work = freshWork(); render(); },
+  // Missions and pop-ups
+  missions() {
+    $('#missionList').innerHTML = MISSIONS.map((m, i) => `<button class="mission-item${state.done.includes(m.id) ? ' done' : ''}" data-act="startMission" data-i="${i}">
+      <span class="em">${m.icon}</span><span class="t">${i + 1}. ${m.title}</span>${m.core ? '<span class="core">⏱ Lesson</span>' : ''}<span class="star">⭐</span></button>`).join('');
+    $('#missionsModal').classList.remove('hidden');
+  },
+  startMission(el) { startMission(+el.dataset.i); },
+  nextMission(el) { startMission(+el.dataset.i); },
+  stopMission() { stopMission(); },
+  hint() { const h = $('#bannerHint'); h.classList.toggle('hidden'); $('#hintBtn').textContent = h.classList.contains('hidden') ? '💡 Show a hint' : '💡 Hide the hint'; fitBanner(); },
+  resetStars() { state.done = []; store.set('ml-done', []); updateStars(); ACTIONS.missions(); },
+  closeModals() { closeAll(); },
+  help() { closeModals(); showHelp(); },
+  words() { $('#wordsList').innerHTML = KEYWORDS.map(([em, w, m]) => `<li><span class="em">${em}</span><span><b>${w}</b>: ${m}</span></li>`).join(''); $('#wordsModal').classList.remove('hidden'); },
+  model() {
+    $('#modelTab').textContent = `${VIEWS[state.view].label.replace(/<[^>]+>/g, '').split(' ')[0]} ${VIEWS[state.view].name}`;
+    $('#modelList').innerHTML = [...MODEL[state.view], ...MODEL.all.filter(a => !MODEL[state.view].some(b => b[1] === a[1]))].map(([em, t]) => `<li><span class="em">${em}</span><span>${t}</span></li>`).join('');
+    $('#modelModal').classList.remove('hidden');
+  }
+};
+DIST.checkFloat = () => { const g = DIST.ringGaps(), fl = g.filter((x, i) => i > 0 && x > 4).length; if (state.dist.rings.length >= 3 && fl >= 2 && g.every((x, i) => i === 0 || x > 4)) emit('float'); };
+document.addEventListener('click', e => {
+  if (DND.skipClick) { DND.skipClick = false; return; }
+  const v = VIEWS[state.view], drag = e.target.closest('[data-drag]');
+  if (drag && v.pick) { v.pick(drag.dataset.drag); return; }
+  const drop = e.target.closest('[data-drop]'), sel = v.sel && v.sel();
+  if (drop && sel) { v.drop(sel, drop.dataset.drop); return; }
+  const el = e.target.closest('[data-act]');
+  if (el && !el.disabled && ACTIONS[el.dataset.act]) ACTIONS[el.dataset.act](el);
+});
+document.addEventListener('change', e => {
+  const t = state.inv, d = e.target.dataset;
+  if (d.keep) { t.keeps[d.keep] = e.target.checked; t.keepsSaid = null; }
+  if (d.risk) { t.risks[d.risk] = e.target.checked; t.risksSaid = null; }
+});
+// Sliders redraw only the picture, so they keep working while they are dragged
+document.addEventListener('input', e => {
+  const id = e.target.id, v = +e.target.value, s = state.dist;
+  if (id === 'dgap') {
+    s.d = v;
+    if (v <= JUMP && s.wall !== 'steel' && !s.jumped) {
+      s.jumped = true;
+      if (s.wall !== 'none') s.through[s.wall] = true;
+      render(); emit('through', { n: Object.keys(s.through).length }); return;
+    }
+    renderStage();
+  }
+  if (id === 'dth') { s.th = v; renderStage(); }
+});
+document.querySelectorAll('.modal').forEach(m => m.addEventListener('click', e => { if (e.target === m) closeAll(); }));
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeAll(); });
+let resizeT;
+addEventListener('resize', () => { fitBanner(); clearTimeout(resizeT); resizeT = setTimeout(renderStage, 120); });
+
+// ================= Start =================
+// Test hooks: #view=dist  ·  #mission=4  ·  #nohelp=1
+const hp = new URLSearchParams(location.hash.slice(1));
+if (VIEWS[hp.get('view')]) state.view = hp.get('view');
+if (hp.has('nohelp')) autoHelp = false;
+updateStars();
+if (MISSIONS[hp.get('mission')]) startMission(+hp.get('mission'));
+else render();
+</script>
+<script>
+  // Offline support: saves the whole Science Hub on this device the first time any page is opened (see ../sw.js)
+  if ('serviceWorker' in navigator) addEventListener('load', () => navigator.serviceWorker.register('../sw.js').catch(() => {}));
+</script>
+</body>
+</html>
