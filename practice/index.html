@@ -233,6 +233,8 @@
 <script src="banks/dissolving.js"></script>
 <script src="banks/sound.js"></script>
 <script src="banks/magnets.js"></script>
+<script src="banks/skills.js"></script>
+<script src="banks/science-around-us.js"></script>
 <script>
 'use strict';
 /* =====================================================================
@@ -253,6 +255,18 @@ const starsFor = f => f >= 0.9 ? 3 : f >= 0.7 ? 2 : f >= 0.4 ? 1 : 0;
 const starText = n => '⭐'.repeat(n) + '☆'.repeat(3 - n);
 
 // ================= Activity types =================
+/* How each type is written in a bank (every question also has type, prompt and, if you like, explain):
+   label     img or svg, alt, credit?, labels: [{ text, x, y, px, py }]  (x, y = box; px, py = what it points to; 0–100), extra?: [wrong labels]
+   order     items: [words, or { t, em, size }] listed in the right order, first?, last?  (words for each end)
+   match     pairs: [[word, meaning]], extra?: [wrong words]
+   cloze     text with {gaps}, extra?: [wrong words]. Give each gap only one right word, or a correct swap is marked wrong.
+   sort      groups: [names], items: [{ t, em, g }]  (g = which group, from 0)
+   venn      sets: [two names], items: [{ t, em, in: [true/false, true/false] }]
+   carroll   rows: [two names], cols: [two names], items: [{ t, em, r, c }]
+   table     caption?, table: { head: [], rows: [[]] }, questions: [{ q, options: [], a, why? }]
+   tf        statements: [{ s, a: true/false, why }]
+   odd       items: [], odd, reasons: [], reason
+   sentence  parts: [words, [right choice, wrong choice…], words…], answers?: [[option for each gap]]  (when more than one version is true) */
 const TYPES = {
   label: { icon: '🏷️', name: 'Label the diagram', desc: 'Put the labels in the right places.' },
   order: { icon: '🔢', name: 'Put in order', desc: 'Put things in the right order.' },

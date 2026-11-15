@@ -214,6 +214,9 @@
     .bubble { left: 6px; top: 6px; max-width: 78%; padding: 5px 9px; font-size: 13.5px; gap: 6px; }
     .bubble .who { font-size: 28px; }
   }
+  /* Lesson (core) missions, and extension missions */
+  .core { background: var(--yellow); color: var(--ink); border-radius: 8px; padding: 1px 7px; font-size: 12.5px; font-weight: 700; white-space: nowrap; }
+  .extn { background: #e8e0ff; color: #5a3fb0; border-radius: 8px; padding: 1px 7px; font-size: 12.5px; font-weight: 700; white-space: nowrap; }
 </style>
 </head>
 <body>
@@ -893,7 +896,7 @@ const lunchMission = (id, icon, title, task, hint) => ({ id, icon, title, task, 
   on: (ev, d) => ev === 'lunch' && d.ok && d.brief === id,
   win: () => LB.BRIEFS[id].win });
 const MISSIONS = [
-  { id: 'balanced', icon: '🍽️', title: 'A balanced day', task: 'Fill Sam\'s plate with a <b>balanced diet</b> for the whole day, then check with Sam.',
+  { id: 'balanced', core: true, icon: '🍽️', title: 'A balanced day', task: 'Fill Sam\'s plate with a <b>balanced diet</b> for the whole day, then check with Sam.',
     hint: 'Look at the plate. Try to put food in every coloured part, with lots of fruit and vegetables. Then choose a drink.',
     setup() { state.view = 'plate'; state.plate = []; state.drink = null; state.said = null; },
     on: (ev, d) => ev === 'plate' && d.ok,
@@ -903,7 +906,7 @@ const MISSIONS = [
     setup() { state.view = 'plate'; state.plate = []; state.drink = null; state.said = null; },
     on: (ev, d) => ev === 'plate' && d.ok && !d.plate.some(id => MEAT.includes(id)),
     win: () => 'A vegetarian diet can be balanced too! Beans, nuts, eggs, hummus and dairy give protein without meat or fish.' },
-  { id: 'fix', icon: '🛠️', title: 'Fix the plate', task: 'Sam\'s plate is full of treats! Change it to make a <b>balanced diet</b>.',
+  { id: 'fix', core: true, icon: '🛠️', title: 'Fix the plate', task: 'Sam\'s plate is full of treats! Change it to make a <b>balanced diet</b>.',
     hint: 'Tap a food on the plate to take it off. One small treat is fine.',
     setup() { state.view = 'plate'; state.model = 'plate'; state.plate = ['chips', 'cake', 'toast', 'sweets', 'chocolate', 'biscuit', 'pasta']; state.drink = 'fizzy'; state.said = null; },
     on: (ev, d) => ev === 'plate' && d.ok,
@@ -917,7 +920,7 @@ const MISSIONS = [
     setup() { state.view = 'labels'; state.labels = { set: 'yog', answers: {} }; },
     on: (ev, d) => ev === 'label' && d.all,
     win: () => 'You can read food labels! Comparing labels helps you choose foods with <b>less sugar</b> and <b>more fibre</b>.' },
-  { id: 'jobs', icon: '🔋', title: 'Food power-ups', task: 'In <b>What is food for?</b>, put all 14 foods with a job they do, with no more than <b>2 mistakes</b>.',
+  { id: 'jobs', core: true, icon: '🔋', title: 'Food power-ups', task: 'In <b>What is food for?</b>, put all 14 foods with a job they do, with no more than <b>2 mistakes</b>.',
     hint: 'Bread, rice and pasta give energy. Meat, fish, eggs and beans help you grow. Some foods can go in two boxes.',
     setup() { state.view = 'jobs'; state.jobs = { placed: {}, sel: null, mistakes: 0, msg: null }; },
     on: (ev, d) => ev === 'jobs' && d.mistakes <= 2,
@@ -1180,7 +1183,7 @@ const ACTIONS = {
   zcheck() { ZOO.check(); },
   missions() {
     $('#missionList').innerHTML = MISSIONS.map((m, i) => `<button class="mission-item${state.done.includes(m.id) ? ' done' : ''}" data-act="startMission" data-i="${i}">
-      <span class="em">${m.icon}</span><span class="t">${i + 1}. ${m.title}</span><span class="star">⭐</span></button>`).join('');
+      <span class="em">${m.icon}</span><span class="t">${i + 1}. ${m.title}</span>${m.ext ? '<span class="extn">➕ Extension</span>' : ''}<span class="star">⭐</span></button>`).join('');
     $('#missionsModal').classList.remove('hidden');
   },
   startMission(el) { startMission(+el.dataset.i); },

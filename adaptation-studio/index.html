@@ -239,6 +239,9 @@
     .banner { width: calc(100% - 20px); top: auto; bottom: 8px; }
     .bubble { max-width: 240px; font-size: 14.5px; }
   }
+  /* Lesson (core) missions, and extension missions */
+  .core { background: var(--yellow); color: var(--ink); border-radius: 8px; padding: 1px 7px; font-size: 12.5px; font-weight: 700; white-space: nowrap; }
+  .extn { background: #e8e0ff; color: #5a3fb0; border-radius: 8px; padding: 1px 7px; font-size: 12.5px; font-weight: 700; white-space: nowrap; }
 </style>
 <script type="importmap">
 { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/" },
@@ -1863,11 +1866,11 @@ function huntBatch() {
 
 // ================= Missions =================
 const MISSIONS = [
-  { id: 'detective', icon: '🔍', title: 'Desert detective', task: 'Find <b>4 features</b> of desert animals or plants.', hint: 'Tap a living thing, then tap its features.',
+  { id: 'detective', core: true, icon: '🔍', title: 'Desert detective', task: 'Find <b>4 features</b> of desert animals or plants.', hint: 'Tap a living thing, then tap its features.',
     setup() { state.view = 'habitats'; state.hab = 'desert'; state.orgId = null; },
     on: ev => ev === 'feat' && [...state.seen].filter(k => orgById(k.split(':')[0]).home === 'desert').length >= 4,
     win: () => 'Desert living things have features that help them <b>keep cool</b> and <b>save water</b>. They are <b>adapted</b> to the desert.' },
-  { id: 'camel', icon: '🐫', title: 'Can a camel survive in the Arctic?', task: 'Predict, then move the <b>camel</b> to the <b>Arctic</b>.', hint: 'Think: freezing cold, icy wind, deep snow.',
+  { id: 'camel', core: true, icon: '🐫', title: 'Can a camel survive in the Arctic?', task: 'Predict, then move the <b>camel</b> to the <b>Arctic</b>.', hint: 'Think: freezing cold, icy wind, deep snow.',
     setup() { state.view = 'move'; setMoveOrg('camel', 'arctic'); },
     on: (ev, d) => ev === 'move' && d.org === 'camel' && d.to === 'arctic',
     win: d => moveSummary(d) + 'A camel is adapted to the hot, dry desert – not the Arctic. Look at the body heat gauge!' },
@@ -1895,7 +1898,7 @@ const MISSIONS = [
     setup() { state.view = 'camo'; Object.assign(state.camo, { scene: 'woodland', colour: 'red', hunts: [], pred: null, msg: '' }); },
     on: (ev, d) => ev === 'hunt' && d.camo && d.hadNonCamo,
     win: () => 'When the colour matched the background, the bugs were much harder to spot. That is <b>camouflage</b>.' },
-  { id: 'eyes', icon: '👀', title: 'Predator or prey? Look at the eyes', task: 'Move the eyes to the front and the sides, then answer the two questions.', hint: 'Count the foxes it can spot.',
+  { id: 'eyes', core: true, icon: '👀', title: 'Predator or prey? Look at the eyes', task: 'Move the eyes to the front and the sides, then answer the two questions.', hint: 'Count the foxes it can spot.',
     setup() { state.view = 'eyes'; state.quiz = {}; },
     on: ev => ev === 'quiz' && state.quiz.rabbit === 'sides' && state.quiz.owl === 'front',
     win: () => '<b>Prey</b> often have eyes on the sides to spot danger. <b>Predators</b> often have eyes at the front to judge distance.' },
@@ -2071,7 +2074,7 @@ const ACTIONS = {
   hpred: el => { state.hunt.pred = el.dataset.v; render(); },
   hbatch: () => huntBatch(),
   help: () => showHelp(), model: () => showModel(),
-  missions: () => { $('#missionList').innerHTML = MISSIONS.map((m, i) => `<button class="mission-item ${state.done.includes(m.id) ? 'done' : ''}" data-act="start-mission" data-i="${i}"><span class="em">${m.icon}</span><span class="t">${i + 1}. ${m.title}</span><span class="star">⭐</span></button>`).join(''); openModal('#missionsModal'); },
+  missions: () => { $('#missionList').innerHTML = MISSIONS.map((m, i) => `<button class="mission-item ${state.done.includes(m.id) ? 'done' : ''}" data-act="start-mission" data-i="${i}"><span class="em">${m.icon}</span><span class="t">${i + 1}. ${m.title}</span>${m.ext ? '<span class="extn">➕ Extension</span>' : ''}<span class="star">⭐</span></button>`).join(''); openModal('#missionsModal'); },
   'close-modal': closeModals,
   'reset-stars': () => { state.done = []; store.set('as2-done', []); updateStars(); ACTIONS.missions(); },
   'start-mission': el => { closeModals(); startMission(+el.dataset.i); },

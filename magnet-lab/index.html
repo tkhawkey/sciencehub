@@ -277,7 +277,6 @@
   <div class="modal-box">
     <button class="modal-x" data-act="closeModals" aria-label="Close">✕</button>
     <h2 id="missionsTitle">🚀 Missions</h2>
-    <p class="muted" style="margin-top:-4px">Short of time? Start with the <span class="core">⏱ Lesson</span> missions.</p>
     <div class="mission-list" id="missionList"></div>
     <div class="modal-actions"><button class="btn" data-act="resetStars">Reset stars</button><button class="btn primary" data-act="closeModals">Close</button></div>
   </div>
@@ -640,41 +639,110 @@ const DIST = {
 const USES = [['🧊', 'Fridge doors', 'A magnetic strip inside the door seal pulls on the steel fridge, so the door stays shut.'],
   ['🗄️', 'Cupboard catches', 'A small magnet in the cupboard pulls on a steel plate on the door, so the door stays closed.'],
   ['👜', 'Bag fastenings', 'Two small magnets hidden in the flap pull together and close the bag.'],
-  ['♻️', 'Recycling plants', 'A very strong magnet lifts steel cans out of the rubbish. Aluminium cans are left behind.']];
-const freshWork = () => ({ cans: shuffle(['s', 's', 's', 's', 's', 'a', 'a', 'a', 'a', 'a']), i: 0, pred: null, phase: 'wait', steel: 0, alu: 0, right: 0 });
-const canG = (kind, x, base, s = 1) => kind === 's'
-  ? `<g transform="translate(${x} ${base}) scale(${s})"><rect x="-18" y="-46" width="36" height="46" rx="3" fill="#c9cfdc" stroke="#6b7590" stroke-width="2"/><rect x="-18" y="-36" width="36" height="22" fill="#ff5f6d"/><text x="0" y="-20" text-anchor="middle" style="font-size:10px;font-weight:700;fill:#fff">BEANS</text></g>`
-  : `<g transform="translate(${x} ${base}) scale(${s})"><rect x="-12" y="-54" width="24" height="54" rx="5" fill="#d7dde8" stroke="#8a93ad" stroke-width="2"/><rect x="-12" y="-42" width="24" height="24" fill="#22b07d"/><text x="0" y="-26" text-anchor="middle" style="font-size:8px;font-weight:700;fill:#fff">FIZZ</text></g>`;
+  ['♻️', 'Recycling plants', 'A very strong magnet lifts steel and iron out of the rubbish. Everything else is left behind.']];
+// Things on the recycling belt: [name, what it is made of, magnetic?]. Some look alike on purpose: you have to know what they are made of.
+const JUNK = {
+  foodcan: ['Food can', 'steel', true], drinkcan: ['Drinks can', 'aluminium', false], bottletop: ['Bottle top', 'steel', true],
+  painttin: ['Paint tin', 'steel', true], nail: ['Old nail', 'iron', true], clips: ['Paperclips', 'steel', true],
+  foil: ['Foil tray', 'aluminium', false], pipe: ['Copper pipe', 'copper', false], bottle: ['Plastic bottle', 'plastic', false],
+  jar: ['Glass jar', 'glass', false], box: ['Cardboard box', 'cardboard', false], crisps: ['Crisp packet', 'plastic with a very thin layer of aluminium', false]
+};
+const junkG = (id, x, y) => {
+  const g = {
+    foodcan: `<rect x="-15" y="-36" width="30" height="36" rx="3" fill="#c9cfdc" stroke="#6b7590" stroke-width="2"/><rect x="-15" y="-28" width="30" height="16" fill="#f6efe0"/><ellipse cx="0" cy="-36" rx="15" ry="3" fill="#dfe4ee" stroke="#6b7590" stroke-width="1.5"/>`,
+    drinkcan: `<rect x="-10" y="-42" width="20" height="42" rx="4" fill="#c9cfdc" stroke="#6b7590" stroke-width="2"/><rect x="-10" y="-32" width="20" height="18" fill="#f6efe0"/><ellipse cx="0" cy="-42" rx="8" ry="2.5" fill="#dfe4ee" stroke="#6b7590" stroke-width="1.5"/><rect x="-2" y="-46" width="5" height="3" rx="1" fill="#8a93ad"/>`,
+    bottletop: `<polygon points="${Array.from({ length: 16 }, (_, k) => { const a = k * Math.PI / 8, r = k % 2 ? 11 : 13; return `${(Math.cos(a) * r).toFixed(1)},${(-10 + Math.sin(a) * r * .5).toFixed(1)}`; }).join(' ')}" fill="#c9cfdc" stroke="#6b7590" stroke-width="1.5"/>`,
+    painttin: `<rect x="-19" y="-30" width="38" height="30" rx="3" fill="#c9cfdc" stroke="#6b7590" stroke-width="2"/><path d="M-17 -30 Q0 -50 17 -30" fill="none" stroke="#6b7590" stroke-width="2"/><rect x="-19" y="-20" width="38" height="8" fill="#f6efe0"/>`,
+    nail: `<path d="M-20 -6 H14 L22 -6 L14 -9 V-3 Z" fill="#8a93ad" stroke="#5b6386" stroke-width="1.2"/><rect x="-22" y="-12" width="4" height="12" rx="1" fill="#6b7590"/>`,
+    clips: [[-8, -6, -20], [4, -10, 15], [0, -2, 40]].map(([dx, dy, r]) => `<g transform="translate(${dx} ${dy}) rotate(${r})"><path d="M-10 -3 H8 A3 3 0 0 1 8 3 H-8 A2 2 0 0 1 -8 -1 H6" fill="none" stroke="#8a93ad" stroke-width="1.6"/></g>`).join(''),
+    foil: `<path d="M-22 -12 L-17 0 H17 L22 -12 Z" fill="#dfe4ee" stroke="#8a93ad" stroke-width="2"/><path d="M-14 -8 h28" stroke="#fff" stroke-width="2"/>`,
+    pipe: `<rect x="-24" y="-12" width="48" height="10" rx="5" fill="#c46a2b" stroke="#8a4a1a" stroke-width="1.5"/>`,
+    bottle: `<path d="M-9 0 V-26 Q-9 -32 -4 -34 V-42 H4 V-34 Q9 -32 9 -26 V0 Z" fill="#bfe3ff" stroke="#7d8db0" stroke-width="2"/><rect x="-5" y="-46" width="10" height="5" fill="#3d7bff"/>`,
+    jar: `<rect x="-13" y="-32" width="26" height="32" rx="5" fill="#d6f5e6" stroke="#7d8db0" stroke-width="2" opacity=".9"/><rect x="-11" y="-38" width="22" height="7" rx="2" fill="#c9a77c"/>`,
+    box: `<rect x="-20" y="-26" width="40" height="26" fill="#c9a77c" stroke="#8a5a2a" stroke-width="2"/><path d="M-20 -26 L-14 -32 H26 L20 -26 M20 0 L26 -6 V-32" fill="#b5803f" stroke="#8a5a2a" stroke-width="1.5"/>`,
+    crisps: `<path d="M-14 0 L-16 -34 L16 -34 L14 0 Z" fill="#ffc83d" stroke="#c99400" stroke-width="2"/><path d="M-16 -34 l4 -3 l4 3 l4 -3 l4 3 l4 -3 l4 3 l4 -3 l4 3" fill="none" stroke="#c99400" stroke-width="1.5"/>`
+  }[id];
+  return `<g transform="translate(${x} ${y}) scale(1.35)">${g}</g>`;
+};
+const SPEEDS = { slow: 75, fast: 150 };   // pixels a second
+const freshWork = () => ({ level: 'slow', items: [], running: false, over: false, pulseUntil: 0, caught: 0, missed: 0, wasted: 0, say: null, seen: {}, best: null });
 const WORK = {
-  stage() {
-    const k = state.work, { w, h, narrow } = stageSize(), top = narrow ? 40 : 50, belt = top + (h - top) * .62, mx = w * .45, done = k.i >= k.cans.length;
-    let o = `<rect width="${w}" height="${h}" fill="#eef4fb"/>`;
-    o += `<rect x="0" y="${belt}" width="${w * .8}" height="16" rx="8" fill="#5b6386"/>${Array.from({ length: 12 }, (_, i) => `<circle cx="${12 + i * w * .8 / 12}" cy="${belt + 8}" r="5" fill="#8a93ad"/>`).join('')}`;
-    // The big magnet over the belt, and its crane
-    o += `<rect x="${mx - 4}" y="${top}" width="8" height="${(belt - top) * .3}" fill="#8a93ad"/><rect x="${mx - 50}" y="${top + (belt - top) * .3}" width="100" height="30" rx="6" fill="#1d2340"/><text x="${mx}" y="${top + (belt - top) * .3 + 20}" text-anchor="middle" style="font-size:13px;font-weight:700;fill:#ffc83d">🧲 BIG MAGNET</text>`;
-    // The two bins: steel (lifted out to the left of the magnet) and aluminium (at the end of the belt)
-    const sx = mx - Math.min(170, w * .25), ax = w * .9;
-    o += `<rect x="${sx - 45}" y="${h - 70}" width="90" height="60" rx="8" fill="#ffd9dc" stroke="${NCOL}" stroke-width="2"/><text x="${sx}" y="${h - 20}" text-anchor="middle" class="gsmall">Steel: ${k.steel}</text>`;
-    o += `<rect x="${ax - 45}" y="${h - 70}" width="90" height="60" rx="8" fill="#d6f5e6" stroke="var(--green)" stroke-width="2"/><text x="${ax}" y="${h - 20}" text-anchor="middle" class="gsmall">Aluminium: ${k.alu}</text>`;
-    if (!done) {
-      const c = k.cans[k.i];
-      if (k.phase === 'wait') o += canG(c, w * .12, belt);
-      else o += `<g class="${c === 's' ? 'lifted' : 'passed'}" style="--x0:${w * .12 - mx}px;--ly:${-(belt - top - (belt - top) * .3 - 40)}px;--bx:${sx - mx}px;--ax:${ax - mx}px;--by:${h - 20 - belt}px">${canG(c, mx, belt)}</g>`;
-      // The queue still to come
-      k.cans.slice(k.i + 1, k.i + 5).forEach((c2, j) => o += canG(c2, w * .12 - 40 - j * 34, belt, .6));
+  timer: null,
+  // A round: 14 things, about half of them magnetic, in a random order with uneven gaps
+  start() {
+    const k = state.work, mag = shuffle(Object.keys(JUNK).filter(id => JUNK[id][2])), non = shuffle(Object.keys(JUNK).filter(id => !JUNK[id][2]));
+    const pick = shuffle([...mag, mag[0], mag[1], ...non]).slice(0, 14);
+    let x = -40; k.items = pick.map(id => { const it = { id, x, st: 'belt', t: 0 }; x -= 100 + Math.random() * 90; return it; });
+    Object.assign(k, { running: true, over: false, caught: 0, missed: 0, wasted: 0, say: null, pulseUntil: 0 });
+    clearInterval(WORK.timer); let last = performance.now();
+    WORK.timer = setInterval(() => {
+      if (state.work !== k || state.view !== 'work') { clearInterval(WORK.timer); k.running = false; return; }
+      const now = performance.now(), dt = Math.min(.1, (now - last) / 1000); last = now; WORK.step(dt); if (k.dirty) { k.dirty = false; render(); } else renderStage();
+    }, 40);
+    render();
+  },
+  geo() { const { w, h, narrow } = stageSize(), top = narrow ? 40 : 50; return { w, h, narrow, top, belt: top + (h - top) * .66, mx: w * .52, endX: w * .86 }; },
+  step(dt) {
+    const k = state.work, G = WORK.geo(), on = performance.now() < k.pulseUntil;
+    k.items.forEach(it => {
+      if (it.st === 'belt') {
+        it.x += SPEEDS[k.level] * dt;
+        if (on && JUNK[it.id][2] && Math.abs(it.x - G.mx) < 46) { it.st = 'lift'; it.t = 0; it.lx = it.x; k.caught++; k.seen[it.id] = true; k.dirty = true; k.say = `✅ Caught! The ${lc(JUNK[it.id][0])} is made of ${JUNK[it.id][1]}.`; }
+        if (it.x >= G.endX) { it.st = 'end'; k.seen[it.id] = true;
+          if (JUNK[it.id][2]) { k.missed++; k.dirty = true; k.say = `❌ Missed! The ${lc(JUNK[it.id][0])} is ${JUNK[it.id][1]}, so the magnet could have lifted it.`; } }
+      } else if (it.st === 'lift') { it.t += dt; if (it.t > 1) it.st = 'binned'; }
+    });
+    if (k.running && k.items.every(it => it.st === 'end' || it.st === 'binned')) {
+      k.running = false; k.over = true; clearInterval(WORK.timer);
+      const perfect = !k.missed && k.wasted <= 2;
+      if (perfect) k.best = k.level;
+      render(); emit('recycled', { perfect });
     }
-    const say = done ? `All sorted! ${k.right} of ${k.cans.length} predictions right.` : k.phase === 'wait' ? 'Will the magnet lift this can? Predict, then run the belt.' : k.cans[k.i] === 's' ? 'The magnet lifts the steel can out!' : 'The magnet does not pull the aluminium can. It goes on.';
-    return `<div class="lay-top"><span class="scaletag">♻️ Recycling belt</span><div class="readout">${say}</div></div><svg viewBox="0 0 ${w} ${h}" aria-label="A recycling belt with a big magnet">${o}</svg>`;
+  },
+  // Switch the magnet on for a moment. Switching it on with nothing magnetic under it wastes electricity.
+  pulse() {
+    const k = state.work; if (!k.running) return;
+    const G = WORK.geo(), under = k.items.filter(it => it.st === 'belt' && Math.abs(it.x - G.mx) < 46);
+    k.pulseUntil = performance.now() + 450;
+    if (!under.some(it => JUNK[it.id][2])) {
+      k.wasted++; k.dirty = true;
+      k.say = under.length ? `🤷 Nothing happened. The ${lc(JUNK[under[0].id][0])} is ${JUNK[under[0].id][1]}: not magnetic.` : '🤷 There was nothing under the magnet.';
+      under.forEach(it => k.seen[it.id] = true);
+    }
+  },
+  stage() {
+    const k = state.work, G = WORK.geo(), on = performance.now() < k.pulseUntil;
+    let o = `<rect width="${G.w}" height="${G.h}" fill="#eef4fb"/>`;
+    // The belt, the big magnet on its crane, and two plain bins
+    o += `<rect x="0" y="${G.belt}" width="${G.endX + 10}" height="16" rx="8" fill="#5b6386"/>${Array.from({ length: 14 }, (_, i) => `<circle cx="${10 + i * (G.endX / 13)}" cy="${G.belt + 8}" r="5" fill="#8a93ad"/>`).join('')}`;
+    const my = G.top + (G.belt - G.top) * .28;
+    o += `<rect x="${G.mx - 4}" y="${G.top}" width="8" height="${my - G.top}" fill="#8a93ad"/><rect x="${G.mx - 52}" y="${my}" width="104" height="32" rx="6" fill="${on ? '#ff5f6d' : '#1d2340'}"/><text x="${G.mx}" y="${my + 21}" text-anchor="middle" style="font-size:13px;font-weight:700;fill:#fff">🧲 ${on ? 'ON!' : 'BIG MAGNET'}</text>`;
+    if (on) o += `<path d="M${G.mx - 46} ${my + 40} V${G.belt - 4} M${G.mx + 46} ${my + 40} V${G.belt - 4}" stroke="#ff5f6d" stroke-width="2" stroke-dasharray="5 5"/>`;
+    const lx = G.mx - Math.min(200, G.w * .3);
+    o += `<rect x="${lx - 50}" y="${G.h - 66}" width="100" height="56" rx="8" fill="#e6e9f2" stroke="#8a93ad" stroke-width="2"/><text x="${lx}" y="${G.h - 40}" text-anchor="middle" class="gsmall">Lifted out</text><text x="${lx}" y="${G.h - 22}" text-anchor="middle" class="glabel">${k.caught}</text>`;
+    o += `<rect x="${G.endX - 30}" y="${G.h - 66}" width="${Math.min(110, G.w - G.endX + 20)}" height="56" rx="8" fill="#e6e9f2" stroke="#8a93ad" stroke-width="2"/><text x="${G.endX + 20}" y="${G.h - 40}" text-anchor="middle" class="gsmall">End of belt</text>`;
+    // Things on the belt, with their names; things being lifted rise to the magnet and swing over to the bin
+    k.items.forEach(it => {
+      if (it.st === 'belt' && it.x > -40 && it.x < G.endX + 30) o += junkG(it.id, it.x, G.belt) + `<text x="${it.x}" y="${G.belt + 34}" text-anchor="middle" class="wsmall">${JUNK[it.id][0]}</text>`;
+      if (it.st === 'lift') { const t = it.t, up = Math.min(1, t * 2.5), side = clamp((t - .4) / .6);
+        o += junkG(it.id, it.lx + (lx - it.lx) * side, G.belt - (G.belt - my - 70) * up + (G.h - 30 - (my + 70)) * side * side); }
+    });
+    const say = k.say || (k.running ? 'Tap the magnet (or the big button) when something magnetic is under it.' : k.over ? 'Round over!' : 'Press Start. Lift out everything made of steel or iron.');
+    return `<div class="lay-top"><span class="scaletag">♻️ Recycling belt</span><div class="readout">${say}</div></div><svg viewBox="0 0 ${G.w} ${G.h}" class="tapme" data-act="wkmag" aria-label="A recycling belt with a big magnet">${o}</svg>`;
   },
   drawer() {
-    const k = state.work, done = k.i >= k.cans.length;
-    const game = done ? `<div class="card says good"><h3>♻️ All sorted!</h3><p>Steel cans: <b>${k.steel}</b>. Aluminium cans: <b>${k.alu}</b>. Your predictions: <b>${k.right} of ${k.cans.length}</b> right.</p><button class="btn" data-act="wkreset">↺ Run it again</button></div>`
-      : `<div class="card says"><h3>♻️ Recycling robot</h3><p>Can ${k.i + 1} of ${k.cans.length}: ${k.cans[k.i] === 's' ? 'a <b>steel</b> food can' : 'an <b>aluminium</b> drink can'}.</p>
-        ${k.phase === 'wait' ? `<p>🤔 Will the big magnet lift it?</p><div class="navrow">${predict('wkpred', [['yes', '✅ Yes'], ['no', '❌ No']], k.pred)}</div><div class="navrow" style="margin-top:6px"><button class="btn go" data-act="wkrun"${k.pred ? '' : ' disabled'}>▶ Run the belt</button></div>`
-          : `<p class="job">${k.cans[k.i] === 's' ? 'Lifted out! Steel is a magnetic material.' : 'Left on the belt. Aluminium is not magnetic.'} ${(k.pred === 'yes') === (k.cans[k.i] === 's') ? '✅ You were right.' : '❌ Not what you predicted.'}</p><div class="navrow"><button class="btn go" data-act="wknext">Next can ▶</button></div>`}</div>`;
-    return `${game}<div class="card"><h2>🏭 Magnets at work</h2><ul class="icons" style="margin:6px 0 0">${USES.map(([em, t, d]) => `<li><span class="em">${em}</span><span><b>${t}</b>: ${d}</span></li>`).join('')}</ul></div>`;
+    const k = state.work, seen = Object.keys(JUNK).filter(id => k.seen[id]);
+    let o = `<div class="card says"><h3>♻️ Recycling robot</h3><p>Rubbish rides along the belt. Switch the <b>big magnet</b> on to lift out anything made of <b>steel or iron</b>. Don't waste electricity on things that are not magnetic!</p>
+      <div class="stops">${[['slow', '🐢 Slow belt'], ['fast', '🐇 Fast belt']].map(([v, t]) => `<button class="opt${k.level === v ? ' on' : ''}" data-act="wklevel" data-v="${v}"${k.running ? ' disabled' : ''}>${t}</button>`).join('')}</div>
+      <div class="navrow" style="margin-top:8px">${k.running ? '<button class="btn go" data-act="wkmag" style="background:var(--coral)">🧲 Magnet ON!</button>' : `<button class="btn go" data-act="wkstart">▶ ${k.over ? 'Play again' : 'Start'}</button>`}</div>
+      <p class="muted">Caught: <b>${k.caught}</b> · Missed: <b>${k.missed}</b> · Wasted switch-ons: <b>${k.wasted}</b></p></div>`;
+    if (k.over) o += `<div class="card says${!k.missed && k.wasted <= 2 ? ' good' : ''}"><h3>${!k.missed && k.wasted <= 2 ? '🌟 Perfect sorting!' : '🔁 Try again?'}</h3><p>${!k.missed ? 'You caught every piece of steel and iron.' : `${k.missed} magnetic ${k.missed === 1 ? 'thing' : 'things'} got away.`} ${k.wasted > 2 ? 'Try not to switch the magnet on for things that are not magnetic.' : ''}</p>${k.best === 'slow' && k.level === 'slow' ? '<p>Now try the <b>fast</b> belt!</p>' : ''}</div>`;
+    if (seen.length) o += `<div class="card"><h3>📋 What was it made of?</h3><table class="gtable"><tr><th>Thing</th><th>Made of</th><th>Magnetic?</th></tr>${seen.map(id => `<tr><td>${JUNK[id][0]}</td><td>${JUNK[id][1]}</td><td>${JUNK[id][2] ? '✅ yes' : '❌ no'}</td></tr>`).join('')}</table></div>`;
+    if (seen.some(id => id === 'drinkcan') && seen.some(id => id === 'foodcan')) o += `<div class="science"><b>🔬 The science</b>Food cans and drinks cans look alike, but most food cans are <b>steel</b> and most drinks cans are <b>aluminium</b>. Only steel and iron are lifted by the magnet. Bottle tops are steel too!</div>`;
+    return `${o}<div class="card"><h2>🏭 Magnets at work</h2><ul class="icons" style="margin:6px 0 0">${USES.map(([em, t, d]) => `<li><span class="em">${em}</span><span><b>${t}</b>: ${d}</span></li>`).join('')}</ul></div>`;
   }
 };
+document.addEventListener('keydown', e => { if (e.key === ' ' && state.view === 'work' && state.work.running && e.target === document.body) { e.preventDefault(); WORK.pulse(); renderStage(); } });
 
 // ================= 4. Strength test (the fair test planner, as in Seed Lab, Dissolving Lab and Sound Studio) =================
 const MAGS = { bar: 'Bar magnet', horse: 'Horseshoe magnet', ring: 'Ring magnet', fridge: 'Fridge magnet', neo: 'Small strong magnet' };
@@ -948,10 +1016,10 @@ const MISSIONS = [
     hint: 'After the results, look at the dot plot. Which dot is far from its two partners?',
     setup() { state.view = 'str'; state.inv = freshInv(); }, on: ev => ev === 'repeated',
     win: () => 'A bent paperclip spoiled one result. You did that test again to check it. Repeating makes results more reliable.' },
-  { id: 'recycle', icon: '♻️', title: 'Recycling robot', task: 'Sort all <b>10 cans</b> on the recycling belt.',
-    hint: 'Which cans will the big magnet lift: steel or aluminium?',
-    setup() { state.view = 'work'; state.work = freshWork(); }, on: ev => ev === 'recycled',
-    win: () => 'The big magnet lifted out the steel cans. The aluminium cans went on. That is how real recycling plants sort cans.' }
+  { id: 'recycle', icon: '♻️', title: 'Recycling robot', task: 'On the recycling belt, lift out <b>every</b> piece of steel and iron in one round, and waste no more than 2 switch-ons.',
+    hint: 'Think about what each thing is made of. Only steel and iron are magnetic. Watch out: some things look alike!',
+    setup() { state.view = 'work'; state.work = freshWork(); }, on: (ev, d) => ev === 'recycled' && d.perfect,
+    win: () => 'Every piece of steel and iron lifted out, and hardly any electricity wasted. That is how real recycling plants sort metals!' }
 ];
 function emit(ev, data = {}) {
   if (state.mission == null) return;
@@ -1018,8 +1086,8 @@ const HELP = {
     look: 'The pull gets stronger as the gap gets smaller.', codes: ['5Pe.02', '5TWSm.01'] },
   str: { q: 'Are all magnets the same strength?', steps: ['Choose a question.', 'Choose <b>one</b> thing to change, what to measure, and what to keep the same.', 'Think about safety, then <b>predict</b>.', 'Measure 3 times, find the odd result, choose a chart and write a conclusion.'],
     look: 'A bigger magnet is not always stronger.', codes: ['5Pe.03', '5TWSp.04', '5TWSp.05', '5TWSp.03', '5TWSc.04', '5TWSa.02', '5TWSa.05'] },
-  work: { q: 'How do we use magnets?', steps: ['Read about magnets at work.', 'Run the recycling belt. <b>Predict</b> for each can.'],
-    look: 'Steel food cans and aluminium drink cans can look alike. The magnet tells them apart.', codes: ['5Pe.01', '5TWSp.03'] }
+  work: { q: 'How do we use magnets?', steps: ['Choose a slow or fast belt, then press <b>Start</b>.', 'When something made of <b>steel or iron</b> is under the magnet, tap to switch the magnet on.', 'Don\'t switch it on for things that are not magnetic: that wastes electricity.', 'Read about other magnets at work.'],
+    look: 'Food cans and drinks cans look alike. Do you know what each one is made of?', codes: ['5Pe.01', '5TWSp.03'] }
 };
 const MODEL = {
   bench: [['🧲', 'The magnet here is drawn bigger to make it easy to see.']],
@@ -1044,7 +1112,7 @@ function showHelp() {
     <p>📖 Tap <b>Words</b> at the top to see what the key words mean.</p>
     <p>🚀 Try the <b>Missions</b> to win stars!</p>
     <details class="teach"><summary>For teachers</summary>${H.codes.map(c => `<p><b>${c}</b> ${OBJ[c]}</p>`).join('')}
-      <h4>⏱ A 45-minute lesson</h4><p>Start with the three <b>Lesson</b> missions: ${core.join(', ')}.</p>
+      <h4>⏱ A 45-minute lesson</h4><p>Good missions to start with: ${core.join(', ')}.</p>
       <h4>All of Magnet Lab's objectives</h4><p>Main: ${MAIN.join(', ')}. Supporting: ${SUPPORT.join(', ')}.</p></details>`;
   welcomed = true;
   $('#helpModal').classList.remove('hidden');
@@ -1119,20 +1187,13 @@ const ACTIONS = {
   invwhy(el) { const t = state.inv; t.why = el.dataset.v; if (!INV.Q().why[+t.why][1]) { if (!t.whyWrong.includes(t.why)) t.whyWrong.push(t.why); } else emit('concluded'); render(); },
   invreset() { state.inv = freshInv(); render(); top0(); },
   // Magnets at work
-  wkpred(el) { state.work.pred = el.dataset.v; render(); },
-  wkrun() { const k = state.work; k.phase = 'moving'; render(); },
-  wknext() {
-    const k = state.work, c = k.cans[k.i];
-    if (c === 's') k.steel++; else k.alu++;
-    if ((k.pred === 'yes') === (c === 's')) k.right++;
-    k.i++; k.pred = null; k.phase = 'wait'; render();
-    if (k.i >= k.cans.length) emit('recycled');
-  },
-  wkreset() { state.work = freshWork(); render(); },
+  wklevel(el) { state.work.level = el.dataset.v; render(); },
+  wkstart() { WORK.start(); },
+  wkmag() { WORK.pulse(); if (state.work.dirty) { state.work.dirty = false; render(); } else renderStage(); },
   // Missions and pop-ups
   missions() {
     $('#missionList').innerHTML = MISSIONS.map((m, i) => `<button class="mission-item${state.done.includes(m.id) ? ' done' : ''}" data-act="startMission" data-i="${i}">
-      <span class="em">${m.icon}</span><span class="t">${i + 1}. ${m.title}</span>${m.core ? '<span class="core">⏱ Lesson</span>' : ''}<span class="star">⭐</span></button>`).join('');
+      <span class="em">${m.icon}</span><span class="t">${i + 1}. ${m.title}</span><span class="star">⭐</span></button>`).join('');
     $('#missionsModal').classList.remove('hidden');
   },
   startMission(el) { startMission(+el.dataset.i); },

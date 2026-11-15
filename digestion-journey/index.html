@@ -234,6 +234,9 @@
     .banner { top: calc(58% + 8px); left: 8px; right: 8px; width: auto; }
     .brand { font-size: 18px; }
   }
+  /* Lesson (core) missions, and extension missions */
+  .core { background: var(--yellow); color: var(--ink); border-radius: 8px; padding: 1px 7px; font-size: 12.5px; font-weight: 700; white-space: nowrap; }
+  .extn { background: #e8e0ff; color: #5a3fb0; border-radius: 8px; padding: 1px 7px; font-size: 12.5px; font-weight: 700; white-space: nowrap; }
 </style>
 </head>
 <body>
@@ -1369,11 +1372,11 @@ const V = {
 // ================= Missions =================
 // Each mission sets up a view; activities call emit() when something happens, and on() says whether that completes it.
 const MISSIONS = [
-  { id: 'apple', icon: '🍎', title: 'Follow the apple', task: 'On the <b>Journey</b>, follow the apple slice all the way from the mouth to the anus.', hint: 'Press <b>Next ▶</b> to move the apple on one stop.',
+  { id: 'apple', core: true, icon: '🍎', title: 'Follow the apple', task: 'On the <b>Journey</b>, follow the apple slice all the way from the mouth to the anus.', hint: 'Press <b>Next ▶</b> to move the apple on one stop.',
     setup() { state.view = 'journey'; state.step = 0; },
     on: (ev, d) => ev === 'step' && d.walked && d.n === STOPS.length - 1,
     win: () => 'The apple went through the mouth, oesophagus, stomach, small intestine, large intestine and rectum, then left through the anus. The whole journey can take <b>more than a day</b>!' },
-  { id: 'build', icon: '🧩', title: 'Build the body', task: 'Drag all <b>6 organs</b> into the right place in the body.', hint: 'The pale outlines show where each organ goes.',
+  { id: 'build', core: true, icon: '🧩', title: 'Build the body', task: 'Drag all <b>6 organs</b> into the right place in the body.', hint: 'The pale outlines show where each organ goes.',
     setup() { state.view = 'organs'; state.outlines = true; },
     on: ev => ev === 'placed',
     win: () => 'Every organ is in place! Together they make one very long tube, from the mouth to the anus.' },
@@ -1381,7 +1384,7 @@ const MISSIONS = [
     setup() { state.view = 'order'; },
     on: (ev, d) => ev === 'ordered' && d.mistakes === 0,
     win: () => 'Mouth → oesophagus → stomach → small intestine → large intestine → rectum → anus. Food only goes <b>one way</b>!' },
-  { id: 'jobs', icon: '❓', title: 'Job matcher', task: 'In <b>What happens here?</b>, get at least <b>6 of 7</b> right first time.', hint: 'Nutrients go into the blood in the <b>small</b> intestine. Water goes back into the body in the <b>large</b> intestine.',
+  { id: 'jobs', core: true, icon: '❓', title: 'Job matcher', task: 'In <b>What happens here?</b>, get at least <b>6 of 7</b> right first time.', hint: 'Nutrients go into the blood in the <b>small</b> intestine. Water goes back into the body in the <b>large</b> intestine.',
     setup() { state.view = 'quiz'; },
     on: (ev, d) => ev === 'matched' && d.firstTry >= 6,
     win: () => 'You know what each part does! The small intestine takes in <b>nutrients</b>, and the large intestine takes back <b>water</b>.' },
@@ -1732,7 +1735,7 @@ const ACTIONS = {
   },
   missions() {
     $('#missionList').innerHTML = MISSIONS.map((m, i) => `<button class="mission-item${state.done.includes(m.id) ? ' done' : ''}" data-act="startMission" data-i="${i}">
-      <span class="em">${m.icon}</span><span class="t">${i + 1}. ${m.title}</span><span class="star">⭐</span></button>`).join('');
+      <span class="em">${m.icon}</span><span class="t">${i + 1}. ${m.title}</span>${m.ext ? '<span class="extn">➕ Extension</span>' : ''}<span class="star">⭐</span></button>`).join('');
     $('#missionsModal').classList.remove('hidden');
   },
   startMission(el) { startMission(+el.dataset.i); },

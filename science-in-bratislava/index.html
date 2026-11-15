@@ -1,0 +1,719 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Science in Bratislava</title>
+<meta name="description" content="Where is science used in our city? Explore a map of a city like Bratislava, meet the people who use science in their jobs, and hunt for each Year 5 topic. An interactive tool for Year 5.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ================= Shared look (matches the other Year 5 tools) ================= */
+  :root {
+    --ink: #1d2340; --muted: #5b6386; --soft: #eef2ff;
+    --yellow: #ffc83d; --blue: #3d7bff; --coral: #ff5f6d; --green: #22b07d; --orange: #f0892e; --grey: #8a93ad; --pink: #e85d9e;
+    --space: #070d24; --drawerW: 360px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: var(--space); color: var(--ink); font-family: 'Fredoka', system-ui, sans-serif; font-size: 17px; line-height: 1.35; -webkit-tap-highlight-color: transparent; }
+  body { display: flex; flex-direction: column; }
+  button, input, textarea { font: inherit; color: inherit; }
+  b { font-weight: 700; }
+  .btn { border: 0; border-radius: 14px; padding: 9px 14px; min-height: 44px; cursor: pointer; background: #fff; color: var(--ink); font-weight: 600; font-size: 16px; box-shadow: 0 3px 0 rgba(0,0,0,.18); }
+  .btn:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,.18); }
+  .btn.active { background: var(--yellow); }
+  .btn:focus-visible { outline: 3px solid var(--yellow); outline-offset: 2px; }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .btn.go { background: var(--green); color: #fff; font-size: 19px; flex: 1; }
+  .btn.primary { background: var(--green); color: #fff; }
+  a.btn { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
+  #drawer a.btn.go, #drawer a.btn.primary { color: #fff; }
+
+  /* ---------- Top bar ---------- */
+  .topbar { flex: none; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 8px 10px; background: rgba(7,13,36,.95); z-index: 15; }
+  .brand { color: #fff; font-size: 21px; font-weight: 700; margin-right: auto; white-space: nowrap; }
+  .hub-link { flex: none; display: grid; place-items: center; width: 38px; height: 38px; border-radius: 12px; text-decoration: none; font-size: 20px; background: rgba(255,255,255,.14); box-shadow: 0 3px 0 rgba(0,0,0,.25); transition: background .15s, transform .08s; }
+  .hub-link:hover { background: rgba(255,255,255,.26); }
+  .hub-link:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,.25); }
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+  .btn.missions { background: var(--blue); color: #fff; }
+  .tabs .btn { padding: 9px 10px; }
+  /* The tabs: their words go first, leaving the icons */
+  @media (max-width: 1399px) {
+    .topbar .long { display: none; }
+    .brand { font-size: 18px; }
+    .topbar, .tabs { gap: 4px; }
+    .tabs .btn { padding: 9px 8px; font-size: 14.5px; }
+  }
+  @media (max-width: 1180px) { .tl { display: none; } .tabs .btn { font-size: 20px; padding: 6px 9px; } }
+
+  /* ---------- Main area: stage on the left, drawer on the right ---------- */
+  main { position: relative; flex: 1; min-height: 0; }
+  #stage { position: absolute; top: 0; bottom: 0; left: 0; right: var(--drawerW); overflow: hidden; background: #eef4fb; display: flex; align-items: center; justify-content: center; }
+  #stage > svg { width: 100%; height: 100%; display: block; touch-action: none; user-select: none; -webkit-user-select: none; }
+  #drawer { position: absolute; top: 0; right: 0; bottom: 0; width: var(--drawerW); background: #dfe6ff; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+  .card { background: #fff; border-radius: 16px; padding: 12px 14px; }
+  .card h2 { margin: 0 0 4px; font-size: 21px; line-height: 1.2; }
+  .card h3 { margin: 0 0 6px; font-size: 17px; }
+  .card p { margin: 4px 0; }
+  .muted { color: var(--muted); font-size: 14.5px; }
+  .term { background: #fff3c4; border-radius: 6px; padding: 0 4px; font-weight: 600; }
+  .navrow { display: flex; gap: 8px; flex-wrap: wrap; }
+  .opt { border: 2px solid #d3dbf7; background: #fff; border-radius: 12px; padding: 6px 10px; min-height: 44px; font-weight: 600; font-size: 15px; cursor: pointer; }
+  .opt.on { background: var(--yellow); border-color: #e0a800; }
+  .opt.wrong { background: #ffe0e3; border-color: var(--coral); }
+  .opt.done, .opt.done:disabled { background: #c9f2df; border-color: var(--green); opacity: 1; }
+  .opt:disabled { opacity: .45; cursor: default; }
+  .opt.sm { font-size: 14px; padding: 4px 8px; }
+  .stops { display: flex; flex-wrap: wrap; gap: 6px; }
+  .spot { background: #fff3c4; border-radius: 12px; padding: 8px 10px; margin-top: 6px !important; }
+  .job { font-size: 16px; background: #c9f2df; border-radius: 12px; padding: 8px 10px; }
+  .says { border: 3px solid var(--yellow); }
+  .says.good { border-color: var(--green); background: #effbf5; }
+  .says ul { margin: 6px 0 0; padding-left: 20px; }
+  .wq .opt { display: block; width: 100%; text-align: left; margin-top: 6px; }
+  .checkbar { position: sticky; bottom: -10px; z-index: 2; display: flex; margin: 0 -10px; padding: 6px 10px 10px; background: #dfe6ff; }
+  .slide { display: flex; align-items: center; gap: 8px; margin: 6px 0; }
+  .slide input[type=range] { flex: 1; min-height: 44px; accent-color: var(--coral); }
+  .lay-top { position: absolute; top: 8px; left: 10px; right: 10px; display: flex; gap: 8px; align-items: flex-start; flex-wrap: wrap; pointer-events: none; z-index: 2; }
+  .scaletag { background: var(--blue); color: #fff; font-weight: 700; border-radius: 10px; padding: 5px 10px; font-size: 15px; white-space: nowrap; }
+  .readout { background: #fff; border-radius: 12px; padding: 5px 10px; font-size: 15px; line-height: 1.3; box-shadow: 0 3px 8px rgba(0,0,0,.12); }
+  .tapme { cursor: pointer; }
+  .icons { list-style: none; padding: 0; margin: 0 0 14px; }
+  .icons li { display: flex; gap: 10px; padding: 6px 0; line-height: 1.35; }
+  .icons .em { font-size: 24px; width: 32px; flex: none; text-align: center; }
+  .linkbtn { border: 0; background: none; color: var(--blue); font-weight: 600; cursor: pointer; padding: 4px 0; font-size: 15px; min-height: 32px; }
+  a.linkbtn { display: inline-flex; align-items: center; text-decoration: none; }
+
+  /* ---------- Chips: tap one, then tap where it goes – or drag it there ---------- */
+  .chip { display: inline-flex; align-items: center; justify-content: center; gap: 4px; border: 2px solid #d3dbf7; background: #fff; border-radius: 12px; padding: 4px 12px; min-height: 44px; font-weight: 600; font-size: 15px; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
+  .chip.sel { background: var(--yellow); border-color: #e0a800; }
+  .chip-ghost { position: fixed; z-index: 30; pointer-events: none; transform: translate(-50%, -50%) rotate(-3deg); box-shadow: 0 8px 18px rgba(0,0,0,.3); opacity: .95; }
+  .bank { display: flex; flex-wrap: wrap; gap: 6px; }
+  .bank:empty::before { content: 'All placed!'; color: var(--muted); font-size: 15px; }
+  .mrow { display: flex; align-items: center; gap: 8px; margin: 6px 0; }
+  .mrow > span { flex: 1; font-size: 15px; line-height: 1.25; }
+  .mslot { flex: none; width: 118px; min-height: 44px; border: 2px dashed #b7c3ea; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; background: #f7f9ff; cursor: pointer; text-align: center; padding: 2px 4px; }
+  .mslot.ready { border-color: #e0a800; background: #fffbea; }
+  .mslot.over { border-style: solid; border-color: var(--green); }
+  .mslot.ok { border-style: solid; border-color: var(--green); background: #c9f2df; cursor: default; }
+  .mslot.bad { border-style: solid; border-color: var(--coral); background: #ffe0e3; }
+  svg .slot.over rect { stroke: var(--green); stroke-width: 4; }
+  svg .slot.ready rect { stroke: #e0a800; }
+
+  /* ---------- Sorting into two boxes ---------- */
+  .sortwrap { position: absolute; inset: 0; display: flex; flex-direction: column; gap: 8px; padding: 50px 8px 8px; }
+  .pool { flex: 1; min-height: 0; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; align-content: start; grid-auto-rows: max-content; padding: 4px; }
+  .pcard { position: relative; display: flex; flex-direction: column; border: 3px solid #fff; background: #fff; border-radius: 14px; padding: 0; overflow: hidden; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; font-weight: 700; font-size: 15px; box-shadow: 0 3px 0 rgba(0,0,0,.12); text-align: center; }
+  .pcard img, .pcard .ph { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; display: block; pointer-events: none; }
+  .pcard .ph { display: grid; place-items: center; font-size: 46px; background: #e6f3e0; }
+  .pcard .ph svg { width: 60%; height: auto; }
+  .pcard > span { padding: 4px 6px; }
+  .pcard.sel { border-color: var(--yellow); box-shadow: 0 0 0 3px var(--yellow); }
+  .pcard.look { border-color: var(--blue); }
+  .bins { flex: none; height: 40%; min-height: 130px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .bin { border: 3px dashed #b7c3ea; border-radius: 16px; background: #fff; padding: 6px; display: flex; flex-direction: column; gap: 4px; overflow-y: auto; cursor: pointer; }
+  .bin h3 { margin: 0; font-size: 18px; text-align: center; pointer-events: none; }
+  .bin .bsub { text-align: center; font-size: 13.5px; color: var(--muted); font-weight: 600; pointer-events: none; }
+  .bin.ready { border-color: var(--yellow); background: #fffbea; }
+  .bin.over { border-style: solid; border-color: var(--green); background: #effbf5; }
+  .bin .in { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; }
+  .mini { width: 66px; display: flex; flex-direction: column; align-items: center; font-size: 12px; font-weight: 600; text-align: center; line-height: 1.1; pointer-events: none; }
+  .mini img, .mini .ph { width: 58px; height: 44px; object-fit: cover; border-radius: 8px; display: grid; place-items: center; font-size: 28px; background: #e6f3e0; }
+  .mini .ph svg { width: 34px; height: 34px; }
+  .photo { position: relative; border-radius: 14px; overflow: hidden; background: #e6f3e0; }
+  .photo img { width: 100%; display: block; }
+  .photo .ph { display: grid; place-items: center; font-size: 80px; aspect-ratio: 4 / 3; }
+  .pcard .credit, .mini .credit { display: none; }
+  .credit { position: absolute; right: 6px; bottom: 6px; background: rgba(0,0,0,.55); color: #fff; font-size: 11px; padding: 2px 6px; border-radius: 6px; max-width: calc(100% - 12px); }
+
+  /* ---------- The fair test (as in Seed Lab) ---------- */
+  .steps { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
+  .steps span { font-size: 12.5px; font-weight: 700; padding: 3px 8px; border-radius: 10px; background: var(--soft); color: var(--muted); }
+  .steps span.now { background: var(--yellow); color: var(--ink); }
+  .steps span.done { background: #c9f2df; color: #147a55; }
+  .varrow { margin: 8px 0; }
+  .varrow > span { display: block; font-weight: 700; font-size: 14.5px; margin-bottom: 4px; }
+  .tag { background: var(--yellow); border-radius: 8px; padding: 1px 6px; font-size: 12px; }
+  .keeps { display: grid; gap: 4px; margin-top: 6px; }
+  .keep { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 4px 8px; border-radius: 10px; background: var(--soft); font-size: 15px; cursor: pointer; }
+  .keep input { width: 22px; height: 22px; flex: none; accent-color: var(--green); }
+  ul.spot { padding-left: 28px; }
+  .seedcards { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 6px; }
+  .seedcard { display: flex; flex-direction: column; align-items: center; gap: 2px; border: 2px solid #d3dbf7; background: #fff; border-radius: 12px; padding: 6px 4px; min-height: 44px; font-weight: 600; font-size: 13.5px; line-height: 1.15; cursor: pointer; text-align: center; }
+  .seedcard.sel { background: var(--yellow); border-color: #e0a800; }
+  .seedcard:disabled { opacity: .6; cursor: default; }
+  .gtable { width: 100%; border-collapse: collapse; font-size: 15px; margin: 6px 0; }
+  .gtable th { text-align: left; font-size: 13.5px; color: var(--muted); padding: 2px 4px; }
+  .gtable td { border-top: 1px solid #e1e6f5; padding: 5px 4px; }
+  .numin { width: 90px; min-height: 44px; font-size: 20px; text-align: center; border: 2px solid #c3cdf2; border-radius: 12px; padding: 4px; background: #fff; }
+  .numin:focus { outline: 3px solid var(--yellow); border-color: #e0a800; }
+  .numin.ok { border-color: var(--green); background: #effbf5; }
+  .ansrow { display: flex; align-items: center; gap: 8px; margin: 8px 0 4px; font-weight: 600; flex-wrap: wrap; }
+  .wsmall { font-family: 'Fredoka', system-ui, sans-serif; font-size: 13px; font-weight: 600; fill: var(--ink); paint-order: stroke; stroke: #fff; stroke-width: 4px; stroke-linejoin: round; }
+  /* ---------- Science in Bratislava ---------- */
+  .pcardp { display: flex; gap: 10px; align-items: flex-start; background: #fff8db; border-radius: 14px; padding: 8px 10px; margin-top: 8px; font-size: 15.5px; line-height: 1.35; }
+  .pcardp .pem { font-size: 38px; line-height: 1; flex: none; }
+  .people { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+  .pchip { display: inline-flex; gap: 6px; align-items: center; border: 2px solid #d3dbf7; background: #fff; border-radius: 12px; padding: 4px 10px; min-height: 44px; font: inherit; font-weight: 600; font-size: 15px; cursor: pointer; color: var(--ink); }
+  .pchip span { font-size: 22px; }
+  .pchip.on { background: var(--yellow); border-color: #e0a800; }
+  .pchip.ok { background: #c9f2df; border-color: var(--green); }
+  .seelab + .seelab { margin-top: 6px; }
+
+  /* ---------- Pictures drawn on the stage ---------- */
+  .glabel { font-family: 'Fredoka', system-ui, sans-serif; font-size: 16px; font-weight: 700; fill: var(--ink); }
+  .gsmall { font-family: 'Fredoka', system-ui, sans-serif; font-size: 13px; font-weight: 600; fill: var(--muted); }
+  .part:hover > path, .part:hover > ellipse { filter: brightness(1.08); }
+  .bob { animation: bob 1.4s ease-in-out infinite alternate; }
+  @keyframes bob { to { transform: translateY(-8px); } }
+  .puff { animation: puff 1.6s ease-out infinite; }
+  @keyframes puff { from { opacity: 1; transform: translate(0, 0); } to { opacity: 0; transform: translate(var(--dx), var(--dy)); } }
+  .glow { animation: glow 1.2s ease-in-out infinite alternate; }
+  @keyframes glow { from { opacity: .35; } to { opacity: .9; } }
+  .scent { animation: rise 2.4s ease-in infinite; }
+  @keyframes rise { from { transform: translateY(0); opacity: 0; } 20% { opacity: .9; } to { transform: translateY(-40px); opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { .bob, .puff, .glow, .scent { animation: none; } }
+
+  /* ---------- Missions and pop-ups ---------- */
+  .banner { position: absolute; top: 10px; right: 10px; width: calc(var(--drawerW) - 20px); z-index: 6; background: #fff; border: 3px solid var(--yellow); border-radius: 16px; padding: 9px 44px 9px 14px; box-shadow: 0 6px 16px rgba(0,0,0,.18); }
+  .banner.hidden { display: none; }
+  .banner .kicker { font-size: 12.5px; font-weight: 700; color: var(--blue); text-transform: uppercase; letter-spacing: .04em; }
+  .banner .close { position: absolute; top: 6px; right: 6px; border: 0; background: var(--soft); border-radius: 50%; width: 32px; height: 32px; cursor: pointer; }
+  .banner .hint { margin-top: 4px; color: var(--muted); font-size: 15px; }
+  .banner .hint.hidden { display: none; }
+  .modal { position: fixed; inset: 0; background: rgba(5,10,30,.6); display: flex; align-items: center; justify-content: center; z-index: 20; padding: 16px; }
+  .modal.hidden { display: none; }
+  .modal-box { position: relative; background: #fff; border-radius: 24px; padding: 20px; width: min(580px, 100%); max-height: calc(100vh - 32px); overflow-y: auto; }
+  .modal-box h2 { margin: 0 0 8px; font-size: 25px; }
+  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+  .mission-list { display: grid; gap: 8px; margin-bottom: 14px; }
+  .mission-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; min-height: 52px; border-radius: 16px; background: var(--soft); border: 0; text-align: left; cursor: pointer; font-size: 16px; }
+  .mission-item .em { font-size: 25px; } .mission-item .t { flex: 1; font-weight: 600; }
+  .mission-item .star { font-size: 21px; filter: grayscale(1); opacity: .35; }
+  .mission-item.done .star { filter: none; opacity: 1; }
+  .core { background: var(--yellow); color: var(--ink); border-radius: 8px; padding: 1px 7px; font-size: 12.5px; font-weight: 700; white-space: nowrap; }
+  .win-emoji { font-size: 56px; text-align: center; }
+  .win-text { font-size: 17.5px; line-height: 1.5; margin-bottom: 14px; }
+  .confetti { position: fixed; top: -40px; font-size: 26px; z-index: 40; pointer-events: none; animation: fall linear forwards; }
+  @keyframes fall { to { transform: translateY(110vh) rotate(540deg); } }
+  .modal-x {
+    position: sticky; top: 0; float: right; z-index: 2;
+    width: 52px; height: 52px; margin: -6px -6px 6px 12px; padding: 0;
+    border: 0; border-radius: 50%; cursor: pointer;
+    background: var(--coral); color: #fff; font-size: 26px; font-weight: 700; line-height: 1;
+    display: grid; place-items: center; box-shadow: 0 3px 0 rgba(0,0,0,.2);
+    transition: transform .08s, filter .15s;
+  }
+  .modal-x:hover { filter: brightness(1.08); }
+  .modal-x:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,.2); }
+  .modal-x:focus-visible { outline: 3px solid var(--yellow); outline-offset: 2px; }
+  .science { background: #fff6d6; border: 3px solid var(--yellow); border-radius: 16px; padding: 10px 14px; margin: 8px 0; }
+  .science > b:first-child { display: block; font-size: 14px; text-transform: uppercase; letter-spacing: .04em; color: #8a5a00; margin-bottom: 2px; }
+  .seelab { display: flex; align-items: center; gap: 8px; background: #e7f7ee; border-radius: 12px; padding: 8px 10px; font-weight: 600; color: #0b6644; text-decoration: none; min-height: 44px; }
+  .help-body h3 { margin: 12px 0 4px; font-size: 17px; }
+  .help-body p { margin: 4px 0; line-height: 1.4; }
+  .help-body ol { margin: 4px 0; padding-left: 24px; line-height: 1.4; }
+  .help-body ol li { margin: 3px 0; }
+  .help-body .welcome { font-weight: 700; color: var(--blue); }
+  details.teach { margin: 12px 0; font-size: 13px; color: var(--muted); }
+  details.teach summary { cursor: pointer; font-weight: 600; min-height: 32px; }
+  details.teach p { margin: 4px 0; }
+  details.teach h4 { margin: 8px 0 2px; font-size: 13px; color: var(--ink); }
+
+  /* ---------- Narrow screens: stage on top, drawer below ---------- */
+  @media (max-width: 760px) {
+    :root { --drawerW: 0px; }
+    #stage { bottom: 42%; right: 0; }
+    #drawer { top: 58%; width: 100%; }
+    .banner { top: calc(58% + 8px); left: 8px; right: 8px; width: auto; }
+    .brand { font-size: 17px; }
+    .topbar > .btn { padding: 5px 7px; }
+    .brand { font-size: 15px; white-space: normal; line-height: 1.05; max-width: 82px; }
+    /* The tabs get a row of their own, under the title and buttons */
+    .tabs { order: 9; width: 100%; justify-content: space-between; gap: 3px; }
+    .tabs .btn { flex: 1; font-size: 18px; padding: 4px 0; min-height: 40px; }
+    .readout, .scaletag { font-size: 13px; padding: 3px 7px; }
+    .glabel { font-size: 12px; } .gsmall { font-size: 10.5px; }
+    .sortwrap { padding-top: 40px; gap: 5px; }
+    .pool { grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); gap: 5px; }
+    .pcard { font-size: 12px; } .pcard .ph { font-size: 30px; }
+    .bins { min-height: 100px; gap: 5px; }
+    .bin h3 { font-size: 14px; } .bin .bsub { display: none; }
+    .mini { width: 46px; font-size: 10px; } .mini img, .mini .ph { width: 42px; height: 32px; font-size: 20px; }
+    .mslot { width: 96px; font-size: 14px; }
+  }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a class="hub-link" href="../index.html" title="Back to the Science Hub" aria-label="Back to the Science Hub">🏠</a>
+  <div class="brand">🏰 Science in Bratislava</div>
+  <div class="tabs" id="tabs"></div>
+  <button class="btn missions" data-act="missions" title="Missions">🚀 <span class="long">Missions </span><span id="starCount"></span></button>
+  <button class="btn" data-act="words" title="Key words">📖<span class="long"> Words</span></button>
+  <button class="btn" data-act="model" title="How is this model different from real life?">🤔<span class="long"> Real life?</span></button>
+  <button class="btn" id="helpBtn" data-act="help" aria-label="How to use">❓</button>
+</div>
+<main>
+  <div id="stage"></div>
+  <div id="drawer"></div>
+  <div id="banner" class="banner hidden" role="status">
+    <div class="kicker" id="bannerKicker"></div>
+    <div id="bannerText"></div>
+    <button class="linkbtn" data-act="hint" id="hintBtn">💡 Show a hint</button>
+    <div class="hint hidden" id="bannerHint"></div>
+    <button class="close" data-act="stopMission" aria-label="Stop this mission">✖</button>
+  </div>
+</main>
+<div id="missionsModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="missionsTitle">
+  <div class="modal-box">
+    <button class="modal-x" data-act="closeModals" aria-label="Close">✕</button>
+    <h2 id="missionsTitle">🚀 Missions</h2>
+    <div class="mission-list" id="missionList"></div>
+    <div class="modal-actions"><button class="btn" data-act="resetStars">Reset stars</button><button class="btn primary" data-act="closeModals">Close</button></div>
+  </div>
+</div>
+<div id="modelModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modelTitle">
+  <div class="modal-box">
+    <button class="modal-x" data-act="closeModals" aria-label="Close">✕</button>
+    <h2 id="modelTitle">🤔 How is this model different from real life?</h2>
+    <p class="muted" id="modelTab" style="margin:-4px 0 8px;font-weight:600"></p>
+    <p style="margin-top:0">A <span class="term">model</span> shows some important features of something real – but not everything.</p>
+    <ul class="icons" id="modelList"></ul>
+    <div class="modal-actions"><button class="btn primary" data-act="closeModals">Got it!</button></div>
+  </div>
+</div>
+<div id="wordsModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="wordsTitle">
+  <div class="modal-box">
+    <button class="modal-x" data-act="closeModals" aria-label="Close">✕</button>
+    <h2 id="wordsTitle">📖 Key words</h2>
+    <ul class="icons" id="wordsList"></ul>
+    <div class="modal-actions"><button class="btn primary" data-act="closeModals">Got it!</button></div>
+  </div>
+</div>
+<div id="winModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="winTitle">
+  <div class="modal-box">
+    <button class="modal-x" data-act="closeModals" aria-label="Close">✕</button>
+    <div class="win-emoji">⭐</div>
+    <h2 id="winTitle" style="text-align:center">Mission complete!</h2>
+    <div class="win-text" id="winText"></div>
+    <div class="modal-actions"><button class="btn" data-act="closeModals">Keep exploring</button><a class="btn primary" id="winPractise" href="../practice/index.html#science-around-us">✏️ Practise this</a><button class="btn primary" id="winNext" data-act="nextMission">Next mission ▶</button></div>
+  </div>
+</div>
+<div id="helpModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+  <div class="modal-box">
+    <button class="modal-x" data-act="closeModals" aria-label="Close">✕</button>
+    <div class="help-body" id="helpBody"></div>
+    <div class="modal-actions"><a class="btn" href="../practice/index.html#science-around-us">✏️ Practise this</a><button class="btn primary" data-act="closeModals">Let's go! 🚀</button></div>
+  </div>
+</div>
+
+<script>
+// ================= Utilities =================
+const $ = (s, r = document) => r.querySelector(s);
+// Saved progress; private windows can block storage, so failures are ignored
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+};
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+const stageSize = () => { const st = $('#stage'), w = st.clientWidth || 900, h = st.clientHeight || 600; return { w, h, narrow: w < 560 }; };
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+const mix = (c1, c2, t) => { const p = c => [1, 3, 5].map(k => parseInt(c.slice(k, k + 2), 16)), a = p(c1), b = p(c2);
+  return '#' + a.map((v, k) => Math.round(v + (b[k] - v) * clamp(t)).toString(16).padStart(2, '0')).join(''); };
+const lc = t => t[0].toLowerCase() + t.slice(1);
+const cap = t => t[0].toUpperCase() + t.slice(1);
+// A question with choices: wrong ones turn red and stay disabled, the right one turns green
+const choices = (act, opts, chosen, wrongs, right) => opts.map(([v, t]) => `<button class="opt${chosen === v && v === right ? ' done' : wrongs.includes(v) ? ' wrong' : ''}" data-act="${act}" data-v="${v}"${wrongs.includes(v) || chosen === right ? ' disabled' : ''}>${t}</button>`).join('');
+// A prediction: no right or wrong yet, just the child's choice
+const predict = (act, opts, chosen) => opts.map(([v, t]) => `<button class="opt${chosen === v ? ' on' : ''}" data-act="${act}" data-v="${v}"${chosen ? ' disabled' : ''}>${t}</button>`).join('');
+
+// ================= Drag or tap =================
+// Anything with data-drag can be picked up; anything with data-drop can take it.
+// A tap picks it up (the view's pick), a second tap on a drop place puts it there (the view's drop).
+// Dragging does the same in one go.
+const DND = { start: null, ghost: null, over: null, skipClick: false };
+document.addEventListener('pointerdown', e => {
+  const el = e.target.closest('[data-drag]');
+  if (!el || e.button > 0 || el.matches(':disabled')) return;
+  DND.start = { el, id: el.dataset.drag, x: e.clientX, y: e.clientY, moved: false };
+});
+document.addEventListener('pointermove', e => {
+  const d = DND.start; if (!d) return;
+  if (!d.moved) {
+    if (Math.hypot(e.clientX - d.x, e.clientY - d.y) < 10) return;
+    d.moved = true;
+    const v = VIEWS[state.view], html = v.ghost && v.ghost(d.id);
+    let g;
+    if (html) { g = document.createElement('div'); g.className = 'chip'; g.innerHTML = html; }
+    else { g = d.el.cloneNode(true); g.style.width = d.el.offsetWidth + 'px'; }
+    g.classList.add('chip-ghost'); g.removeAttribute('data-drag');
+    document.body.appendChild(g); DND.ghost = g;
+  }
+  DND.ghost.style.left = e.clientX + 'px'; DND.ghost.style.top = e.clientY + 'px';
+  const over = document.elementFromPoint(e.clientX, e.clientY)?.closest('[data-drop]');
+  if (over !== DND.over) { DND.over?.classList.remove('over'); over?.classList.add('over'); DND.over = over; }
+});
+function endDrag(e) {
+  const d = DND.start; DND.start = null;
+  if (!d || !d.moved) return;
+  DND.ghost?.remove(); DND.ghost = null; DND.over?.classList.remove('over'); DND.over = null;
+  DND.skipClick = true; setTimeout(() => DND.skipClick = false, 0);
+  const over = e && document.elementFromPoint(e.clientX, e.clientY)?.closest('[data-drop]');
+  const v = VIEWS[state.view];
+  if (over && v.drop) v.drop(d.id, over.dataset.drop);
+}
+document.addEventListener('pointerup', endDrag);
+document.addEventListener('pointercancel', () => endDrag(null));
+
+
+// A repeatable random number generator, so the same picture comes back every time (from Particle Playground)
+function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+
+// ================= Science in Bratislava =================
+const TOOL = { name: 'Science in Bratislava', store: 'sb-done', confetti: ['⭐', '🌟', '🏰', '🔬', '🎉'] };
+// The places on the map. x, y in % of the map. General names: these are examples, not real addresses.
+// person: [emoji, name, job, what they say, the science they use]. links: [[tool name, link]].
+const PLACES = {
+  water: { em: '💧', name: 'The water works', x: 16, y: 30, topic: 'Filtering and clean water',
+    sci: 'Water from wells and the river is <b>filtered</b> through sand and gravel to take out bits. Then it is <b>tested</b> to make sure it is safe to drink.',
+    person: ['🧑‍🔬', 'Zuzana', 'Water scientist', 'I take samples of water every day and test them, to check the water is clean and safe.', 'Filtering and testing water'],
+    links: [['⚗️ Dissolving Lab: Separation station', '../dissolving-lab/index.html#view=sep&task=sand'], ['💧 Air and Water: Is it pure?', '../air-and-water/index.html#view=pure']] },
+  cars: { em: '🚗', name: 'The car factory', x: 82, y: 22, topic: 'Air resistance and friction',
+    sci: 'Engineers shape cars so the air flows smoothly round them. Less <b>air resistance</b> means the car uses less fuel. They test tyres for good <b>friction</b> on wet roads.',
+    person: ['👷', 'Peter', 'Engineer', 'I design cars and test them in a wind tunnel. I want them to be safe and to use less fuel.', 'Forces: air resistance and friction'],
+    links: [['🛝 Forces Playground', '../forces-playground/index.html#view=parachute']] },
+  hospital: { em: '🏥', name: 'The hospital', x: 50, y: 16, topic: 'The human body and digestion',
+    sci: 'Doctors and nurses use what scientists know about the <b>human body</b> to find out why people are ill, and to help them get better.',
+    person: ['👩‍⚕️', 'Jana', 'Doctor', 'I find out why people have tummy aches. I need to know how food travels through the body.', 'The digestive system'],
+    links: [['🍎 Digestion Journey', '../digestion-journey/index.html']] },
+  pharmacy: { em: '💊', name: 'The pharmacy', x: 33, y: 46, topic: 'Dissolving medicines',
+    sci: 'Medicines must be measured very carefully. Some medicines are tablets that <b>dissolve</b> in water before you drink them.',
+    person: ['🧑‍⚕️', 'Martin', 'Pharmacist', 'I check that each person gets the right medicine and the right amount. Some tablets fizz and dissolve in water.', 'Dissolving and measuring'],
+    links: [['🧂 Dissolving Lab', '../dissolving-lab/index.html#view=beaker']] },
+  bakery: { em: '🥐', name: 'The bakery', x: 52, y: 40, topic: 'Melting and changes of state',
+    sci: 'Butter and chocolate <b>melt</b> when they are warmed, and go solid again when they cool. Baking changes dough into bread, and that change can\'t be undone.',
+    person: ['🧑‍🍳', 'Eva', 'Baker', 'I melt chocolate for the cakes, then let it cool so it sets hard again. The oven must be just the right temperature.', 'Melting and solidifying'],
+    links: [['🧊 Particle Playground', '../particle-playground/index.html']] },
+  weather: { em: '🌦️', name: 'The weather station', x: 70, y: 46, topic: 'The weather and the water cycle',
+    sci: 'Instruments measure the temperature, the rain and the wind every day. Scientists use the measurements to <b>forecast</b> the weather.',
+    person: ['👩‍🔬', 'Lucia', 'Meteorologist', 'I measure the rain and the clouds every day, and tell people what the weather will be like tomorrow.', 'The water cycle and the air'],
+    links: [['💧 Air and Water: Water cycle', '../air-and-water/index.html#view=water']] },
+  vet: { em: '🐶', name: 'The vet', x: 30, y: 84, topic: 'Animal diets',
+    sci: 'Vets look after sick animals. They check what each animal eats, because every animal needs its own <b>balanced diet</b>.',
+    person: ['🧑‍⚕️', 'Tomáš', 'Vet', 'I help sick pets get better, and tell their owners what food their pet needs to stay healthy.', 'A balanced diet for animals'],
+    links: [['🍽️ Balanced Plate: Feed the zoo', '../balanced-plate/index.html#view=zoo']] },
+  recycling: { em: '♻️', name: 'The recycling centre', x: 86, y: 84, topic: 'Magnets sorting metals',
+    sci: 'A very strong <b>magnet</b> lifts steel and iron out of the rubbish. Aluminium, plastic and glass are sorted in other ways.',
+    person: ['👷', 'Juraj', 'Recycling worker', 'I sort the rubbish so it can be used again. A huge magnet does some of the work for me!', 'Magnets and magnetic materials'],
+    links: [['🧲 Magnet Lab: Magnets at work', '../magnet-lab/index.html#view=work']] },
+  farm: { em: '🚜', name: 'A farm near the city', x: 60, y: 84, topic: 'Seeds, flowers and growing',
+    sci: 'Farmers know what seeds need to <b>germinate</b>: water and the right temperature. Bees <b>pollinate</b> the flowers of their fruit trees.',
+    person: ['👩‍🌾', 'Katarína', 'Farmer', 'I plant seeds in spring, when the soil is warm and damp. The bees visit my apple trees.', 'Seeds, germination and pollination'],
+    links: [['🌱 Seed Lab', '../seed-lab/index.html'], ['🌸 Flower Lab', '../flower-lab/index.html']] },
+  zoo: { em: '🦒', name: 'The zoo', x: 8, y: 50, topic: 'Animals and their habitats',
+    sci: 'Zoo keepers know how each animal is <b>adapted</b> to where it lives in the wild. They give it the right home and the right food.',
+    person: ['🧑‍🔬', 'Marek', 'Zoo keeper', 'Our camels and our penguins need very different homes. I know what each animal needs.', 'Adaptations to habitats'],
+    links: [['🦊 Adaptation Studio', '../adaptation-studio/index.html']] },
+  concert: { em: '🎻', name: 'The concert hall', x: 30, y: 16, topic: 'Sound and music',
+    sci: 'Instrument makers change the <b>length</b> and <b>tightness</b> of strings to change the <b>pitch</b>. Sound engineers make sure the music sounds clear.',
+    person: ['🎧', 'Simona', 'Sound engineer', 'I make sure everyone in the hall can hear the music clearly, loud or quiet, high or low.', 'Sound: pitch and volume'],
+    links: [['🎵 Sound Studio', '../sound-studio/index.html']] },
+  observatory: { em: '🔭', name: 'The observatory', x: 92, y: 40, topic: 'Space, the Sun and the planets',
+    sci: 'Astronomers use big <b>telescopes</b> to study the Moon, the planets and the stars. They know how the Earth moves round the Sun.',
+    person: ['🧑‍🚀', 'Michal', 'Astronomer', 'At night I look at the Moon and the planets through a big telescope, and measure how they move.', 'The Earth, the Sun and space'],
+    links: [['🌍 Seasons Explorer', '../earth-seasons/index.html']] }
+};
+const PORDER = Object.keys(PLACES);
+const JOBS = PORDER.map(id => PLACES[id].person[2]);
+const freshMap = () => ({ open: null, seen: {} });
+const freshPeople = () => ({ order: shuffle(PORDER), cur: null, job: {}, jobWrong: {}, sci: {}, sciWrong: {}, place: {}, placeWrong: null, done: {} });
+const freshHunt = () => ({ order: shuffle(PORDER), i: 0, wrong: 0, tap: null, found: {}, opts: null });
+const state = { view: 'map', mission: null, done: store.get(TOOL.store, []), map: freshMap(), people: freshPeople(), hunt: freshHunt() };
+const ACTIONS = {};
+
+// ================= The map (all three views use it) =================
+function mapStage(mode) {
+  const { w, h, narrow } = stageSize(), top = narrow ? 40 : 52, mh = h - top - 8, X = x => 10 + (w - 20) * x / 100, Y = y => top + mh * y / 100;
+  let o = `<rect width="${w}" height="${h}" fill="#e7f3df"/>`;
+  // Streets, parks, the Danube with two bridges, and the castle on its hill
+  for (let k = 1; k < 8; k++) o += `<line x1="${X(k * 12.5)}" x2="${X(k * 12.5 - 4)}" y1="${Y(0)}" y2="${Y(52)}" stroke="#fff" stroke-width="5" opacity=".8"/>`;
+  for (let k = 1; k < 4; k++) o += `<line x1="${X(0)}" x2="${X(100)}" y1="${Y(k * 13)}" y2="${Y(k * 13 + 2)}" stroke="#fff" stroke-width="5" opacity=".8"/>`;
+  o += `<path d="M${X(0)} ${Y(56)} C${X(25)} ${Y(50)} ${X(45)} ${Y(64)} ${X(70)} ${Y(57)} S${X(95)} ${Y(55)} ${X(100)} ${Y(60)} V${Y(70)} C${X(85)} ${Y(66)} ${X(70)} ${Y(70)} ${X(48)} ${Y(73)} S${X(15)} ${Y(64)} ${X(0)} ${Y(66)} Z" fill="#7fb2ff"/>`;
+  o += `<text x="${X(52)}" y="${Y(66)}" text-anchor="middle" class="gsmall" style="fill:#fff;font-weight:700">the Danube</text>`;
+  [[30, '#c6d0f2'], [63, '#c6d0f2']].forEach(([x, c]) => o += `<rect x="${X(x)}" y="${Y(52)}" width="${Math.max(10, (w - 20) * .025)}" height="${mh * .24}" fill="${c}" stroke="#8a93ad"/>`);
+  o += `<ellipse cx="${X(22)}" cy="${Y(50)}" rx="${(w - 20) * .07}" ry="${mh * .06}" fill="#b9dca6"/><text x="${X(22)}" y="${Y(50)}" text-anchor="middle" style="font-size:${narrow ? 22 : 34}px">🏰</text>`;
+  // The places
+  PORDER.forEach(id => {
+    const P = PLACES[id], cx = X(P.x), cy = Y(P.y), r = narrow ? 17 : 26;
+    const on = (mode === 'map' && state.map.open === id) || (mode === 'people' && state.people.place[state.people.cur] === id) || (mode === 'hunt' && state.hunt.tap === id);
+    const seen = mode === 'map' ? state.map.seen[id] : mode === 'people' ? Object.values(state.people.place).includes(id) : state.hunt.found[id];
+    const bad = mode === 'people' && state.people.placeWrong === id || mode === 'hunt' && state.hunt.badTap === id;
+    o += `<g class="tapme" data-act="placetap" data-v="${id}"><circle cx="${cx}" cy="${cy}" r="${r + 4}" fill="${bad ? 'var(--coral)' : on ? 'var(--yellow)' : seen ? 'var(--green)' : '#fff'}" stroke="#1d2340" stroke-width="2"/>
+      <text x="${cx}" y="${cy + r * .38}" text-anchor="middle" style="font-size:${r * 1.1}px">${P.em}</text>
+      <text x="${cx}" y="${cy + r + (narrow ? 13 : 18)}" text-anchor="middle" class="wsmall"${narrow ? ' style="font-size:9.5px"' : ''}>${narrow ? P.name.replace(/^(The|A) /, '').replace(' near the city', '') : P.name}</text></g>`;
+  });
+  return `<svg viewBox="0 0 ${w} ${h}" aria-label="A map of a city like Bratislava">${o}</svg>`;
+}
+ACTIONS.placetap = el => { const v = VIEWS[state.view]; if (v.tap) v.tap(el.dataset.v); };
+
+// ================= 1. Explore the map =================
+const MAPV = {
+  stage() { return `<div class="lay-top"><span class="scaletag">🗺️ Science in the city</span><div class="readout">Tap a place to find out what science happens there.</div></div>${mapStage('map')}`; },
+  tap(id) { const m = state.map; m.open = id; m.seen[id] = true; render(); top0(); emit('seen', { n: Object.keys(m.seen).length }); },
+  drawer() {
+    const m = state.map, P = m.open && PLACES[m.open], n = Object.keys(m.seen).length;
+    return `${P ? `<div class="card says"><h2>${P.em} ${P.name}</h2><p><b>🔬 Science here:</b> ${P.sci}</p>
+        <div class="pcardp"><span class="pem">${P.person[0]}</span><div><b>${P.person[1]}, ${lc(P.person[2])}</b><br>"${P.person[3]}"</div></div>
+        <p style="margin-top:8px"><b>Find out more:</b></p>${P.links.map(([t, href]) => `<a class="seelab" href="${href}" style="margin-top:4px">${t} ▶</a>`).join('')}</div>` : ''}
+      <div class="card"><h2>🗺️ Science in the city</h2><p>Science is not just in the classroom! People all over the city use science in their jobs.</p><p class="muted">Places visited: ${n} of ${PORDER.length}</p></div>
+      ${n >= 4 ? '<div class="science"><b>🔬 The science</b>Doctors, bakers, engineers, farmers and many more people use science every day. You will learn about all of these ideas in Year 5!</div>' : ''}`;
+  }
+};
+
+// ================= 2. Who works here? =================
+// For each person: what is their job? Which science do they use? Where do they work?
+const PEOPLEV = {
+  stage() {
+    const p = state.people, P = p.cur && PLACES[p.cur], step = P && PEOPLEV.step(p.cur);
+    const say = !P ? 'Choose a person in the panel.' : step === 'place' ? `Where does ${P.person[1]} work? Tap the place on the map.` : step === 'done' ? `✅ ${P.person[1]} works at ${lc(P.name)}.` : 'Answer the questions in the panel.';
+    return `<div class="lay-top"><span class="scaletag">🧑‍🔬 Who works here?</span><div class="readout">${say}</div></div>${mapStage('people')}`;
+  },
+  step(id) { const p = state.people; return !p.job[id] ? 'job' : !p.sci[id] ? 'sci' : !p.place[id] ? 'place' : 'done'; },
+  tap(id) {
+    const p = state.people; if (!p.cur || PEOPLEV.step(p.cur) !== 'place') return;
+    if (id === p.cur) { p.place[p.cur] = id; p.placeWrong = null; p.done[p.cur] = true; render(); emit('person', { n: Object.keys(p.done).length }); }
+    else { p.placeWrong = id; render(); }
+  },
+  // Three choices: the right one and two others, always in the same order for the same person
+  opts(id, key) {
+    const right = key === 'job' ? PLACES[id].person[2] : PLACES[id].person[4], all = PORDER.map(x => key === 'job' ? PLACES[x].person[2] : PLACES[x].person[4]);
+    const k = PORDER.indexOf(id), others = [all[(k + 3) % all.length], all[(k + 7) % all.length]];
+    return [right, ...others].sort((a, b) => (a.length * 7 + k) % 5 - (b.length * 7 + k) % 5);
+  },
+  drawer() {
+    const p = state.people, n = Object.keys(p.done).length, P = p.cur && PLACES[p.cur];
+    let o = '';
+    if (P) {
+      const st = PEOPLEV.step(p.cur), jobs = PEOPLEV.opts(p.cur, 'job'), scis = PEOPLEV.opts(p.cur, 'sci');
+      o += `<div class="card says${st === 'done' ? ' good' : ''}"><div class="pcardp"><span class="pem">${P.person[0]}</span><div><b>${P.person[1]}</b> says:<br>"${P.person[3]}"</div></div>
+        <p style="margin-top:8px"><b>1. What is ${P.person[1]}'s job?</b></p><div class="stops wq">${choices('pjob', jobs.map(j => [j, j]), p.job[p.cur] ? P.person[2] : null, p.jobWrong[p.cur] || [], P.person[2])}</div>
+        ${p.job[p.cur] ? `<p style="margin-top:8px"><b>2. Which science does ${P.person[1]} use?</b></p><div class="stops wq">${choices('psci', scis.map(j => [j, j]), p.sci[p.cur] ? P.person[4] : null, p.sciWrong[p.cur] || [], P.person[4])}</div>` : ''}
+        ${p.sci[p.cur] ? `<p style="margin-top:8px"><b>3. Where does ${P.person[1]} work?</b> Tap the place on the map.</p>${p.placeWrong ? `<p class="spot">💡 Not ${lc(PLACES[p.placeWrong].name)}. Where would a ${lc(P.person[2])} work?</p>` : ''}` : ''}
+        ${st === 'done' ? `<p class="job">✅ ${P.person[1]} is a ${lc(P.person[2])} at ${lc(P.name)}. ${P.sci}</p>` : ''}</div>`;
+    }
+    o += `<div class="card"><h2>🧑‍🔬 Who works here?</h2><p>Choose a person. Find their job, the science they use, and where they work.</p>
+      <div class="people">${p.order.map(id => `<button class="pchip${p.cur === id ? ' on' : ''}${p.done[id] ? ' ok' : ''}" data-act="pperson" data-v="${id}"><span>${PLACES[id].person[0]}</span>${PLACES[id].person[1]}${p.done[id] ? ' ✓' : ''}</button>`).join('')}</div>
+      <p class="muted">Done: ${n} of ${PORDER.length}</p></div>`;
+    return o;
+  }
+};
+ACTIONS.pperson = el => { const p = state.people; p.cur = el.dataset.v; p.placeWrong = null; render(); top0(); };
+ACTIONS.pjob = el => { const p = state.people, P = PLACES[p.cur]; if (el.dataset.v === P.person[2]) p.job[p.cur] = true; else (p.jobWrong[p.cur] = p.jobWrong[p.cur] || []).push(el.dataset.v); render(); };
+ACTIONS.psci = el => { const p = state.people, P = PLACES[p.cur]; if (el.dataset.v === P.person[4]) p.sci[p.cur] = true; else (p.sciWrong[p.cur] = p.sciWrong[p.cur] || []).push(el.dataset.v); render(); };
+
+// ================= 3. Science hunt =================
+const HUNTV = {
+  stage() {
+    const t = state.hunt, id = t.order[t.i];
+    const say = t.i >= PORDER.length ? `All found! Mistakes: ${t.wrong}.` : `🔎 Where would you find science about: <b>${lc(PLACES[id].topic)}</b>?`;
+    return `<div class="lay-top"><span class="scaletag">🔎 Science hunt</span><div class="readout">${say}</div></div>${mapStage('hunt')}`;
+  },
+  tap(id) {
+    const t = state.hunt, want = t.order[t.i]; if (t.i >= PORDER.length || t.tap === want) return;
+    if (id === want) { t.tap = id; t.badTap = null; t.found[id] = true; render(); }
+    else { t.wrong++; t.badTap = id; render(); }
+  },
+  drawer() {
+    const t = state.hunt, id = t.order[t.i], P = id && PLACES[id], got = t.tap === id, n = Object.keys(t.found).length;
+    let o = '';
+    if (t.i < PORDER.length) o += `<div class="card says${got ? ' good' : ''}"><h3>🔎 ${t.i + 1} of ${PORDER.length}</h3><p>Where would you find science about <b>${lc(P.topic)}</b>? Tap the place on the map.</p>
+      ${t.badTap && !got ? `<p class="spot">💡 Not ${lc(PLACES[t.badTap].name)}. Think: who would need to know about ${lc(P.topic)}?</p>` : ''}
+      ${got ? `<p class="job">✅ Yes! ${P.em} <b>${P.name}</b>. ${P.sci}</p><div class="navrow"><button class="btn go" data-act="hnext">Next ▶</button></div>` : ''}</div>`;
+    else o += `<div class="card says good"><h3>🎉 You found them all!</h3><p>Mistakes: <b>${t.wrong}</b>.</p><button class="btn" data-act="hreset">↺ Play again</button></div>`;
+    return o + `<div class="card"><h2>🔎 Science hunt</h2><p>Each question names a science topic from Year 5. Find the place in the city where people use it.</p><p class="muted">Found: ${n} of ${PORDER.length} · Mistakes: ${t.wrong}</p></div>`;
+  }
+};
+ACTIONS.hnext = () => { const t = state.hunt; t.i++; t.tap = null; t.badTap = null; render(); if (t.i >= PORDER.length) emit('hunt', { wrong: t.wrong }); };
+ACTIONS.hreset = () => { state.hunt = freshHunt(); render(); };
+
+// ================= Views, words, missions, help =================
+const VIEWS = {
+  map: { label: '🗺️ <span class="tl">The city</span>', name: 'Science in the city', ...MAPV },
+  people: { label: '🧑‍🔬 <span class="tl">Who works here?</span>', name: 'Who works here?', ...PEOPLEV },
+  hunt: { label: '🔎 <span class="tl">Science hunt</span>', name: 'Science hunt', ...HUNTV }
+};
+const KEYWORDS = [
+  ['🔬', 'science', 'finding out how the world works, using evidence'], ['🧑‍🔬', 'scientist', 'a person whose job is to find things out using science'],
+  ['👷', 'engineer', 'a person who uses science to design and build things, like cars and bridges'], ['💼', 'job', 'the work a person does, usually to earn money'],
+  ['🛠️', 'technology', 'tools and machines that people make, using science']
+];
+const MISSIONS = [
+  { id: 'explore', core: true, icon: '🗺️', title: 'City explorer', task: 'Visit <b>8</b> places on the map and find out what science happens there.',
+    hint: 'Tap each circle on the map.', setup() { state.view = 'map'; state.map = freshMap(); }, on: (ev, d) => ev === 'seen' && d.n >= 8,
+    win: () => 'Science happens all over the city: in hospitals, bakeries, factories and more.' },
+  { id: 'every', icon: '🏙️', title: 'Every corner', task: 'Visit <b>all 12</b> places on the map.',
+    hint: 'Look for the green circles: you have visited those already.', setup() { state.view = 'map'; }, on: (ev, d) => ev === 'seen' && d.n >= PORDER.length,
+    win: () => 'Twelve places, and science in every one of them!' },
+  { id: 'people4', core: true, icon: '🧑‍🔬', title: 'Who works here?', task: 'For <b>4</b> people, find their job, the science they use, and where they work.',
+    hint: 'Read what each person says. Which words give you a clue?', setup() { state.view = 'people'; state.people = freshPeople(); }, on: (ev, d) => ev === 'person' && d.n >= 4,
+    win: () => 'People use science in all kinds of jobs.' },
+  { id: 'people12', icon: '👥', title: 'Science workers', task: 'Do it for <b>all 12</b> people.',
+    hint: 'Ticks show the people you have already done.', setup() { state.view = 'people'; }, on: (ev, d) => ev === 'person' && d.n >= PORDER.length,
+    win: () => 'Doctors, bakers, engineers, farmers, vets and more: they all use science at work.' },
+  { id: 'hunt', core: true, icon: '🔎', title: 'Science hunt', task: 'In <b>Science hunt</b>, find the place for every science topic.',
+    hint: 'Think about who would need to know about each topic.', setup() { state.view = 'hunt'; state.hunt = freshHunt(); }, on: ev => ev === 'hunt',
+    win: () => 'You found where every Year 5 science topic is used in the city.' },
+  { id: 'sharp', icon: '🎯', title: 'Sharp eyes', task: 'Finish the <b>Science hunt</b> with <b>no more than 1</b> mistake.',
+    hint: 'Visit the places on the map first, to learn what happens there.', setup() { state.view = 'hunt'; state.hunt = freshHunt(); }, on: (ev, d) => ev === 'hunt' && d.wrong <= 1,
+    win: () => 'Sharp eyes! You know where science is used around the city.' }
+];
+const OBJ = {
+  '5SIC.02': 'Describe how science is used in their local area.',
+  '5SIC.04': 'Identify people who use science, including professionally, in their area and describe how they use science.'
+};
+const MAIN = ['5SIC.02', '5SIC.04'], SUPPORT = [];
+const HELP = {
+  map: { q: 'Where is science used in our city?', steps: ['Tap a place on the map.', 'Read what science happens there, and who works there.', 'Follow a link to find out more in another tool.'], look: 'The green circles are places you have visited.', codes: ['5SIC.02', '5SIC.04'] },
+  people: { q: 'Who uses science in their job?', steps: ['Choose a person.', 'Choose their job, then the science they use.', 'Tap the place where they work.'], look: 'Read what each person says: it is full of clues.', codes: ['5SIC.04'] },
+  hunt: { q: 'Can you find where each science topic is used?', steps: ['Read the topic.', 'Tap the place on the map where people use it.'], look: 'Some topics could fit two places. Choose the best one.', codes: ['5SIC.02'] }
+};
+const MODEL = {
+  map: [['🗺️', 'The map is a simple drawing of a city like Bratislava. It is not to scale, and the places are not at their real addresses.']],
+  people: [['🧑‍🔬', 'The people are made up, but these are real jobs, and people in Bratislava really do them.']],
+  hunt: [['🔬', 'Most places use lots of science, not just one topic. Here each place has one Year 5 topic.']],
+  all: [['🏙️', 'A real city has many more places where people use science.'], ['🔬', 'Real jobs use lots of science, not only the parts you learn in Year 5.']]
+};
+
+// ================= Missions =================
+function emit(ev, data = {}) {
+  if (state.mission == null) return;
+  const i = state.mission, m = MISSIONS[i];
+  if (!m.on(ev, data)) return;
+  stopMission();
+  if (!state.done.includes(m.id)) { state.done.push(m.id); store.set(TOOL.store, state.done); }
+  updateStars();
+  setTimeout(() => {
+    $('#winTitle').textContent = `${m.icon} Mission complete!`;
+    $('#winText').innerHTML = m.win(data);
+    $('#winNext').style.display = i < MISSIONS.length - 1 ? '' : 'none';
+    $('#winPractise').style.display = i < MISSIONS.length - 1 ? 'none' : '';
+    $('#winNext').dataset.i = i + 1;
+    $('#winModal').classList.remove('hidden'); confetti();
+  }, 1200);
+}
+function startMission(i) {
+  closeModals();
+  state.mission = i; MISSIONS[i].setup();
+  location.hash = 'view=' + state.view;
+  const m = MISSIONS[i];
+  $('#bannerKicker').textContent = `Mission ${i + 1} of ${MISSIONS.length}: ${m.title}`;
+  $('#bannerText').innerHTML = m.task; $('#bannerHint').innerHTML = m.hint;
+  $('#bannerHint').classList.add('hidden'); $('#hintBtn').textContent = '💡 Show a hint';
+  $('#banner').classList.remove('hidden');
+  render(); $('#drawer').scrollTop = 0;
+}
+function stopMission() { state.mission = null; $('#banner').classList.add('hidden'); fitBanner(); }
+function fitBanner() { $('#drawer').style.paddingTop = state.mission == null ? '' : `${$('#banner').offsetHeight + 18}px`; }
+function updateStars() { $('#starCount').textContent = `${state.done.filter(id => MISSIONS.some(m => m.id === id)).length}/${MISSIONS.length} ⭐`; }
+function closeModals() { document.querySelectorAll('.modal').forEach(m => m.classList.add('hidden')); }
+function closeAll() { closeModals(); maybeHelp(); }
+function confetti() {
+  for (let i = 0; i < 30; i++) {
+    const s = document.createElement('span'); s.className = 'confetti'; s.textContent = TOOL.confetti[i % TOOL.confetti.length];
+    s.style.left = `${Math.random() * 100}vw`; s.style.animationDuration = `${2 + Math.random() * 2}s`; s.style.animationDelay = `${Math.random() * .6}s`;
+    document.body.appendChild(s); setTimeout(() => s.remove(), 5000);
+  }
+}
+
+// ================= Help, key words and Real life =================
+const helpSeen = new Set();
+let autoHelp = true, welcomed = false;
+function showHelp() {
+  const H = HELP[state.view], V = VIEWS[state.view];
+  helpSeen.add(state.view);
+  const core = MISSIONS.map((m, i) => m.core ? `${i + 1} (${m.title})` : null).filter(Boolean);
+  $('#helpBody').innerHTML = `<h2 id="helpTitle">${V.label.replace(/<[^>]+>/g, '').split(' ')[0]} ${V.name}</h2>
+    ${welcomed ? '' : `<p class="welcome">Welcome to ${TOOL.name}!</p>`}
+    <h3>🔬 The big question</h3><p>${H.q}</p>
+    <h3>👆 What to do</h3><ol>${H.steps.map(s => `<li>${s}</li>`).join('')}</ol>
+    <p><b>💡 Look out for:</b> ${H.look}</p>
+    <p>📖 Tap <b>Words</b> at the top to see what the key words mean.</p>
+    <p>🚀 Try the <b>Missions</b> to win stars!</p>
+    <details class="teach"><summary>For teachers</summary>${H.codes.map(c => `<p><b>${c}</b> ${OBJ[c]}</p>`).join('')}
+      <h4>⏱ A 45-minute lesson</h4><p>Good missions to start with: ${core.join(', ')}.</p>
+      <h4>All of ${TOOL.name}'s objectives</h4><p>Main: ${MAIN.join(', ')}.${SUPPORT.length ? ` Supporting: ${SUPPORT.join(', ')}.` : ''}</p></details>`;
+  welcomed = true;
+  $('#helpModal').classList.remove('hidden');
+}
+function maybeHelp() { if (!autoHelp || helpSeen.has(state.view) || document.querySelector('.modal:not(.hidden)')) return; showHelp(); }
+
+function renderStage() { $('#stage').innerHTML = VIEWS[state.view].stage(); }
+function render() {
+  const v = VIEWS[state.view];
+  $('#tabs').innerHTML = Object.entries(VIEWS).map(([id, x]) =>
+    `<button class="btn${id === state.view ? ' active' : ''}" data-act="view" data-view="${id}" title="${x.name}" aria-label="${x.name}">${x.label}</button>`).join('');
+  const keep = $('#drawer').scrollTop, same = render.last === state.view;
+  $('#drawer').innerHTML = v.drawer();
+  renderStage();
+  if (same) $('#drawer').scrollTop = keep;
+  render.last = state.view;
+  fitBanner();
+  maybeHelp();
+}
+
+// ================= Actions shared by every view =================
+const top0 = () => { $('#drawer').scrollTop = 0; };
+Object.assign(ACTIONS, {
+  view(el) { closeModals(); state.view = el.dataset.view; location.hash = 'view=' + state.view; render(); top0(); },
+  missions() {
+    $('#missionList').innerHTML = MISSIONS.map((m, i) => `<button class="mission-item${state.done.includes(m.id) ? ' done' : ''}" data-act="startMission" data-i="${i}">
+      <span class="em">${m.icon}</span><span class="t">${i + 1}. ${m.title}</span><span class="star">⭐</span></button>`).join('');
+    $('#missionsModal').classList.remove('hidden');
+  },
+  startMission(el) { startMission(+el.dataset.i); },
+  nextMission(el) { startMission(+el.dataset.i); },
+  stopMission() { stopMission(); },
+  hint() { const h = $('#bannerHint'); h.classList.toggle('hidden'); $('#hintBtn').textContent = h.classList.contains('hidden') ? '💡 Show a hint' : '💡 Hide the hint'; fitBanner(); },
+  resetStars() { state.done = []; store.set(TOOL.store, []); updateStars(); ACTIONS.missions(); },
+  closeModals() { closeAll(); },
+  help() { closeModals(); showHelp(); },
+  words() { $('#wordsList').innerHTML = KEYWORDS.map(([em, w, m]) => `<li><span class="em">${em}</span><span><b>${w}</b>: ${m}</span></li>`).join(''); $('#wordsModal').classList.remove('hidden'); },
+  model() {
+    $('#modelTab').textContent = `${VIEWS[state.view].label.replace(/<[^>]+>/g, '').split(' ')[0]} ${VIEWS[state.view].name}`;
+    $('#modelList').innerHTML = [...MODEL[state.view], ...MODEL.all.filter(a => !MODEL[state.view].some(b => b[1] === a[1]))].map(([em, t]) => `<li><span class="em">${em}</span><span>${t}</span></li>`).join('');
+    $('#modelModal').classList.remove('hidden');
+  }
+});
+document.addEventListener('click', e => {
+  if (DND.skipClick) { DND.skipClick = false; return; }
+  const v = VIEWS[state.view], drag = e.target.closest('[data-drag]');
+  if (drag && v.pick) { v.pick(drag.dataset.drag); return; }
+  const drop = e.target.closest('[data-drop]'), sel = v.sel && v.sel();
+  if (drop && sel) { v.drop(sel, drop.dataset.drop); return; }
+  const el = e.target.closest('[data-act]');
+  if (el && !el.disabled && ACTIONS[el.dataset.act]) ACTIONS[el.dataset.act](el);
+});
+document.querySelectorAll('.modal').forEach(m => m.addEventListener('click', e => { if (e.target === m) closeAll(); }));
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeAll(); });
+let resizeT;
+addEventListener('resize', () => { fitBanner(); clearTimeout(resizeT); resizeT = setTimeout(renderStage, 120); });
+
+// ================= Start =================
+// Test hooks: #view=…  ·  #mission=2  ·  #nohelp=1
+const hp = new URLSearchParams(location.hash.slice(1));
+if (VIEWS[hp.get('view')]) state.view = hp.get('view');
+if (hp.has('nohelp')) autoHelp = false;
+updateStars();
+if (MISSIONS[hp.get('mission')]) startMission(+hp.get('mission'));
+else render();
+</script>
+<script>
+  // Offline support: saves the whole Science Hub on this device the first time any page is opened (see ../sw.js)
+  if ('serviceWorker' in navigator) addEventListener('load', () => navigator.serviceWorker.register('../sw.js').catch(() => {}));
+</script>
+</body>
+</html>

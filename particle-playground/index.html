@@ -174,6 +174,9 @@
     .readout, .scaletag { font-size: 13px; padding: 3px 7px; }
     .glabel { font-size: 14px; } .gsmall { font-size: 11px; } .wsmall { font-size: 11px; }
   }
+  /* Lesson (core) missions, and extension missions */
+  .core { background: var(--yellow); color: var(--ink); border-radius: 8px; padding: 1px 7px; font-size: 12.5px; font-weight: 700; white-space: nowrap; }
+  .extn { background: #e8e0ff; color: #5a3fb0; border-radius: 8px; padding: 1px 7px; font-size: 12.5px; font-weight: 700; white-space: nowrap; }
 </style>
 </head>
 <body>
@@ -683,7 +686,7 @@ document.addEventListener('pointercancel', () => { if (Chips.d) { Chips.d.ghost?
 // ================= Missions =================
 // Each mission sets up a view; activities call emit() when something happens, and on() says whether that completes it.
 const MISSIONS = [
-  { id: 'melt', icon: '🧊', title: 'Melt the ice', task: 'In <b>Particle box</b>, the water is frozen. Make the ice <b>melt</b>.',
+  { id: 'melt', core: true, icon: '🧊', title: 'Melt the ice', task: 'In <b>Particle box</b>, the water is frozen. Make the ice <b>melt</b>.',
     hint: 'Ice melts at its melting point. Warm it up with the temperature slider.',
     setup() { state.view = 'box'; state.box = { sub: 'water', temp: -10 }; },
     on: (ev, d) => ev === 'phase' && d.sub === 'water' && d.ph === 'liquid',
@@ -708,7 +711,7 @@ const MISSIONS = [
     setup() { state.view = 'odd'; state.odd = Object.assign(freshOdd(), { mode: 'freeze' }); },
     on: ev => ev === 'measure',
     win: () => 'Water <b>expands</b> (gets bigger) when it freezes: 100 ml became about 109 ml of ice. Wax <b>shrinks</b> when it becomes solid, like most substances.' },
-  { id: 'evap', icon: '☀️', title: 'Where did the water go?', task: 'In <b>Evaporate & condense</b>, predict, then leave the three jugs for a day. How much water evaporated from the warmest jug?',
+  { id: 'evap', core: true, icon: '☀️', title: 'Where did the water go?', task: 'In <b>Evaporate & condense</b>, predict, then leave the three jugs for a day. How much water evaporated from the warmest jug?',
     hint: 'It started with 100 ml. Take away what is left.',
     setup() { state.view = 'evap'; state.evap = freshEvap(); },
     on: ev => ev === 'evap',
@@ -728,7 +731,7 @@ const MISSIONS = [
     setup() { state.view = 'gas'; state.gas = freshGas(); },
     on: (ev, d) => ev === 'gases' && d.n === 5,
     win: () => 'Oxygen, nitrogen, carbon dioxide, hydrogen and water vapour are all <b>gases at room temperature</b>.' },
-  { id: 'sort', icon: '🗂️', title: 'Solid, liquid or gas?', task: 'In <b>Gases</b>, choose <b>Sort them</b> and sort all <b>12</b> into solids, liquids and gases at room temperature.',
+  { id: 'sort', core: true, icon: '🗂️', title: 'Solid, liquid or gas?', task: 'In <b>Gases</b>, choose <b>Sort them</b> and sort all <b>12</b> into solids, liquids and gases at room temperature.',
     hint: 'All five gases from the balloons are gases at room temperature.',
     setup() { state.view = 'gas'; state.gas = Object.assign(freshGas(), { mode: 'sort' }); },
     on: ev => ev === 'sort',
@@ -1019,7 +1022,7 @@ const ACTIONS = {
   greset() { state.gas = Object.assign(freshGas(), { mode: 'sort', seen: state.gas.seen }); render(); },
   missions() {
     $('#missionList').innerHTML = MISSIONS.map((m, i) => `<button class="mission-item${state.done.includes(m.id) ? ' done' : ''}" data-act="startMission" data-i="${i}">
-      <span class="em">${m.icon}</span><span class="t">${i + 1}. ${m.title}</span><span class="star">⭐</span></button>`).join('');
+      <span class="em">${m.icon}</span><span class="t">${i + 1}. ${m.title}</span>${m.ext ? '<span class="extn">➕ Extension</span>' : ''}<span class="star">⭐</span></button>`).join('');
     $('#missionsModal').classList.remove('hidden');
   },
   startMission(el) { startMission(+el.dataset.i); },

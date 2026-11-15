@@ -222,6 +222,9 @@
   details.teach { margin: 12px 0; font-size: 13px; color: var(--muted); }
   details.teach summary { cursor: pointer; font-weight: 600; min-height: 32px; }
   details.teach p { margin: 4px 0; }
+  /* Lesson (core) missions, and extension missions */
+  .core { background: var(--yellow); color: var(--ink); border-radius: 8px; padding: 1px 7px; font-size: 12.5px; font-weight: 700; white-space: nowrap; }
+  .extn { background: #e8e0ff; color: #5a3fb0; border-radius: 8px; padding: 1px 7px; font-size: 12.5px; font-weight: 700; white-space: nowrap; }
 </style>
 </head>
 <body>
@@ -568,12 +571,12 @@ const LAB = {
 // ================= Missions =================
 // Each mission sets up the lab; the lab calls emit() when something happens, and on() says whether that completes it.
 const MISSIONS = [
-  { id: 'water', icon: '💧', title: 'Do seeds need water?', task: 'Plan a <b>fair test</b> to find out if bean seeds need water to germinate. Predict, then run it.',
+  { id: 'water', core: true, icon: '💧', title: 'Do seeds need water?', task: 'Plan a <b>fair test</b> to find out if bean seeds need water to germinate. Predict, then run it.',
     hint: 'Change only the water. Water Group A, and give Group B no water.',
     setup() { state.view = 'bench'; state.lab = freshLab(); },
     on: (ev, d) => ev === 'ran' && d.iv === 'water' && d.eff !== 'none',
     win: () => 'The seeds with no water did not germinate at all. Seeds need <b>water</b> to germinate.' },
-  { id: 'temp', icon: '❄️', title: 'Too cold?', task: 'Find out if temperature affects germination, with a fair test.',
+  { id: 'temp', core: true, icon: '❄️', title: 'Too cold?', task: 'Find out if temperature affects germination, with a fair test.',
     hint: 'Change only the temperature. Put one group somewhere cold (4 °C) and keep the other warm.',
     setup() { state.view = 'bench'; state.lab = freshLab(); },
     on: (ev, d) => ev === 'ran' && d.iv === 'temp' && d.eff !== 'none',
@@ -608,7 +611,7 @@ const MISSIONS = [
     setup() { state.view = 'spread'; state.sp = freshSp(); state.sp.part = 'flaps'; },
     on: ev => ev === 'flaps',
     win: () => 'Wind, water, hitching a ride, seeds as food, bursting, drop and roll, and shakers: <b>7 ways</b> seeds travel!' },
-  { id: 'sorted', icon: '🔍', title: 'Seed detective', task: 'Sort all 19 seeds into the 7 ways seeds travel. There are two rounds.',
+  { id: 'sorted', core: true, icon: '🔍', title: 'Seed detective', task: 'Sort all 19 seeds into the 7 ways seeds travel. There are two rounds.',
     hint: 'Look at the shape of each seed. Wings? Hooks? Juicy fruit? Holes like a pepper pot?',
     setup() { state.view = 'spread'; state.sp = freshSp(); state.sp.part = 'sort'; },
     on: ev => ev === 'sorted',
@@ -1235,7 +1238,7 @@ const ACTIONS = {
   greset() { state.gr = freshGr(); render(); $('#drawer').scrollTop = 0; },
   missions() {
     $('#missionList').innerHTML = MISSIONS.map((m, i) => `<button class="mission-item${state.done.includes(m.id) ? ' done' : ''}" data-act="startMission" data-i="${i}">
-      <span class="em">${m.icon}</span><span class="t">${i + 1}. ${m.title}</span><span class="star">⭐</span></button>`).join('');
+      <span class="em">${m.icon}</span><span class="t">${i + 1}. ${m.title}</span>${m.ext ? '<span class="extn">➕ Extension</span>' : ''}<span class="star">⭐</span></button>`).join('');
     $('#missionsModal').classList.remove('hidden');
   },
   startMission(el) { startMission(+el.dataset.i); },

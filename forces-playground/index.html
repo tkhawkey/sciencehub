@@ -216,8 +216,28 @@
   .modal-x:focus-visible { outline: 3px solid var(--yellow); outline-offset: 2px; }
 
   /* ---------- "The science" highlight ---------- */
+  /* ---------- Ideas that changed: two ideas side by side, and the evidence so far ---------- */
+  .ideaswrap { position: absolute; inset: 0; padding: 60px 14px 14px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; background: #eef4fb; }
+  .ideas2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .ibox { position: relative; background: #fff; border: 4px solid #d3dbf7; border-radius: 18px; padding: 12px; text-align: center; transition: border-color .2s, box-shadow .2s; }
+  .ibox.now { border-color: var(--yellow); box-shadow: 0 0 0 5px rgba(255, 200, 61, .35); }
+  .ibox p { margin: 6px 0 0; font-size: 16px; line-height: 1.35; }
+  .ilab { font-weight: 700; color: var(--muted); font-size: 14px; text-transform: uppercase; letter-spacing: .04em; }
+  .ipic { font-size: 46px; line-height: 1.1; margin-top: 4px; }
+  .ipic svg { width: min(150px, 80%); height: auto; }
+  .itag { display: inline-block; margin-top: 8px; background: var(--yellow); border-radius: 999px; padding: 2px 10px; font-weight: 700; font-size: 13px; }
+  .ilist { display: grid; gap: 8px; }
+  .icard { display: flex; gap: 10px; align-items: flex-start; background: #fff; border-radius: 14px; padding: 10px 12px; font-size: 15.5px; line-height: 1.35; border: 2px solid transparent; }
+  .icard.cur { border-color: var(--blue); }
+  .icard .iem { font-size: 26px; flex: none; }
+  @media (max-width: 760px) { .ideaswrap { padding-top: 44px; gap: 8px; } .ideas2 { gap: 6px; } .ibox { padding: 8px; } .ibox p { font-size: 13.5px; } .ipic { font-size: 32px; } .icard { font-size: 13.5px; padding: 6px 8px; } }
+  .card.says { border: 3px solid var(--yellow); }
+  .card.says.good { border-color: var(--green); background: #effbf5; }
   .science { background: #fff6d6; border: 3px solid var(--yellow); border-radius: 16px; padding: 10px 14px; margin: 8px 0; }
   .science > b:first-child { display: block; font-size: 14px; text-transform: uppercase; letter-spacing: .04em; color: #8a5a00; margin-bottom: 2px; }
+  /* Lesson (core) missions, and extension missions */
+  .core { background: var(--yellow); color: var(--ink); border-radius: 8px; padding: 1px 7px; font-size: 12.5px; font-weight: 700; white-space: nowrap; }
+  .extn { background: #e8e0ff; color: #5a3fb0; border-radius: 8px; padding: 1px 7px; font-size: 12.5px; font-weight: 700; white-space: nowrap; }
 </style>
 </head>
 <body>
@@ -573,8 +593,10 @@ function trolleyPic(lean) {
 
 // ================= State =================
 // arrows and tries are kept for each scene (and each moment), so switching back keeps a child's work
+// Ideas that changed: which card the child is on, and when they changed their mind
+const freshIdeas = () => ({ i: 0, pick: null, changedAt: null, done: false });
 const state = { view: 'arrows', scene: 0, moment: {}, arrows: {}, checked: null, tries: {}, solved: store.get('fp-solved', []),
-  mission: null, mseen: new Set(), done: store.get('fp-done', []) };
+  mission: null, mseen: new Set(), done: store.get('fp-done', []), ideas: freshIdeas() };
 
 // ================= Force arrow builder =================
 const A = {
@@ -1203,12 +1225,12 @@ addEventListener('resize', () => { if (state.view === 'ramp' && state.ramp.pendi
 const got = (id, all) => { state.mseen.add(id); return all.every(x => state.mseen.has(x)); };
 const SURFS = ['ice', 'wood', 'carpet', 'sandpaper'];
 const MISSIONS = [
-  { id: 'still', icon: '📕', title: 'Still, but not empty', task: 'In <b>Force arrows</b>, draw the right forces on the <b>book</b> and on the <b>boat</b>.',
+  { id: 'still', core: true, icon: '📕', title: 'Still, but not empty', task: 'In <b>Force arrows</b>, draw the right forces on the <b>book</b> and on the <b>boat</b>.',
     hint: 'Something pulls everything down. What pushes back up: the table, or the water?',
     setup() { state.view = 'arrows'; state.scene = 0; state.checked = null; },
     on: (ev, d) => ev === 'solved' && got(d.id, ['book', 'boat']),
     win: () => 'Still objects have forces on them too! The forces are <b>balanced</b>: the same size, pushing in opposite directions.' },
-  { id: 'skydiver', icon: '🪂', title: 'Falling fast, falling steady', task: 'Draw the forces on the <b>skydiver</b> for <b>both</b> moments: just jumped, and steady speed.',
+  { id: 'skydiver', core: true, icon: '🪂', title: 'Falling fast, falling steady', task: 'Draw the forces on the <b>skydiver</b> for <b>both</b> moments: just jumped, and steady speed.',
     hint: 'Just jumped: gravity is bigger. Steady speed: the two arrows are the same length.',
     setup() { state.view = 'arrows'; state.scene = 2; state.moment.skydiver = 0; state.checked = null; },
     on: (ev, d) => ev === 'solved' && got(d.id, ['skydiver-jump', 'skydiver-steady']),
@@ -1218,7 +1240,7 @@ const MISSIONS = [
     setup() { state.view = 'arrows'; state.scene = 4; state.moment.trolley = 0; state.checked = null; },
     on: (ev, d) => ev === 'solved' && got(d.id, ['trolley-steady', 'trolley-faster']),
     win: () => 'When the push forwards is <b>bigger</b> than friction, the trolley speeds up. When they are the <b>same size</b>, it keeps going at a steady speed.' },
-  { id: 'slowing', icon: '🐟', title: 'Slowing down', task: 'Draw the forces on the sliding <b>box</b> and on the gliding <b>fish</b>.',
+  { id: 'slowing', core: true, icon: '🐟', title: 'Slowing down', task: 'Draw the forces on the sliding <b>box</b> and on the gliding <b>fish</b>.',
     hint: 'Nothing pushes them forwards any more. Which force slows each one down? It points <b>backwards</b>.',
     setup() { state.view = 'arrows'; state.scene = 3; state.checked = null; },
     on: (ev, d) => ev === 'solved' && got(d.id, ['box', 'fish']),
@@ -1238,6 +1260,11 @@ const MISSIONS = [
     setup() { state.view = 'ramp'; Object.assign(state.ramp, { runs: [], shown: null, answer: null, pending: null, msg: null }); },
     on: (ev, d) => ev === 'ranswer' && d.a === 'sandpaper',
     win: () => 'Rough surfaces have <b>more friction</b>, so the car stops sooner. On smooth ice it rolls the furthest.' },
+  { id: 'ideas', icon: '🕰️', title: 'Ideas that changed', task: 'In <b>Ideas that changed</b>, look at all the evidence. Do heavier things always fall faster?',
+    hint: 'Some evidence fits both ideas. Some evidence does not fit the old idea at all.',
+    setup() { state.view = 'ideas'; state.ideas = freshIdeas(); },
+    on: ev => ev === 'ideas',
+    win: () => 'Without air, heavy and light things fall together. Scientists changed their idea because of new <b>evidence</b>.' },
   { id: 'tape', icon: '📏', title: 'Sharp eyes', task: 'In the <b>Friction ramp</b>, read the tape measure right <b>first time</b> on all <b>4 surfaces</b>.',
     hint: 'Find the last number before the red line, then count on the small marks. Each one is 1 cm.',
     setup() { state.view = 'ramp'; Object.assign(state.ramp, { shown: null, pending: null, msg: null }); },
@@ -1408,11 +1435,69 @@ const VIEWS = {
           ${r.answer === 'sandpaper' ? '<div class="science"><b>🔬 The science</b>Yes! Sandpaper is the <b>roughest</b> surface, so it has the <b>most friction</b> and the car stopped soonest. Ice is the smoothest, with the least friction, so the car rolled furthest.</div>'
             : r.answer ? '<p>Look at your bar chart. On which surface did the car stop soonest?</p>' : ''}</div>` : ''}`;
     }
+  },
+  ideas: {
+    label: '🕰️ <span class="tl">Ideas that changed</span>',
+    stage: () => IDEAS.stage(),
+    after() {},
+    drawer: () => IDEAS.drawer() + (state.ideas.done ? '<div class="card"><p>See air resistance at work on Earth:</p><button class="btn" data-act="view" data-view="parachute">🪂 Try the Parachute drop ▶</button></div>' : '')
   }
+};
+
+// What Forces Playground's "Ideas that changed" is about
+const IDEA = {
+  intro: 'For about 2,000 years, most people believed what the Greek thinker Aristotle said about falling things.',
+  old: 'Heavier things always fall faster than lighter things.', oldPic: '🪨 ⬇️⬇️ &nbsp; 🪶 ⬇️',
+  neu: 'Without air, heavy and light things fall at the same speed.', newPic: '🔨 ⬇️ &nbsp; 🪶 ⬇️',
+  cards: [
+    { em: '🪨', fits: 'both', text: 'Drop a stone and a feather at the same time. The stone lands first.',
+      why: 'Both ideas can explain this. Is it because the stone is heavier, or because the air slows the feather down?' },
+    { em: '⚽', fits: 'new', text: 'About 400 years ago, Galileo rolled heavy and light balls down long, gentle ramps and timed them. They sped up in the same way and reached the bottom together.',
+      note: 'You may hear that Galileo dropped balls from the Leaning Tower of Pisa. That famous story may not be true!',
+      why: 'If heavier things always fell faster, the heavy ball would have won every time.' },
+    { em: '🌕', fits: 'new', text: 'In 1971, an astronaut on the Moon, David Scott, dropped a hammer and a feather at the same time. They landed together!',
+      why: 'There is no air on the Moon, so there is no air resistance. Without air, heavy and light things fall together.' },
+    { em: '🪂', fits: 'new', text: 'On Earth, a parachute falls slowly, even with a heavy person under it. Its big canopy has lots of air resistance.',
+      why: 'It is air resistance, not being light, that slows things down.' }
+  ],
+  end: 'On Earth, a feather falls slowly because of <b>air resistance</b>, not because it is light. Without air, heavy and light things fall together. People believed the old idea for a very long time. Scientists changed it because of new <b>evidence</b> from experiments.'
+};
+// ================= Ideas that changed (5SIC.01) =================
+// An old idea, a new idea, and evidence cards shown one at a time. After each card the child decides:
+// keep the old idea, or change it? A card that fits both ideas can't settle it; a card that doesn't fit the old idea should change it.
+const IDEAS = {
+  // Which idea the child believes now
+  now() { const s = state.ideas; return s.changedAt != null && s.changedAt <= s.i ? 'new' : 'old'; },
+  stage() {
+    const s = state.ideas, D = IDEA, now = IDEAS.now(), shown = D.cards.slice(0, Math.min(s.i + 1, D.cards.length));
+    return `<div class="ideaswrap"><div class="ideas2">
+        <div class="ibox${now === 'old' ? ' now' : ''}"><div class="ilab">💭 The old idea</div><div class="ipic">${D.oldPic}</div><p>${D.old}</p>${now === 'old' ? '<span class="itag">What you believe now</span>' : ''}</div>
+        <div class="ibox${now === 'new' ? ' now' : ''}"><div class="ilab">💡 The new idea</div><div class="ipic">${D.newPic}</div><p>${D.neu}</p>${now === 'new' ? '<span class="itag">What you believe now</span>' : ''}</div></div>
+      <div class="ilist">${shown.map((c, k) => `<div class="icard${k === s.i && !s.done ? ' cur' : ''}"><span class="iem">${c.em}</span><span><b>Evidence ${k + 1}:</b> ${c.text}</span></div>`).join('')}</div></div>`;
+  },
+  drawer() {
+    const s = state.ideas, D = IDEA, c = D.cards[s.i], right = c && (c.fits === 'both' ? 'keep' : 'change');
+    let o = `<div class="card"><h2>🕰️ Ideas that changed</h2><p>${D.intro}</p><p class="muted">Look at each piece of <b>evidence</b>. Should we keep the old idea, or change it?</p></div>`;
+    if (!s.done) {
+      o += `<div class="card says${s.pick === right ? ' good' : ''}"><h3>${c.em} Evidence ${s.i + 1} of ${D.cards.length}</h3><p>${c.text}</p>${c.note ? `<p class="muted">${c.note}</p>` : ''}`;
+      if (!s.pick) o += `<p style="margin-top:6px"><b>What do you think now?</b></p><div class="navrow"><button class="btn" data-act="ideapick" data-v="keep">🔒 Keep the old idea</button><button class="btn" data-act="ideapick" data-v="change">🔄 Change to the new idea</button></div>`;
+      else {
+        const msg = c.fits === 'both'
+          ? (s.pick === 'keep' ? `✅ Good thinking. ${c.why} It does not prove the old idea wrong, so keep looking.` : `🤔 Not yet! ${c.why} It does not show which idea is right.`)
+          : (s.pick === 'change' ? `✅ Yes! ${c.why}` : `🤔 Look again. This evidence does <b>not</b> fit the old idea. ${c.why}`);
+        o += `<p class="${s.pick === right ? 'job' : 'spot'}">${msg}</p><div class="navrow"><button class="btn go" data-act="ideanext">${s.i < D.cards.length - 1 ? 'Next evidence ▶' : 'Finish ▶'}</button></div>`;
+      }
+      o += '</div>';
+    } else o += `<div class="science"><b>🔬 The science</b>${D.end}</div><div class="card"><p><b>Scientists change their ideas when new evidence appears.</b></p><button class="btn" data-act="ideareset">↺ Start again</button></div>`;
+    return o;
+  },
+  pick(v) { const s = state.ideas, c = IDEA.cards[s.i]; s.pick = v; if (c.fits === 'new' && s.changedAt == null) s.changedAt = s.i; },
+  next() { const s = state.ideas; if (s.i < IDEA.cards.length - 1) { s.i++; s.pick = null; } else { s.done = true; if (s.changedAt == null) s.changedAt = 0; } }
 };
 
 // ================= Help (❓): one pop-up per tab =================
 const CUR = {
+  sic1: '<p><b>5SIC.01</b> Describe how scientific knowledge and understanding changes over time through the use of evidence gained by enquiry.</p>',
   f1: '<p><b>5Pf.01</b> Identify a range of forces (limited to gravity, applied forces, normal forces, upthrust, friction, air resistance and water resistance).</p>',
   f2: '<p><b>5Pf.02</b> Know that an object may have multiple forces acting upon it, even when at rest.</p>',
   f3: '<p><b>5Pf.03</b> Use force diagrams to show the name and direction of forces acting on an object.</p>',
@@ -1432,6 +1517,10 @@ const HELP = {
     steps: ['Choose an object.', 'Read the force meter while the object hangs in the air.', 'Raise the tank, then read the force meter again.', 'Work out how big the <b>upthrust</b> is.'],
     tip: 'Use the close-up to read the meter to the nearest <b>newton</b> (N).',
     cur: CUR.f1 + CUR.sc5 },
+  ideas: { q: 'Do heavier things always fall faster?',
+    steps: ['Read the <b>old idea</b> and the <b>new idea</b>.', 'Read each piece of <b>evidence</b>.', 'Decide: keep the old idea, or change it?'],
+    tip: 'Some evidence fits both ideas. It can\'t tell you which one is right.',
+    cur: CUR.sic1 },
   ramp: { q: 'On which surface does the toy car roll the furthest?',
     steps: ['Predict a surface and say why.', 'Choose a surface and press <b>Let go!</b>', 'Read the tape measure where the car stopped.', 'Test all <b>4 surfaces</b>.'],
     tip: 'Watch the <b>friction</b> arrow as the car slows down.',
@@ -1479,6 +1568,9 @@ const MODEL = {
   tank: [
     ['🛁', 'Only the <b>upthrust</b> arrow is drawn. Gravity and the pull of the force meter act on the object too.'],
     RL.ghost, RL.scale],
+  ideas: [
+    ['📜', 'The story is told simply. Real scientists argued about these ideas for many years, and did many more experiments.'],
+    ['🌕', 'You can watch a video of the real hammer and feather drop on the Moon, from 1971.']],
   ramp: [
     ['🚗', 'Only <b>friction</b> from the surface is shown. A real toy car is also slowed a little by air resistance and by friction in its wheels.'],
     RL.ghost, RL.scale]
@@ -1498,6 +1590,9 @@ function render() {
 // ================= Actions =================
 const ACTIONS = {
   view(el) { state.view = el.dataset.view; location.hash = 'view=' + state.view; render(); autoHelp(); },
+  ideapick(el) { IDEAS.pick(el.dataset.v); render(); },
+  ideanext() { IDEAS.next(); render(); if (state.ideas.done) emit('ideas'); },
+  ideareset() { state.ideas = freshIdeas(); render(); },
   help() { closeModals(); showHelp(); },
   scene(el) { state.scene = +el.dataset.i; state.checked = null; render(); },
   moment(el) { state.moment[SCENES[state.scene].id] = +el.dataset.i; state.checked = null; render(); },
@@ -1507,7 +1602,7 @@ const ACTIONS = {
   closeFb() { state.checked = null; A.showFb(); },
   missions() {
     $('#missionList').innerHTML = MISSIONS.map((m, i) => `<button class="mission-item${state.done.includes(m.id) ? ' done' : ''}" data-act="startMission" data-i="${i}">
-      <span class="em">${m.icon}</span><span class="t">${i + 1}. ${m.title}</span><span class="star">⭐</span></button>`).join('');
+      <span class="em">${m.icon}</span><span class="t">${i + 1}. ${m.title}</span>${m.ext ? '<span class="extn">➕ Extension</span>' : ''}<span class="star">⭐</span></button>`).join('');
     $('#missionsModal').classList.remove('hidden');
   },
   startMission(el) { startMission(+el.dataset.i); },

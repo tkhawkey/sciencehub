@@ -180,6 +180,10 @@
   .modal-box h2 { margin: 0 0 8px; font-size: 25px; }
   .modal-actions { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
   .mission-list { display: grid; gap: 8px; margin-bottom: 14px; }
+  .ecards { display: grid; gap: 6px; margin-top: 6px; }
+  .ecard { text-align: left; border: 2px solid #d3dbf7; background: #fff; border-radius: 12px; padding: 8px 10px; min-height: 44px; font: inherit; font-size: 15px; cursor: pointer; color: var(--ink); }
+  .ecard.on { background: #fff3c4; border-color: #e0a800; }
+  .ecard:disabled { cursor: default; }
   .mission-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; min-height: 52px; border-radius: 16px; background: var(--soft); border: 0; text-align: left; cursor: pointer; font-size: 16px; }
   .mission-item .em { font-size: 25px; } .mission-item .t { flex: 1; font-weight: 600; }
   .mission-item .star { font-size: 21px; filter: grayscale(1); opacity: .35; }
@@ -222,6 +226,9 @@
     .brand { font-size: 18px; }
     .tl { display: none; }
   }
+  /* Lesson (core) missions, and extension missions */
+  .core { background: var(--yellow); color: var(--ink); border-radius: 8px; padding: 1px 7px; font-size: 12.5px; font-weight: 700; white-space: nowrap; }
+  .extn { background: #e8e0ff; color: #5a3fb0; border-radius: 8px; padding: 1px 7px; font-size: 12.5px; font-weight: 700; white-space: nowrap; }
 </style>
 </head>
 <body>
@@ -256,6 +263,7 @@
   <div class="modal-box">
     <button class="modal-x" data-act="closeModals" aria-label="Close">✕</button>
     <h2 id="missionsTitle">🚀 Missions</h2>
+    <p class="muted" style="margin-top:-4px">Missions marked <span class="extn">➕ Extension</span> go beyond the Year 5 objectives.</p>
     <div class="mission-list" id="missionList"></div>
     <div class="modal-actions"><button class="btn" data-act="resetStars">Reset stars</button><button class="btn primary" data-act="closeModals">Close</button></div>
   </div>
@@ -355,7 +363,8 @@ const freshAir = () => ({ level: 100, seed: 3, sorted: false, pred: null, reason
 const freshLayers = () => ({ scale: false, sel: 'tropo', chip: null, placed: {}, fx: {}, res: {}, tries: {}, said: null, probe: 5 });
 const freshWater = () => ({ mode: 'step', step: 0, wrong: [], placed: {}, chip: null, said: null, cold: false, cup: 0, well: '', diff: '', ideas: false });
 const freshPure = () => ({ pred: {}, reason: '', heated: false, ans: {}, wrong: {} });
-const freshTown = () => ({ mode: 'spot', open: null, answered: {}, wrong: {}, fixed: {} });
+const freshCase = () => ({ side: null, picked: {}, checked: null, because: null, evidence: null, counter: null, but: null, butWrong: [], becWrong: [] });
+const freshTown = () => ({ mode: 'spot', open: null, answered: {}, wrong: {}, fixed: {}, case: freshCase() });
 const freshEarth = () => ({ hover: null, sel: null, seen: [] });
 const state = { view: 'air', air: freshAir(), earth: freshEarth(), layers: freshLayers(), water: freshWater(), pure: freshPure(), town: freshTown(), mission: null, done: store.get('aw-done', []) };
 
@@ -979,6 +988,74 @@ const PU = {
 
 // ================= River town =================
 // A made-up town by the River Danube. Spot the pollution, then use science and technology to make things better.
+// ================= Make your case (5SIC.03): use science to support a point =================
+// Evidence cards: [id, text, kind]. kind: 'yes' / 'no' supports that side, 'op' is an opinion, 'x' is true but does not help.
+const CASE = {
+  q: 'Should farms near the Danube use less fertiliser?',
+  sides: { yes: 'Farms near the Danube should use less fertiliser.', no: 'Farms near the Danube should not use less fertiliser.' },
+  cards: [
+    ['y1', 'When it rains, fertiliser washes off the fields and into the river.', 'yes'],
+    ['y2', 'Extra fertiliser in a river makes tiny green plants (algae) grow very fast. When they die and rot, the water loses oxygen, and fish can die.', 'yes'],
+    ['y3', 'Farmers can test their soil to find out how much fertiliser the crops really need.', 'yes'],
+    ['n1', 'Fertiliser helps crops to grow bigger, so farms can grow more food.', 'no'],
+    ['n2', 'Without enough fertiliser, some crops grow small and weak.', 'no'],
+    ['o1', 'Farming is the most boring job in the world.', 'op'],
+    ['o2', 'Blue rivers are the prettiest rivers.', 'op'],
+    ['x1', 'The Danube is about 2,850 km long.', 'x']
+  ],
+  // "because…": the first reason for each side uses science; the other is just an opinion
+  becs: {
+    yes: [['r1', 'fertiliser that washes into the river can harm fish and other living things.'], ['r2', 'I don\'t like farms.']],
+    no: [['r1', 'crops need fertiliser to grow well, and people need food.'], ['r2', 'farmers are nice people.']]
+  },
+  // The last step: "Some people might say… but…". The first answer for each side is the strongest reply.
+  buts: {
+    yes: [['b1', 'testing the soil means farmers can give crops what they need, without extra that washes into the river.'], ['b2', 'fish are more important than food.'], ['b3', 'the Danube is very long.']],
+    no: [['b1', 'farmers can stop it washing away, for example by not spreading fertiliser just before rain.'], ['b2', 'rivers do not matter.'], ['b3', 'algae are green.']]
+  }
+};
+// A question with choices: wrong ones turn red and stay disabled, the right one turns green (as in the other tools)
+const choices = (act, opts, chosen, wrongs, right) => opts.map(([v, t]) => `<button class="opt${chosen === v && v === right ? ' done' : wrongs.includes(v) ? ' wrong' : ''}" data-act="${act}" data-v="${v}"${wrongs.includes(v) || chosen === right ? ' disabled' : ''}>${t}</button>`).join('');
+const CASEV = {
+  drawer() {
+    const c = state.town.case, C = CASE, card = id => C.cards.find(x => x[0] === id);
+    let o = `<div class="card says"><h3>⚖️ Make your case</h3><p>When people argue about the environment, use <b>science</b> to support your point.</p>
+      <p style="margin-top:6px"><b>${C.q}</b></p><div class="navrow">${[['yes', '✅ Yes'], ['no', '❌ No']].map(([v, t]) => `<button class="btn${c.side === v ? ' active' : ''}" data-act="cside" data-v="${v}">${t}</button>`).join('')}</div>
+      <p class="muted">There is no wrong side. What matters is the evidence you use.</p></div>`;
+    if (!c.side) return o;
+    const other = c.side === 'yes' ? 'no' : 'yes', ok = c.checked === 'ok';
+    o += `<div class="card"><h3>1. Pick your evidence</h3><p>Tap the cards that are <b>evidence</b> for your side. Leave out opinions, and facts that don't help.</p>
+      <div class="ecards">${C.cards.map(([id, t]) => `<button class="ecard${c.picked[id] ? ' on' : ''}" data-act="cpick" data-v="${id}"${ok ? ' disabled' : ''}>${t}</button>`).join('')}</div>
+      ${Array.isArray(c.checked) ? `<ul class="spot">${c.checked.map(m => `<li>${m}</li>`).join('')}</ul>` : ''}
+      ${ok ? '<p class="job">Good choices! These cards are all evidence for your side.</p>' : '<div class="navrow" style="margin-top:6px"><button class="btn" data-act="ccheck">✔ Check my evidence</button></div>'}</div>`;
+    if (!ok) return o;
+    const mine = C.cards.filter(x => x[2] === c.side), theirs = C.cards.filter(x => x[2] === other), mineP = mine.filter(x => c.picked[x[0]]);
+    const pickRow = (key, opts) => `<div class="stops wq">${opts.map(([id, t]) => `<button class="opt${c[key] === id ? ' on' : ''}" data-act="cset" data-k="${key}" data-v="${id}">${t}</button>`).join('')}</div>`;
+    o += `<div class="card"><h3>2. Build your argument</h3>
+      <p><b>I think</b> ${lcFirst(C.sides[c.side]).replace(/\.$/, '')} <b>because…</b></p><div class="stops wq">${choices('cbec', C.becs[c.side], c.because, c.becWrong, 'r1')}</div>
+      ${c.because && c.because !== 'r1' ? '<p class="spot">💡 That is an opinion. Choose a reason that uses science.</p>' : ''}
+      ${c.because === 'r1' ? `<p style="margin-top:8px"><b>The evidence shows…</b></p>${pickRow('evidence', mineP.map(x => [x[0], x[1]]))}` : ''}
+      ${c.because === 'r1' && c.evidence ? `<p style="margin-top:8px"><b>Some people might say…</b></p>${pickRow('counter', theirs.map(x => [x[0], x[1]]))}` : ''}
+      ${c.counter ? `<p style="margin-top:8px"><b>…but…</b></p><div class="stops wq">${choices('cbut', C.buts[c.side], c.but, c.butWrong, 'b1')}</div>
+        ${c.but && c.but !== 'b1' ? '<p class="spot">💡 That is not a scientific reason. Which answer uses evidence?</p>' : ''}` : ''}</div>`;
+    if (c.but === 'b1') o += `<div class="science"><b>⚖️ Your argument</b>I think ${lcFirst(C.sides[c.side]).replace(/\.$/, '')} because ${C.becs[c.side][0][1]} The evidence shows that ${lcFirst(card(c.evidence)[1])} Some people might say that ${lcFirst(card(c.counter)[1])} But ${C.buts[c.side][0][1]}</div>
+      <div class="card"><p>Scientists use <b>evidence</b>, not opinions, to support their points. Try the other side too!</p><button class="btn" data-act="cside" data-v="${other}">↺ Argue the other side</button></div>`;
+    return o;
+  },
+  check() {
+    const c = state.town.case, msgs = [], other = c.side === 'yes' ? 'no' : 'yes';
+    const picked = CASE.cards.filter(x => c.picked[x[0]]);
+    picked.forEach(([, t, k]) => {
+      if (k === 'op') msgs.push(`"${t}" is an <b>opinion</b>, not evidence.`);
+      if (k === 'x') msgs.push(`"${t}" is true, but it does not help your argument.`);
+      if (k === other) msgs.push(`"${t}" supports the <b>other</b> side. Save it for "Some people might say…".`);
+    });
+    const good = picked.filter(x => x[2] === c.side).length;
+    if (good < 2) msgs.push('Find at least <b>2</b> cards that support your side.');
+    c.checked = msgs.length ? msgs.slice(0, 4) : 'ok';
+  }
+};
+const lcFirst = t => t[0].toLowerCase() + t.slice(1);
 const RT = {
   // x: how far across the picture. river / air: how much this place pollutes them. fix: [picture, what to do, how it helps]
   PLACES: {
@@ -1137,7 +1214,7 @@ document.addEventListener('pointercancel', () => { if (Chips.d) { Chips.d.ghost?
 // ================= Missions =================
 // Each mission sets up a view; activities call emit() when something happens, and on() says whether that completes it.
 const MISSIONS = [
-  { id: 'count', icon: '🔢', title: 'What is air made of?', task: 'Predict which gas there is most of in air. Then <b>count</b> the 100 particles and check.',
+  { id: 'count', core: true, icon: '🔢', title: 'What is air made of?', task: 'Predict which gas there is most of in air. Then <b>count</b> the 100 particles and check.',
     hint: 'Press <b>Sort them</b> to put the colours in rows. Each full row is 10.',
     setup() { state.view = 'air'; state.air = freshAir(); },
     on: ev => ev === 'count',
@@ -1147,27 +1224,27 @@ const MISSIONS = [
     setup() { state.view = 'air'; state.air = Object.assign(freshAir(), { level: 10000, predSaved: true, counted: true, counts: { n: '78', o: '21', x: '1' } }); },
     on: ev => ev === 'co2',
     win: () => 'Carbon dioxide <b>is</b> in the air, but only <b>4 in every 10,000</b> particles: <b>0.04%</b>. That is why you can\'t find it in just 100.' },
-  { id: 'explore', icon: '🌍', title: 'Layer explorer', task: 'In <b>Around the Earth</b>, find out about all <b>5</b> layers of the atmosphere.',
+  { id: 'explore', ext: true, icon: '🌍', title: 'Layer explorer', task: 'In <b>Around the Earth</b>, find out about all <b>5</b> layers of the atmosphere.',
     hint: 'Point at each coloured layer in the picture, or tap it.',
     setup() { state.view = 'earth'; state.earth = freshEarth(); },
     on: (ev, d) => ev === 'explore' && d.seen === 5,
     win: () => 'From the ground up: the <b>troposphere</b>, <b>stratosphere</b>, <b>mesosphere</b>, <b>thermosphere</b> and <b>exosphere</b>. Together they make the atmosphere: the layer of air all around the Earth.' },
-  { id: 'sky', icon: '✈️', title: 'Sky high', task: 'In <b>Heights and temperature</b>, put all <b>9</b> things at the right height, then check.',
+  { id: 'sky', ext: true, icon: '✈️', title: 'Sky high', task: 'In <b>Heights and temperature</b>, put all <b>9</b> things at the right height, then check.',
     hint: 'Tap a layer to read about it. Each layer\'s card tells you what happens there.',
     setup() { state.view = 'layers'; state.layers = freshLayers(); },
     on: (ev, d) => ev === 'layers' && d.all,
     win: () => 'Weather and clouds are in the <b>troposphere</b>, the ozone layer is in the <b>stratosphere</b>, meteors burn up in the <b>mesosphere</b>, the space station orbits in the <b>thermosphere</b> and some satellites are out in the <b>exosphere</b>.' },
-  { id: 'cold', icon: '🥶', title: 'The coldest place', task: 'In <b>Heights and temperature</b>, drag the 🌡️ thermometer to the <b>coldest</b> part of the atmosphere.',
+  { id: 'cold', ext: true, icon: '🥶', title: 'The coldest place', task: 'In <b>Heights and temperature</b>, drag the 🌡️ thermometer to the <b>coldest</b> part of the atmosphere.',
     hint: 'Drag up and down on the temperature graph. Where does the red line go furthest to the left?',
     setup() { state.view = 'layers'; state.layers = freshLayers(); },
     on: (ev, d) => ev === 'probe' && d.km >= 80 && d.km <= 90,
     win: () => 'The coldest place is the top of the <b>mesosphere</b>, about 85 km up: around <b>−90 °C</b>!' },
-  { id: 'hot', icon: '🔥', title: 'Hot but thin', task: 'In <b>Heights and temperature</b>, find a height where it is <b>hotter than 500 °C</b>.',
+  { id: 'hot', ext: true, icon: '🔥', title: 'Hot but thin', task: 'In <b>Heights and temperature</b>, find a height where it is <b>hotter than 500 °C</b>.',
     hint: 'The temperature line goes off the graph in one layer. Look above the edge of space.',
     setup() { state.view = 'layers'; state.layers = freshLayers(); },
     on: (ev, d) => ev === 'probe' && d.t > 500,
     win: () => 'The <b>thermosphere</b> gets very hot: 700 °C or more. But the air there is so thin that the few particles could hardly warm you at all, so it would not feel hot.' },
-  { id: 'wsteps', icon: '🌧️', title: 'Round and round', task: 'In <b>Water cycle</b>, answer all <b>4</b> "What happens next?" questions.',
+  { id: 'wsteps', core: true, icon: '🌧️', title: 'Round and round', task: 'In <b>Water cycle</b>, answer all <b>4</b> "What happens next?" questions.',
     hint: 'Think about what warmth does to water, what cooling does to water vapour, and which way water flows.',
     setup() { state.view = 'water'; state.water = freshWater(); },
     on: ev => ev === 'wsteps',
@@ -1187,11 +1264,16 @@ const MISSIONS = [
     setup() { state.view = 'pure'; state.pure = freshPure(); },
     on: ev => ev === 'pure',
     win: () => '<b>Most water is not pure</b>: sea, river, tap and mineral water all have substances dissolved in them, even though they look clear. Only rain water is nearly pure.' },
-  { id: 'spot', icon: '🔍', title: 'Pollution spotter', task: 'In <b>Devín</b>, look at all <b>6</b> places and decide which ones are causing pollution.',
+  { id: 'spot', core: true, icon: '🔍', title: 'Pollution spotter', task: 'In <b>Devín</b>, look at all <b>6</b> places and decide which ones are causing pollution.',
     hint: 'Pollution has two parts: it is caused by humans, and it contaminates (makes dirty and harmful) the air, water or land.',
     setup() { state.view = 'town'; state.town = freshTown(); },
     on: ev => ev === 'spot',
     win: () => 'Farm chemicals, litter, exhaust fumes, factory smoke and dirty water, and a leaking tip are all <b>pollution</b>: substances added by people that harm the environment. Falling leaves are natural, so they are not pollution.' },
+  { id: 'case', icon: '⚖️', title: 'Make your case', task: 'In <b>Devín</b>, choose <b>Make your case</b>. Pick a side, choose your evidence and build your argument.',
+    hint: 'Evidence is something that has been found out. An opinion is just what someone thinks.',
+    setup() { state.view = 'town'; state.town = Object.assign(freshTown(), { mode: 'case' }); },
+    on: ev => ev === 'case',
+    win: () => 'You used <b>scientific evidence</b> to support your point, and answered the other side. That is how scientists argue!' },
   { id: 'clean', icon: '🛠️', title: 'Clean up the Danube', task: 'In <b>Devín</b>, choose <b>Make it better</b> and make the river and the air <b>very good</b>.',
     hint: 'Each place that causes pollution has something that can help.',
     setup() { state.view = 'town'; state.town = Object.assign(freshTown(), { mode: 'fix' }); },
@@ -1238,6 +1320,7 @@ const LEARN = {
   '5Cm.02': 'Understand that substances can be gaseous and know the common gases at room temperature (limited to oxygen, carbon dioxide, water vapour, nitrogen and hydrogen).',
   '5ESp.02': 'Understand that most water on Earth is not pure and has dissolved substances in it.',
   '5ESp.03': 'Understand that pollution is the introduction of substances by humans that harm the environment and identify examples of pollution.',
+  '5SIC.03': 'Use science to support points when discussing issues, situations or actions.',
   '5SIC.05': 'Discuss how the use of science and technology can have positive and negative environmental effects on their local area.',
   '5ESc.01': 'Describe the water cycle (limited to evaporation, condensation and precipitation).',
   '5TWSm.01': 'Know that a model presents an object, process or idea in a way that shows some of the important features.'
@@ -1260,8 +1343,8 @@ const HELP = {
     ['Choose <b>Pure</b> or <b>Not pure</b> for each water.', 'Write why you think that.', 'Press <b>Evaporate</b> and look in the dishes.', 'Answer the questions.'],
     '<b>Pure</b> water is only water, with nothing else in it.', ['5ESp.02']],
   town: ['What is <b>pollution</b>, and how can science and technology help?',
-    ['<b>Spot the pollution</b>: tap each numbered circle.', 'Decide: is it pollution? Yes or no.', '<b>Make it better</b>: choose a fix for each place.', 'Watch the river and the air get cleaner.'],
-    'Check both parts of what <b>pollution</b> means.', ['5ESp.03', '5SIC.05']]
+    ['<b>Spot the pollution</b>: tap each numbered circle.', 'Decide: is it pollution? Yes or no.', '<b>Make it better</b>: choose a fix for each place.', 'Watch the river and the air get cleaner.', '<b>Make your case</b>: choose a side and support it with evidence.'],
+    'Check both parts of what <b>pollution</b> means.', ['5ESp.03', '5SIC.05', '5SIC.03']]
 };
 // Real life: how each tab's model is different, as [emoji, text]
 const PICS = ['🖼️', 'The pictures are simple drawings, <b>not to scale</b>.'];
@@ -1518,11 +1601,12 @@ const VIEWS = {
       const top = `<div class="card"><h2>Devín, on the Danube</h2>
           <p><b>Devín</b> is by the <b>River Danube</b>, in Slovakia, under its castle. The farm, factory and rubbish tip in this picture are <b>made up</b>.</p>
           <p><b>🔬 What is pollution, and how can science and technology help?</b></p>
-          <div class="stops"><button class="opt${t.mode === 'spot' ? ' on' : ''}" data-act="tmode2" data-m="spot">🔍 Spot the pollution</button><button class="opt${t.mode === 'fix' ? ' on' : ''}" data-act="tmode2" data-m="fix">🛠️ Make it better</button></div></div>`;
+          <div class="stops"><button class="opt${t.mode === 'spot' ? ' on' : ''}" data-act="tmode2" data-m="spot">🔍 Spot the pollution</button><button class="opt${t.mode === 'fix' ? ' on' : ''}" data-act="tmode2" data-m="fix">🛠️ Make it better</button><button class="opt${t.mode === 'case' ? ' on' : ''}" data-act="tmode2" data-m="case">⚖️ Make your case</button></div></div>`;
       const defn = `<div class="card"><h3>📖 What is pollution?</h3>
           <p><b>Pollution</b> is when <b>harmful substances</b> are added to the environment <b>by humans</b>.</p>
           <ol class="facts"><li><b>It is caused by humans.</b> Things that happen naturally, like leaves falling, are not pollution.</li>
           <li><b>It contaminates the environment.</b> The substances make the air, water or land dirty, and harm living things.</li></ol></div>`;
+      if (t.mode === 'case') return `${top}${CASEV.drawer()}`;
       if (t.mode === 'spot') {
         const found = RT.ORDER.filter(id => t.answered[id]).length, Q = P[t.open];
         const ask = Q ? `<div class="card says${t.answered[t.open] ? ' good' : ''}"><h3>${Q.em} ${Q.name}</h3><p>${Q.see}</p>
@@ -1578,6 +1662,12 @@ const ACTIONS = {
   llayer(el) { state.layers.sel = el.dataset.l; render(); },
   lcheck() { LY.check(); },
   tmode2(el) { state.town.mode = el.dataset.m; state.town.open = null; render(); },
+  cside(el) { state.town.case = { ...freshCase(), side: el.dataset.v }; render(); },
+  cpick(el) { const c = state.town.case, id = el.dataset.v; c.picked[id] = !c.picked[id]; c.checked = null; render(); },
+  ccheck() { CASEV.check(); render(); },
+  cset(el) { const c = state.town.case, k = el.dataset.k; c[k] = el.dataset.v; if (k === 'evidence') { c.counter = null; c.but = null; c.butWrong = []; } if (k === 'counter') { c.but = null; c.butWrong = []; } render(); },
+  cbec(el) { const c = state.town.case; c.because = el.dataset.v; if (c.because !== 'r1' && !c.becWrong.includes(c.because)) c.becWrong.push(c.because); render(); },
+  cbut(el) { const c = state.town.case; c.but = el.dataset.v; if (c.but !== 'b1' && !c.butWrong.includes(c.but)) c.butWrong.push(c.but); render(); if (c.but === 'b1') emit('case'); },
   tans(el) { RT.answer(el.dataset.v === '1'); },
   tfix(el) { RT.fix(el.dataset.id); },
   ppred(el) { state.pure.pred[el.dataset.id] = el.dataset.v === '1'; render(); },
@@ -1594,7 +1684,7 @@ const ACTIONS = {
   lpopclose() { EV.hide(); state.earth.sel = null; renderStage(); },
   missions() {
     $('#missionList').innerHTML = MISSIONS.map((m, i) => `<button class="mission-item${state.done.includes(m.id) ? ' done' : ''}" data-act="startMission" data-i="${i}">
-      <span class="em">${m.icon}</span><span class="t">${i + 1}. ${m.title}</span><span class="star">⭐</span></button>`).join('');
+      <span class="em">${m.icon}</span><span class="t">${i + 1}. ${m.title}</span>${m.ext ? '<span class="extn">➕ Extension</span>' : ''}<span class="star">⭐</span></button>`).join('');
     $('#missionsModal').classList.remove('hidden');
   },
   startMission(el) { startMission(+el.dataset.i); },

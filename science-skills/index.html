@@ -1,0 +1,787 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Science Skills</title>
+<meta name="description" content="How do scientists find things out? Meet the five types of enquiry, choose the right one for a question, and find facts you can trust. An interactive tool for Year 5.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ================= Shared look (matches the other Year 5 tools) ================= */
+  :root {
+    --ink: #1d2340; --muted: #5b6386; --soft: #eef2ff;
+    --yellow: #ffc83d; --blue: #3d7bff; --coral: #ff5f6d; --green: #22b07d; --orange: #f0892e; --grey: #8a93ad; --pink: #e85d9e;
+    --space: #070d24; --drawerW: 360px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: var(--space); color: var(--ink); font-family: 'Fredoka', system-ui, sans-serif; font-size: 17px; line-height: 1.35; -webkit-tap-highlight-color: transparent; }
+  body { display: flex; flex-direction: column; }
+  button, input, textarea { font: inherit; color: inherit; }
+  b { font-weight: 700; }
+  .btn { border: 0; border-radius: 14px; padding: 9px 14px; min-height: 44px; cursor: pointer; background: #fff; color: var(--ink); font-weight: 600; font-size: 16px; box-shadow: 0 3px 0 rgba(0,0,0,.18); }
+  .btn:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,.18); }
+  .btn.active { background: var(--yellow); }
+  .btn:focus-visible { outline: 3px solid var(--yellow); outline-offset: 2px; }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .btn.go { background: var(--green); color: #fff; font-size: 19px; flex: 1; }
+  .btn.primary { background: var(--green); color: #fff; }
+  a.btn { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
+  #drawer a.btn.go, #drawer a.btn.primary { color: #fff; }
+
+  /* ---------- Top bar ---------- */
+  .topbar { flex: none; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 8px 10px; background: rgba(7,13,36,.95); z-index: 15; }
+  .brand { color: #fff; font-size: 21px; font-weight: 700; margin-right: auto; white-space: nowrap; }
+  .hub-link { flex: none; display: grid; place-items: center; width: 38px; height: 38px; border-radius: 12px; text-decoration: none; font-size: 20px; background: rgba(255,255,255,.14); box-shadow: 0 3px 0 rgba(0,0,0,.25); transition: background .15s, transform .08s; }
+  .hub-link:hover { background: rgba(255,255,255,.26); }
+  .hub-link:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,.25); }
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+  .btn.missions { background: var(--blue); color: #fff; }
+  .tabs .btn { padding: 9px 10px; }
+  /* The tabs: their words go first, leaving the icons */
+  @media (max-width: 1399px) {
+    .topbar .long { display: none; }
+    .brand { font-size: 18px; }
+    .topbar, .tabs { gap: 4px; }
+    .tabs .btn { padding: 9px 8px; font-size: 14.5px; }
+  }
+  @media (max-width: 1180px) { .tl { display: none; } .tabs .btn { font-size: 20px; padding: 6px 9px; } }
+
+  /* ---------- Main area: stage on the left, drawer on the right ---------- */
+  main { position: relative; flex: 1; min-height: 0; }
+  #stage { position: absolute; top: 0; bottom: 0; left: 0; right: var(--drawerW); overflow: hidden; background: #eef4fb; display: flex; align-items: center; justify-content: center; }
+  #stage > svg { width: 100%; height: 100%; display: block; touch-action: none; user-select: none; -webkit-user-select: none; }
+  #drawer { position: absolute; top: 0; right: 0; bottom: 0; width: var(--drawerW); background: #dfe6ff; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+  .card { background: #fff; border-radius: 16px; padding: 12px 14px; }
+  .card h2 { margin: 0 0 4px; font-size: 21px; line-height: 1.2; }
+  .card h3 { margin: 0 0 6px; font-size: 17px; }
+  .card p { margin: 4px 0; }
+  .muted { color: var(--muted); font-size: 14.5px; }
+  .term { background: #fff3c4; border-radius: 6px; padding: 0 4px; font-weight: 600; }
+  .navrow { display: flex; gap: 8px; flex-wrap: wrap; }
+  .opt { border: 2px solid #d3dbf7; background: #fff; border-radius: 12px; padding: 6px 10px; min-height: 44px; font-weight: 600; font-size: 15px; cursor: pointer; }
+  .opt.on { background: var(--yellow); border-color: #e0a800; }
+  .opt.wrong { background: #ffe0e3; border-color: var(--coral); }
+  .opt.done, .opt.done:disabled { background: #c9f2df; border-color: var(--green); opacity: 1; }
+  .opt:disabled { opacity: .45; cursor: default; }
+  .opt.sm { font-size: 14px; padding: 4px 8px; }
+  .stops { display: flex; flex-wrap: wrap; gap: 6px; }
+  .spot { background: #fff3c4; border-radius: 12px; padding: 8px 10px; margin-top: 6px !important; }
+  .job { font-size: 16px; background: #c9f2df; border-radius: 12px; padding: 8px 10px; }
+  .says { border: 3px solid var(--yellow); }
+  .says.good { border-color: var(--green); background: #effbf5; }
+  .says ul { margin: 6px 0 0; padding-left: 20px; }
+  .wq .opt { display: block; width: 100%; text-align: left; margin-top: 6px; }
+  .checkbar { position: sticky; bottom: -10px; z-index: 2; display: flex; margin: 0 -10px; padding: 6px 10px 10px; background: #dfe6ff; }
+  .slide { display: flex; align-items: center; gap: 8px; margin: 6px 0; }
+  .slide input[type=range] { flex: 1; min-height: 44px; accent-color: var(--coral); }
+  .lay-top { position: absolute; top: 8px; left: 10px; right: 10px; display: flex; gap: 8px; align-items: flex-start; flex-wrap: wrap; pointer-events: none; z-index: 2; }
+  .scaletag { background: var(--blue); color: #fff; font-weight: 700; border-radius: 10px; padding: 5px 10px; font-size: 15px; white-space: nowrap; }
+  .readout { background: #fff; border-radius: 12px; padding: 5px 10px; font-size: 15px; line-height: 1.3; box-shadow: 0 3px 8px rgba(0,0,0,.12); }
+  .tapme { cursor: pointer; }
+  .icons { list-style: none; padding: 0; margin: 0 0 14px; }
+  .icons li { display: flex; gap: 10px; padding: 6px 0; line-height: 1.35; }
+  .icons .em { font-size: 24px; width: 32px; flex: none; text-align: center; }
+  .linkbtn { border: 0; background: none; color: var(--blue); font-weight: 600; cursor: pointer; padding: 4px 0; font-size: 15px; min-height: 32px; }
+  a.linkbtn { display: inline-flex; align-items: center; text-decoration: none; }
+
+  /* ---------- Chips: tap one, then tap where it goes – or drag it there ---------- */
+  .chip { display: inline-flex; align-items: center; justify-content: center; gap: 4px; border: 2px solid #d3dbf7; background: #fff; border-radius: 12px; padding: 4px 12px; min-height: 44px; font-weight: 600; font-size: 15px; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
+  .chip.sel { background: var(--yellow); border-color: #e0a800; }
+  .chip-ghost { position: fixed; z-index: 30; pointer-events: none; transform: translate(-50%, -50%) rotate(-3deg); box-shadow: 0 8px 18px rgba(0,0,0,.3); opacity: .95; }
+  .bank { display: flex; flex-wrap: wrap; gap: 6px; }
+  .bank:empty::before { content: 'All placed!'; color: var(--muted); font-size: 15px; }
+  .mrow { display: flex; align-items: center; gap: 8px; margin: 6px 0; }
+  .mrow > span { flex: 1; font-size: 15px; line-height: 1.25; }
+  .mslot { flex: none; width: 118px; min-height: 44px; border: 2px dashed #b7c3ea; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; background: #f7f9ff; cursor: pointer; text-align: center; padding: 2px 4px; }
+  .mslot.ready { border-color: #e0a800; background: #fffbea; }
+  .mslot.over { border-style: solid; border-color: var(--green); }
+  .mslot.ok { border-style: solid; border-color: var(--green); background: #c9f2df; cursor: default; }
+  .mslot.bad { border-style: solid; border-color: var(--coral); background: #ffe0e3; }
+  svg .slot.over rect { stroke: var(--green); stroke-width: 4; }
+  svg .slot.ready rect { stroke: #e0a800; }
+
+  /* ---------- Sorting into two boxes ---------- */
+  .sortwrap { position: absolute; inset: 0; display: flex; flex-direction: column; gap: 8px; padding: 50px 8px 8px; }
+  .pool { flex: 1; min-height: 0; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; align-content: start; grid-auto-rows: max-content; padding: 4px; }
+  .pcard { position: relative; display: flex; flex-direction: column; border: 3px solid #fff; background: #fff; border-radius: 14px; padding: 0; overflow: hidden; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; font-weight: 700; font-size: 15px; box-shadow: 0 3px 0 rgba(0,0,0,.12); text-align: center; }
+  .pcard img, .pcard .ph { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; display: block; pointer-events: none; }
+  .pcard .ph { display: grid; place-items: center; font-size: 46px; background: #e6f3e0; }
+  .pcard .ph svg { width: 60%; height: auto; }
+  .pcard > span { padding: 4px 6px; }
+  .pcard.sel { border-color: var(--yellow); box-shadow: 0 0 0 3px var(--yellow); }
+  .pcard.look { border-color: var(--blue); }
+  .bins { flex: none; height: 40%; min-height: 130px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .bin { border: 3px dashed #b7c3ea; border-radius: 16px; background: #fff; padding: 6px; display: flex; flex-direction: column; gap: 4px; overflow-y: auto; cursor: pointer; }
+  .bin h3 { margin: 0; font-size: 18px; text-align: center; pointer-events: none; }
+  .bin .bsub { text-align: center; font-size: 13.5px; color: var(--muted); font-weight: 600; pointer-events: none; }
+  .bin.ready { border-color: var(--yellow); background: #fffbea; }
+  .bin.over { border-style: solid; border-color: var(--green); background: #effbf5; }
+  .bin .in { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; }
+  .mini { width: 66px; display: flex; flex-direction: column; align-items: center; font-size: 12px; font-weight: 600; text-align: center; line-height: 1.1; pointer-events: none; }
+  .mini img, .mini .ph { width: 58px; height: 44px; object-fit: cover; border-radius: 8px; display: grid; place-items: center; font-size: 28px; background: #e6f3e0; }
+  .mini .ph svg { width: 34px; height: 34px; }
+  .photo { position: relative; border-radius: 14px; overflow: hidden; background: #e6f3e0; }
+  .photo img { width: 100%; display: block; }
+  .photo .ph { display: grid; place-items: center; font-size: 80px; aspect-ratio: 4 / 3; }
+  .pcard .credit, .mini .credit { display: none; }
+  .credit { position: absolute; right: 6px; bottom: 6px; background: rgba(0,0,0,.55); color: #fff; font-size: 11px; padding: 2px 6px; border-radius: 6px; max-width: calc(100% - 12px); }
+
+  /* ---------- The fair test (as in Seed Lab) ---------- */
+  .steps { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
+  .steps span { font-size: 12.5px; font-weight: 700; padding: 3px 8px; border-radius: 10px; background: var(--soft); color: var(--muted); }
+  .steps span.now { background: var(--yellow); color: var(--ink); }
+  .steps span.done { background: #c9f2df; color: #147a55; }
+  .varrow { margin: 8px 0; }
+  .varrow > span { display: block; font-weight: 700; font-size: 14.5px; margin-bottom: 4px; }
+  .tag { background: var(--yellow); border-radius: 8px; padding: 1px 6px; font-size: 12px; }
+  .keeps { display: grid; gap: 4px; margin-top: 6px; }
+  .keep { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 4px 8px; border-radius: 10px; background: var(--soft); font-size: 15px; cursor: pointer; }
+  .keep input { width: 22px; height: 22px; flex: none; accent-color: var(--green); }
+  ul.spot { padding-left: 28px; }
+  .seedcards { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 6px; }
+  .seedcard { display: flex; flex-direction: column; align-items: center; gap: 2px; border: 2px solid #d3dbf7; background: #fff; border-radius: 12px; padding: 6px 4px; min-height: 44px; font-weight: 600; font-size: 13.5px; line-height: 1.15; cursor: pointer; text-align: center; }
+  .seedcard.sel { background: var(--yellow); border-color: #e0a800; }
+  .seedcard:disabled { opacity: .6; cursor: default; }
+  .gtable { width: 100%; border-collapse: collapse; font-size: 15px; margin: 6px 0; }
+  .gtable th { text-align: left; font-size: 13.5px; color: var(--muted); padding: 2px 4px; }
+  .gtable td { border-top: 1px solid #e1e6f5; padding: 5px 4px; }
+  .numin { width: 90px; min-height: 44px; font-size: 20px; text-align: center; border: 2px solid #c3cdf2; border-radius: 12px; padding: 4px; background: #fff; }
+  .numin:focus { outline: 3px solid var(--yellow); border-color: #e0a800; }
+  .numin.ok { border-color: var(--green); background: #effbf5; }
+  .ansrow { display: flex; align-items: center; gap: 8px; margin: 8px 0 4px; font-weight: 600; flex-wrap: wrap; }
+  .wsmall { font-family: 'Fredoka', system-ui, sans-serif; font-size: 13px; font-weight: 600; fill: var(--ink); paint-order: stroke; stroke: #fff; stroke-width: 4px; stroke-linejoin: round; }
+  /* ---------- Science Skills ---------- */
+  .cardgrid { position: absolute; inset: 0; padding: 56px 14px 14px; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; align-content: center; overflow-y: auto; }
+  .ecard { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; min-height: 150px; border: 4px solid #fff; background: #fff; border-radius: 20px; font: inherit; font-size: 18px; color: var(--ink); cursor: pointer; box-shadow: 0 4px 0 rgba(0,0,0,.1); padding: 12px; text-align: center; }
+  .ecard .bigem { font-size: 54px; line-height: 1; }
+  .ecard.on { border-color: var(--yellow); box-shadow: 0 0 0 5px rgba(255,200,61,.35); }
+  .ecard .tick { position: absolute; top: 8px; right: 12px; color: var(--green); font-weight: 700; }
+  .whichwrap .pool { flex: 0 1 auto; max-height: 42%; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }
+  .qcard { display: flex; gap: 8px; align-items: center; text-align: left; border: 3px solid #fff; background: #fff; border-radius: 14px; padding: 8px 10px; min-height: 52px; font: inherit; font-weight: 600; font-size: 15px; color: var(--ink); cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; box-shadow: 0 3px 0 rgba(0,0,0,.1); }
+  .qcard.sel { border-color: var(--yellow); box-shadow: 0 0 0 3px var(--yellow); }
+  .qcard .qem { font-size: 24px; flex: none; }
+  .bins.five { flex: 1 1 auto; height: auto; grid-template-columns: repeat(5, 1fr); }
+  .bins.five .bin h3 { font-size: 15px; }
+  .qmini { background: var(--soft); border-radius: 8px; padding: 3px 6px; font-size: 12.5px; font-weight: 600; pointer-events: none; text-align: left; width: 100%; }
+  .askrow { padding: 8px 0; border-top: 1px solid #e1e6f5; }
+  .askrow:first-child { border-top: 0; }
+  .askrow p { margin: 2px 0 6px; }
+  .askrow .navrow .opt { flex: 1; }
+  .srcgrid { position: absolute; inset: 0; padding: 56px 12px 12px; display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; align-content: start; overflow-y: auto; }
+  .src { text-align: left; border: 3px solid #fff; background: #fff; border-radius: 16px; padding: 10px 12px; font: inherit; color: var(--ink); cursor: pointer; box-shadow: 0 3px 0 rgba(0,0,0,.1); display: flex; flex-direction: column; gap: 6px; }
+  .src .skind { font-weight: 700; font-size: 15px; }
+  .src .swords { font-size: 15px; line-height: 1.35; font-style: italic; }
+  .src .suse { font-weight: 700; color: #8a5a00; font-size: 14px; }
+  .src .swhy { font-size: 14px; line-height: 1.3; }
+  .src.on { border-color: var(--yellow); background: #fffbea; }
+  .src.good { border-color: var(--green); background: #effbf5; }
+  .src.bad { opacity: .75; }
+  .src:disabled { cursor: default; }
+  @media (max-width: 760px) {
+    .cardgrid { padding-top: 44px; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 6px; }
+    .ecard { min-height: 92px; font-size: 13.5px; padding: 6px; } .ecard .bigem { font-size: 32px; }
+    .whichwrap { padding-top: 64px; } .whichwrap .pool { grid-template-columns: 1fr; }
+    .bins.five { grid-template-columns: 1fr 1fr; } .bins.five .bin h3 { font-size: 12.5px; }
+    .srcgrid { padding-top: 64px; grid-template-columns: 1fr; }
+  }
+
+  /* ---------- Pictures drawn on the stage ---------- */
+  .glabel { font-family: 'Fredoka', system-ui, sans-serif; font-size: 16px; font-weight: 700; fill: var(--ink); }
+  .gsmall { font-family: 'Fredoka', system-ui, sans-serif; font-size: 13px; font-weight: 600; fill: var(--muted); }
+  .part:hover > path, .part:hover > ellipse { filter: brightness(1.08); }
+  .bob { animation: bob 1.4s ease-in-out infinite alternate; }
+  @keyframes bob { to { transform: translateY(-8px); } }
+  .puff { animation: puff 1.6s ease-out infinite; }
+  @keyframes puff { from { opacity: 1; transform: translate(0, 0); } to { opacity: 0; transform: translate(var(--dx), var(--dy)); } }
+  .glow { animation: glow 1.2s ease-in-out infinite alternate; }
+  @keyframes glow { from { opacity: .35; } to { opacity: .9; } }
+  .scent { animation: rise 2.4s ease-in infinite; }
+  @keyframes rise { from { transform: translateY(0); opacity: 0; } 20% { opacity: .9; } to { transform: translateY(-40px); opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { .bob, .puff, .glow, .scent { animation: none; } }
+
+  /* ---------- Missions and pop-ups ---------- */
+  .banner { position: absolute; top: 10px; right: 10px; width: calc(var(--drawerW) - 20px); z-index: 6; background: #fff; border: 3px solid var(--yellow); border-radius: 16px; padding: 9px 44px 9px 14px; box-shadow: 0 6px 16px rgba(0,0,0,.18); }
+  .banner.hidden { display: none; }
+  .banner .kicker { font-size: 12.5px; font-weight: 700; color: var(--blue); text-transform: uppercase; letter-spacing: .04em; }
+  .banner .close { position: absolute; top: 6px; right: 6px; border: 0; background: var(--soft); border-radius: 50%; width: 32px; height: 32px; cursor: pointer; }
+  .banner .hint { margin-top: 4px; color: var(--muted); font-size: 15px; }
+  .banner .hint.hidden { display: none; }
+  .modal { position: fixed; inset: 0; background: rgba(5,10,30,.6); display: flex; align-items: center; justify-content: center; z-index: 20; padding: 16px; }
+  .modal.hidden { display: none; }
+  .modal-box { position: relative; background: #fff; border-radius: 24px; padding: 20px; width: min(580px, 100%); max-height: calc(100vh - 32px); overflow-y: auto; }
+  .modal-box h2 { margin: 0 0 8px; font-size: 25px; }
+  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+  .mission-list { display: grid; gap: 8px; margin-bottom: 14px; }
+  .mission-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; min-height: 52px; border-radius: 16px; background: var(--soft); border: 0; text-align: left; cursor: pointer; font-size: 16px; }
+  .mission-item .em { font-size: 25px; } .mission-item .t { flex: 1; font-weight: 600; }
+  .mission-item .star { font-size: 21px; filter: grayscale(1); opacity: .35; }
+  .mission-item.done .star { filter: none; opacity: 1; }
+  .core { background: var(--yellow); color: var(--ink); border-radius: 8px; padding: 1px 7px; font-size: 12.5px; font-weight: 700; white-space: nowrap; }
+  .win-emoji { font-size: 56px; text-align: center; }
+  .win-text { font-size: 17.5px; line-height: 1.5; margin-bottom: 14px; }
+  .confetti { position: fixed; top: -40px; font-size: 26px; z-index: 40; pointer-events: none; animation: fall linear forwards; }
+  @keyframes fall { to { transform: translateY(110vh) rotate(540deg); } }
+  .modal-x {
+    position: sticky; top: 0; float: right; z-index: 2;
+    width: 52px; height: 52px; margin: -6px -6px 6px 12px; padding: 0;
+    border: 0; border-radius: 50%; cursor: pointer;
+    background: var(--coral); color: #fff; font-size: 26px; font-weight: 700; line-height: 1;
+    display: grid; place-items: center; box-shadow: 0 3px 0 rgba(0,0,0,.2);
+    transition: transform .08s, filter .15s;
+  }
+  .modal-x:hover { filter: brightness(1.08); }
+  .modal-x:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,.2); }
+  .modal-x:focus-visible { outline: 3px solid var(--yellow); outline-offset: 2px; }
+  .science { background: #fff6d6; border: 3px solid var(--yellow); border-radius: 16px; padding: 10px 14px; margin: 8px 0; }
+  .science > b:first-child { display: block; font-size: 14px; text-transform: uppercase; letter-spacing: .04em; color: #8a5a00; margin-bottom: 2px; }
+  .seelab { display: flex; align-items: center; gap: 8px; background: #e7f7ee; border-radius: 12px; padding: 8px 10px; font-weight: 600; color: #0b6644; text-decoration: none; min-height: 44px; }
+  .help-body h3 { margin: 12px 0 4px; font-size: 17px; }
+  .help-body p { margin: 4px 0; line-height: 1.4; }
+  .help-body ol { margin: 4px 0; padding-left: 24px; line-height: 1.4; }
+  .help-body ol li { margin: 3px 0; }
+  .help-body .welcome { font-weight: 700; color: var(--blue); }
+  details.teach { margin: 12px 0; font-size: 13px; color: var(--muted); }
+  details.teach summary { cursor: pointer; font-weight: 600; min-height: 32px; }
+  details.teach p { margin: 4px 0; }
+  details.teach h4 { margin: 8px 0 2px; font-size: 13px; color: var(--ink); }
+
+  /* ---------- Narrow screens: stage on top, drawer below ---------- */
+  @media (max-width: 760px) {
+    :root { --drawerW: 0px; }
+    #stage { bottom: 42%; right: 0; }
+    #drawer { top: 58%; width: 100%; }
+    .banner { top: calc(58% + 8px); left: 8px; right: 8px; width: auto; }
+    .brand { font-size: 17px; }
+    .topbar > .btn { padding: 5px 7px; }
+    .brand { font-size: 15px; white-space: normal; line-height: 1.05; max-width: 82px; }
+    /* The tabs get a row of their own, under the title and buttons */
+    .tabs { order: 9; width: 100%; justify-content: space-between; gap: 3px; }
+    .tabs .btn { flex: 1; font-size: 18px; padding: 4px 0; min-height: 40px; }
+    .readout, .scaletag { font-size: 13px; padding: 3px 7px; }
+    .glabel { font-size: 12px; } .gsmall { font-size: 10.5px; }
+    .sortwrap { padding-top: 40px; gap: 5px; }
+    .pool { grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); gap: 5px; }
+    .pcard { font-size: 12px; } .pcard .ph { font-size: 30px; }
+    .bins { min-height: 100px; gap: 5px; }
+    .bin h3 { font-size: 14px; } .bin .bsub { display: none; }
+    .mini { width: 46px; font-size: 10px; } .mini img, .mini .ph { width: 42px; height: 32px; font-size: 20px; }
+    .mslot { width: 96px; font-size: 14px; }
+  }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a class="hub-link" href="../index.html" title="Back to the Science Hub" aria-label="Back to the Science Hub">🏠</a>
+  <div class="brand">🔬 Science Skills</div>
+  <div class="tabs" id="tabs"></div>
+  <button class="btn missions" data-act="missions" title="Missions">🚀 <span class="long">Missions </span><span id="starCount"></span></button>
+  <button class="btn" data-act="words" title="Key words">📖<span class="long"> Words</span></button>
+  <button class="btn" data-act="model" title="How is this model different from real life?">🤔<span class="long"> Real life?</span></button>
+  <button class="btn" id="helpBtn" data-act="help" aria-label="How to use">❓</button>
+</div>
+<main>
+  <div id="stage"></div>
+  <div id="drawer"></div>
+  <div id="banner" class="banner hidden" role="status">
+    <div class="kicker" id="bannerKicker"></div>
+    <div id="bannerText"></div>
+    <button class="linkbtn" data-act="hint" id="hintBtn">💡 Show a hint</button>
+    <div class="hint hidden" id="bannerHint"></div>
+    <button class="close" data-act="stopMission" aria-label="Stop this mission">✖</button>
+  </div>
+</main>
+<div id="missionsModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="missionsTitle">
+  <div class="modal-box">
+    <button class="modal-x" data-act="closeModals" aria-label="Close">✕</button>
+    <h2 id="missionsTitle">🚀 Missions</h2>
+    <div class="mission-list" id="missionList"></div>
+    <div class="modal-actions"><button class="btn" data-act="resetStars">Reset stars</button><button class="btn primary" data-act="closeModals">Close</button></div>
+  </div>
+</div>
+<div id="modelModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modelTitle">
+  <div class="modal-box">
+    <button class="modal-x" data-act="closeModals" aria-label="Close">✕</button>
+    <h2 id="modelTitle">🤔 How is this model different from real life?</h2>
+    <p class="muted" id="modelTab" style="margin:-4px 0 8px;font-weight:600"></p>
+    <p style="margin-top:0">A <span class="term">model</span> shows some important features of something real – but not everything.</p>
+    <ul class="icons" id="modelList"></ul>
+    <div class="modal-actions"><button class="btn primary" data-act="closeModals">Got it!</button></div>
+  </div>
+</div>
+<div id="wordsModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="wordsTitle">
+  <div class="modal-box">
+    <button class="modal-x" data-act="closeModals" aria-label="Close">✕</button>
+    <h2 id="wordsTitle">📖 Key words</h2>
+    <ul class="icons" id="wordsList"></ul>
+    <div class="modal-actions"><button class="btn primary" data-act="closeModals">Got it!</button></div>
+  </div>
+</div>
+<div id="winModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="winTitle">
+  <div class="modal-box">
+    <button class="modal-x" data-act="closeModals" aria-label="Close">✕</button>
+    <div class="win-emoji">⭐</div>
+    <h2 id="winTitle" style="text-align:center">Mission complete!</h2>
+    <div class="win-text" id="winText"></div>
+    <div class="modal-actions"><button class="btn" data-act="closeModals">Keep exploring</button><a class="btn primary" id="winPractise" href="../practice/index.html#skills">✏️ Practise this</a><button class="btn primary" id="winNext" data-act="nextMission">Next mission ▶</button></div>
+  </div>
+</div>
+<div id="helpModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+  <div class="modal-box">
+    <button class="modal-x" data-act="closeModals" aria-label="Close">✕</button>
+    <div class="help-body" id="helpBody"></div>
+    <div class="modal-actions"><a class="btn" href="../practice/index.html#skills">✏️ Practise this</a><button class="btn primary" data-act="closeModals">Let's go! 🚀</button></div>
+  </div>
+</div>
+
+<script>
+// ================= Utilities =================
+const $ = (s, r = document) => r.querySelector(s);
+// Saved progress; private windows can block storage, so failures are ignored
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+};
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+const stageSize = () => { const st = $('#stage'), w = st.clientWidth || 900, h = st.clientHeight || 600; return { w, h, narrow: w < 560 }; };
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+const mix = (c1, c2, t) => { const p = c => [1, 3, 5].map(k => parseInt(c.slice(k, k + 2), 16)), a = p(c1), b = p(c2);
+  return '#' + a.map((v, k) => Math.round(v + (b[k] - v) * clamp(t)).toString(16).padStart(2, '0')).join(''); };
+const lc = t => t[0].toLowerCase() + t.slice(1);
+const cap = t => t[0].toUpperCase() + t.slice(1);
+// A question with choices: wrong ones turn red and stay disabled, the right one turns green
+const choices = (act, opts, chosen, wrongs, right) => opts.map(([v, t]) => `<button class="opt${chosen === v && v === right ? ' done' : wrongs.includes(v) ? ' wrong' : ''}" data-act="${act}" data-v="${v}"${wrongs.includes(v) || chosen === right ? ' disabled' : ''}>${t}</button>`).join('');
+// A prediction: no right or wrong yet, just the child's choice
+const predict = (act, opts, chosen) => opts.map(([v, t]) => `<button class="opt${chosen === v ? ' on' : ''}" data-act="${act}" data-v="${v}"${chosen ? ' disabled' : ''}>${t}</button>`).join('');
+
+// ================= Drag or tap =================
+// Anything with data-drag can be picked up; anything with data-drop can take it.
+// A tap picks it up (the view's pick), a second tap on a drop place puts it there (the view's drop).
+// Dragging does the same in one go.
+const DND = { start: null, ghost: null, over: null, skipClick: false };
+document.addEventListener('pointerdown', e => {
+  const el = e.target.closest('[data-drag]');
+  if (!el || e.button > 0 || el.matches(':disabled')) return;
+  DND.start = { el, id: el.dataset.drag, x: e.clientX, y: e.clientY, moved: false };
+});
+document.addEventListener('pointermove', e => {
+  const d = DND.start; if (!d) return;
+  if (!d.moved) {
+    if (Math.hypot(e.clientX - d.x, e.clientY - d.y) < 10) return;
+    d.moved = true;
+    const v = VIEWS[state.view], html = v.ghost && v.ghost(d.id);
+    let g;
+    if (html) { g = document.createElement('div'); g.className = 'chip'; g.innerHTML = html; }
+    else { g = d.el.cloneNode(true); g.style.width = d.el.offsetWidth + 'px'; }
+    g.classList.add('chip-ghost'); g.removeAttribute('data-drag');
+    document.body.appendChild(g); DND.ghost = g;
+  }
+  DND.ghost.style.left = e.clientX + 'px'; DND.ghost.style.top = e.clientY + 'px';
+  const over = document.elementFromPoint(e.clientX, e.clientY)?.closest('[data-drop]');
+  if (over !== DND.over) { DND.over?.classList.remove('over'); over?.classList.add('over'); DND.over = over; }
+});
+function endDrag(e) {
+  const d = DND.start; DND.start = null;
+  if (!d || !d.moved) return;
+  DND.ghost?.remove(); DND.ghost = null; DND.over?.classList.remove('over'); DND.over = null;
+  DND.skipClick = true; setTimeout(() => DND.skipClick = false, 0);
+  const over = e && document.elementFromPoint(e.clientX, e.clientY)?.closest('[data-drop]');
+  const v = VIEWS[state.view];
+  if (over && v.drop) v.drop(d.id, over.dataset.drop);
+}
+document.addEventListener('pointerup', endDrag);
+document.addEventListener('pointercancel', () => endDrag(null));
+
+
+// A repeatable random number generator, so the same picture comes back every time (from Particle Playground)
+function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+
+// ================= Science Skills =================
+const TOOL = { name: 'Science Skills', store: 'sk-done', confetti: ['⭐', '🌟', '🔬', '📚', '🎉'] };
+// The five types of scientific enquiry: [id, emoji, name, what you do, an example from a Year 5 topic, how]
+const ENQ = [
+  ['fair', '⚖️', 'Fair testing', 'Change <b>one</b> thing, measure what happens, and keep everything else the same.', 'Does a bigger parachute fall more slowly? <span class="muted">(Forces)</span>', 'Plan the test, change one thing, measure, and repeat to check.'],
+  ['time', '⏳', 'Observing over time', 'Watch or measure the <b>same thing</b> again and again, over minutes, days or months.', 'How does a bean seed change over three weeks? <span class="muted">(Seeds)</span>', 'Look at it at regular times. Draw it, photograph it, or measure it each time.'],
+  ['pattern', '📈', 'Pattern seeking', 'Look at <b>lots</b> of examples, or collect lots of data, then look for a pattern. You can\'t control everything.', 'Do bigger instruments make lower sounds? <span class="muted">(Sound)</span>', 'Collect results from lots of examples, put them in a table or graph, and look for a pattern.'],
+  ['classify', '🗂️', 'Identifying and classifying', 'Look closely at things, then <b>name</b> them or <b>sort</b> them into groups.', 'Is this plant a flowering plant? <span class="muted">(Flowers)</span>', 'Look for features you can see or test, then sort or name things using them.'],
+  ['research', '📚', 'Research', 'Find out what other people have <b>already discovered</b>, from books, websites and experts.', 'What did Galileo discover? <span class="muted">(Earth and space)</span>', 'Use good sources. Check the facts in more than one place.']
+];
+const ENQ_OF = id => ENQ.find(e => e[0] === id);
+// Which enquiry? Questions from the Year 5 topics: [question, type, emoji]
+const QUESTIONS = [
+  ['Which magnet is the strongest?', 'fair', '🧲'], ['Does sugar dissolve faster in warm water?', 'fair', '🧂'], ['Does a toy car roll further on carpet or on wood?', 'fair', '🚗'],
+  ['How does a bean seed change over three weeks?', 'time', '🫘'], ['How does the shape of the Moon change over a month?', 'time', '🌓'],
+  ['Do bigger instruments make lower sounds?', 'pattern', '🎻'], ['Do children with longer legs jump further?', 'pattern', '🦵'], ['Do bigger animals eat more food?', 'pattern', '🐘'],
+  ['Is this plant a flowering plant?', 'classify', '🌻'], ['Is this animal a mammal, a bird or a fish?', 'classify', '🐧'],
+  ['What did Galileo discover?', 'research', '🔭'], ['How do astronauts eat in space?', 'research', '🧑‍🚀']
+];
+const WHY_TYPE = {
+  fair: 'You can change one thing and keep the rest the same.', time: 'You watch the same thing change as time goes by.',
+  pattern: 'You can\'t control everything, so you look at lots of examples for a pattern.', classify: 'You look closely, then name it or put it in a group.',
+  research: 'You can\'t test it yourself. You find out what others have discovered.'
+};
+// Ask a question: three scenes. Each question: [question, type or null (not a science question)]
+const SCENES = {
+  garden: { name: 'The garden', em: '🌳', pics: ['☀️', '🌻', '🐝', '🌳', '🐸', '🪨', '🐛', '🌱'], qs: [
+    ['How does a tadpole change over the summer?', 'time'], ['Which minibeasts live under the stones?', 'classify'], ['Do seeds need water to start growing?', 'fair'],
+    ['Which flower is the prettiest?', null], ['Do taller sunflowers have bigger flower heads?', 'pattern'], ['Should we have a picnic today?', null]] },
+  kitchen: { name: 'The kitchen', em: '🍳', pics: ['🍌', '🧂', '🥛', '🧊', '🍰', '🥕', '🍎', '🫖'], qs: [
+    ['Does salt dissolve faster in hot water or cold water?', 'fair'], ['How does a banana change over a week?', 'time'], ['Who invented the fridge?', 'research'],
+    ['Is chocolate cake the best cake?', null], ['Which of these foods are fruits, and which are vegetables?', 'classify'], ['What should we have for dinner?', null]] },
+  playground: { name: 'The playground', em: '🛝', pics: ['☀️', '🐦', '🌳', '☁️', '⚽', '🛝', '🏃', '🎒'], qs: [
+    ['Does a ball bounce higher on concrete or on grass?', 'fair'], ['Do taller children run faster?', 'pattern'], ['How does my shadow change during the day?', 'time'],
+    ['Which birds visit the playground?', 'classify'], ['Is football more fun than tag?', null], ['How is the soft rubber under the swings made?', 'research']] }
+};
+const SORDER = ['garden', 'kitchen', 'playground'];
+// Find the facts: research questions and their sources. Source: [id, emoji, kind, words, good?, why it is (not) good]
+const RESEARCH = [
+  { q: 'How many planets go round the Sun?', ask: 'old', sources: [
+      ['enc', '📕', 'An encyclopedia (2024)', 'There are eight planets in our Solar System: Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus and Neptune.', true, 'A recent encyclopedia, checked by experts.'],
+      ['ad', '🛍️', 'An advert', 'Buy the SuperScope 3000! See all 12 planets from your bedroom! Only €99!', false, 'An advert wants to sell you something. Its "facts" may not be true.'],
+      ['friend', '🗣️', 'A friend says', 'I think there are about 20 planets.', false, 'That is a guess, not a checked fact.'],
+      ['agency', '💻', 'A space agency website', 'Eight planets orbit our Sun. The smallest is Mercury and the largest is Jupiter.', true, 'Space scientists wrote it. They study the planets.'],
+      ['old', '📜', 'An old book (1990)', 'There are nine planets. Pluto is the smallest planet.', false, 'It is out of date. In 2006, scientists decided Pluto is a dwarf planet.'],
+      ['side', '📗', 'A science book', 'The Sun is a star. It is very, very hot.', false, 'That is true, but it does not answer the question.'],
+      ['expert', '👩‍🔬', 'A video by an astronomer', 'We know of eight planets going round our Sun, and lots of smaller objects too.', true, 'An astronomer is an expert who studies space.']],
+    whyQ: 'Why should you leave out the old book?', whys: [['a', 'It is out of date. Scientists have found out more since it was written.', true], ['b', 'Old books are too long.', false], ['c', 'It has no pictures.', false]] },
+  { q: 'Do bats use sound to find their food?', ask: 'ad', sources: [
+      ['enc', '📕', 'An encyclopedia', 'Many bats make high squeaks and listen for the echoes. The echoes help them find insects in the dark.', true, 'Encyclopedias are checked by experts.'],
+      ['friend', '🗣️', 'A friend\'s brother says', 'Bats are blind, so they just bump into things.', false, 'That is not true: bats can see. And it is just what someone says, not a checked fact.'],
+      ['ad', '🛍️', 'An advert', 'Bat-Away spray! Bats hate it! Half price today!', false, 'An advert wants to sell you something. It does not answer the question either.'],
+      ['charity', '💻', 'A nature charity website', 'Bats find insects by listening to the echoes of their own calls.', true, 'People who study and protect bats wrote it.'],
+      ['old', '📜', 'A very old book (1900)', 'Nobody knows how bats find their way in the dark.', false, 'It is out of date. Scientists found out about bats and echoes in the 1940s.'],
+      ['side', '📗', 'A science book', 'Bats are mammals. Mothers feed their babies milk.', false, 'That is true, but it does not answer the question.'],
+      ['keeper', '🧑‍🔬', 'A zoo keeper explains', 'Our bats use sound to find mealworms, even with the lights off.', true, 'A zoo keeper works with bats every day.']],
+    whyQ: 'Why should you leave out the advert?', whys: [['a', 'It wants to sell you something, so it might not tell the truth.', true], ['b', 'Adverts are too short.', false], ['c', 'It is too colourful.', false]] },
+  { q: 'Why do we have seasons?', sources: [
+      ['enc', '📕', 'An encyclopedia', 'The Earth\'s axis is tilted. When our half of the Earth leans towards the Sun, we have summer.', true, 'Encyclopedias are checked by experts.'],
+      ['friend', '🗣️', 'A friend says', 'It is summer when the Earth is closer to the Sun.', false, 'Lots of people think this, but it is not true! The Earth is closest to the Sun in January.'],
+      ['ad', '🛍️', 'An advert', 'Summer sale! Sun cream: buy 2, get 1 free!', false, 'An advert wants to sell you something. It does not answer the question.'],
+      ['noname', '❔', 'A website with no name', 'Seasons happen because the Sun gets hotter and then colder again.', false, 'We don\'t know who wrote it, and the fact is wrong.'],
+      ['side', '📗', 'A science book', 'The Earth takes 365 days to go round the Sun.', false, 'That is true, but it does not explain why we have seasons.'],
+      ['agency', '👩‍🔬', 'A video by a space scientist', 'The Earth is tilted. As it goes round the Sun, each half leans towards the Sun for part of the year. That is summer.', true, 'A space scientist studies how the Earth moves.'],
+      ['textbook', '📘', 'A school science textbook', 'The tilt of the Earth causes the seasons. When the north leans towards the Sun, the south leans away.', true, 'Textbooks are written by experts and checked carefully.']],
+    whyQ: 'Why should you leave out the website with no name?', whys: [['a', 'We don\'t know who wrote it, so we can\'t trust it. And its fact is wrong.', true], ['b', 'All websites are wrong.', false], ['c', 'It is too short.', false]] },
+  { q: 'Is it bad to eat lots of sugar every day?', sources: [
+      ['health', '💻', 'A health service website', 'Eating lots of sugar every day is bad for your teeth and your health. Have sugary food only sometimes.', true, 'Doctors and health experts wrote it.'],
+      ['ad', '🛍️', 'An advert', 'Choco-Pops! Packed with sugar for energy all day long!', false, 'An advert wants to sell you something, so it will not tell you the bad parts.'],
+      ['friend', '🗣️', 'A friend says', 'My cousin eats sweets every day and he is fine.', false, 'That is one person\'s story, not evidence. One example is not enough.'],
+      ['dentist', '🦷', 'A dentist explains', 'Sugar feeds the germs in your mouth. They make acid that makes holes in your teeth.', true, 'A dentist is an expert on teeth.'],
+      ['old', '📜', 'An old cookbook (1950)', 'Sugar is good for children. Give them plenty every day.', false, 'It is out of date. Scientists have found out much more about sugar since then.'],
+      ['side', '📗', 'A science book', 'Sugar dissolves in water.', false, 'That is true, but it does not answer the question.'],
+      ['enc', '📕', 'An encyclopedia', 'Too much sugar can cause tooth decay, and can make people put on too much weight.', true, 'Encyclopedias are checked by experts.']],
+    whyQ: 'Why can\'t you trust what the friend says about their cousin?', whys: [['a', 'One person\'s story is not enough evidence. Scientists look at lots of people.', true], ['b', 'Cousins are always wrong.', false], ['c', 'The story is too short.', false]] }
+];
+
+// ================= State =================
+const freshSort = () => ({ placed: {}, sel: null, wrong: null, mistakes: 0, order: shuffle(QUESTIONS.map((_, k) => k)) });
+const freshAsk = () => ({ scene: 'garden', ans: {}, type: {}, wrong: {}, done: {} });
+const freshFacts = () => ({ r: 0, picked: {}, said: null, ok: false, why: null, whyWrong: [], done: {} });
+const state = { view: 'types', mission: null, done: store.get(TOOL.store, []), types: { open: null, seen: {} }, sort: freshSort(), ask: freshAsk(), facts: freshFacts() };
+const ACTIONS = {};
+
+// ================= 1. The five types =================
+const TYPESV = {
+  stage() {
+    const t = state.types;
+    return `<div class="lay-top"><span class="scaletag">🔬 Five ways to find out</span><div class="readout">Tap a card to find out more.</div></div>
+      <div class="cardgrid">${ENQ.map(([id, em, nm]) => `<button class="ecard${t.open === id ? ' on' : ''}${t.seen[id] ? ' seen' : ''}" data-act="topen" data-v="${id}"><span class="bigem">${em}</span><b>${nm}</b>${t.seen[id] ? '<span class="tick">✓</span>' : ''}</button>`).join('')}</div>`;
+  },
+  drawer() {
+    const t = state.types, E = t.open && ENQ_OF(t.open), n = Object.keys(t.seen).length;
+    return `${E ? `<div class="card says"><h2>${E[1]} ${E[2]}</h2><p>${E[3]}</p><p style="margin-top:8px"><b>👆 How:</b> ${E[5]}</p><p class="spot">💬 <b>Example:</b> ${E[4]}</p></div>` : ''}
+      <div class="card"><h2>🔬 Five ways to find out</h2><p>Scientists ask questions. Then they choose the best way to find the answer. This is called an <span class="term">enquiry</span>: a way of finding out.</p>
+        <p>There are five main types of enquiry. Tap each card.</p><p class="muted">Looked at: ${n} of 5</p></div>
+      ${n === 5 ? '<div class="science"><b>🔬 The science</b>Different questions need different enquiries. Now try <b>Which enquiry?</b> to sort some questions.</div>' : ''}`;
+  }
+};
+ACTIONS.topen = el => { const t = state.types; t.open = el.dataset.v; t.seen[t.open] = true; render(); top0(); if (Object.keys(t.seen).length === 5) emit('types'); };
+
+// ================= 2. Which enquiry? =================
+const SORTV = {
+  sel: () => state.sort.sel,
+  pick(k) { const s = state.sort; if (s.placed[k] != null) return; s.sel = k; s.wrong = null; render(); },
+  drop(k, type) {
+    const s = state.sort, Q = QUESTIONS[+k]; if (!Q || s.placed[k] != null) return;
+    if (Q[1] === type) { s.placed[k] = type; s.sel = null; s.wrong = null; } else { s.wrong = { k: +k, type }; s.mistakes++; }
+    render();
+    if (QUESTIONS.every((_, i) => s.placed[i] != null)) emit('sorted', { mistakes: s.mistakes });
+  },
+  stage() {
+    const s = state.sort;
+    const pool = s.order.filter(k => s.placed[k] == null).map(k => `<button class="qcard${s.sel == k ? ' sel' : ''}" data-drag="${k}"><span class="qem">${QUESTIONS[k][2]}</span>${QUESTIONS[k][0]}</button>`).join('');
+    const bins = ENQ.map(([id, em, nm]) => `<div class="bin${s.sel != null ? ' ready' : ''}" data-drop="${id}"><h3>${em} ${nm}</h3><div class="in">${QUESTIONS.map((q, k) => s.placed[k] === id ? `<div class="qmini">${q[2]} ${q[0]}</div>` : '').join('')}</div></div>`).join('');
+    const say = s.wrong ? '💡 Not quite. What would you actually <b>do</b> to find out?' : s.sel != null ? 'Now tap the right box. Or drag it.' : 'Tap a question, then tap the best kind of enquiry.';
+    return `<div class="lay-top"><span class="scaletag">🗂️ Which enquiry?</span><div class="readout">${say}</div></div>
+      <div class="sortwrap whichwrap"><div class="pool">${pool}</div><div class="bins five">${bins}</div></div>`;
+  },
+  drawer() {
+    const s = state.sort, n = Object.keys(s.placed).length, W = s.wrong && QUESTIONS[s.wrong.k];
+    return `${W ? `<div class="card says"><h3>💡 Not ${ENQ_OF(s.wrong.type)[2].toLowerCase()}</h3><p>"${W[0]}"</p><p>Ask yourself: what would you <b>do</b> to find out? Would you change one thing? Watch it over time? Look at lots of examples? Sort or name it? Or look it up?</p></div>` : ''}
+      <div class="card"><h2>🗂️ Which enquiry?</h2><p>Each question needs a different way of finding out. Put each question with the <b>best</b> type of enquiry.</p><p class="muted">Sorted: ${n} of ${QUESTIONS.length} · Mistakes: ${s.mistakes}</p>
+        ${n ? '<button class="btn" data-act="sreset">↺ Start again</button>' : ''}</div>
+      <div class="card"><h3>📖 The five types</h3><ul class="icons" style="margin:0">${ENQ.map(([, em, nm, what]) => `<li><span class="em">${em}</span><span><b>${nm}</b>: ${what}</span></li>`).join('')}</ul></div>`;
+  }
+};
+ACTIONS.sreset = () => { state.sort = freshSort(); render(); };
+
+// ================= 3. Ask a question =================
+const ASKV = {
+  stage() {
+    const a = state.ask, S = SCENES[a.scene], { w, h, narrow } = stageSize(), top = narrow ? 40 : 50;
+    const bg = { garden: ['#cdeefb', '#8fd17a'], kitchen: ['#fff3dc', '#e6c9a1'], playground: ['#cdeefb', '#c9b38f'] }[a.scene];
+    let o = `<rect width="${w}" height="${h}" fill="${bg[0]}"/><rect y="${top + (h - top) * .6}" width="${w}" height="${h}" fill="${bg[1]}"/>`;
+    S.pics.forEach((p, k) => { const x = w * (.1 + (k % 4) * .26), y = top + (h - top) * (k < 4 ? .38 : .78); o += `<text x="${x}" y="${y}" text-anchor="middle" style="font-size:${narrow ? 36 : 60}px">${p}</text>`; });
+    const n = S.qs.filter((_, i) => a.done[`${a.scene}:${i}`]).length;
+    return `<div class="lay-top"><span class="scaletag">${S.em} ${S.name}</span><div class="readout">What could a scientist ask here? ${n} of ${S.qs.length} questions done.</div></div><svg viewBox="0 0 ${w} ${h}" aria-label="${S.name}">${o}</svg>`;
+  },
+  drawer() {
+    const a = state.ask, S = SCENES[a.scene];
+    const rows = S.qs.map(([q, type], i) => {
+      const id = `${a.scene}:${i}`, ans = a.ans[id], tp = a.type[id], done = a.done[id], wr = a.wrong[id] || [];
+      let o = `<div class="askrow${done ? ' ok' : ''}"><p><b>${q}</b></p>`;
+      if (!ans) o += `<div class="navrow">${choices('aans', [[`${id}|sci`, '🔬 Science can answer it'], [`${id}|not`, '💭 Not a science question']], null, wr.filter(x => x === 'sci' || x === 'not').map(x => `${id}|${x}`), `${id}|${type ? 'sci' : 'not'}`)}</div>${wr.includes(type ? 'not' : 'sci') ? `<p class="spot">💡 ${type ? 'Could you find this out by testing, watching, looking for a pattern, sorting or looking it up?' : 'This is about what people like, think or want. Can an experiment answer it?'}</p>` : ''}`;
+      else if (!type) o += `<p class="job">💭 Not a science question: it is about what people like or want. There is no right answer to find out.</p>`;
+      else if (!done) o += `<p class="muted">🔬 Yes! Which enquiry is best?</p><div class="stops">${choices('atype', ENQ.map(e => [`${id}|${e[0]}`, `${e[1]} ${e[2]}`]), tp ? `${id}|${tp}` : null, wr.filter(x => ENQ_OF(x)).map(x => `${id}|${x}`), `${id}|${type}`)}</div>${tp && tp !== type ? `<p class="spot">💡 Not quite. What would you actually <b>do</b> to find out?</p>` : ''}`;
+      else o += `<p class="job">${ENQ_OF(type)[1]} <b>${ENQ_OF(type)[2]}</b>. ${WHY_TYPE[type]}</p>`;
+      return o + '</div>';
+    }).join('');
+    const nScenes = SORDER.filter(sc => SCENES[sc].qs.every((_, i) => state.ask.done[`${sc}:${i}`])).length;
+    return `<div class="card"><h2>❓ Ask a question</h2><p>Some questions can be answered by science. Others are about what people like or want. Choose a place.</p>
+        <div class="stops">${SORDER.map(sc => `<button class="opt${a.scene === sc ? ' on' : ''}${SCENES[sc].qs.every((_, i) => a.done[`${sc}:${i}`]) ? ' done' : ''}" data-act="ascene" data-v="${sc}">${SCENES[sc].em} ${SCENES[sc].name}</button>`).join('')}</div>
+        <p class="muted">Places finished: ${nScenes} of 3</p></div>
+      <div class="card">${rows}</div>`;
+  }
+};
+const askDone = sc => SCENES[sc].qs.every((_, i) => state.ask.done[`${sc}:${i}`]);
+ACTIONS.ascene = el => { state.ask.scene = el.dataset.v; render(); top0(); };
+ACTIONS.aans = el => {
+  const a = state.ask, [id, v] = el.dataset.v.split('|'), [sc, i] = id.split(':'), type = SCENES[sc].qs[+i][1];
+  if ((v === 'sci') === !!type) { a.ans[id] = v; if (!type) a.done[id] = true; } else (a.wrong[id] = a.wrong[id] || []).push(v);
+  render(); if (askDone(sc)) emit('scene', { n: SORDER.filter(askDone).length });
+};
+ACTIONS.atype = el => {
+  const a = state.ask, [id, v] = el.dataset.v.split('|'), [sc, i] = id.split(':'), type = SCENES[sc].qs[+i][1];
+  a.type[id] = v; if (v === type) a.done[id] = true; else (a.wrong[id] = a.wrong[id] || []).push(v);
+  render(); if (askDone(sc)) emit('scene', { n: SORDER.filter(askDone).length });
+};
+
+// ================= 4. Find the facts =================
+const FACTSV = {
+  stage() {
+    const f = state.facts, R = RESEARCH[f.r];
+    return `<div class="lay-top"><span class="scaletag">📚 Find the facts</span><div class="readout">❓ ${R.q}</div></div>
+      <div class="srcgrid">${R.sources.map(([id, em, kind, words, good, why]) => { const on = f.picked[id], show = f.ok;
+        return `<button class="src${on ? ' on' : ''}${show ? (good ? ' good' : ' bad') : ''}" data-act="fpick" data-v="${id}"${f.ok ? ' disabled' : ''}><div class="skind">${em} ${kind}</div><div class="swords">"${words}"</div>${show ? `<div class="swhy">${good ? '✅' : '❌'} ${why}</div>` : on ? '<div class="suse">✔ I will use this</div>' : ''}</button>`; }).join('')}</div>`;
+  },
+  drawer() {
+    const f = state.facts, R = RESEARCH[f.r];
+    return `<div class="card says"><h2>📚 Find the facts</h2><p><b>Question:</b> ${R.q}</p><p>Tap the sources you would use. Choose ones that <b>answer the question</b> and that you can <b>trust</b>.</p>
+        ${Array.isArray(f.said) ? `<ul class="spot">${f.said.map(m => `<li>${m}</li>`).join('')}</ul>` : ''}
+        ${f.ok ? '<p class="job">✅ Good choices! These sources answer the question, and you can trust them.</p>' : '<div class="navrow" style="margin-top:6px"><button class="btn go" data-act="fcheck">✔ Check my sources</button></div>'}</div>
+      ${f.ok ? `<div class="card wq"><h3>🤔 Explain one choice</h3><p><b>${R.whyQ}</b></p>${choices('fwhy', R.whys.map(x => [x[0], x[1]]), f.why, f.whyWrong, 'a')}
+        ${f.why && f.why !== 'a' ? '<p class="spot">💡 Think about what is wrong with the information itself.</p>' : ''}</div>` : ''}
+      ${f.why === 'a' ? `<div class="science"><b>🔬 The science</b>Good research uses sources that <b>answer the question</b> and can be <b>trusted</b>: up to date, written by experts, and not trying to sell you something. Check facts in <b>more than one</b> source.</div>
+        <div class="card">${RESEARCH.map((x, k) => `<button class="opt${k === f.r ? ' on' : ''}${f.done[k] ? ' done' : ''}" data-act="fnext" data-v="${k}" style="margin:3px">${k + 1}. ${x.q}</button>`).join('')}</div>` : ''}
+      <div class="card"><h3>📖 Is it a good source?</h3><ul class="icons" style="margin:0"><li><span class="em">🎯</span><span>Does it <b>answer</b> the question?</span></li><li><span class="em">🧑‍🔬</span><span>Was it written by people who <b>know</b> about it?</span></li><li><span class="em">📅</span><span>Is it <b>up to date</b>?</span></li><li><span class="em">🛍️</span><span>Is it trying to <b>sell</b> you something?</span></li><li><span class="em">💭</span><span>Is it a <b>fact</b>, or just an <b>opinion</b>?</span></li></ul></div>`;
+  }
+};
+ACTIONS.fpick = el => { const f = state.facts, id = el.dataset.v; f.picked[id] = !f.picked[id]; f.said = null; render(); };
+ACTIONS.fcheck = () => {
+  const f = state.facts, R = RESEARCH[f.r], msgs = [];
+  R.sources.forEach(([id, , kind, , good, why]) => { if (f.picked[id] && !good) msgs.push(`<b>${kind}</b>: ${why}`); });
+  const missed = R.sources.filter(x => x[4] && !f.picked[x[0]]).length;
+  if (missed) msgs.push(`There ${missed === 1 ? 'is 1 more good source' : `are ${missed} more good sources`} to find.`);
+  f.said = msgs.length ? msgs.slice(0, 4) : null; f.ok = !msgs.length; render();
+};
+ACTIONS.fwhy = el => { const f = state.facts; f.why = el.dataset.v; if (f.why !== 'a') { if (!f.whyWrong.includes(f.why)) f.whyWrong.push(f.why); } else { f.done[f.r] = true; emit('facts', { n: Object.keys(f.done).length }); } render(); };
+ACTIONS.fnext = el => { const done = state.facts.done; state.facts = { ...freshFacts(), r: +el.dataset.v, done }; render(); top0(); };
+
+// ================= Views =================
+const VIEWS = {
+  types: { label: '🔬 <span class="tl">Five types</span>', name: 'Five ways to find out', ...TYPESV },
+  which: { label: '🗂️ <span class="tl">Which enquiry?</span>', name: 'Which enquiry?', ...SORTV },
+  ask: { label: '❓ <span class="tl">Ask a question</span>', name: 'Ask a question', ...ASKV },
+  facts: { label: '📚 <span class="tl">Find the facts</span>', name: 'Find the facts', ...FACTSV }
+};
+const KEYWORDS = [
+  ['🔍', 'enquiry', 'a way of finding out the answer to a question'], ['⚖️', 'fair test', 'a test where you change one thing and keep everything else the same'],
+  ['👀', 'observe', 'look carefully, and notice what happens'], ['📈', 'pattern', 'something that happens again and again, in the same way'],
+  ['🗂️', 'classify', 'sort things into groups'], ['📚', 'research', 'finding out what other people have already discovered'],
+  ['📄', 'source', 'where information comes from: a book, a website or a person'], ['✅', 'evidence', 'facts that help to answer a question'],
+  ['💭', 'opinion', 'what someone thinks or likes. It is not a fact.']
+];
+const MISSIONS = [
+  { id: 'types', core: true, icon: '🔬', title: 'Meet the five', task: 'Look at all <b>5</b> types of enquiry.',
+    hint: 'Tap each card on the screen.', setup() { state.view = 'types'; state.types = { open: null, seen: {} }; }, on: ev => ev === 'types',
+    win: () => 'Fair testing, observing over time, pattern seeking, identifying and classifying, and research: five ways to find out.' },
+  { id: 'sort', core: true, icon: '🗂️', title: 'Which enquiry?', task: 'Put all <b>12</b> questions with the best type of enquiry.',
+    hint: 'Ask yourself: what would I actually do to find out?', setup() { state.view = 'which'; state.sort = freshSort(); }, on: ev => ev === 'sorted',
+    win: () => 'Every question sorted. Choosing the right enquiry is the first step to a good answer.' },
+  { id: 'sharp', icon: '🎯', title: 'Sharp sorter', task: 'Sort all 12 questions with <b>no more than 1</b> mistake.',
+    hint: 'Read each question carefully. Look at the list of the five types.', setup() { state.view = 'which'; state.sort = freshSort(); }, on: (ev, d) => ev === 'sorted' && d.mistakes <= 1,
+    win: () => 'Sharp thinking! You know the five types of enquiry well.' },
+  { id: 'ask', core: true, icon: '❓', title: 'Science questions', task: 'In <b>Ask a question</b>, finish one place: decide which questions science can answer, and how.',
+    hint: 'An opinion, like "which is the prettiest?", can\'t be answered by science.', setup() { state.view = 'ask'; state.ask = freshAsk(); }, on: ev => ev === 'scene',
+    win: () => 'Science can answer questions you can test, watch, measure or look up. It can\'t answer opinions.' },
+  { id: 'allscenes', icon: '🗺️', title: 'Question collector', task: 'Finish <b>all 3</b> places in <b>Ask a question</b>.',
+    hint: 'Try the garden, the kitchen and the playground.', setup() { state.view = 'ask'; }, on: (ev, d) => ev === 'scene' && d.n === 3,
+    win: () => 'Scientific questions are everywhere: in the garden, in the kitchen and in the playground!' },
+  { id: 'facts', icon: '📚', title: 'Fact finder', task: 'In <b>Find the facts</b>, choose the good sources for a research question, then explain one choice.',
+    hint: 'Leave out adverts, opinions, old books and facts that don\'t answer the question.', setup() { state.view = 'facts'; state.facts = freshFacts(); }, on: ev => ev === 'facts',
+    win: () => 'You chose sources that answer the question and can be trusted.' },
+  { id: 'trust', icon: '🕵️', title: 'Trust detective', task: 'Finish <b>all 4</b> research questions in <b>Find the facts</b>.',
+    hint: 'After each one, choose the next question at the bottom of the panel.', setup() { state.view = 'facts'; }, on: (ev, d) => ev === 'facts' && d.n === RESEARCH.length,
+    win: () => 'Four research questions answered, with sources you can trust. Brilliant research!' }
+];
+const OBJ = {
+  '5TWSp.01': 'Ask scientific questions and select appropriate scientific enquiries to use.',
+  '5TWSp.02': 'Know the features of the five main types of scientific enquiry (research, fair testing, observing over time, identifying and classifying, and pattern seeking).',
+  '5TWSc.07': 'Use a range of secondary information sources to research and select relevant evidence to answer questions.'
+};
+const MAIN = ['5TWSp.01', '5TWSp.02', '5TWSc.07'], SUPPORT = [];
+const HELP = {
+  types: { q: 'How do scientists find things out?', steps: ['Tap each of the five cards.', 'Read what you do, and the example from a Year 5 topic.'], look: 'Each type of enquiry suits a different kind of question.', codes: ['5TWSp.02'] },
+  which: { q: 'Which type of enquiry is best for each question?', steps: ['Tap a question.', 'Tap the type of enquiry that suits it best. Or drag it.'], look: 'Think about what you would actually <b>do</b> to find out.', codes: ['5TWSp.02', '5TWSp.01'] },
+  ask: { q: 'Which questions can science answer?', steps: ['Choose a place.', 'For each question: can science answer it?', 'If yes, choose the best type of enquiry.'], look: 'Questions about what people like or want can\'t be answered by science.', codes: ['5TWSp.01', '5TWSp.02'] },
+  facts: { q: 'Which sources can you trust?', steps: ['Read the question.', 'Tap every source you would use.', 'Check, then explain one choice.'], look: 'A good source answers the question, is up to date, and is not trying to sell you something.', codes: ['5TWSc.07'] }
+};
+const MODEL = {
+  types: [['📋', 'Real investigations often mix more than one type of enquiry.']],
+  which: [['🤔', 'Some questions could be answered in more than one way. Here, each one has a best answer.']],
+  ask: [['🖼️', 'The places are simple pictures. Look around your own garden, kitchen and playground for real questions.']],
+  facts: [['📄', 'The sources here are made up, and much shorter than real ones. Real research means reading carefully.']],
+  all: [['🧑‍🔬', 'Real scientists use all five types of enquiry, and often more than one in the same project.'], ['🔍', 'In real research, always check a fact in more than one good source.']]
+};
+
+// ================= Missions =================
+function emit(ev, data = {}) {
+  if (state.mission == null) return;
+  const i = state.mission, m = MISSIONS[i];
+  if (!m.on(ev, data)) return;
+  stopMission();
+  if (!state.done.includes(m.id)) { state.done.push(m.id); store.set(TOOL.store, state.done); }
+  updateStars();
+  setTimeout(() => {
+    $('#winTitle').textContent = `${m.icon} Mission complete!`;
+    $('#winText').innerHTML = m.win(data);
+    $('#winNext').style.display = i < MISSIONS.length - 1 ? '' : 'none';
+    $('#winPractise').style.display = i < MISSIONS.length - 1 ? 'none' : '';
+    $('#winNext').dataset.i = i + 1;
+    $('#winModal').classList.remove('hidden'); confetti();
+  }, 1200);
+}
+function startMission(i) {
+  closeModals();
+  state.mission = i; MISSIONS[i].setup();
+  location.hash = 'view=' + state.view;
+  const m = MISSIONS[i];
+  $('#bannerKicker').textContent = `Mission ${i + 1} of ${MISSIONS.length}: ${m.title}`;
+  $('#bannerText').innerHTML = m.task; $('#bannerHint').innerHTML = m.hint;
+  $('#bannerHint').classList.add('hidden'); $('#hintBtn').textContent = '💡 Show a hint';
+  $('#banner').classList.remove('hidden');
+  render(); $('#drawer').scrollTop = 0;
+}
+function stopMission() { state.mission = null; $('#banner').classList.add('hidden'); fitBanner(); }
+function fitBanner() { $('#drawer').style.paddingTop = state.mission == null ? '' : `${$('#banner').offsetHeight + 18}px`; }
+function updateStars() { $('#starCount').textContent = `${state.done.filter(id => MISSIONS.some(m => m.id === id)).length}/${MISSIONS.length} ⭐`; }
+function closeModals() { document.querySelectorAll('.modal').forEach(m => m.classList.add('hidden')); }
+function closeAll() { closeModals(); maybeHelp(); }
+function confetti() {
+  for (let i = 0; i < 30; i++) {
+    const s = document.createElement('span'); s.className = 'confetti'; s.textContent = TOOL.confetti[i % TOOL.confetti.length];
+    s.style.left = `${Math.random() * 100}vw`; s.style.animationDuration = `${2 + Math.random() * 2}s`; s.style.animationDelay = `${Math.random() * .6}s`;
+    document.body.appendChild(s); setTimeout(() => s.remove(), 5000);
+  }
+}
+
+// ================= Help, key words and Real life =================
+const helpSeen = new Set();
+let autoHelp = true, welcomed = false;
+function showHelp() {
+  const H = HELP[state.view], V = VIEWS[state.view];
+  helpSeen.add(state.view);
+  const core = MISSIONS.map((m, i) => m.core ? `${i + 1} (${m.title})` : null).filter(Boolean);
+  $('#helpBody').innerHTML = `<h2 id="helpTitle">${V.label.replace(/<[^>]+>/g, '').split(' ')[0]} ${V.name}</h2>
+    ${welcomed ? '' : `<p class="welcome">Welcome to ${TOOL.name}!</p>`}
+    <h3>🔬 The big question</h3><p>${H.q}</p>
+    <h3>👆 What to do</h3><ol>${H.steps.map(s => `<li>${s}</li>`).join('')}</ol>
+    <p><b>💡 Look out for:</b> ${H.look}</p>
+    <p>📖 Tap <b>Words</b> at the top to see what the key words mean.</p>
+    <p>🚀 Try the <b>Missions</b> to win stars!</p>
+    <details class="teach"><summary>For teachers</summary>${H.codes.map(c => `<p><b>${c}</b> ${OBJ[c]}</p>`).join('')}
+      <h4>⏱ A 45-minute lesson</h4><p>Good missions to start with: ${core.join(', ')}.</p>
+      <h4>All of ${TOOL.name}'s objectives</h4><p>Main: ${MAIN.join(', ')}.${SUPPORT.length ? ` Supporting: ${SUPPORT.join(', ')}.` : ''}</p></details>`;
+  welcomed = true;
+  $('#helpModal').classList.remove('hidden');
+}
+function maybeHelp() { if (!autoHelp || helpSeen.has(state.view) || document.querySelector('.modal:not(.hidden)')) return; showHelp(); }
+
+function renderStage() { $('#stage').innerHTML = VIEWS[state.view].stage(); }
+function render() {
+  const v = VIEWS[state.view];
+  $('#tabs').innerHTML = Object.entries(VIEWS).map(([id, x]) =>
+    `<button class="btn${id === state.view ? ' active' : ''}" data-act="view" data-view="${id}" title="${x.name}" aria-label="${x.name}">${x.label}</button>`).join('');
+  const keep = $('#drawer').scrollTop, same = render.last === state.view;
+  $('#drawer').innerHTML = v.drawer();
+  renderStage();
+  if (same) $('#drawer').scrollTop = keep;
+  render.last = state.view;
+  fitBanner();
+  maybeHelp();
+}
+
+// ================= Actions shared by every view =================
+const top0 = () => { $('#drawer').scrollTop = 0; };
+Object.assign(ACTIONS, {
+  view(el) { closeModals(); state.view = el.dataset.view; location.hash = 'view=' + state.view; render(); top0(); },
+  missions() {
+    $('#missionList').innerHTML = MISSIONS.map((m, i) => `<button class="mission-item${state.done.includes(m.id) ? ' done' : ''}" data-act="startMission" data-i="${i}">
+      <span class="em">${m.icon}</span><span class="t">${i + 1}. ${m.title}</span><span class="star">⭐</span></button>`).join('');
+    $('#missionsModal').classList.remove('hidden');
+  },
+  startMission(el) { startMission(+el.dataset.i); },
+  nextMission(el) { startMission(+el.dataset.i); },
+  stopMission() { stopMission(); },
+  hint() { const h = $('#bannerHint'); h.classList.toggle('hidden'); $('#hintBtn').textContent = h.classList.contains('hidden') ? '💡 Show a hint' : '💡 Hide the hint'; fitBanner(); },
+  resetStars() { state.done = []; store.set(TOOL.store, []); updateStars(); ACTIONS.missions(); },
+  closeModals() { closeAll(); },
+  help() { closeModals(); showHelp(); },
+  words() { $('#wordsList').innerHTML = KEYWORDS.map(([em, w, m]) => `<li><span class="em">${em}</span><span><b>${w}</b>: ${m}</span></li>`).join(''); $('#wordsModal').classList.remove('hidden'); },
+  model() {
+    $('#modelTab').textContent = `${VIEWS[state.view].label.replace(/<[^>]+>/g, '').split(' ')[0]} ${VIEWS[state.view].name}`;
+    $('#modelList').innerHTML = [...MODEL[state.view], ...MODEL.all.filter(a => !MODEL[state.view].some(b => b[1] === a[1]))].map(([em, t]) => `<li><span class="em">${em}</span><span>${t}</span></li>`).join('');
+    $('#modelModal').classList.remove('hidden');
+  }
+});
+document.addEventListener('click', e => {
+  if (DND.skipClick) { DND.skipClick = false; return; }
+  const v = VIEWS[state.view], drag = e.target.closest('[data-drag]');
+  if (drag && v.pick) { v.pick(drag.dataset.drag); return; }
+  const drop = e.target.closest('[data-drop]'), sel = v.sel && v.sel();
+  if (drop && sel) { v.drop(sel, drop.dataset.drop); return; }
+  const el = e.target.closest('[data-act]');
+  if (el && !el.disabled && ACTIONS[el.dataset.act]) ACTIONS[el.dataset.act](el);
+});
+document.querySelectorAll('.modal').forEach(m => m.addEventListener('click', e => { if (e.target === m) closeAll(); }));
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeAll(); });
+let resizeT;
+addEventListener('resize', () => { fitBanner(); clearTimeout(resizeT); resizeT = setTimeout(renderStage, 120); });
+
+// ================= Start =================
+// Test hooks: #view=…  ·  #mission=2  ·  #nohelp=1
+const hp = new URLSearchParams(location.hash.slice(1));
+if (VIEWS[hp.get('view')]) state.view = hp.get('view');
+if (hp.has('nohelp')) autoHelp = false;
+updateStars();
+if (MISSIONS[hp.get('mission')]) startMission(+hp.get('mission'));
+else render();
+</script>
+<script>
+  // Offline support: saves the whole Science Hub on this device the first time any page is opened (see ../sw.js)
+  if ('serviceWorker' in navigator) addEventListener('load', () => navigator.serviceWorker.register('../sw.js').catch(() => {}));
+</script>
+</body>
+</html>

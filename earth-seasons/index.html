@@ -238,8 +238,60 @@
     .scale-note { display: none; }
     .banner { top: 52px; font-size: 14px; }
   }
+
+  /* ---------- Flat views (Satellites, Ideas that changed): a picture over the 3D stage, controls in the panel ---------- */
+  #flat { position: absolute; inset: 0; background: #070d24; display: flex; flex-direction: column; }
+  #flat.hidden, body:not(.flat) #flatCtl { display: none; }
+  #flatStage { position: relative; flex: 1; min-height: 0; }
+  body.flat .dock, body.flat .zoom-btns, body.flat .scale-note, body.flat #labels { display: none; }
+  body.flat #panel > .card:not(#viewCard) { display: none; }
+  #flatCtl { display: flex; flex-direction: column; gap: 10px; }
+  #flatCtl p { margin: 4px 0; font-size: 15px; line-height: 1.4; }
+  .opt { border: 2px solid #d3dbf7; background: #fff; border-radius: 12px; padding: 6px 10px; min-height: 44px; font: inherit; font-weight: 600; font-size: 15px; cursor: pointer; color: var(--ink); }
+  .opt.on { background: var(--yellow); border-color: #e0a800; }
+  .opt.wrong { background: #ffe0e3; border-color: var(--coral); }
+  .opt.done, .opt.done:disabled { background: #c9f2df; border-color: var(--green); opacity: 1; }
+  .opt:disabled { opacity: .5; cursor: default; }
+  .opt.sm { font-size: 14px; padding: 4px 8px; }
+  .stops { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+  .navrow { display: flex; gap: 8px; flex-wrap: wrap; }
+  .card.says { border: 3px solid var(--yellow); }
+  .card.says.good { border-color: var(--green); background: #effbf5; }
+  .job { background: #c9f2df; border-radius: 12px; padding: 8px 10px; }
+  .spot { background: #fff3c4; border-radius: 12px; padding: 8px 10px; }
+  .btn.go { background: var(--green); color: #fff; font-size: 18px; flex: 1; min-height: 46px; }
+  .flabel { display: block; margin-top: 8px; font-size: 15px; }
+  .ftxt { font-family: 'Fredoka', system-ui, sans-serif; font-size: 14px; font-weight: 600; }
+  .satrow { display: flex; flex-direction: column; gap: 4px; padding: 8px 0; border-top: 1px solid #e1e6f5; }
+  .satrow .sem { font-size: 22px; }
+  .tagok { align-self: flex-start; background: #c9f2df; border-radius: 999px; padding: 2px 10px; font-weight: 700; font-size: 13px; }
+  .orbiting { animation: orbiting linear infinite; }
+  @keyframes orbiting { to { transform: rotate(-360deg); } }
+  @media (prefers-reduced-motion: reduce) { .orbiting { animation-duration: 60s !important; } }
+  @media (max-width: 860px) {
+    #flatStage { flex: 1 1 46%; }
+    #flat #flatCtl { flex: 1 1 54%; overflow-y: auto; background: #dfe6ff; padding: 8px; }
+  }
+  /* ---------- Ideas that changed: two ideas side by side, and the evidence so far ---------- */
+  .ideaswrap { position: absolute; inset: 0; padding: 4px 14px 14px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; background: #eef4fb; }
+  .ideas2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .ibox { position: relative; background: #fff; border: 4px solid #d3dbf7; border-radius: 18px; padding: 12px; text-align: center; transition: border-color .2s, box-shadow .2s; }
+  .ibox.now { border-color: var(--yellow); box-shadow: 0 0 0 5px rgba(255, 200, 61, .35); }
+  .ibox p { margin: 6px 0 0; font-size: 16px; line-height: 1.35; }
+  .ilab { font-weight: 700; color: var(--muted); font-size: 14px; text-transform: uppercase; letter-spacing: .04em; }
+  .ipic { font-size: 46px; line-height: 1.1; margin-top: 4px; }
+  .ipic svg { width: min(150px, 80%); height: auto; }
+  .itag { display: inline-block; margin-top: 8px; background: var(--yellow); border-radius: 999px; padding: 2px 10px; font-weight: 700; font-size: 13px; }
+  .ilist { display: grid; gap: 8px; }
+  .icard { display: flex; gap: 10px; align-items: flex-start; background: #fff; border-radius: 14px; padding: 10px 12px; font-size: 15.5px; line-height: 1.35; border: 2px solid transparent; }
+  .icard.cur { border-color: var(--blue); }
+  .icard .iem { font-size: 26px; flex: none; }
+  @media (max-width: 760px) { .ideaswrap { gap: 8px; } .ideas2 { gap: 6px; } .ibox { padding: 8px; } .ibox p { font-size: 13.5px; } .ipic { font-size: 32px; } .icard { font-size: 13.5px; padding: 6px 8px; } }
   .panel-close { display: none; }
   @media (max-width: 860px) { .panel-close { display: block; align-self: flex-end; } }
+  /* Lesson (core) missions, and extension missions */
+  .core { background: var(--yellow); color: var(--ink); border-radius: 8px; padding: 1px 7px; font-size: 12.5px; font-weight: 700; white-space: nowrap; }
+  .extn { background: #e8e0ff; color: #5a3fb0; border-radius: 8px; padding: 1px 7px; font-size: 12.5px; font-weight: 700; white-space: nowrap; }
 </style>
 <script type="importmap">
 { "imports": {
@@ -254,6 +306,7 @@
 <div id="stage">
   <canvas id="scene" aria-label="3D model of the Earth going around the Sun"></canvas>
   <div id="labels"></div>
+  <div id="flat" class="hidden"><div id="flatStage"></div></div>
 
   <div class="topbar">
     <a class="hub-link" href="../index.html" title="Back to the Science Hub" aria-label="Back to the Science Hub">🏠</a>
@@ -262,6 +315,8 @@
       <button class="btn active" data-view="space">🌌 Space</button>
       <button class="btn" data-view="side">👀 Side</button>
       <button class="btn" data-view="earth">🔍 <span class="long">Zoom to </span>Earth</button>
+      <button class="btn" data-view="sat" aria-label="Satellites">🛰️<span class="long"> Satellites</span></button>
+      <button class="btn" data-view="ideas" aria-label="Ideas that changed">🕰️<span class="long"> Ideas that changed</span></button>
     </div>
     <button class="btn" id="missionsBtn">🚀 <span class="long">Missions </span><span id="starCount"></span></button>
     <button class="btn" id="panelToggle">ℹ️ Info</button>
@@ -308,6 +363,7 @@
 
 <aside id="panel" aria-label="Information">
   <button class="btn small panel-close" id="panelClose">✖ Close</button>
+  <div id="flatCtl"></div>
   <div class="card" id="viewCard">
     <div class="card-title" id="viewTitle">🌌 Space view: the Earth's orbit</div>
     <div class="science" id="viewScience"></div>
@@ -387,6 +443,7 @@
   <div class="modal-box">
     <button class="modal-x" data-act="close" aria-label="Close">✕</button>
     <h2 id="missionsTitle">🚀 Missions</h2>
+    <p class="muted" style="margin-top:-4px">Missions marked <span class="extn">➕ Extension</span> go beyond the Year 5 objectives.</p>
     <p class="muted" style="margin-top:0">Complete each mission to earn a star ⭐</p>
     <div class="mission-list" id="missionList"></div>
     <div class="modal-actions">
@@ -785,7 +842,14 @@ function viewDest(v) {
 }
 let tween = null;
 function goView(v) {
+  const wasFlat = isFlat(state.view);
+  if (isFlat(v)) {
+    setPlaying(false); state.view = v;
+    document.querySelectorAll('[data-view]').forEach(b => b.classList.toggle('active', b.dataset.view === v));
+    beamGroup.visible = false; renderFlat(); onViewChanged(v); return;
+  }
   state.view = v;
+  if (wasFlat) renderFlat();
   tween = { t: 0, v, fromPos: camera.position.clone(), fromTgt: controls.target.clone(), fromScale: earthGroup.scale.x };
   controls.enabled = false;
   controls.minDistance = 0; controls.maxDistance = Infinity;
@@ -1187,6 +1251,221 @@ $('#bannerClose').onclick = () => {
   state.mission = null; hideBanner();
 };
 
+// ================= Ideas that changed (5SIC.01) =================
+// An old idea, a new idea, and evidence cards shown one at a time. After each card the child decides:
+// keep the old idea, or change it? A card that fits both ideas can't settle it; a card that doesn't fit the old idea should change it.
+const freshIdeas = () => ({ i: 0, pick: null, changedAt: null, done: false });
+const IDEAS = {
+  // Which idea the child believes now
+  now() { const s = state.ideas; return s.changedAt != null && s.changedAt <= s.i ? 'new' : 'old'; },
+  stage() {
+    const s = state.ideas, D = IDEA, now = IDEAS.now(), shown = D.cards.slice(0, Math.min(s.i + 1, D.cards.length));
+    return `<div class="ideaswrap"><div class="ideas2">
+        <div class="ibox${now === 'old' ? ' now' : ''}"><div class="ilab">💭 The old idea</div><div class="ipic">${D.oldPic}</div><p>${D.old}</p>${now === 'old' ? '<span class="itag">What you believe now</span>' : ''}</div>
+        <div class="ibox${now === 'new' ? ' now' : ''}"><div class="ilab">💡 The new idea</div><div class="ipic">${D.newPic}</div><p>${D.neu}</p>${now === 'new' ? '<span class="itag">What you believe now</span>' : ''}</div></div>
+      <div class="ilist">${shown.map((c, k) => `<div class="icard${k === s.i && !s.done ? ' cur' : ''}"><span class="iem">${c.em}</span><span><b>Evidence ${k + 1}:</b> ${c.text}</span></div>`).join('')}</div></div>`;
+  },
+  drawer() {
+    const s = state.ideas, D = IDEA, c = D.cards[s.i], right = c && (c.fits === 'both' ? 'keep' : 'change');
+    let o = `<div class="card"><h2>🕰️ Ideas that changed</h2><p>${D.intro}</p><p class="muted">Look at each piece of <b>evidence</b>. Should we keep the old idea, or change it?</p></div>`;
+    if (!s.done) {
+      o += `<div class="card says${s.pick === right ? ' good' : ''}"><h3>${c.em} Evidence ${s.i + 1} of ${D.cards.length}</h3><p>${c.text}</p>${c.note ? `<p class="muted">${c.note}</p>` : ''}`;
+      if (!s.pick) o += `<p style="margin-top:6px"><b>What do you think now?</b></p><div class="navrow"><button class="btn" data-act="ideapick" data-v="keep">🔒 Keep the old idea</button><button class="btn" data-act="ideapick" data-v="change">🔄 Change to the new idea</button></div>`;
+      else {
+        const msg = c.fits === 'both'
+          ? (s.pick === 'keep' ? `✅ Good thinking. ${c.why} It does not prove the old idea wrong, so keep looking.` : `🤔 Not yet! ${c.why} It does not show which idea is right.`)
+          : (s.pick === 'change' ? `✅ Yes! ${c.why}` : `🤔 Look again. This evidence does <b>not</b> fit the old idea. ${c.why}`);
+        o += `<p class="${s.pick === right ? 'job' : 'spot'}">${msg}</p><div class="navrow"><button class="btn go" data-act="ideanext">${s.i < D.cards.length - 1 ? 'Next evidence ▶' : 'Finish ▶'}</button></div>`;
+      }
+      o += '</div>';
+    } else o += `<div class="science"><b>🔬 The science</b>${D.end}</div><div class="card"><p><b>Scientists change their ideas when new evidence appears.</b></p><button class="btn" data-act="ideareset">↺ Start again</button></div>`;
+    return o;
+  },
+  pick(v) { const s = state.ideas, c = IDEA.cards[s.i]; s.pick = v; if (c.fits === 'new' && s.changedAt == null) s.changedAt = s.i; },
+  next() { const s = state.ideas; if (s.i < IDEA.cards.length - 1) { s.i++; s.pick = null; } else { s.done = true; if (s.changedAt == null) s.changedAt = 0; } }
+};
+state.ideas = freshIdeas();
+
+// ================= Flat views: Satellites and Ideas that changed =================
+// These two views are flat pictures, not the 3D model. They cover the 3D stage, and their controls sit in the info panel
+// (or under the picture on a phone, where the info panel is hidden).
+const FLAT = new Set(['sat', 'ideas']);
+const isFlat = v => FLAT.has(v);
+const narrowFlat = () => matchMedia('(max-width: 860px)').matches;
+const fchoices = (act, opts, chosen, wrongs, right) => opts.map(([v, t]) => `<button class="opt${chosen === v && v === right ? ' done' : wrongs.includes(v) ? ' wrong' : ''}" data-fact="${act}" data-v="${v}"${wrongs.includes(v) || chosen === right ? ' disabled' : ''}>${t}</button>`).join('');
+
+// ---------- Satellites (5ESs.03) ----------
+// The launcher: Isaac Newton's idea of a cannon on a mountain so tall that it is above the air.
+// Model units: the Earth's radius is 1 and its pull is 1. The mountain top is drawn at 1.12, much too tall, so you can see it.
+const R0 = 1.12, VC = 7.9;   // a launch speed of 7.9 km per second gives a circle at the mountain top
+const SATS = [['moon', '🌕', 'The Moon', 'nat', 'The Moon is a natural satellite. It orbits the Earth.'],
+  ['iss', '🛰️', 'The International Space Station', 'art', 'People built it. Astronauts live on it as it orbits the Earth.'],
+  ['gps', '📡', 'A GPS satellite', 'art', 'People built it. It helps phones and cars find where they are.'],
+  ['weather', '🌦️', 'A weather satellite', 'art', 'People built it. It takes pictures of clouds, to help forecast the weather.'],
+  ['hubble', '🔭', 'The Hubble Space Telescope', 'art', 'People built it. It is a telescope that orbits the Earth, above the air.'],
+  ['phobos', '🪨', 'Phobos', 'nat', 'Phobos is a natural satellite: one of the two moons of Mars.']];
+const PLANETS = [['mercury', 'Mercury', '#b8b2a8', 16, [], 'Mercury has <b>no</b> moons.'],
+  ['venus', 'Venus', '#e8c27a', 22, [], 'Venus has <b>no</b> moons.'],
+  ['earth', 'Earth', '#3d7bff', 24, [['the Moon', 3, 70, 14]], 'The Earth has <b>one</b> moon: the Moon.'],
+  ['mars', 'Mars', '#d9653b', 18, [['Phobos', 1.6, 40, 5], ['Deimos', 2.6, 62, 4]], 'Mars has <b>two</b> small moons: Phobos and Deimos.'],
+  ['jupiter', 'Jupiter', '#d9a774', 46, [['Io', 2, 70, 6], ['Europa', 3, 92, 5], ['Ganymede', 4.4, 118, 8], ['Callisto', 6.5, 146, 7]], 'Jupiter has <b>dozens</b> of moons. Here are its four biggest. New moons are still being found!'],
+  ['saturn', 'Saturn', '#e6cf8f', 40, [['Titan', 5, 120, 8], ['', 2.2, 70, 3], ['', 3.2, 88, 3], ['', 7, 148, 4]], 'Saturn has <b>dozens</b> of moons. Its biggest is Titan. New moons are still being found!']];
+const freshSat = () => ({ mode: 'launch', speed: 5, fly: null, got: {}, sort: {}, sortWrong: {}, planet: 'earth', seen: {}, disc: null });
+state.sat = freshSat();
+const SAT = {
+  // What will happen: launched sideways at the mountain top, the other end of its path is at r0·q ÷ (2 − q), where q = r0·v².
+  outcome(sp) {
+    const v = sp / VC * Math.sqrt(1 / R0), q = R0 * v * v;
+    if (q >= 2) return 'escape';
+    return Math.min(R0 * q / (2 - q), R0) > 1 ? 'orbit' : 'fall';
+  },
+  launch() {
+    const s = state.sat, v = s.speed / VC * Math.sqrt(1 / R0);
+    s.fly = { x: 0, y: R0, vx: v, vy: 0, trail: [[0, R0]], ang: 0, out: SAT.outcome(s.speed), end: false };
+    clearInterval(SAT.timer);
+    SAT.timer = setInterval(() => {
+      const f = s.fly; if (!f || state.view !== 'sat' || s.mode !== 'launch') { clearInterval(SAT.timer); return; }
+      for (let k = 0; k < 40; k++) {
+        const r = Math.hypot(f.x, f.y), a = 1 / (r * r);
+        f.vx -= a * f.x / r * .002; f.vy -= a * f.y / r * .002; const px = f.x, py = f.y; f.x += f.vx * .002; f.y += f.vy * .002;
+        f.ang += Math.atan2(px * f.y - py * f.x, px * f.x + py * f.y);
+        const r2 = Math.hypot(f.x, f.y);
+        if (r2 <= 1) { f.end = 'fall'; break; }
+        if (r2 > 6) { f.end = 'escape'; break; }
+        if (Math.abs(f.ang) >= 2 * Math.PI && !f.round) { f.round = true; }
+      }
+      f.trail.push([f.x, f.y]); if (f.trail.length > 900) f.trail.shift();
+      if (f.end || f.round) {
+        const res = f.end || 'orbit';
+        if (!s.got[res]) { s.got[res] = true; }
+        if (f.end) clearInterval(SAT.timer);
+        if (!f.told) { f.told = true; renderFlat(); return; }
+      }
+      drawFlatStage();
+    }, 40);
+    renderFlat();
+  },
+  stage(w, h) {
+    const s = state.sat, narrow = w < 560;
+    if (s.mode === 'launch') {
+      const k = Math.min(w, h) / 2 / 2.7, cx = w / 2, cy = h / 2 + 10, X = x => cx + x * k, Y = y => cy - y * k, f = s.fly;
+      let o = `<rect width="${w}" height="${h}" fill="#070d24"/>` + Array.from({ length: 40 }, (_, i) => `<circle cx="${(i * 97) % w}" cy="${(i * 61) % h}" r="1.2" fill="#fff" opacity=".6"/>`).join('');
+      o += `<circle cx="${cx}" cy="${cy}" r="${k}" fill="#3d7bff"/><path d="M${cx - k * .6} ${cy - k * .55} q${k * .3} -${k * .2} ${k * .5} 0 t${k * .5} ${k * .1}" fill="#22b07d"/><circle cx="${cx}" cy="${cy}" r="${k * 1.04}" fill="none" stroke="#9fd0ff" stroke-width="${k * .05}" opacity=".35"/>`;
+      o += `<path d="M${cx - k * .14} ${cy - k * .99} L${cx} ${Y(R0)} L${cx + k * .14} ${cy - k * .99} Z" fill="#8a7a55" stroke="#5a4a2a"/><path d="M${cx - k * .04} ${Y(R0) + k * .03} L${cx} ${Y(R0)} L${cx + k * .04} ${Y(R0) + k * .03} Z" fill="#fff"/>`;
+      o += `<text x="${cx + k * .2}" y="${Y(R0) - 4}" class="ftxt" style="fill:#fff">🏔️ a very tall mountain</text>`;
+      if (f) { o += `<polyline points="${f.trail.map(([x, y]) => `${X(x).toFixed(1)},${Y(y).toFixed(1)}`).join(' ')}" fill="none" stroke="#ffc83d" stroke-width="2.5" stroke-dasharray="6 4"/>`;
+        const [x, y] = f.trail[f.trail.length - 1]; o += `<text x="${X(x)}" y="${Y(y) + 8}" text-anchor="middle" style="font-size:${narrow ? 18 : 24}px">${f.end === 'fall' ? '💥' : '🛰️'}</text>`; }
+      else o += `<text x="${cx}" y="${Y(R0) - 12}" text-anchor="middle" style="font-size:${narrow ? 18 : 24}px">🛰️</text>`;
+      return o;
+    }
+    if (s.mode === 'moons') {
+      const P = PLANETS.find(p => p[0] === s.planet), cx = w / 2, cy = h / 2 + 10, sc = Math.min(1.3, Math.min(w, h) / 360);
+      let o = `<rect width="${w}" height="${h}" fill="#070d24"/>` + Array.from({ length: 40 }, (_, i) => `<circle cx="${(i * 97) % w}" cy="${(i * 61) % h}" r="1.2" fill="#fff" opacity=".6"/>`).join('');
+      P[4].forEach(([, , d]) => o += `<circle cx="${cx}" cy="${cy}" r="${d * sc}" fill="none" stroke="#5b6386" stroke-dasharray="3 5"/>`);
+      if (P[0] === 'saturn') o += `<ellipse cx="${cx}" cy="${cy}" rx="${P[3] * sc * 1.9}" ry="${P[3] * sc * .5}" fill="none" stroke="#e6cf8f" stroke-width="${6 * sc}" opacity=".8"/>`;
+      o += `<circle cx="${cx}" cy="${cy}" r="${P[3] * sc}" fill="${P[2]}"/><text x="${cx}" y="${cy + P[3] * sc + 22}" text-anchor="middle" class="ftxt" style="fill:#fff">${P[1]}</text>`;
+      P[4].forEach(([nm, sec, d, r], i) => o += `<g class="orbiting" style="transform-origin:${cx}px ${cy}px;animation-duration:${sec * 2}s;animation-delay:-${i * 1.3}s"><circle cx="${cx + d * sc}" cy="${cy}" r="${r * sc}" fill="#d9dce6"/>${nm ? `<text x="${cx + d * sc}" y="${cy - r * sc - 5}" text-anchor="middle" class="ftxt" style="fill:#fff;font-size:12px">${nm}</text>` : ''}</g>`);
+      if (P[0] === 'jupiter' || P[0] === 'saturn') o += Array.from({ length: 14 }, (_, i) => { const a = i * 2.39, d = (165 + (i % 4) * 14) * sc; return `<circle cx="${cx + Math.cos(a) * d}" cy="${cy + Math.sin(a) * d * .9}" r="1.6" fill="#c6d0f2"/>`; }).join('');
+      if (!P[4].length) o += `<text x="${cx}" y="${cy - P[3] * sc - 20}" text-anchor="middle" class="ftxt" style="fill:#ffc83d">No moons</text>`;
+      return o;
+    }
+    // Natural or made by people: a picture of the Earth with the Moon and a few satellites
+    const cx = w / 2, cy = h / 2, k = Math.min(w, h) / 6;
+    let o = `<rect width="${w}" height="${h}" fill="#070d24"/><circle cx="${cx}" cy="${cy}" r="${k}" fill="#3d7bff"/><circle cx="${cx}" cy="${cy}" r="${k * 1.5}" fill="none" stroke="#5b6386" stroke-dasharray="3 5"/><circle cx="${cx}" cy="${cy}" r="${k * 2.6}" fill="none" stroke="#5b6386" stroke-dasharray="3 5"/>`;
+    o += `<g class="orbiting" style="transform-origin:${cx}px ${cy}px;animation-duration:10s"><text x="${cx + k * 1.5}" y="${cy + 8}" text-anchor="middle" style="font-size:22px">🛰️</text></g>`;
+    o += `<g class="orbiting" style="transform-origin:${cx}px ${cy}px;animation-duration:40s"><text x="${cx - k * 2.6}" y="${cy + 10}" text-anchor="middle" style="font-size:28px">🌕</text></g>`;
+    return o;
+  },
+  ctl() {
+    const s = state.sat;
+    let o = `<div class="card"><div class="card-title">🛰️ Satellites</div><p>A <b>satellite</b> is an object in space that <b>orbits</b> (goes round and round) a larger object. A <b>moon</b> is a natural satellite that orbits a planet.</p>
+      <div class="stops">${[['launch', '🚀 Launcher'], ['sort', '🔍 Natural or not?'], ['moons', '🪐 Planets and moons']].map(([m, t]) => `<button class="opt${s.mode === m ? ' on' : ''}" data-fact="satmode" data-v="${m}">${t}</button>`).join('')}</div></div>`;
+    if (s.mode === 'launch') {
+      const f = s.fly, res = f && (f.end || (f.round ? 'orbit' : null));
+      const say = { fall: '⬇️ <b>Too slow!</b> Gravity pulls it back down to the Earth.', orbit: '🔄 <b>Just right!</b> It keeps falling towards the Earth, but it moves sideways so fast that it keeps missing. It is in <b>orbit</b>: it is a satellite!', escape: '🚀 <b>Too fast!</b> It escapes the Earth\'s pull and flies off into space.' };
+      o += `<div class="card says${res === 'orbit' ? ' good' : ''}"><div class="card-title">🚀 Launch it sideways</div><p>Imagine a mountain so tall that its top is above the air. Launch a satellite sideways from the top.</p>
+        <label class="flabel">Speed: <b>${s.speed} km per second</b> <span class="muted">(${Math.round(s.speed * 3600).toLocaleString('en-GB')} km per hour)</span></label>
+        <input type="range" id="satSpeed" min="2" max="13" step=".5" value="${s.speed}" aria-label="Launch speed">
+        <div class="navrow" style="margin-top:6px"><button class="btn go" data-fact="satgo">🚀 Launch!</button></div>
+        ${res ? `<p class="${res === 'orbit' ? 'job' : 'spot'}">${say[res]}</p>` : ''}
+        <p class="muted">Found: ${['fall', 'orbit', 'escape'].map(k => `${s.got[k] ? '✅' : '⬜'} ${{ fall: 'too slow', orbit: 'just right', escape: 'too fast' }[k]}`).join(' · ')}</p></div>`;
+      if (s.got.orbit) o += `<div class="science"><b>🔬 The science</b>A satellite is always falling towards the Earth, but it moves sideways so fast that it keeps missing! Real satellites near the Earth travel at about <b>8 km every second</b>.</div>`;
+      return o;
+    }
+    if (s.mode === 'sort') {
+      const n = SATS.filter(x => s.sort[x[0]]).length;
+      o += `<div class="card"><div class="card-title">🔍 Natural, or made by people?</div><p class="muted">A <b>natural</b> satellite was not made by people. An <b>artificial</b> satellite was made by people.</p>
+        ${SATS.map(([id, em, nm, kind, why]) => `<div class="satrow${s.sort[id] ? ' ok' : ''}"><div><span class="sem">${em}</span> <b>${nm}</b>${s.sort[id] ? `<p class="muted" style="margin:2px 0 0">${why}</p>` : (s.sortWrong[id] ? '<p class="spot" style="margin:2px 0 0">Not quite. Was it made by people?</p>' : '')}</div>
+          ${s.sort[id] ? `<span class="tagok">${kind === 'nat' ? '🌑 Natural' : '🔧 Made by people'}</span>` : `<div class="navrow"><button class="opt sm" data-fact="satsort" data-id="${id}" data-v="nat">🌑 Natural</button><button class="opt sm" data-fact="satsort" data-id="${id}" data-v="art">🔧 Made by people</button></div>`}</div>`).join('')}
+        <p class="muted">Sorted: ${n} of ${SATS.length}</p></div>`;
+      return o;
+    }
+    const P = PLANETS.find(p => p[0] === s.planet), nseen = PLANETS.filter(p => s.seen[p[0]]).length;
+    o += `<div class="card"><div class="card-title">🪐 Planets and their moons</div><p class="muted">Tap a planet to see its moons.</p>
+      <div class="stops">${PLANETS.map(p => `<button class="opt sm${s.planet === p[0] ? ' on' : ''}${s.seen[p[0]] && s.planet !== p[0] ? ' done' : ''}" data-fact="satplanet" data-v="${p[0]}">${p[1]}</button>`).join('')}</div>
+      <p class="job">${P[5]}</p><p class="muted">Looked at: ${nseen} of ${PLANETS.length}</p></div>`;
+    if (nseen >= PLANETS.length) {
+      const ans = s.disc;
+      o += `<div class="card says${ans ? ' good' : ''}"><div class="card-title">🤔 Think about it</div><p>A satellite orbits a larger object. <b>Is the Earth a satellite of the Sun?</b></p>
+        <div class="navrow">${[['yes', '✅ Yes'], ['no', '❌ No']].map(([v, t]) => `<button class="opt${ans === v ? ' on' : ''}" data-fact="satdisc" data-v="${v}">${t}</button>`).join('')}</div>
+        ${ans ? `<p class="job">${ans === 'yes' ? 'Good thinking!' : 'Think again about the meaning.'} By the meaning of "satellite", <b>yes</b>: the Earth orbits the much larger Sun. But we call the Earth a <b>planet</b>. The word <b>moon</b> is for a natural satellite that orbits a <b>planet</b>.</p>` : ''}</div>`;
+    }
+    return o;
+  }
+};
+
+// ---------- Ideas that changed (5SIC.01) ----------
+const geoPic = `<svg viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="44" fill="none" stroke="#c6d0f2" stroke-dasharray="3 4"/><circle cx="60" cy="60" r="26" fill="none" stroke="#c6d0f2" stroke-dasharray="3 4"/><circle cx="60" cy="60" r="11" fill="#3d7bff"/><circle cx="104" cy="60" r="10" fill="#ffc83d"/><circle cx="60" cy="34" r="5" fill="#d9653b"/><circle cx="41" cy="78" r="4" fill="#d9dce6"/></svg>`;
+const helioPic = `<svg viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="44" fill="none" stroke="#c6d0f2" stroke-dasharray="3 4"/><circle cx="60" cy="60" r="26" fill="none" stroke="#c6d0f2" stroke-dasharray="3 4"/><circle cx="60" cy="60" r="13" fill="#ffc83d"/><circle cx="104" cy="60" r="7" fill="#3d7bff"/><circle cx="60" cy="34" r="5" fill="#e8c27a"/><circle cx="111" cy="54" r="2.5" fill="#d9dce6"/></svg>`;
+const IDEA = {
+  intro: 'For thousands of years, most people believed that the Earth stood still in the middle of everything.',
+  old: 'The Earth is in the middle. The Sun, the Moon and the planets all go round the Earth.', oldPic: geoPic,
+  neu: 'The Earth and the other planets go round the Sun.', newPic: helioPic,
+  cards: [
+    { em: '🌅', fits: 'both', text: 'Every day, the Sun seems to move across the sky, from the east to the west.',
+      why: 'Both ideas can explain this. A spinning Earth would look just the same from here.' },
+    { em: '📜', fits: 'new', text: 'Sometimes Mars seems to stop, then go backwards across the night sky for a few weeks. In 1543, Nicolaus Copernicus showed that this is easy to explain if the Earth and Mars both go round the Sun, and the Earth overtakes Mars.',
+      why: 'The old idea needed lots of extra circles to explain it. The new idea explains it simply.' },
+    { em: '🔭', fits: 'new', text: 'In 1610, Galileo looked at Jupiter through his telescope. He saw four moons going round Jupiter.',
+      why: 'So not everything goes round the Earth!' },
+    { em: '🌓', fits: 'new', text: 'Galileo also saw that Venus has phases, like our Moon: sometimes a thin crescent, sometimes almost a full circle.',
+      why: 'Venus can only show all of these shapes if it goes round the Sun.' }
+  ],
+  end: 'At first, many people did not want to change the old idea. But as more <b>evidence</b> was found, scientists changed their minds. Today we know that the Earth and the planets go round the Sun.'
+};
+
+// ---------- Drawing and controls for the flat views ----------
+function drawFlatStage() {
+  const st = $('#flatStage'); if (!st) return;
+  if (state.view === 'ideas') { st.innerHTML = IDEAS.stage(); return; }
+  const w = st.clientWidth || 600, h = st.clientHeight || 400;
+  st.innerHTML = `<svg viewBox="0 0 ${w} ${h}" width="100%" height="100%" aria-label="Satellites">${SAT.stage(w, h)}</svg>`;
+}
+function renderFlat() {
+  const v = state.view, ctl = $('#flatCtl');
+  document.body.classList.toggle('flat', isFlat(v));
+  $('#flat').classList.toggle('hidden', !isFlat(v));
+  if (!isFlat(v)) return;
+  // Controls: in the info panel on a big screen, under the picture on a phone
+  const home = narrowFlat() ? $('#flat') : $('#panel');
+  if (ctl.parentNode !== home) home.appendChild(ctl);
+  $('#flat').style.paddingTop = `${Math.ceil($('.topbar').getBoundingClientRect().bottom) + 8}px`;
+  ctl.innerHTML = v === 'ideas' ? IDEAS.drawer().replace(/data-act=/g, 'data-fact=') : SAT.ctl();
+  drawFlatStage();
+}
+const FACT = {
+  satmode(el) { state.sat.mode = el.dataset.v; renderFlat(); },
+  satgo() { SAT.launch(); },
+  satsort(el) { const s = state.sat, id = el.dataset.id, x = SATS.find(y => y[0] === id); if (x[3] === el.dataset.v) s.sort[id] = true; else s.sortWrong[id] = true; renderFlat(); },
+  satplanet(el) { state.sat.planet = el.dataset.v; state.sat.seen[el.dataset.v] = true; renderFlat(); },
+  satdisc(el) { state.sat.disc = el.dataset.v; renderFlat(); },
+  ideapick(el) { IDEAS.pick(el.dataset.v); renderFlat(); },
+  ideanext() { IDEAS.next(); renderFlat(); },
+  ideareset() { state.ideas = freshIdeas(); renderFlat(); }
+};
+document.addEventListener('click', e => { const el = e.target.closest('[data-fact]'); if (el && !el.disabled && FACT[el.dataset.fact]) FACT[el.dataset.fact](el); });
+document.addEventListener('input', e => { if (e.target.id === 'satSpeed') { state.sat.speed = +e.target.value; const l = e.target.previousElementSibling; if (l) l.innerHTML = `Speed: <b>${state.sat.speed} km per second</b> <span class="muted">(${Math.round(state.sat.speed * 3600).toLocaleString('en-GB')} km per hour)</span>`; } });
+
 // ================= Missions =================
 const atPin = () => { const dc = declination(state.day); return { dl: dayLength(state.pin.lat, dc), alt: noonAltitude(state.pin.lat, dc) }; };
 function startSetup({ pin = 'bratislava', tilt = REAL_TILT, day, view } = {}) {
@@ -1197,7 +1476,7 @@ function startSetup({ pin = 'bratislava', tilt = REAL_TILT, day, view } = {}) {
   if (view && state.view !== view) goView(view);
 }
 const MISSIONS = [
-  { id: 'summer', icon: '☀️', title: 'Summer in Slovakia',
+  { id: 'summer', core: true, icon: '☀️', title: 'Summer in Slovakia',
     task: 'Grab the Earth and drag it around the Sun until it is <b>summer in Slovakia</b>.',
     hint: 'Watch the red stick (the North Pole). Summer comes when the top half of the Earth leans <b>towards</b> the Sun.',
     setup: () => startSetup({ day: 14, view: 'space' }),
@@ -1221,7 +1500,7 @@ const MISSIONS = [
     setup: () => { startSetup({ day: 171 }); openPanelMobile(); },
     check: () => dayGap(state.day, 3.5) <= 3,
     win: () => 'Surprise! The Earth is closest to the Sun in <b>early January</b> – that\'s <b>winter</b> in Slovakia! So being closer does <b>not</b> make summer. It\'s the <b>tilt</b> that causes the seasons. 🎉' },
-  { id: 'christmas', icon: '🎄', title: 'Christmas in Australia',
+  { id: 'christmas', core: true, icon: '🎄', title: 'Christmas in Australia',
     task: 'Move your pin to <b>Sydney, Australia</b>, then set the date to <b>Christmas Day (25 December)</b>. What season is it there?',
     hint: 'Choose Sydney from the place menu in the info panel. Then use the date slider.',
     setup: () => startSetup({ day: 280 }),
@@ -1239,7 +1518,31 @@ const MISSIONS = [
     setup: () => startSetup({ view: 'side' }),
     check: () => state.tilt <= 0.5,
     win: () => 'With no tilt, every place gets <b>12 hours of daylight every day</b> of the year. No summer and no winter – <b>no seasons</b> at all!' },
-  { id: 'supertilt', icon: '🤸', title: 'Super-tilt!',
+  { id: 'orbit', core: true, icon: '🛰️', title: 'Into orbit!',
+    task: 'In <b>Satellites</b>, launch a satellite from the mountain top so that it goes into <b>orbit</b>.',
+    hint: 'Too slow and it falls back down. Too fast and it flies off into space. Try a speed in between.',
+    setup: () => { state.sat = freshSat(); goView('sat'); },
+    check: () => !!state.sat.got.orbit,
+    win: () => 'Just right! It keeps falling towards the Earth, but it moves sideways so fast that it keeps missing. That is an <b>orbit</b>. 🛰️' },
+  { id: 'satsort', icon: '🔍', title: 'Natural or made by people?',
+    task: 'In <b>Satellites</b>, choose <b>Natural or not?</b> and sort all <b>6</b> satellites.',
+    hint: 'Was it made by people? Then it is an artificial satellite.',
+    setup: () => { state.sat = { ...freshSat(), mode: 'sort' }; goView('sat'); },
+    check: () => SATS.every(x => state.sat.sort[x[0]]),
+    win: () => 'The Moon and Phobos are <b>natural</b> satellites: moons. The space station, GPS and weather satellites and the Hubble telescope were <b>made by people</b>.' },
+  { id: 'moons', icon: '🪐', title: 'Moon spotter',
+    task: 'In <b>Satellites</b>, choose <b>Planets and moons</b>. Look at all <b>6</b> planets, then answer the question at the end.',
+    hint: 'Tap each planet. Which ones have no moons at all?',
+    setup: () => { state.sat = { ...freshSat(), mode: 'moons', seen: { earth: true } }; goView('sat'); },
+    check: () => PLANETS.every(p => state.sat.seen[p[0]]) && !!state.sat.disc,
+    win: () => 'Mercury and Venus have no moons. The Earth has one, Mars has two, and Jupiter and Saturn have dozens. A moon is a <b>natural satellite</b> that orbits a planet.' },
+  { id: 'ideas', icon: '🕰️', title: 'Ideas that changed',
+    task: 'In <b>Ideas that changed</b>, look at all the evidence. Does everything go round the Earth?',
+    hint: 'Some evidence fits both ideas. Some evidence does not fit the old idea at all.',
+    setup: () => { state.ideas = freshIdeas(); goView('ideas'); },
+    check: () => state.ideas.done,
+    win: () => 'The Earth and the planets go round the Sun. Scientists changed their idea because of new <b>evidence</b>, like Galileo\'s moons of Jupiter. 🔭' },
+  { id: 'supertilt', ext: true, icon: '🤸', title: 'Super-tilt!',
     task: 'Change the <b>tilt</b> and the <b>date</b> so that <b>Bratislava</b> gets 24 hours of daylight!',
     hint: 'You need a BIG tilt – more than 40°. Then find summer.',
     setup: () => startSetup({ day: 171 }),
@@ -1252,7 +1555,7 @@ function renderMissionList() {
   MISSIONS.forEach((ms, i) => {
     const b = document.createElement('button');
     b.className = `mission-item${state.done.includes(ms.id) ? ' done' : ''}`;
-    b.innerHTML = `<span class="em">${ms.icon}</span><span class="t">${i + 1}. ${ms.title}</span><span class="star">⭐</span>`;
+    b.innerHTML = `<span class="em">${ms.icon}</span><span class="t">${i + 1}. ${ms.title}</span>${ms.ext ? '<span class="extn">➕ Extension</span>' : ''}<span class="star">⭐</span>`;
     b.onclick = () => { $('#missionsModal').classList.add('hidden'); startMission(i); };
     list.appendChild(b);
   });
@@ -1408,6 +1711,40 @@ const HELP = {
       ['☁️', 'Real sunlight and temperatures also depend on the weather, clouds, and the land and sea.'],
     ],
   },
+  sat: {
+    title: '🛰️ Satellites',
+    question: 'What is a satellite, and how does it stay up?',
+    steps: [
+      '<b>Launcher</b>: choose a speed and launch. Find too slow, just right and too fast.',
+      '<b>Natural or not?</b>: sort the satellites.',
+      '<b>Planets and moons</b>: tap each planet to see its moons.',
+    ],
+    look: 'A satellite is always falling, but it moves sideways so fast that it keeps missing the Earth!',
+    teachers: '<p><b>5ESs.03</b> Know that a satellite is an object in space that orbits a larger object and a moon is a natural satellite that orbits a planet.</p>',
+    card: '🛰️ Satellites',
+    science: 'A <b>satellite</b> is an object in space that <b>orbits</b> a larger object. A <b>moon</b> is a <b>natural</b> satellite that orbits a planet. Satellites made by people are <b>artificial</b> satellites.',
+    real: [
+      ['🏔️', 'No mountain is tall enough to launch a satellite! Real satellites go up on rockets. The mountain is Isaac Newton\'s idea, from over 300 years ago.'],
+      ['📏', 'The mountain, the satellites and the moons are drawn much too big, and much too close.'],
+      ['⏱️', 'The moons move much faster here. Our Moon takes about 27 days to orbit the Earth.'],
+    ],
+  },
+  ideas: {
+    title: '🕰️ Ideas that changed',
+    question: 'Does everything in the sky go round the Earth?',
+    steps: [
+      'Read the <b>old idea</b> and the <b>new idea</b>.',
+      'Read each piece of <b>evidence</b>.',
+      'Decide: keep the old idea, or change it?',
+    ],
+    look: 'Some evidence fits both ideas. It can\'t tell you which one is right.',
+    teachers: '<p><b>5SIC.01</b> Describe how scientific knowledge and understanding changes over time through the use of evidence gained by enquiry.</p>',
+    card: '🕰️ Ideas that changed',
+    science: 'Scientists change their ideas when new <b>evidence</b> appears. People once thought everything went round the Earth. Evidence showed that the Earth and the planets go round the Sun.',
+    real: [
+      ['📜', 'The story is told simply. Real scientists argued about these ideas for over 100 years.'],
+    ],
+  },
 };
 const REAL_GENERAL = [
   ['📏', 'The Sun and the Earth are <b>not to scale</b>. In real life, the Earth would be a tiny dot, very far away from the Sun.'],
@@ -1480,6 +1817,7 @@ function resize() {
   // Re-frame the view after a real size change (e.g. rotating a tablet)
   if (lastSize && (Math.abs(w - lastSize[0]) > 40 || Math.abs(h - lastSize[1]) > 40)) goView(state.view);
   lastSize = [w, h];
+  if (isFlat(state.view)) renderFlat();
 }
 let lastSize = null;
 new ResizeObserver(resize).observe(stage);
@@ -1508,6 +1846,7 @@ function updateBeams() {
 function animate() {
   requestAnimationFrame(animate);
   const dt = Math.min(clock.getDelta(), 0.1);
+  if (isFlat(state.view)) { checkMission(dt); return; }
   if (state.playing && !dragging) state.day = (state.day + dt * YEAR / SPEEDS[state.speedIdx].secs) % YEAR;
   if (state.spinning) state.spin += dt * Math.PI * 2 / SPIN_SECS;
 

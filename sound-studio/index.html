@@ -298,7 +298,6 @@
   <div class="modal-box">
     <button class="modal-x" data-act="closeModals" aria-label="Close">✕</button>
     <h2 id="missionsTitle">🚀 Missions</h2>
-    <p class="muted" style="margin-top:-4px">Short of time? Start with the <span class="core">⏱ Lesson</span> missions.</p>
     <div class="mission-list" id="missionList"></div>
     <div class="modal-actions"><button class="btn" data-act="resetStars">Reset stars</button><button class="btn primary" data-act="closeModals">Close</button></div>
   </div>
@@ -1382,7 +1381,7 @@ function showHelp() {
     <p>📖 Tap <b>Words</b> at the top to see what the key words mean.</p>
     <p>🚀 Try the <b>Missions</b> to win stars!</p>
     <details class="teach"><summary>For teachers</summary>${H.codes.map(c => `<p><b>${c}</b> ${OBJ[c]}</p>`).join('')}
-      <h4>⏱ A 45-minute lesson</h4><p>Start with the three <b>Lesson</b> missions: ${core.join(', ')}.</p>
+      <h4>⏱ A 45-minute lesson</h4><p>Good missions to start with: ${core.join(', ')}.</p>
       <h4>All of Sound Studio's objectives</h4><p>Main: ${MAIN.join(', ')}. Supporting: ${SUPPORT.join(', ')}.</p>
       <h4>🔈 Sound</h4><p>All sounds are made by the browser. The volume is capped and every sound starts softly. Everything is also shown as a picture and in words.</p></details>`;
   welcomed = true;
@@ -1489,7 +1488,7 @@ const ACTIONS = {
   // Missions and pop-ups
   missions() {
     $('#missionList').innerHTML = MISSIONS.map((m, i) => `<button class="mission-item${state.done.includes(m.id) ? ' done' : ''}" data-act="startMission" data-i="${i}">
-      <span class="em">${m.icon}</span><span class="t">${i + 1}. ${m.title}</span>${m.core ? '<span class="core">⏱ Lesson</span>' : ''}<span class="star">⭐</span></button>`).join('');
+      <span class="em">${m.icon}</span><span class="t">${i + 1}. ${m.title}</span><span class="star">⭐</span></button>`).join('');
     $('#missionsModal').classList.remove('hidden');
   },
   startMission(el) { startMission(+el.dataset.i); },
