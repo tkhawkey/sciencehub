@@ -654,7 +654,7 @@ function draw() {
 // Topics the class has reached, in teaching order. To add a topic, add its bank id here.
 // The rest are hidden from the topic list, but links such as #forces still open them,
 // and ?all in the address shows every topic (hidden ones are marked) for the teacher.
-const SHOWN = ['earth-space', 'digestion', 'diet', 'adaptations'];
+const SHOWN = ['earth-space', 'digestion', 'diet', 'adaptations', 'skills', 'science-around-us'];
 const SHOW_ALL = new URLSearchParams(location.search).has('all');
 function homeBanks() {
   const shown = SHOWN.map(id => window.BANKS.find(b => b.id === id)).filter(Boolean);
