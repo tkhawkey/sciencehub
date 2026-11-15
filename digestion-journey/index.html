@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="../hub/objectives.js"></script><script src="../hub/levels.js"></script>
 <style>
   /* ================= Shared look (matches Adaptation Studio) ================= */
   :root {
@@ -234,9 +235,12 @@
     .banner { top: calc(58% + 8px); left: 8px; right: 8px; width: auto; }
     .brand { font-size: 18px; }
   }
-  /* Lesson (core) missions, and extension missions */
-  .core { background: var(--yellow); color: var(--ink); border-radius: 8px; padding: 1px 7px; font-size: 12.5px; font-weight: 700; white-space: nowrap; }
-  .extn { background: #e8e0ff; color: #5a3fb0; border-radius: 8px; padding: 1px 7px; font-size: 12.5px; font-weight: 700; white-space: nowrap; }
+  /* Level badges come from ../hub/levels.js; keep them in normal case inside the banner */
+  .banner .kicker .lvl { text-transform: none; letter-spacing: 0; margin-left: 4px; }
+  /* Optional science words: shown after a plain-English version, in a lighter style */
+  .optword { color: var(--muted); font-weight: 400; }
+  .optword .term { background: #f3f0e4; font-weight: 500; }
+  .key .optword { font-size: .9em; }
 </style>
 </head>
 <body>
@@ -450,18 +454,18 @@ const OES_D = 'M300 150 C300 260 302 360 304 405 C306 428 318 444 334 456';
 const STOPS = [
   { id: 'mouth', name: 'Mouth', organs: ['teeth'], at: [300, 145], form: 'slice', time: 'About 1 minute',
     now: 'being chewed and ground into smaller, easier-to-swallow pieces',
-    text: 'Your <span class="term">teeth</span> bite and chew the apple into small pieces. <span class="term">Saliva</span> from the salivary glands makes it soft and wet, so it is easy to swallow.' },
+    text: 'Your <span class="term">teeth</span> bite and chew the apple into small pieces. <span class="term">Saliva</span> makes it soft and wet, so it is easy to swallow. <span class="optword">(Saliva comes from the salivary glands.)</span>' },
   { id: 'oesophagus', name: 'Oesophagus', organs: ['oesophagus'], form: 'bolus', time: 'About 7 seconds', ms: 6500, peri: true,
     now: 'a soft, wet ball',
-    text: 'When you swallow, the ball of food goes down the <span class="term">oesophagus</span>. Rings of muscle squeeze behind the food in waves to push it along. This squeezing is called <span class="term">peristalsis</span>.' },
+    text: 'When you swallow, the ball of food goes down the <span class="term">oesophagus</span>. Muscles in the oesophagus squeeze behind the food and push it down. <span class="optword">(Scientists call this <span class="term">peristalsis</span>.)</span>' },
   { id: 'stomach', name: 'Stomach', organs: ['stomach'], form: 'mush', time: 'About 2–4 hours', ms: 1200, churn: true,
     route: 'M326 449 C338 462 350 478 355 495',
-    now: 'a thick mush called chyme',
-    text: 'The <span class="term">stomach</span> churns the food and mixes it with acid and digestive juices. This breaks it down into a thick mush called <span class="term">chyme</span>.' },
+    now: 'a thick, soupy mush',
+    text: 'The <span class="term">stomach</span> churns the food and mixes it with acid and digestive juices. This breaks it down into a thick, soupy mush <span class="optword">(called <span class="term">chyme</span>)</span>.' },
   { id: 'small-intestine', name: 'Small intestine', organs: ['small-intestine'], form: 'liquid', time: 'About 3–5 hours', ms: 10000, fx: 'nutrients', switchAt: .12, flow: true,
     route: 'M355 495 C340 525 290 535 258 530 C240 535 238 565 252 583 C268 602 312 601 334 584 C370 600 380 620 350 628 C320 636 280 620 255 640 C240 655 280 668 320 662 C360 656 385 672 360 690 C335 706 280 700 250 696 C238 694 232 690 226 684',
     now: 'a runny liquid',
-    text: 'The chyme becomes a runny liquid. <span class="term">Nutrients</span> from the food pass through the walls of the <span class="term">small intestine</span> into the <b>blood</b>, which carries them all around the body.' },
+    text: 'The mush becomes a runny liquid. The food has now been broken down into <span class="term">nutrients</span>. The nutrients pass through the walls of the <span class="term">small intestine</span> into the <b>blood</b>. The blood carries them all around the body.' },
   { id: 'large-intestine', name: 'Large intestine', organs: ['large-intestine'], form: 'waste', time: 'About 1–2 days', ms: 10000, fx: 'water', blend: [.45, .65], flow: true,
     route: 'M226 684 C214 690 202 682 200 665 C198 640 199 600 202 578 C205 562 215 556 232 560 C260 568 285 584 310 582 C335 580 360 568 378 552 C388 543 394 538 397 548 C402 568 402 600 400 630 C398 660 392 688 382 708',
     now: 'solid waste (faeces)',
@@ -469,7 +473,7 @@ const STOPS = [
   { id: 'rectum', name: 'Rectum', organs: ['rectum'], form: 'waste', time: 'Until you need the toilet', ms: 2200, flow: true,
     route: 'M382 708 C372 724 352 733 330 734 C312 735 300 738 296 748 C294 755 297 760 297 765',
     now: 'faeces, waiting',
-    text: 'The faeces are stored in the <span class="term">rectum</span> until you go to the toilet.' },
+    text: 'The faeces are stored at the end of the large intestine until you go to the toilet. <span class="optword">(This part is called the <span class="term">rectum</span>.)</span>' },
   { id: 'anus', name: 'Anus', organs: ['anus'], form: 'gone', time: 'When you go to the toilet', ms: 1600,
     route: 'M297 765 L297 836',
     now: 'gone! The journey is over.',
@@ -694,13 +698,12 @@ function setStep(n, animate) {
 
 // ================= Drag the organs =================
 // Each piece: the drawing groups it is made of, and the label that appears when it is placed.
+// The rectum (an optional word) is not a piece: it stays drawn in place, like the mouth.
 const PIECES = [
   { id: 'oesophagus', name: 'Oesophagus', groups: ['oesophagus'] },
   { id: 'stomach', name: 'Stomach', groups: ['stomach'] },
   { id: 'small-intestine', name: 'Small intestine', groups: ['small-intestine', 'small-intestine-coils'] },
   { id: 'large-intestine', name: 'Large intestine', groups: ['large-intestine', 'large-intestine-front'] },
-  // The rectum is a clipped slice of a longer path, so its visible box is given here
-  { id: 'rectum', name: 'Rectum', groups: ['rectum'], box: { x: 280, y: 742, width: 34, height: 60 } },
   { id: 'anus', name: 'Anus', groups: ['anus'], snap: 22 }
 ];
 // Tray spaces either side of the body
@@ -800,11 +803,13 @@ const organGroups = (svg, id) => svg.querySelectorAll(`#${id}, [data-organ="${id
 
 // ================= Journey order =================
 // Children tap the stops in the order food visits them; each correct tap lights the organ, numbers it and extends the route.
+// The rectum is an optional word, so it is never a choice: it fills in by itself straight after the large intestine.
+const OPTIONAL_STOP = 'rectum';
 const O = {
   mount() {
     const svg = $('#stage svg');
     svg.classList.add('ordermode');
-    state.order = { done: 0, mistakes: 0, choices: STOPS.map((s, i) => i).sort(() => Math.random() - .5) };
+    state.order = { done: 0, mistakes: 0, choices: STOPS.map((s, i) => i).filter(i => STOPS[i].id !== OPTIONAL_STOP).sort(() => Math.random() - .5) };
     const firstLab = svg.querySelector(':scope > .lab');
     addMouthLabel(svg);
     const trail = svgEl('g', { id: 'oTrail', class: 'oTrail' });
@@ -822,6 +827,16 @@ const O = {
       O.say(o.done ? `Not quite! Where does the food go after the ${STOPS[o.done - 1].name.toLowerCase()}?` : 'Not quite! Where does the food go in?');
       return;
     }
+    O.place(n);
+    const auto = STOPS[o.done] && STOPS[o.done].id === OPTIONAL_STOP;
+    if (auto) O.place(o.done);
+    $('#drawer').innerHTML = VIEWS.order.drawer();
+    if (o.done < STOPS.length) O.say(`Yes! Number ${n + 1} is the ${s.name.toLowerCase()}.${auto ? ` Number ${n + 2}, the ${STOPS[n + 1].name.toLowerCase()}, is filled in for you.` : ''}`);
+    else emit('ordered', { mistakes: o.mistakes });
+  },
+  // Light up stop n, number it and extend the route
+  place(n) {
+    const o = state.order, s = STOPS[n];
     s.organs.forEach(id => organGroups(O.svg, id).forEach(g => g.classList.add('on')));
     const lab = labelFor(O.svg, s.name);
     lab.classList.add('show');
@@ -838,9 +853,6 @@ const O = {
       O.svg.insertBefore(g, O.svg.querySelector('#large-intestine-front'));
     }
     o.done++;
-    $('#drawer').innerHTML = VIEWS.order.drawer();
-    if (o.done < STOPS.length) O.say(`Yes! Number ${n + 1} is the ${s.name.toLowerCase()}.`);
-    else emit('ordered', { mistakes: o.mistakes });
   },
   say(msg) { const m = $('#orderMsg'); if (m) m.textContent = msg; }
 };
@@ -850,7 +862,7 @@ const O = {
 const JOBS = {
   mouth: { job: 'Bites, chews and grinds food into small pieces. Saliva makes it soft and wet.', does: 'chews food into small pieces' },
   oesophagus: { job: 'A muscly tube that squeezes food down to the stomach.', does: 'squeezes food down to the stomach' },
-  stomach: { job: 'Churns food with acid and digestive juices to make a thick mush called chyme.', does: 'churns food into chyme' },
+  stomach: { job: 'Churns food with acid and digestive juices to make a thick, soupy mush.', does: 'churns food into a soupy mush' },
   'small-intestine': { job: 'Nutrients from the food pass through its walls into the blood.', does: 'passes nutrients into the blood' },
   'large-intestine': { job: 'Takes water back into the body, leaving solid waste called faeces.', does: 'takes water back into the body' },
   rectum: { job: 'Stores faeces until you go to the toilet.', does: 'stores faeces until you go to the toilet' },
@@ -860,7 +872,8 @@ const W = {
   mount() {
     const svg = $('#stage svg');
     svg.classList.add('quizmode');
-    state.quiz = { n: 0, firstTry: 0, missed: false, order: STOPS.map((s, i) => i).sort(() => Math.random() - .5) };
+    // The rectum is an optional word, so there is no question about it (tapping it still says what it does)
+    state.quiz = { n: 0, firstTry: 0, missed: false, order: STOPS.map((s, i) => i).filter(i => STOPS[i].id !== 'rectum').sort(() => Math.random() - .5) };
     addMouthLabel(svg);
     addTapPads(svg);
     svg.addEventListener('click', e => {
@@ -873,7 +886,7 @@ const W = {
   stopOf(id) { return STOPS.findIndex(s => s.organs.includes(id)); },
   tap(id) {
     const q = state.quiz;
-    if (q.n === STOPS.length) return;
+    if (q.n === q.order.length) return;
     const want = q.order[q.n], got = W.stopOf(id), s = STOPS[got];
     if (got < 0) return;
     W.flash(s, 'oops');
@@ -889,7 +902,7 @@ const W = {
     q.n++;
     $('#drawer').innerHTML = VIEWS.quiz.drawer();
     W.say(`Yes! The ${s.name.toLowerCase()} does that.`);
-    if (q.n === STOPS.length) emit('matched', { firstTry: q.firstTry });
+    if (q.n === q.order.length) emit('matched', { firstTry: q.firstTry });
   },
   flash(s, cls) {
     s.organs.forEach(id => organGroups(W.svg, id).forEach(g => { g.classList.remove('oops', 'yay'); void g.getBBox(); g.classList.add(cls); }));
@@ -1068,8 +1081,8 @@ const DROP = 'M0 -10 C6 -2 8 2 8 5 A8 8 0 0 1 -8 5 C-8 2 -6 -2 0 -10 Z';
 const VESSEL = (d, w = 30) => `<path d="${d}" fill="none" stroke="#a51d2d" stroke-width="${w}"/><path d="${d}" fill="none" stroke="#e8505f" stroke-width="${w - 6}"/>`;
 
 const CLOSE = [
-  { id: 'teeth', name: 'Teeth', title: 'Chewing',
-    text: 'Your <span class="term">incisors</span> bite off a piece of apple and your <span class="term">canines</span> help grip and tear. Your <span class="term">molars</span> grind it into smaller and smaller pieces. <span class="term">Saliva</span> from the salivary glands makes it soft and wet, ready to swallow.',
+  { id: 'teeth', name: 'Teeth', title: 'Chewing', tier: 'back',
+    text: 'Your <span class="term">incisors</span> bite off a piece of apple and your <span class="term">canines</span> help grip and tear. Your <span class="term">molars</span> grind it into smaller and smaller pieces. <span class="term">Saliva</span> makes it soft and wet, ready to swallow. <span class="optword">(Saliva comes from the salivary glands.)</span>',
     svg() {
       const T = [[185, 'i'], [226, 'i'], [266, 'c'], [316, 'p'], [364, 'p'], [422, 'm'], [492, 'm'], [562, 'm']];
       const tooth = ([c, k]) => k === 'i' ? `M${c - 17} 190 L${c - 16} 242 Q${c} 250 ${c + 16} 242 L${c + 17} 190 Z`
@@ -1118,7 +1131,7 @@ const CLOSE = [
     }
   },
   { id: 'stomach', name: 'Stomach', title: 'Inside the stomach',
-    text: 'The stomach\'s muscly walls squeeze and churn the food. <span class="term">Acid</span> and <span class="term">digestive juices</span> break it down (the acid also kills most germs). Bit by bit, the chunks turn into a thick mush called <span class="term">chyme</span>, which is squirted into the small intestine.',
+    text: 'The stomach\'s muscly walls squeeze and churn the food. <span class="term">Acid</span> and <span class="term">digestive juices</span> break it down (the acid also kills most germs). Bit by bit, the chunks turn into a thick, soupy mush <span class="optword">(called <span class="term">chyme</span>)</span>. It is squirted into the small intestine.',
     svg() {
       const STO = $('#diagramSvg').content.querySelector('#stomach path').getAttribute('d');
       const tube = (d, a, b, w) => `<path d="${d}" fill="none" stroke="${a}" stroke-width="${w + 3}" stroke-linecap="round"/><path d="${d}" fill="none" stroke="${b}" stroke-width="${w}" stroke-linecap="round"/>`;
@@ -1139,7 +1152,7 @@ const CLOSE = [
         ${cl('From the oesophagus', 400, 70, 'end', 406, 64, 440, 92)}${cl('Muscly wall', 740, 220, 'start', 736, 214, 690, 258)}
         ${cl('To the small intestine', 30, 360, 'start', 120, 370, 240, 460)}
         <g class="lab tl"><circle cx="772" cy="452" r="9" style="fill:#a3d977;stroke:#5e9c3a;stroke-width:2"/><text x="792" y="459">Acid and</text><text x="792" y="483">digestive juices</text>
-          <rect x="762" y="510" width="20" height="20" rx="5" fill="#e6c977" stroke="#b0913e" stroke-width="1.5"/><text x="792" y="527">Chyme</text></g>`;
+          <rect x="762" y="510" width="20" height="20" rx="5" fill="#e6c977" stroke="#b0913e" stroke-width="1.5"/><text x="792" y="527">Soupy mush</text></g>`;
     },
     frame(svg) {
       const wall = svg.querySelector('#sChurn > path'), Lw = wall.getTotalLength(), duo = svg.querySelector('#sDuo'), Ld = duo.getTotalLength();
@@ -1167,7 +1180,7 @@ const CLOSE = [
     }
   },
   { id: 'villi', name: 'Small intestine', title: 'Into the blood',
-    text: 'The food is now a runny liquid. Its <span class="term">nutrients</span> pass through the thin, folded wall of the small intestine and into the <b>blood</b>. The blood then carries them all around your body.',
+    text: 'The food is now a runny liquid. It has been broken down into tiny <span class="term">nutrients</span>. The nutrients pass through the thin, folded wall of the small intestine and into the <b>blood</b>. The blood then carries them all around your body.',
     svg() {
       const V = Array.from({ length: 7 }, (_, i) => 130 + i * 123);
       // Open at the bottom so no outline shows where a villus joins the wall
@@ -1312,7 +1325,7 @@ const ANIMALS = [
       'small-intestine': vTube('M246 106 q11 14 22 0 t22 0 t22 0 t22 0 C348 106 350 120 334 122 q-11 -14 -22 0 t-22 0 t-22 0 t-22 0', ...SI),
       'large-intestine': vTube('M244 122 C234 120 236 74 258 68 L340 68 C368 68 384 76 394 84', ...LI),
       anus: vAnus(398, 88) } },
-  { id: 'cow', name: 'Cow', icon: '🐄', note: 'Its stomach has <b>4 parts</b>, to break down tough grass.',
+  { id: 'cow', name: 'Cow', icon: '🐄', note: '<span class="lvl lvl-further">🔭 Going further</span> Its stomach has <b>4 parts</b>, to break down tough grass.',
     body: vBody(`<rect x="140" y="36" width="272" height="96" rx="44"/><path d="M96 40 L162 36 L172 110 L84 98 Z"/>
       <path d="M56 30 C76 20 104 22 110 36 C114 50 100 70 92 92 C86 110 70 120 50 120 C32 118 22 106 28 92 C36 72 42 40 56 30 Z"/>
       <rect x="160" y="118" width="24" height="58" rx="10"/><rect x="194" y="118" width="24" height="58" rx="10"/><rect x="350" y="118" width="24" height="58" rx="10"/><rect x="382" y="114" width="24" height="62" rx="10"/>
@@ -1372,11 +1385,11 @@ const V = {
 // ================= Missions =================
 // Each mission sets up a view; activities call emit() when something happens, and on() says whether that completes it.
 const MISSIONS = [
-  { id: 'apple', core: true, icon: '🍎', title: 'Follow the apple', task: 'On the <b>Journey</b>, follow the apple slice all the way from the mouth to the anus.', hint: 'Press <b>Next ▶</b> to move the apple on one stop.',
+  { id: 'apple', start: true, icon: '🍎', title: 'Follow the apple', task: 'On the <b>Journey</b>, follow the apple slice all the way from the mouth to the anus.', hint: 'Press <b>Next ▶</b> to move the apple on one stop.',
     setup() { state.view = 'journey'; state.step = 0; },
     on: (ev, d) => ev === 'step' && d.walked && d.n === STOPS.length - 1,
     win: () => 'The apple went through the mouth, oesophagus, stomach, small intestine, large intestine and rectum, then left through the anus. The whole journey can take <b>more than a day</b>!' },
-  { id: 'build', core: true, icon: '🧩', title: 'Build the body', task: 'Drag all <b>6 organs</b> into the right place in the body.', hint: 'The pale outlines show where each organ goes.',
+  { id: 'build', start: true, icon: '🧩', title: 'Build the body', task: 'Drag all <b>5 organs</b> into the right place in the body.', hint: 'The pale outlines show where each organ goes.',
     setup() { state.view = 'organs'; state.outlines = true; },
     on: ev => ev === 'placed',
     win: () => 'Every organ is in place! Together they make one very long tube, from the mouth to the anus.' },
@@ -1384,18 +1397,10 @@ const MISSIONS = [
     setup() { state.view = 'order'; },
     on: (ev, d) => ev === 'ordered' && d.mistakes === 0,
     win: () => 'Mouth → oesophagus → stomach → small intestine → large intestine → rectum → anus. Food only goes <b>one way</b>!' },
-  { id: 'jobs', core: true, icon: '❓', title: 'Job matcher', task: 'In <b>What happens here?</b>, get at least <b>6 of 7</b> right first time.', hint: 'Nutrients go into the blood in the <b>small</b> intestine. Water goes back into the body in the <b>large</b> intestine.',
+  { id: 'jobs', start: true, icon: '❓', title: 'Job matcher', task: 'In <b>What happens here?</b>, get at least <b>5 of 6</b> right first time.', hint: 'Nutrients go into the blood in the <b>small</b> intestine. Water goes back into the body in the <b>large</b> intestine.',
     setup() { state.view = 'quiz'; },
-    on: (ev, d) => ev === 'matched' && d.firstTry >= 6,
+    on: (ev, d) => ev === 'matched' && d.firstTry >= 5,
     win: () => 'You know what each part does! The small intestine takes in <b>nutrients</b>, and the large intestine takes back <b>water</b>.' },
-  { id: 'grind', icon: '😬', title: 'Grinding teeth', task: 'In <b>Lion vs zebra</b>, show the <b>molars</b>, then make the animals chew.', hint: 'Tap <b>Molars</b>, then press <b>Chew!</b>',
-    setup() { state.view = 'teeth'; },
-    on: (ev, d) => ev === 'chew' && d.type === 'molar',
-    win: () => 'A zebra slides its jaw from side to side, so its flat molars <b>grind</b> tough grass. A lion chops up and down, so its jagged molars <b>slice</b> meat like scissors.' },
-  { id: 'lionzebra', icon: '🦓', title: 'Lion or zebra?', task: 'Get all <b>6 of 6</b> right in the <b>Lion or zebra?</b> quiz.', hint: 'Meat-eaters need teeth for gripping and slicing. Grass-eaters need teeth for cutting and grinding.',
-    setup() { state.view = 'teeth'; },
-    on: (ev, d) => ev === 'tquiz' && d.right === TQUIZ.length,
-    win: () => 'An animal\'s teeth suit the food it eats. A lion\'s teeth <b>grip and slice</b> meat. A zebra\'s teeth <b>nip and grind</b> grass.' },
   { id: 'zoom', icon: '🔬', title: 'Zoom right in', task: 'Watch all <b>4 close-ups</b>.', hint: 'Tap each button at the top of the Close-ups card.',
     setup() { state.view = 'close'; state.close = 0; state.cpaused = false; state.seenClose = new Set(); },
     on: ev => ev === 'close' && state.seenClose.size === CLOSE.length,
@@ -1404,7 +1409,15 @@ const MISSIONS = [
     setup() { state.view = 'animals'; state.vpart = null; state.vdog = new Set(); },
     on: (ev, d) => ev === 'vpart' && d.dogFound === VPARTS.length,
     win: () => 'A dog has the same parts as you, in the same order: mouth, oesophagus, stomach, small intestine, large intestine and anus. Many <b>vertebrates</b> have a digestive system like ours!' },
-  { id: 'nopeek', icon: '🙈', title: 'No peeking!', task: 'Drag all <b>6 organs</b> into place with <b>no outlines</b>.', hint: 'The stomach is on the left side of the body. That is on the right as you look at the picture!',
+  { id: 'grind', tier: 'back', icon: '😬', title: 'Grinding teeth', task: 'In <b>Lion vs zebra</b>, show the <b>molars</b>, then make the animals chew.', hint: 'Tap <b>Molars</b>, then press <b>Chew!</b>',
+    setup() { state.view = 'teeth'; },
+    on: (ev, d) => ev === 'chew' && d.type === 'molar',
+    win: () => 'A zebra slides its jaw from side to side, so its flat molars <b>grind</b> tough grass. A lion chops up and down, so its jagged molars <b>slice</b> meat like scissors.' },
+  { id: 'lionzebra', tier: 'further', icon: '🦓', title: 'Lion or zebra?', task: 'Get all <b>6 of 6</b> right in the <b>Lion or zebra?</b> quiz.', hint: 'Meat-eaters need teeth for gripping and slicing. Grass-eaters need teeth for cutting and grinding.',
+    setup() { state.view = 'teeth'; },
+    on: (ev, d) => ev === 'tquiz' && d.right === TQUIZ.length,
+    win: () => 'An animal\'s teeth suit the food it eats. A lion\'s teeth <b>grip and slice</b> meat. A zebra\'s teeth <b>nip and grind</b> grass.' },
+  { id: 'nopeek', tier: 'further', icon: '🙈', title: 'No peeking!', task: 'Drag all <b>5 organs</b> into place with <b>no outlines</b>.', hint: 'The stomach is on the left side of the body. That is on the right as you look at the picture!',
     setup() { state.view = 'organs'; state.outlines = false; },
     on: (ev, d) => ev === 'placed' && !d.peeked,
     win: () => 'You know where every organ goes, with no help at all. Brilliant!' }
@@ -1431,7 +1444,7 @@ function startMission(i) {
   state.mission = i; MISSIONS[i].setup();
   location.hash = 'view=' + state.view;
   const m = MISSIONS[i];
-  $('#bannerKicker').textContent = `Mission ${i + 1} of ${MISSIONS.length}: ${m.title}`;
+  $('#bannerKicker').innerHTML = `Mission ${i + 1} of ${MISSIONS.length}: ${m.title}${HUB.badge(HUB.tier(m))}`;
   $('#bannerText').innerHTML = m.task; $('#bannerHint').innerHTML = m.hint;
   $('#bannerHint').classList.add('hidden'); $('#hintBtn').textContent = '💡 Show a hint';
   $('#banner').classList.remove('hidden');
@@ -1452,11 +1465,18 @@ function confetti() {
 }
 
 // ================= Help and "Real life?" (current tab only) =================
-const CURRIC = {
-  bs: '<p><b>5Bs.04</b> Describe the human digestive system, including the functions of the organs involved (limited to mouth, oesophagus, stomach, small intestine, large intestine and anus), and know that many vertebrates have a similar digestive system.</p>',
-  m: '<p><b>5TWSm.01</b> Know that a model presents an object, process or idea in a way that shows some of the important features.</p>',
-  p: '<p><b>5TWSp.03</b> Make predictions, referring to relevant scientific knowledge and understanding within familiar and unfamiliar contexts.</p>'
-};
+// Objective codes for each tab; the wording comes from ../hub/objectives.js
+const CURRIC = { bs: 'SC5-BOD-1', m: 'SC5-SKL-19', p: 'SC5-SKL-4' };
+// "For teachers": good first missions, and the missions that are not Core
+function teacherMissions() {
+  const n = m => MISSIONS.indexOf(m) + 1;
+  const start = MISSIONS.filter(m => m.start).map(n);
+  const extra = ['back', 'further', 'next'].map(t => {
+    const ms = MISSIONS.filter(m => HUB.tier(m) === t);
+    return ms.length ? `${HUB.TIERS[t].em} ${HUB.TIERS[t].name}: ${ms.map(m => `${n(m)} (${m.title})`).join(', ')}.` : '';
+  }).filter(Boolean).join(' ');
+  return `<p>Good missions to start with: ${start.join(', ')}.</p>${extra ? `<p>${extra}</p>` : ''}`;
+}
 const HELP = {
   diagram: { icon: '🧍', q: 'What are the parts of the digestive system, and what does each one do?',
     steps: ['Look at the labelled parts of the body.', 'Hover over a part to find out its job. On a tablet, tap it.', 'Use the key to match each colour to a part.'],
@@ -1504,7 +1524,7 @@ function showHelp() {
     <div class="help-sec">👆 What to do</div><ol>${h.steps.map(s => `<li>${s}</li>`).join('')}</ol>
     ${h.look ? `<div class="help-sec">💡 Look out for</div><p>${h.look}</p>` : ''}
     <p class="muted">🚀 Try the Missions to win stars!</p>
-    <details class="help-teach"><summary>For teachers</summary>${h.teach.map(k => CURRIC[k]).join('')}
+    <details class="help-teach"><summary>For teachers</summary>${HUB.objList(h.teach.map(k => CURRIC[k]))}${teacherMissions()}
       <p>Organ shapes based on a diagram by Mariana Ruiz Villarreal (public domain).</p></details>`;
   $('#helpModal').classList.remove('hidden');
 }
@@ -1529,8 +1549,8 @@ const VIEWS = {
     after() { P.mount(); },
     drawer() {
       const key = [
-        ['Teeth', '#ffffff'], ['Salivary glands', '#ffd34d'], ['Oesophagus', '#f4a6bd'], ['Stomach', '#ffb062'],
-        ['Small intestine', '#fb8f7c'], ['Large intestine', '#86cf9f'], ['Rectum', '#86b2ee'], ['Anus', '#3f6fb8']
+        ['Teeth', '#ffffff'], ['Glands that make saliva <span class="optword">(salivary glands)</span>', '#ffd34d'], ['Oesophagus', '#f4a6bd'], ['Stomach', '#ffb062'],
+        ['Small intestine', '#fb8f7c'], ['Large intestine', '#86cf9f'], ['End of the large intestine <span class="optword">(rectum)</span>', '#86b2ee'], ['Anus', '#3f6fb8']
       ].map(([n, c]) => `<li><span class="sw" style="background:${c}"></span>${n}</li>`).join('');
       return `
         <div class="card"><h2>The digestive system</h2>
@@ -1553,12 +1573,13 @@ const VIEWS = {
       const predict = !pr
         ? `<div class="card predict"><h3>🤔 Predict first</h3><p>Where do you think food stays the <b>longest</b>?</p>
             <div class="stops">${PREDICT.map(x => `<button class="opt" data-act="jpredict" data-id="${x.id}">${x.name}</button>`).join('')}</div>
-            <p class="muted">The times show once you have chosen.</p></div>`
+            <p class="muted">The times show once you have chosen. Times are rough guides. They change from person to person.</p></div>`
         : STOPS.findIndex(x => x.id === longest) <= n
           ? `<div class="card"><h3>🤔 Your prediction</h3>
               <p>${pr === longest ? '🎉 Spot on!' : `You guessed the ${guess.toLowerCase()}. Good thinking!`}</p>
               <div class="science"><b>🔬 The science</b>Food stays longest in the <b>large intestine</b>, because taking back water is slow.</div>
-              ${PREDICT.map(x => `<div class="trow${x.id === longest ? ' best' : ''}"><span>${x.name}${x.id === pr ? ' <b class="mine">🤔 you</b>' : ''}</span><span>${x.time.replace('About ', '')}</span></div>`).join('')}</div>`
+              ${PREDICT.map(x => `<div class="trow${x.id === longest ? ' best' : ''}"><span>${x.name}${x.id === pr ? ' <b class="mine">🤔 you</b>' : ''}</span><span>${x.time}</span></div>`).join('')}
+              <p class="muted">Times are rough guides. They change from person to person.</p></div>`
           : `<div class="card"><p class="muted" style="margin:0">🤔 You guessed: <b>${guess}</b>. Keep going to find out!</p></div>`;
       return `${pr ? '' : predict}
         <div class="card"><div class="muted">Stop ${n + 1} of ${STOPS.length}</div>
@@ -1625,23 +1646,23 @@ const VIEWS = {
     drawer() {
       const q = state.quiz;
       if (!q) return '';
-      const done = q.n === STOPS.length;
+      const done = q.n === q.order.length;
       return `
         <div class="card"><h2>What happens here?</h2>
           <p class="bigq">🔬 What job does each part of the digestive system do?</p>
-          ${done ? '' : `<div class="muted">Question ${q.n + 1} of ${STOPS.length}</div>
+          ${done ? '' : `<div class="muted">Question ${q.n + 1} of ${q.order.length}</div>
           <p class="job">${JOBS[STOPS[q.order[q.n]].id].job}</p>
           <p><b>Tap the part of the body that does this.</b></p>`}
-          <div class="progress"><div style="width:${q.n / STOPS.length * 100}%"></div></div>
+          <div class="progress"><div style="width:${q.n / q.order.length * 100}%"></div></div>
           <p class="muted" id="quizMsg"></p></div>
         ${done ? `<div class="card"><h2>🎉 Well done!</h2><p>You matched every part to its job.</p>
-            <p><b>${q.firstTry} of ${STOPS.length}</b> right first time.</p>
+            <p><b>${q.firstTry} of ${q.order.length}</b> right first time.</p>
             <div class="science"><b>🔬 The science</b>Each part has a job. The stomach churns food. The small intestine takes in <b>nutrients</b>. The large intestine takes back <b>water</b>.</div></div>` : ''}
         <div class="navrow"><button class="btn${done ? ' go' : ''}" data-act="restart">Start again ↺</button></div>`;
     }
   },
   teeth: {
-    label: 'Lion vs zebra',
+    label: 'Lion vs zebra', tier: 'back',
     stage() { return teethSvg(); },
     after() { T.mount(); $('#drawer').innerHTML = this.drawer(); },
     drawer() {
@@ -1658,7 +1679,7 @@ const VIEWS = {
           ${t.answered ? `<p>${t.answered === who ? 'Yes!' : 'Not quite.'} It's the <b>${who}</b>.</p>
             <div class="navrow"><button class="btn go" data-act="tnext">${t.q === TQUIZ.length - 1 ? 'See my score' : 'Next ▶'}</button></div>` : ''}`;
       return `
-        <div class="card"><h2>Lion vs zebra teeth</h2>
+        <div class="card">${HUB.note('back')}<h2>Lion vs zebra teeth</h2>
           <p>A lion is a <span class="term">predator</span> that eats meat. A zebra is <span class="term">prey</span> that eats grass.</p>
           <div class="science"><b>🔬 The science</b>An animal's teeth suit the food it eats.</div></div>
         <div class="card"><h3>Tap a type of tooth</h3><div class="stops">${types}</div>
@@ -1667,7 +1688,7 @@ const VIEWS = {
         <div class="card"><h3>See them chew</h3>
           <p>Lions chop up and down like scissors. Zebras slide their jaws to grind grass.</p>
           <button class="btn" data-act="tchew">Chew! 😬</button></div>
-        <div class="card"><h3>Lion or zebra?</h3>${quiz}</div>
+        <div class="card">${HUB.badge('further', true)}<h3>Lion or zebra?</h3>${quiz}</div>
         <div class="card"><p style="margin:0">Find out how lions hunt zebras and how zebras escape in
           <a href="../adaptation-studio/index.html#view=pp" target="_blank" rel="noopener"><b>Predator &amp; prey</b></a> in Adaptation Studio.</p></div>`;
     }
@@ -1678,10 +1699,10 @@ const VIEWS = {
     after() { C.mount(); },
     drawer() {
       const sc = CLOSE[state.close];
-      const picks = CLOSE.map((x, i) => `<button class="opt${i === state.close ? ' on' : ''}" data-act="cpick" data-n="${i}">${x.name}</button>`).join('');
+      const picks = CLOSE.map((x, i) => `<button class="opt${i === state.close ? ' on' : ''}" data-act="cpick" data-n="${i}">${x.name}${x.tier ? ' ' + HUB.TIERS[x.tier].em : ''}</button>`).join('');
       return `
         <div class="card"><h2>Close-ups</h2><p class="bigq">🔬 What happens to food inside your organs?</p><p>Zoom right in to see what happens inside.</p><div class="stops">${picks}</div></div>
-        <div class="card"><h2>${sc.title}</h2><p>${sc.text}</p></div>
+        <div class="card">${HUB.note(sc.tier)}<h2>${sc.title}</h2><p>${sc.text}</p></div>
         <div class="navrow"><button class="btn" data-act="cpause">${state.cpaused ? '▶ Play' : '⏸ Pause'}</button></div>`;
     }
   },
@@ -1697,7 +1718,7 @@ const VIEWS = {
           <div class="science"><b>🔬 The science</b>Many <span class="term">vertebrates</span> (animals with a backbone) have a digestive system like yours: one long tube from the mouth to the anus, with the <b>same parts in the same order</b>.</div></div>
         <div class="card"><h3>Find a part in every animal</h3><p class="muted">Tap a part below, or in one of the animals.</p><div class="stops">${chips}</div>
           ${p ? `<p class="job">${VNAMES[p]}: ${JOBS[p].job}</p>` : ''}
-          ${p === 'stomach' ? '<p>A cow\'s stomach has <b>4 parts</b>, because grass is so hard to break down. Similar, but not exactly the same!</p>' : ''}</div>
+          ${p === 'stomach' ? '<p>' + HUB.badge('further') + ' A cow\'s stomach has <b>4 parts</b>, because grass is so hard to break down. Similar, but not exactly the same!</p>' : ''}</div>
         ${m && m.id === 'dog' ? `<div class="card"><p><b>🐕 Dog parts found: ${found} of ${VPARTS.length}</b></p><div class="progress"><div style="width:${found / VPARTS.length * 100}%"></div></div></div>` : ''}`;
     }
   },
@@ -1706,7 +1727,7 @@ const VIEWS = {
 function render() {
   const v = VIEWS[state.view];
   $('#tabs').innerHTML = Object.entries(VIEWS).map(([id, x]) =>
-    `<button class="btn${id === state.view ? ' active' : ''}" data-act="view" data-view="${id}">${x.label}</button>`).join('');
+    `<button class="btn${id === state.view ? ' active' : ''}" data-act="view" data-view="${id}">${x.label}${x.tier ? ' ' + HUB.TIERS[x.tier].em : ''}</button>`).join('');
   $('#stage').innerHTML = v.stage();
   $('#drawer').innerHTML = v.drawer();
   if (v.after) v.after();
@@ -1734,8 +1755,8 @@ const ACTIONS = {
     D.svg.classList.toggle('nohints', !state.outlines); $('#drawer').innerHTML = VIEWS.organs.drawer();
   },
   missions() {
-    $('#missionList').innerHTML = MISSIONS.map((m, i) => `<button class="mission-item${state.done.includes(m.id) ? ' done' : ''}" data-act="startMission" data-i="${i}">
-      <span class="em">${m.icon}</span><span class="t">${i + 1}. ${m.title}</span>${m.ext ? '<span class="extn">➕ Extension</span>' : ''}<span class="star">⭐</span></button>`).join('');
+    $('#missionList').innerHTML = HUB.starLine(MISSIONS, state.done) + HUB.missionList(MISSIONS, (m, i) => `<button class="mission-item${state.done.includes(m.id) ? ' done' : ''}" data-act="startMission" data-i="${i}">
+      <span class="em">${m.icon}</span><span class="t">${i + 1}. ${m.title}</span>${HUB.badge(HUB.tier(m))}<span class="star">⭐</span></button>`);
     $('#missionsModal').classList.remove('hidden');
   },
   startMission(el) { startMission(+el.dataset.i); },
@@ -1780,7 +1801,7 @@ else render();
 // #view=organs&placed=3 places the first few organs, for screenshots
 if (state.view === 'organs' && hp.has('placed')) D.items.slice(0, +hp.get('placed')).forEach(D.place);
 // #view=order&done=3 puts the first few stops in order
-if (state.view === 'order' && hp.has('done')) for (let i = 0; i < +hp.get('done'); i++) O.pick(i);
+if (state.view === 'order' && hp.has('done')) while (state.order.done < Math.min(+hp.get('done'), STOPS.length)) O.pick(state.order.done);
 // #view=close&c=2&t=3 freezes close-up 2 at 3 seconds
 if (state.view === 'close' && hp.has('c')) { state.close = +hp.get('c') || 0; render(); }
 if (state.view === 'close' && hp.has('t')) { state.cpaused = true; C.t = +hp.get('t'); C.draw(C.t); $('#drawer').innerHTML = VIEWS.close.drawer(); }

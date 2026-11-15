@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="../hub/objectives.js"></script><script src="../hub/levels.js"></script>
 <style>
   /* ================= Shared look (matches Seed Lab and Dissolving Lab) ================= */
   :root {
@@ -219,7 +220,7 @@
   .mission-item .em { font-size: 25px; } .mission-item .t { flex: 1; font-weight: 600; }
   .mission-item .star { font-size: 21px; filter: grayscale(1); opacity: .35; }
   .mission-item.done .star { filter: none; opacity: 1; }
-  .core { background: var(--yellow); color: var(--ink); border-radius: 8px; padding: 1px 7px; font-size: 12.5px; font-weight: 700; white-space: nowrap; }
+  .banner .kicker .lvl { text-transform: none; letter-spacing: 0; }
   .win-emoji { font-size: 56px; text-align: center; }
   .win-text { font-size: 17.5px; line-height: 1.5; margin-bottom: 14px; }
   .confetti { position: fixed; top: -40px; font-size: 26px; z-index: 40; pointer-events: none; animation: fall linear forwards; }
@@ -920,7 +921,7 @@ const BOT = {
   drawer() {
     const b = state.bot, P = state.pred.bot || {};
     const modes = `<div class="card"><h2>🧴 Bottle band</h2><p>Five bottles with different amounts of water. You can <b>tap</b> them or <b>blow</b> across the top.</p>
-      <div class="navrow" style="margin-top:6px">${[['tap', '🥄 Tap'], ['blow', '🌬️ Blow'], ['match', '🎯 Match the note']].map(([m, t]) => `<button class="btn${b.mode === m ? ' active' : ''}" data-act="bmode" data-v="${m}">${t}</button>`).join('')}</div></div>`;
+      <div class="navrow" style="margin-top:6px">${[['tap', '🥄 Tap'], ['blow', '🌬️ Blow'], ['match', '🎯 Match the note ' + HUB.TIERS.further.em]].map(([m, t]) => `<button class="btn${b.mode === m ? ' active' : ''}" data-act="bmode" data-v="${m}">${t}</button>`).join('')}</div></div>`;
     if (b.mode === 'tap') return `${modes}<div class="card says"><h3>🥄 Tapping</h3><p>Tap each bottle. When you tap, the <b>glass and the water</b> vibrate.</p><p class="muted">Tapped: ${Object.keys(b.tapped).length} of 5</p></div>
       ${Object.keys(b.tapped).length >= 3 ? '<div class="science"><b>🔬 The science</b>Tapping: the bottle and the water vibrate. <b>More water</b> is heavier, so it vibrates more slowly: the note is <b>lower</b>.</div>' : ''}
       ${Object.keys(b.tapped).length >= 3 ? '<div class="card"><p>Now try <b>blowing</b>. Will it be the same?</p><button class="btn" data-act="bmode" data-v="blow">🌬️ Try blowing</button></div>' : ''}`;
@@ -930,7 +931,7 @@ const BOT = {
         ${Object.keys(b.blown).length === 5 ? '<div class="science"><b>🔬 The science</b>Tapping: more water → <b>lower</b>. Blowing: more water → <b>higher</b>. They go in <b>opposite</b> directions, because a different thing vibrates: the glass and water, or the air.</div>' : ''}`;
     }
     const ok = b.said === 'ok';
-    return `${modes}<div class="card says"><h3>🎯 Match the note</h3><p>A mystery note was made by blowing across a bottle. Change the water in your bottle until your note is the same.</p>
+    return `${modes}<div class="card says">${HUB.note('further')}<h3>🎯 Match the note</h3><p>A mystery note was made by blowing across a bottle. Change the water in your bottle until your note is the same.</p>
       <div class="navrow"><button class="btn" data-act="btarget">❓ Play the mystery note</button><button class="btn" data-act="bmine">🌬️ Blow my bottle</button></div>
       <div class="slide"><span>💧 Less</span><input type="range" id="bmine" min="0" max=".8" step=".05" value="${b.mine}" aria-label="Water in your bottle"><span>💧💧 More</span></div>
       ${b.said && !ok ? `<p class="spot">💡 ${b.said}</p>` : ''}${ok ? '<p class="job">🎉 A match! Here is a new mystery note.</p>' : ''}
@@ -963,7 +964,7 @@ const FAMS = {
     why: 'A bigger instrument has longer, thicker strings. They vibrate more slowly, so the notes are lower.' }
 };
 const FORD = ['xylo', 'pan', 'rec', 'drums', 'strings'];
-const PATTERNS = [['big', 'The bigger or longer it is, the lower the note.', true], ['small', 'The bigger or longer it is, the higher the note.', false, 'Look at your lowest notes again. Are they the big ones or the small ones?'], ['none', 'The size makes no difference to the note.', false, 'Look at the order you made. Do you see sizes getting smaller as the notes get higher?']];
+const PATTERNS = [['big', 'In the same family of instruments, the bigger or longer it is, the lower the note.', true], ['small', 'In the same family of instruments, the bigger or longer it is, the higher the note.', false, 'Look at your lowest notes again. Are they the big ones or the small ones?'], ['none', 'The size makes no difference to the note.', false, 'Look at the order you made. Do you see sizes getting smaller as the notes get higher?']];
 // A small picture of one item
 function itemSvg(fam, it, sz = 60) {
   const [, , s] = it, W = 80, H = 60;
@@ -1237,9 +1238,9 @@ const KEYWORDS = [
 ];
 
 // ================= Missions =================
-// core: one of the three missions for a 45-minute lesson
+// start: one of the three missions for a 45-minute lesson. tier: the level (missing = Core). Core missions come first.
 const MISSIONS = [
-  { id: 'find', core: true, icon: '〰️', title: 'Find the vibration', task: 'Find the <b>vibrating part</b> in all 7 sound makers.',
+  { id: 'find', start: true, icon: '〰️', title: 'Find the vibration', task: 'Find the <b>vibrating part</b> in all 7 sound makers.',
     hint: 'Make the sound and watch in slow motion. Which part moves backwards and forwards?',
     setup() { state.view = 'vib'; state.vib = freshVib(); }, on: ev => ev === 'found',
     win: () => 'Every sound was made by something vibrating: a string, a skin, a ruler, prongs, a cone, a bell and your voice box.' },
@@ -1247,7 +1248,7 @@ const MISSIONS = [
     hint: 'First find the vibrating part. Then make the sound again and press Stop while it is still vibrating.',
     setup() { state.view = 'vib'; state.vib = { ...state.vib, stopped: {} }; }, on: (ev, d) => ev === 'stopped' && d.n >= 3,
     win: () => 'When the vibration stops, the sound stops. No vibration, no sound!' },
-  { id: 'highquiet', core: true, icon: '🤫', title: 'High but quiet', task: 'Make a <b>high</b>, <b>quiet</b> note on the guitar.',
+  { id: 'highquiet', start: true, icon: '🤫', title: 'High but quiet', task: 'Make a <b>high</b>, <b>quiet</b> note on the guitar.',
     hint: 'Pluck gently for quiet. For high, make the string tighter, thinner or shorter.',
     setup() { state.view = 'gtr'; state.gtr = freshGtr(); }, on: (ev, d) => ev === 'guitar' && d.p >= .6 && d.v < .55,
     win: () => 'High does not mean loud! A note can be high <b>and</b> quiet. Pitch and volume are two different things.' },
@@ -1255,7 +1256,7 @@ const MISSIONS = [
     hint: 'Hit hard for loud. Which size of drum makes a low note? Which skin?',
     setup() { state.view = 'drum'; state.drum = freshDrum(); }, on: (ev, d) => ev === 'drum' && d.p <= .35 && d.v >= .55,
     win: () => 'Low does not mean quiet! A big drum hit hard makes a low, loud note.' },
-  { id: 'mystery', core: true, icon: '🎧', title: 'Mystery sounds', task: 'Put all 8 mystery sounds in the right box: <b>high or low</b>, <b>loud or quiet</b>.',
+  { id: 'mystery', start: true, icon: '🎧', title: 'Mystery sounds', task: 'Put all 8 mystery sounds in the right box: <b>high or low</b>, <b>loud or quiet</b>.',
     hint: 'Ask two questions about each sound. Is it high or low? Then: is it loud or quiet?',
     setup() { state.view = 'pics'; state.pics = { ...freshPics(), mode: 'mystery' }; }, on: ev => ev === 'mystery',
     win: () => 'You sorted every sound by its pitch <b>and</b> its volume. A mouse squeak is high but quiet. A ship\'s horn is low but loud.' },
@@ -1267,18 +1268,18 @@ const MISSIONS = [
     hint: 'When you blow, the air inside vibrates, not the water. Which bottle has the least air?',
     setup() { state.view = 'bot'; state.bot = { ...freshBot(), mode: 'blow' }; delete state.pred.bot; }, on: ev => ev === 'blown',
     win: () => `${state.pred.bot?.pick === 'most' ? 'Your prediction was right! ' : 'A surprise! '}Blowing: the bottle with the most water (and the least air) makes the highest note. Tapping goes the other way.` },
-  { id: 'match', icon: '🎯', title: 'Match the note', task: 'Match <b>3</b> mystery notes with your bottle.',
-    hint: 'Blowing: more water makes a higher note. Is your note too high or too low? Compare the sound pictures too.',
-    setup() { state.view = 'bot'; state.bot = { ...freshBot(), mode: 'match' }; BOT.newTarget(); }, on: (ev, d) => ev === 'matched' && d.n >= 3,
-    win: () => 'Three matches! You changed the amount of air in the bottle to change the pitch.' },
   { id: 'pattern', icon: '🔍', title: 'Spot the pattern', task: 'Put all 5 instrument families in order, lowest to highest. Then find the pattern.',
     hint: 'Tap each one to listen. Look at the sizes too: the long ones, the big ones…',
     setup() { state.view = 'pat'; state.pat = freshPat(); }, on: () => FORD.every(f => state.pat.done[f]) && state.pat.pattern === 'big',
-    win: () => 'The bigger or longer it is, the lower the note. You found that by <b>pattern seeking</b>.' },
+    win: () => 'In the same family of instruments, the bigger or longer it is, the lower the note. You found that by <b>pattern seeking</b>.' },
   { id: 'scientist', icon: '🔬', title: 'Sound scientist', task: 'Finish an <b>investigation</b>, with a conclusion.',
     hint: 'Change only one thing. Make everything else the same in every test.',
     setup() { state.view = 'inv'; state.inv = freshInv(); }, on: ev => ev === 'concluded',
-    win: () => 'A fair test, an odd result found and checked, a chart and a conclusion. That is real science!' }
+    win: () => 'A fair test, an odd result found and checked, a chart and a conclusion. That is real science!' },
+  { id: 'match', tier: 'further', icon: '🎯', title: 'Match the note', task: 'Match <b>3</b> mystery notes with your bottle.',
+    hint: 'Blowing: more water makes a higher note. Is your note too high or too low? Compare the sound pictures too.',
+    setup() { state.view = 'bot'; state.bot = { ...freshBot(), mode: 'match' }; BOT.newTarget(); }, on: (ev, d) => ev === 'matched' && d.n >= 3,
+    win: () => 'Three matches! You changed the amount of air in the bottle to change the pitch.' }
 ];
 function emit(ev, data = {}) {
   if (state.mission == null) return;
@@ -1301,7 +1302,7 @@ function startMission(i) {
   state.mission = i; MISSIONS[i].setup();
   location.hash = 'view=' + state.view;
   const m = MISSIONS[i];
-  $('#bannerKicker').textContent = `Mission ${i + 1} of ${MISSIONS.length}: ${m.title}`;
+  $('#bannerKicker').innerHTML = `Mission ${i + 1} of ${MISSIONS.length}: ${m.title} ${HUB.badge(HUB.tier(m))}`;
   $('#bannerText').innerHTML = m.task; $('#bannerHint').innerHTML = m.hint;
   $('#bannerHint').classList.add('hidden'); $('#hintBtn').textContent = '💡 Show a hint';
   $('#banner').classList.remove('hidden');
@@ -1322,37 +1323,25 @@ function confetti() {
 }
 
 // ================= Help, key words and Real life =================
-const OBJ = {
-  '5Ps.01': 'Investigate how sounds are made by vibrating sources.',
-  '5Ps.02': 'Describe sounds in terms of high or low pitch and loud or quiet volume.',
-  '5Ps.03': 'Investigate how to change the volume and pitch of sounds.',
-  '5TWSm.01': 'Know that a model presents an object, process or idea in a way that shows some of the important features.',
-  '5TWSm.02': 'Use models, including diagrams, to represent and describe scientific phenomena and ideas.',
-  '5TWSp.02': 'Know the features of the five main types of scientific enquiry (research, fair testing, observing over time, identifying and classifying, and pattern seeking).',
-  '5TWSp.03': 'Make predictions, referring to relevant scientific knowledge and understanding within familiar and unfamiliar contexts.',
-  '5TWSp.04': 'Plan fair test investigations, identifying the independent, dependent and control variables.',
-  '5TWSc.04': 'Decide when observations and measurements need to be repeated to give more reliable data.',
-  '5TWSa.02': 'Describe patterns in results, including identifying any anomalous results.',
-  '5TWSa.05': 'Present and interpret results using tables, bar charts, dot plots and line graphs.'
-};
-const MAIN = ['5Ps.01', '5Ps.02', '5Ps.03'], SUPPORT = ['5TWSm.01', '5TWSm.02', '5TWSp.02', '5TWSp.03', '5TWSp.04', '5TWSc.04', '5TWSa.02', '5TWSa.05'];
+// Objective wording comes from ../hub/objectives.js (HUB.objList)
+const MAIN = ['SC5-SOU-1', 'SC5-SOU-2', 'SC5-SOU-3'], SUPPORT = ['SC5-SKL-19', 'SC5-SKL-20', 'SC5-SKL-2', 'SC5-SKL-4', 'SC5-SKL-5', 'SC5-SKL-10', 'SC5-SKL-13', 'SC5-SKL-12'];
 const HELP = {
   vib: { q: 'How are sounds made?', steps: ['Choose a sound maker.', 'Make the sound. Watch the picture in <b>slow motion</b>.', 'Tap the part that is <b>vibrating</b>.', 'Make the sound again, then <b>stop</b> it.'],
-    look: 'When the vibration stops, the sound stops too.', codes: ['5Ps.01', '5TWSm.01'] },
+    look: 'When the vibration stops, the sound stops too.', codes: ['SC5-SOU-1', 'SC5-SKL-19'] },
   pics: { q: 'How can we describe a sound?', steps: ['Move the sliders and play the sound. Watch the <b>sound picture</b> change.', 'Then try the <b>Mystery sounds</b>: high or low? Loud or quiet?'],
-    look: 'High does <b>not</b> mean loud. A sound can be high and quiet.', codes: ['5Ps.02', '5TWSm.02'] },
+    look: 'High does <b>not</b> mean loud. A sound can be high and quiet.', codes: ['SC5-SOU-2', 'SC5-SKL-20'] },
   gtr: { q: 'How can we change the pitch and volume of a string?', steps: ['<b>Predict</b> first.', 'Change how tight, how thick and how long the string is.', 'Pluck gently, then hard. Watch the meters.'],
-    look: 'Plucking harder makes the note louder, but not higher.', codes: ['5Ps.03', '5Ps.01', '5TWSp.03'] },
+    look: 'Plucking harder makes the note louder, but not higher.', codes: ['SC5-SOU-3', 'SC5-SOU-1', 'SC5-SKL-4'] },
   drum: { q: 'How can we change the sound of a drum?', steps: ['<b>Predict</b> first.', 'Change the size of the drum and how tight the skin is.', 'Hit gently, then hard. Watch the rice.'],
-    look: 'The rice shows how much the skin is vibrating.', codes: ['5Ps.03', '5Ps.01', '5TWSp.03'] },
+    look: 'The rice shows how much the skin is vibrating.', codes: ['SC5-SOU-3', 'SC5-SOU-1', 'SC5-SKL-4'] },
   rul: { q: 'How does a ruler make a high or a low note?', steps: ['<b>Predict</b> first.', 'Change how far the ruler is over the edge.', 'Let go, and count the <b>vibrations per second</b>.'],
-    look: 'More vibrations per second make a higher note.', codes: ['5Ps.03', '5Ps.01', '5TWSp.03'] },
+    look: 'More vibrations per second make a higher note.', codes: ['SC5-SOU-3', 'SC5-SOU-1', 'SC5-SKL-4'] },
   bot: { q: 'Why do bottles with water make different notes?', steps: ['<b>Tap</b> each bottle.', '<b>Predict</b>, then <b>blow</b> across each bottle.', 'Then try <b>Match the note</b>.'],
-    look: 'Tapping and blowing go in <b>opposite</b> directions. Think about what is vibrating.', codes: ['5Ps.03', '5TWSp.03'] },
+    look: 'Tapping and blowing go in <b>opposite</b> directions. Think about what is vibrating.', codes: ['SC5-SOU-3', 'SC5-SKL-4'] },
   pat: { q: 'Is there a pattern in how instruments sound?', steps: ['Choose a family of instruments.', 'Tap each one to hear it.', 'Put them in order, from lowest to highest. Then find the pattern.'],
-    look: 'Look at the size of each one, as well as listening.', codes: ['5TWSp.02', '5TWSa.02', '5Ps.03'] },
+    look: 'Look at the size of each one, as well as listening.', codes: ['SC5-SKL-2', 'SC5-SKL-13', 'SC5-SOU-3'] },
   inv: { q: 'Can you plan and carry out a fair test about sound?', steps: ['Choose a question.', 'Choose <b>one</b> thing to change, what to measure, and what to keep the same.', '<b>Predict</b>, then measure 3 times.', 'Find the odd result, choose a chart and write a conclusion.'],
-    look: 'Change only <b>one</b> thing. If you change two, you can\'t tell which one made the difference.', codes: ['5TWSp.04', '5TWSp.03', '5TWSc.04', '5TWSa.02', '5TWSa.05'] }
+    look: 'Change only <b>one</b> thing. If you change two, you can\'t tell which one made the difference.', codes: ['SC5-SKL-5', 'SC5-SKL-4', 'SC5-SKL-10', 'SC5-SKL-13', 'SC5-SKL-12'] }
 };
 const MODEL = {
   vib: [['🐢', 'Real vibrations are too fast to see clearly, often hundreds every second. You might see a blur (a guitar string looks fuzzy), but not each movement. Here they are shown in slow motion.']],
@@ -1371,7 +1360,8 @@ let autoHelp = true, welcomed = false;
 function showHelp() {
   const H = HELP[state.view], V = VIEWS[state.view];
   helpSeen.add(state.view);
-  const core = MISSIONS.map((m, i) => m.core ? `${i + 1} (${m.title})` : null).filter(Boolean);
+  const start = MISSIONS.map((m, i) => m.start ? `${i + 1} (${m.title})` : null).filter(Boolean);
+  const extra = HUB.ORDER.filter(t => t !== 'core').map(t => { const l = MISSIONS.map((m, i) => HUB.tier(m) === t ? `${i + 1} (${m.title})` : null).filter(Boolean); return l.length ? `<p>${HUB.TIERS[t].em} ${HUB.TIERS[t].name}: ${l.join(', ')}.</p>` : ''; }).join('');
   $('#helpBody').innerHTML = `<h2 id="helpTitle">${V.label.replace(/<[^>]+>/g, '').split(' ')[0]} ${V.name}</h2>
     ${welcomed ? '' : '<p class="welcome">Welcome to Sound Studio!</p>'}
     <h3>🔬 The big question</h3><p>${H.q}</p>
@@ -1380,8 +1370,8 @@ function showHelp() {
     <p>🔊 Tap the <b>sound button</b> at the top to turn the sound on or off. No sound? Watch the pictures and read the words.</p>
     <p>📖 Tap <b>Words</b> at the top to see what the key words mean.</p>
     <p>🚀 Try the <b>Missions</b> to win stars!</p>
-    <details class="teach"><summary>For teachers</summary>${H.codes.map(c => `<p><b>${c}</b> ${OBJ[c]}</p>`).join('')}
-      <h4>⏱ A 45-minute lesson</h4><p>Good missions to start with: ${core.join(', ')}.</p>
+    <details class="teach"><summary>For teachers</summary>${HUB.objList(H.codes)}
+      <h4>⏱ A 45-minute lesson</h4><p>Good missions to start with: ${start.join(', ')}.</p>${extra}
       <h4>All of Sound Studio's objectives</h4><p>Main: ${MAIN.join(', ')}. Supporting: ${SUPPORT.join(', ')}.</p>
       <h4>🔈 Sound</h4><p>All sounds are made by the browser. The volume is capped and every sound starts softly. Everything is also shown as a picture and in words.</p></details>`;
   welcomed = true;
@@ -1487,8 +1477,8 @@ const ACTIONS = {
   invreset() { state.inv = freshInv(); render(); top0(); },
   // Missions and pop-ups
   missions() {
-    $('#missionList').innerHTML = MISSIONS.map((m, i) => `<button class="mission-item${state.done.includes(m.id) ? ' done' : ''}" data-act="startMission" data-i="${i}">
-      <span class="em">${m.icon}</span><span class="t">${i + 1}. ${m.title}</span><span class="star">⭐</span></button>`).join('');
+    $('#missionList').innerHTML = HUB.starLine(MISSIONS, state.done) + HUB.missionList(MISSIONS, (m, i) => `<button class="mission-item${state.done.includes(m.id) ? ' done' : ''}" data-act="startMission" data-i="${i}">
+      <span class="em">${m.icon}</span><span class="t">${i + 1}. ${m.title}</span>${HUB.badge(HUB.tier(m))}<span class="star">⭐</span></button>`);
     $('#missionsModal').classList.remove('hidden');
   },
   startMission(el) { startMission(+el.dataset.i); },

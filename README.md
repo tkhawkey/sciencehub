@@ -1,6 +1,8 @@
 # Year 5 Science Hub
 
-Interactive science tools and practice questions for Year 5 (Cambridge Primary Science), Cambridge International School Bratislava.
+Interactive science tools and practice questions for Year 5 at Cambridge International School Bratislava.
+
+Written by teachers at CIS Bratislava to support our Year 5 science curriculum. Not produced or endorsed by any exam board.
 
 Open `index.html` for the hub. Each tool lives in its own folder; `practice/` holds the question banks; `sw.js` saves everything for offline use.
 
@@ -23,109 +25,145 @@ Open `index.html` for the hub. Each tool lives in its own folder; `practice/` ho
 | Science Skills | `science-skills/` | `practice/banks/skills.js` |
 | Science in Bratislava | `science-in-bratislava/` | `practice/banks/science-around-us.js` |
 
-## Coverage of the Stage 5 objectives
+## Levels
 
-Which tool(s) cover each Cambridge Primary Science Stage 5 learning objective. A tool is listed when it shows the objective in its "For teachers" notes.
-⚠️ marks an objective that no tool covers yet.
+Every mission, tab and practice question has one of four levels.
 
-_The list of objectives is taken from the teacher's handoffs and the tools. It has not been checked line by line against the official framework (0097), so check there for any objective missing from this table._
+| Level | Badge | What it means |
+|---|---|---|
+| Core | ⭐ Core | What every Year 5 child should learn. |
+| Going further | 🔭 Going further | Deeper Year 5 work. Optional. |
+| Next year | ⏩ Next year | An idea met properly in Year 6 or later. Optional. |
+| Look back | ↩️ Look back | Something from Year 3 or 4 that helps with this topic. |
 
-### Biology
+Practice sets use Core and Look back questions. Going further and Next year questions are added only when "Include optional questions" is switched on.
+
+## Objectives and coverage
+
+The hub has its own learning objectives, with codes in the form `SC5-PLA-2` (science, Year 5, topic, number). The wording is in `hub/objectives.js`. A tool is listed when its "For teachers" notes use the objective.
+
+A private mapping to the external curriculum is kept by the school and is not part of this repository. The objectives were checked against it on 15 November 2026.
+
+### Plants
 
 | Code | Objective | Covered by |
 |---|---|---|
-| 5Bs.01 | Know that not all plants produce flowers. | Flower Lab |
-| 5Bs.02 | Identify the parts of a flower (limited to petals, sepals, anthers, filaments, stamens, stigma, style, carpel and ovary). | Flower Lab |
-| 5Bs.03 | Describe the functions of the parts of a flower (limited to petals, anthers, stigma and ovary). | Flower Lab |
-| 5Bs.04 | Describe the human digestive system, including the functions of the organs involved (limited to mouth, oesophagus, stomach, small intestine, large intestine and anus), and know that many vertebrates have a similar digestive system. | Digestion Journey |
-| 5Bp.01 | Know that animals, including humans, need an adequate, balanced diet in order to be healthy. | Balanced Plate |
-| 5Bp.02 | Know the stages in the life cycle of a flowering plant. | Seed Lab, Flower Lab |
-| 5Bp.03 | Describe how flowering plants reproduce by pollination, fruit and seed production, and seed dispersal. | Seed Lab, Flower Lab |
-| 5Bp.04 | Describe seed germination and know that seeds, in general, require water and an appropriate temperature to germinate. | Seed Lab |
-| 5Be.01 | Describe how plants and animals are adapted to environments that are hot, cold, wet and/or dry. | Adaptation Studio |
-| 5Be.02 | Describe how flowering plants are adapted to attract pollinators and promote seed dispersal. | Seed Lab, Flower Lab |
-| 5Be.03 | Describe the common adaptations of predator and prey animals. | Adaptation Studio |
+| SC5-PLA-1 | Recognise that some plants, such as mosses, ferns and conifers, reproduce without making flowers. | Flower Lab |
+| SC5-PLA-2 | Find and name the parts of a flower: sepal, petal, stamen (made of anther and filament) and carpel (made of stigma, style and ovary). | Flower Lab |
+| SC5-PLA-3 | Explain what the petals, anthers, stigma and ovary each do when a flower makes seeds. | Flower Lab |
+| SC5-PLA-4 | Put the stages in the life of a flowering plant in order, from seed back round to seed. | Seed Lab, Flower Lab |
+| SC5-PLA-5 | Explain how flowering plants make new plants: pollen moving between flowers, seeds and fruit forming, and seeds being spread. | Seed Lab, Flower Lab |
+| SC5-PLA-6 | Describe what happens as a seed starts to grow, and explain that most seeds need water and warmth to start. | Seed Lab |
+| SC5-PLA-7 | Explain how a flower's features attract the animals that carry its pollen, and how the features of a seed or fruit help it travel. | Seed Lab, Flower Lab |
 
-### Chemistry
+### Body and food
 
 | Code | Objective | Covered by |
 |---|---|---|
-| 5Cm.01 | Use the particle model to describe solid, liquids (including solutions) and gases. | Particle Playground, Dissolving Lab |
-| 5Cm.02 | Understand that substances can be gaseous and know the common gases at room temperature (limited to oxygen, carbon dioxide, water vapour, nitrogen and hydrogen). | Particle Playground, Air and Water |
-| 5Cp.01 | Know that the ability of a solid to dissolve and the ability of a liquid to act as a solvent are properties of the solid and liquid. | Dissolving Lab |
-| 5Cp.02 | Know the main properties of water (limited to boiling point, melting point, expands when it solidifies, and its ability to dissolve a range of substances) and know that water acts differently from many other substances. | Particle Playground |
-| 5Cc.01 | Describe the processes of evaporation and condensation, using the particle model and relating the processes to changes in temperature. | Particle Playground |
-| 5Cc.02 | Understand that dissolving is a reversible process and investigate how to separate the solvent and solute after a solution is formed. | Dissolving Lab |
-| 5Cc.03 | Investigate and describe the process of dissolving (using the terms solute, solvent, solution), and relate it to making a mixture. | Dissolving Lab |
+| SC5-BOD-1 | Follow food from the mouth to the anus, explain what the mouth, oesophagus, stomach, small intestine and large intestine each do to it, and recognise that many animals with backbones digest food in a similar way. | Digestion Journey |
+| SC5-BOD-2 | Explain why people and other animals need enough food, and the right mix of foods, to stay healthy. | Balanced Plate |
 
-### Physics
+### Adaptation
 
 | Code | Objective | Covered by |
 |---|---|---|
-| 5Pf.01 | Identify a range of forces (limited to gravity, applied forces, normal forces, upthrust, friction, air resistance and water resistance). | Forces Playground |
-| 5Pf.02 | Know that an object may have multiple forces acting upon it, even when at rest. | Forces Playground |
-| 5Pf.03 | Use force diagrams to show the name and direction of forces acting on an object. | Forces Playground |
-| 5Ps.01 | Investigate how sounds are made by vibrating sources. | Sound Studio |
-| 5Ps.02 | Describe sounds in terms of high or low pitch and loud or quiet volume. | Sound Studio |
-| 5Ps.03 | Investigate how to change the volume and pitch of sounds. | Sound Studio |
-| 5Pe.01 | Know the difference between a magnet and a magnetic material. | Magnet Lab |
-| 5Pe.02 | Know that forces act over a distance between magnets, and between a magnet and a magnetic material. | Magnet Lab |
-| 5Pe.03 | Know that magnets can have different magnetic strengths. | Magnet Lab |
+| SC5-ADA-1 | Explain how the features of plants and animals help them survive in places that are very hot, cold, wet or dry. | Adaptation Studio |
+| SC5-ADA-2 | Compare the features that help predators catch food with the features that help prey stay safe. | Adaptation Studio |
+
+### Materials and particles
+
+| Code | Objective | Covered by |
+|---|---|---|
+| SC5-MAT-1 | Use a particle picture to show how solids, liquids, gases and solutions are different. | Particle Playground, Dissolving Lab |
+| SC5-MAT-2 | Recognise that a substance can be a gas, and name gases found at room temperature: oxygen, nitrogen, carbon dioxide, hydrogen and water vapour. | Particle Playground, Air and Water |
+| SC5-MAT-3 | Recognise that whether something dissolves depends on both the solid and the liquid. | Dissolving Lab |
+| SC5-MAT-4 | Explain what makes water unusual: the temperatures at which it freezes and boils, how it gets bigger when it freezes, and how many things dissolve in it. | Particle Playground |
+| SC5-MAT-5 | Explain evaporation and condensation using particles, linking each one to warming or cooling. | Particle Playground |
+| SC5-MAT-6 | Show that dissolving can be undone, and try ways to get back both the solid and the liquid. | Dissolving Lab |
+| SC5-MAT-7 | Investigate dissolving, use the words solute, solvent and solution, and recognise a solution as one kind of mixture. | Dissolving Lab |
+
+### Forces
+
+| Code | Objective | Covered by |
+|---|---|---|
+| SC5-FOR-1 | Name the forces at work in everyday situations: gravity, pushes and pulls, the support (normal) force from a surface, upthrust, friction, air resistance and water resistance. | Forces Playground |
+| SC5-FOR-2 | Explain that something standing still can still have several forces on it. | Forces Playground |
+| SC5-FOR-3 | Draw force arrows that show which force each one is and which way it acts. | Forces Playground |
+
+### Sound
+
+| Code | Objective | Covered by |
+|---|---|---|
+| SC5-SOU-1 | Show that every sound comes from something vibrating. | Sound Studio |
+| SC5-SOU-2 | Use high and low for pitch, and loud and quiet for volume, keeping the two ideas separate. | Sound Studio |
+| SC5-SOU-3 | Find out how to make a sound higher, lower, louder or quieter. | Sound Studio |
+
+### Magnets
+
+| Code | Objective | Covered by |
+|---|---|---|
+| SC5-MAG-1 | Tell a magnet apart from a material that a magnet attracts. | Magnet Lab |
+| SC5-MAG-2 | Show that magnets push and pull without touching, on other magnets and on magnetic materials. | Magnet Lab |
+| SC5-MAG-3 | Compare how strong different magnets are. | Magnet Lab |
 
 ### Earth and space
 
 | Code | Objective | Covered by |
 |---|---|---|
-| 5ESp.01 | Know that the Earth is surrounded by a layer of air called the atmosphere, which is a mixture of different gases (including nitrogen, carbon dioxide and oxygen). | Air and Water |
-| 5ESp.02 | Understand that most water on Earth is not pure and has dissolved substances in it. | Air and Water |
-| 5ESp.03 | Understand that pollution is the introduction of substances by humans that harm the environment and identify examples of pollution. | Air and Water |
-| 5ESc.01 | Describe the water cycle (limited to evaporation, condensation and precipitation). | Air and Water |
-| 5ESs.01 | Describe the orbit of the Earth around the Sun (limited to slight ellipse, anticlockwise direction and the duration). | Seasons Explorer |
-| 5ESs.02 | Describe how the tilt of the Earth can create different seasons in different places. | Seasons Explorer |
-| 5ESs.03 | Know that a satellite is an object in space that orbits a larger object and a moon is a natural satellite that orbits a planet. | Seasons Explorer |
+| SC5-EAR-1 | Explain that the Earth is wrapped in air, called the atmosphere, and that air is a mix of gases, mostly nitrogen and oxygen with a little carbon dioxide. | Air and Water |
+| SC5-EAR-2 | Recognise that most water on Earth has other substances dissolved in it. | Air and Water |
+| SC5-EAR-3 | Explain pollution as harmful substances that people add to the environment, and give examples. | Air and Water |
+| SC5-EAR-4 | Explain the water cycle using evaporation, condensation and precipitation. | Air and Water |
+| SC5-EAR-5 | Describe the Earth's yearly journey round the Sun: a nearly circular path, the direction it travels and how long it takes. | Seasons Explorer |
+| SC5-EAR-6 | Explain how the Earth's tilt gives different places different seasons at the same time. | Seasons Explorer |
+| SC5-EAR-7 | Explain that a satellite travels round something bigger than itself, and that a moon is a natural satellite of a planet. | Seasons Explorer |
 
-### Thinking and working scientifically
-
-| Code | Objective | Covered by |
-|---|---|---|
-| 5TWSm.01 | Know that a model presents an object, process or idea in a way that shows some of the important features. | Seasons Explorer, Digestion Journey, Balanced Plate, Adaptation Studio, Forces Playground, Sound Studio, Magnet Lab, Particle Playground, Dissolving Lab, Air and Water, Flower Lab |
-| 5TWSm.02 | Use models, including diagrams, to represent and describe scientific phenomena and ideas. | Sound Studio, Flower Lab |
-| 5TWSp.01 | Ask scientific questions and select appropriate scientific enquiries to use. | Science Skills |
-| 5TWSp.02 | Know the features of the five main types of scientific enquiry (research, fair testing, observing over time, identifying and classifying, and pattern seeking). | Sound Studio, Science Skills |
-| 5TWSp.03 | Make predictions, referring to relevant scientific knowledge and understanding within familiar and unfamiliar contexts. | Digestion Journey, Sound Studio, Magnet Lab, Dissolving Lab, Seed Lab, Flower Lab |
-| 5TWSp.04 | Plan fair test investigations, identifying the independent, dependent and control variables. | Sound Studio, Magnet Lab, Dissolving Lab, Seed Lab |
-| 5TWSp.05 | Describe risks when planning practical work and consider how to minimise them. | Magnet Lab, Dissolving Lab |
-| 5TWSc.01 | Sort, group and classify objects, materials and living things through testing, observation and using secondary information. | Magnet Lab, Flower Lab |
-| 5TWSc.02 | Complete a key based on easily observed differences. | ⚠️ **Not covered** |
-| 5TWSc.03 | Choose equipment to carry out an investigation and use it appropriately. | Dissolving Lab |
-| 5TWSc.04 | Decide when observations and measurements need to be repeated to give more reliable data. | Sound Studio, Magnet Lab, Seed Lab |
-| 5TWSc.05 | Take appropriately accurate measurements. | Forces Playground, Dissolving Lab |
-| 5TWSc.06 | Carry out practical work safely. | Dissolving Lab |
-| 5TWSc.07 | Use a range of secondary information sources to research and select relevant evidence to answer questions. | Science Skills |
-| 5TWSc.08 | Collect and record observations and/or measurements in tables and diagrams appropriate to the type of scientific enquiry. | Seed Lab |
-| 5TWSa.01 | Describe the accuracy of predictions, based on results. | Seed Lab |
-| 5TWSa.02 | Describe patterns in results, including identifying any anomalous results. | Sound Studio, Magnet Lab, Dissolving Lab, Seed Lab |
-| 5TWSa.03 | Make a conclusion from results informed by scientific understanding. | Seed Lab |
-| 5TWSa.04 | Suggest how an investigation could be improved and explain any proposed changes. | Seed Lab |
-| 5TWSa.05 | Present and interpret results using tables, bar charts, dot plots and line graphs. | Sound Studio, Magnet Lab, Dissolving Lab, Seed Lab |
-
-### Science in context
+### Working like a scientist
 
 | Code | Objective | Covered by |
 |---|---|---|
-| 5SIC.01 | Describe how scientific knowledge and understanding changes over time through the use of evidence gained by enquiry. | Seasons Explorer, Forces Playground |
-| 5SIC.02 | Describe how science is used in their local area. | Science in Bratislava |
-| 5SIC.03 | Use science to support points when discussing issues, situations or actions. | Air and Water |
-| 5SIC.04 | Identify people who use science, including professionally, in their area and describe how they use science. | Science in Bratislava |
-| 5SIC.05 | Discuss how the use of science and technology can have positive and negative environmental effects on their local area. | Air and Water |
+| SC5-SKL-1 | Ask questions that science can answer, and choose a good way to answer them. | Science Skills |
+| SC5-SKL-2 | Recognise five ways scientists find things out: research, fair testing, watching over time, sorting and naming, and looking for patterns. | Sound Studio, Science Skills |
+| SC5-SKL-3 | Find and choose useful information from books, websites and experts to answer a question. | Science Skills |
+| SC5-SKL-4 | Predict what will happen, giving a reason from what you know about science. | Digestion Journey, Sound Studio, Magnet Lab, Dissolving Lab, Seed Lab, Flower Lab |
+| SC5-SKL-5 | Plan a fair test: decide what to change, what to measure and what to keep the same. | Sound Studio, Magnet Lab, Dissolving Lab, Seed Lab |
+| SC5-SKL-6 | Spot what could go wrong in an investigation and plan how to keep everyone safe. | Magnet Lab, Dissolving Lab |
+| SC5-SKL-7 | Choose the right equipment for an investigation and use it properly. | Dissolving Lab |
+| SC5-SKL-8 | Work safely during practical work. | Dissolving Lab |
+| SC5-SKL-9 | Measure carefully, reading scales as accurately as the task needs. | Forces Playground, Dissolving Lab |
+| SC5-SKL-10 | Decide when to repeat measurements so the results can be trusted. | Sound Studio, Magnet Lab, Seed Lab |
+| SC5-SKL-11 | Record results in a table or diagram that suits the investigation. | Seed Lab |
+| SC5-SKL-12 | Show and read results using tables, bar charts, dot plots and line graphs. | Sound Studio, Magnet Lab, Dissolving Lab, Seed Lab |
+| SC5-SKL-13 | Find patterns in results and notice any result that doesn't fit. | Sound Studio, Magnet Lab, Dissolving Lab, Seed Lab |
+| SC5-SKL-14 | Say how well a prediction matched the results. | Seed Lab |
+| SC5-SKL-15 | Reach a conclusion from the results, using science to explain it. | Seed Lab |
+| SC5-SKL-16 | Suggest how an investigation could be better, and say why. | Seed Lab |
+| SC5-SKL-17 | Sort and group things using tests, close looking and information from other sources. | Magnet Lab, Flower Lab |
+| SC5-SKL-18 | Use a branching key to identify things by features you can see. | Science Skills |
+| SC5-SKL-19 | Explain that a model shows some important features of the real thing, but not all of them. | Seasons Explorer, Digestion Journey, Balanced Plate, Adaptation Studio, Forces Playground, Sound Studio, Magnet Lab, Particle Playground, Dissolving Lab, Air and Water, Flower Lab |
+| SC5-SKL-20 | Use models and diagrams to explain science ideas. | Sound Studio, Flower Lab |
 
-## Not covered yet
+### Science in our world
 
-- **5TWSc.02** Complete a key based on easily observed differences.
+| Code | Objective | Covered by |
+|---|---|---|
+| SC5-WLD-1 | Explain how scientific ideas change when new evidence is found. | Seasons Explorer, Forces Playground |
+| SC5-WLD-2 | Find examples of science being used in our own area. | Science in Bratislava |
+| SC5-WLD-3 | Use scientific evidence to back up a point in a discussion. | Air and Water |
+| SC5-WLD-4 | Name local jobs that use science and say how they use it. | Science in Bratislava |
+| SC5-WLD-5 | Weigh up the good and bad effects of science and technology on our local environment. | Air and Water |
 
 ## Notes for editing
 
-- Each tool is one self-contained `index.html`, with no build step.
+- Each tool is one self-contained `index.html`, with no build step. Two small shared scripts sit in `hub/`: `objectives.js` (the objective wording) and `levels.js` (level badges, mission lists and star counts).
 - Units not taught yet are hidden: tiles have `hidden` in `index.html`, and banks are missing from `SHOWN` in `practice/index.html`. Add `?all` to either address to see everything.
-- `#selftest` on the practice page checks that every question can be answered.
+- `#selftest` on the practice page checks that every question can be answered, whatever its level.
 - On every publish, regenerate the `FILES` list in `sw.js` and change the `CACHE` name, so devices download the new version.
+
+### Label rules
+
+- Missions: add `tier: 'further'`, `'next'` or `'back'`. Leave it out for Core. Keep the missions in the list in level order: Core, Look back, Going further, Next year.
+- `start: true` marks the Core missions suggested for a first lesson (shown in the teacher notes).
+- A tab or part of a tab that is not Core shows its badge and a one-line note at the top (`HUB.note(tier)`).
+- Practice questions: add `tier` in the same way. Every true/false statement needs a `why`.
+- Use only the hub codes and wording from `hub/objectives.js`. No exam-board codes or wording in this repository.

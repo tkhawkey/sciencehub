@@ -1,11 +1,12 @@
-/* Question bank: Adaptations (Cambridge Primary Science 5Be.01, 5Be.03)
+/* Question bank: Adaptations (SC5-ADA-1, SC5-ADA-2)
    Each question is one object. "type" says which activity it is – see the engine (index.html) for the formats.
-   In "sentence" questions the right choice is written first (the engine shuffles them); "answers" lists other true versions. */
+   In "sentence" questions the right choice is written first (the engine shuffles them); "answers" lists other true versions.
+   tier: 'further' = Going further (herds and the Hunt simulator); no tier = Core. */
 window.BANKS = window.BANKS || [];
 (() => {
 const P = f => `../adaptation-studio/photos/${f}`;
 window.BANKS.push({
-  id: 'adaptations', title: 'Adaptations', icon: '🦊', objectives: '5Be.01 · 5Be.03',
+  id: 'adaptations', title: 'Adaptations', icon: '🦊', objectives: 'SC5-ADA-1 · SC5-ADA-2',
   explorer: { name: 'Adaptation Studio', icon: '🦊', href: '../adaptation-studio/index.html' },
   intro: 'How animals and plants are adapted to hot, cold, wet and dry habitats – and how predators and prey are adapted.',
   items: [
@@ -38,7 +39,7 @@ window.BANKS.push({
     explain: 'Rainforests get over 2,000 mm of rain a year. Surprisingly, the Arctic tundra is very dry too – but not as dry as a desert.' },
   { type: 'order', prompt: 'Put these foxes in order of ear size, from biggest to smallest.', first: 'Biggest ears', last: 'Smallest ears',
     items: ['Fennec fox (hot desert)', 'Red fox (woodland)', 'Arctic fox (cold Arctic)'],
-    explain: 'The hotter the habitat, the bigger the ears. Big ears let heat escape; small ears keep heat in.' },
+    explain: 'For these foxes, the hotter the habitat, the bigger the ears. Big ears let heat escape; small ears keep heat in.' },
   { type: 'order', prompt: 'Put the steps of a camouflage investigation in order.', first: 'First', last: 'Last',
     items: ['Predict which colour will be harder to find', 'Time how long it takes to find red bugs', 'Change the bugs to brown', 'Time how long it takes to find brown bugs', 'Compare the times with your prediction'],
     explain: 'Make a prediction first, change one thing, measure, then compare your results with what you predicted.' },
@@ -84,9 +85,15 @@ window.BANKS.push({
       { s: 'Camouflage can help both predators and prey.', a: true, why: 'Prey hide from predators, and predators like the jaguar can creep up on prey unseen.' },
       { s: 'A poison dart frog\'s bright colours help it hide.', a: false, why: 'Its bright colours are a warning to predators: "I am poisonous!"' },
       { s: 'Drip tips help rainwater run off leaves.', a: true, why: 'This stops mould growing on leaves in the wet rainforest.' },
-      { s: 'Living in a big group can help prey animals stay safe.', a: true, why: 'More eyes and ears means danger is spotted sooner.' },
     ],
     explain: 'Some of these surprise people!' },
+  { type: 'tf', tier: 'further', prompt: 'True or false?',
+    statements: [
+      { s: 'Living in a big group can help prey animals stay safe.', a: true, why: 'More eyes and ears means danger is spotted sooner.' },
+      { s: 'In a big herd, a lion finds it easy to pick out one zebra.', a: false, why: 'A crowd of running stripes makes it hard to pick just one.' },
+      { s: 'One hunt in the simulator is enough to be sure what helps.', a: false, why: 'Each hunt has some luck in it. Run lots of hunts and compare.' },
+    ],
+    explain: 'Many prey animals live in groups.' },
 
   // ---------- Sort into groups ----------
   { type: 'sort', prompt: 'Which habitat does each feature help in?', groups: ['🏜️ Desert', '❄️ Arctic', '🌧️ Rainforest'],

@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="../hub/objectives.js"></script><script src="../hub/levels.js"></script>
 <style>
   :root {
     --panelW: 380px;
@@ -289,9 +290,9 @@
   @media (max-width: 760px) { .ideaswrap { gap: 8px; } .ideas2 { gap: 6px; } .ibox { padding: 8px; } .ibox p { font-size: 13.5px; } .ipic { font-size: 32px; } .icard { font-size: 13.5px; padding: 6px 8px; } }
   .panel-close { display: none; }
   @media (max-width: 860px) { .panel-close { display: block; align-self: flex-end; } }
-  /* Lesson (core) missions, and extension missions */
-  .core { background: var(--yellow); color: var(--ink); border-radius: 8px; padding: 1px 7px; font-size: 12.5px; font-weight: 700; white-space: nowrap; }
-  .extn { background: #e8e0ff; color: #5a3fb0; border-radius: 8px; padding: 1px 7px; font-size: 12.5px; font-weight: 700; white-space: nowrap; }
+  /* The Space view says where we are looking from */
+  .view-note { position: absolute; left: 14px; color: rgba(255,255,255,.75); font-size: 13px; pointer-events: none; }
+  body.flat .view-note { display: none; }
 </style>
 <script type="importmap">
 { "imports": {
@@ -314,7 +315,7 @@
     <div class="views" role="group" aria-label="Camera views">
       <button class="btn active" data-view="space">🌌 Space</button>
       <button class="btn" data-view="side">👀 Side</button>
-      <button class="btn" data-view="earth">🔍 <span class="long">Zoom to </span>Earth</button>
+      <button class="btn" data-view="earth" title="Look back – from earlier years">🔍 <span class="long">Zoom to </span>Earth ↩️</button>
       <button class="btn" data-view="sat" aria-label="Satellites">🛰️<span class="long"> Satellites</span></button>
       <button class="btn" data-view="ideas" aria-label="Ideas that changed">🕰️<span class="long"> Ideas that changed</span></button>
     </div>
@@ -358,6 +359,7 @@
     <button class="btn" id="zoomOut" aria-label="Zoom out" title="Zoom out">－</button>
     <button class="btn" id="zoomReset" aria-label="Reset the view" title="Reset the view">🎯</button>
   </div>
+  <div class="view-note" id="viewNote">👆 Looking down from above the North Pole</div>
   <div class="scale-note" id="scaleNote">⚠️ Not to scale! The real Sun is much bigger and much further away.</div>
 </div>
 
@@ -443,7 +445,6 @@
   <div class="modal-box">
     <button class="modal-x" data-act="close" aria-label="Close">✕</button>
     <h2 id="missionsTitle">🚀 Missions</h2>
-    <p class="muted" style="margin-top:-4px">Missions marked <span class="extn">➕ Extension</span> go beyond the Year 5 objectives.</p>
     <p class="muted" style="margin-top:0">Complete each mission to earn a star ⭐</p>
     <div class="mission-list" id="missionList"></div>
     <div class="modal-actions">
@@ -1251,7 +1252,7 @@ $('#bannerClose').onclick = () => {
   state.mission = null; hideBanner();
 };
 
-// ================= Ideas that changed (5SIC.01) =================
+// ================= Ideas that changed (SC5-WLD-1) =================
 // An old idea, a new idea, and evidence cards shown one at a time. After each card the child decides:
 // keep the old idea, or change it? A card that fits both ideas can't settle it; a card that doesn't fit the old idea should change it.
 const freshIdeas = () => ({ i: 0, pick: null, changedAt: null, done: false });
@@ -1294,7 +1295,7 @@ const isFlat = v => FLAT.has(v);
 const narrowFlat = () => matchMedia('(max-width: 860px)').matches;
 const fchoices = (act, opts, chosen, wrongs, right) => opts.map(([v, t]) => `<button class="opt${chosen === v && v === right ? ' done' : wrongs.includes(v) ? ' wrong' : ''}" data-fact="${act}" data-v="${v}"${wrongs.includes(v) || chosen === right ? ' disabled' : ''}>${t}</button>`).join('');
 
-// ---------- Satellites (5ESs.03) ----------
+// ---------- Satellites (SC5-EAR-7) ----------
 // The launcher: Isaac Newton's idea of a cannon on a mountain so tall that it is above the air.
 // Model units: the Earth's radius is 1 and its pull is 1. The mountain top is drawn at 1.12, much too tall, so you can see it.
 const R0 = 1.12, VC = 7.9;   // a launch speed of 7.9 km per second gives a circle at the mountain top
@@ -1310,7 +1311,8 @@ const PLANETS = [['mercury', 'Mercury', '#b8b2a8', 16, [], 'Mercury has <b>no</b
   ['mars', 'Mars', '#d9653b', 18, [['Phobos', 1.6, 40, 5], ['Deimos', 2.6, 62, 4]], 'Mars has <b>two</b> small moons: Phobos and Deimos.'],
   ['jupiter', 'Jupiter', '#d9a774', 46, [['Io', 2, 70, 6], ['Europa', 3, 92, 5], ['Ganymede', 4.4, 118, 8], ['Callisto', 6.5, 146, 7]], 'Jupiter has <b>dozens</b> of moons. Here are its four biggest. New moons are still being found!'],
   ['saturn', 'Saturn', '#e6cf8f', 40, [['Titan', 5, 120, 8], ['', 2.2, 70, 3], ['', 3.2, 88, 3], ['', 7, 148, 4]], 'Saturn has <b>dozens</b> of moons. Its biggest is Titan. New moons are still being found!']];
-const freshSat = () => ({ mode: 'launch', speed: 5, fly: null, got: {}, sort: {}, sortWrong: {}, planet: 'earth', seen: {}, disc: null });
+const freshSat = () => ({ mode: 'launch', speed: 5, fly: null, got: {}, sort: {}, sortWrong: {}, planet: 'earth', seen: {}, disc: null, discWrong: [], earthSat: null });
+const NOMOON_OPTS = [['mv', 'Mercury and Venus'], ['em', 'Earth and Mars'], ['js', 'Jupiter and Saturn']];
 state.sat = freshSat();
 const SAT = {
   // What will happen: launched sideways at the mountain top, the other end of its path is at r0·q ÷ (2 − q), where q = r0·v².
@@ -1379,11 +1381,11 @@ const SAT = {
   ctl() {
     const s = state.sat;
     let o = `<div class="card"><div class="card-title">🛰️ Satellites</div><p>A <b>satellite</b> is an object in space that <b>orbits</b> (goes round and round) a larger object. A <b>moon</b> is a natural satellite that orbits a planet.</p>
-      <div class="stops">${[['launch', '🚀 Launcher'], ['sort', '🔍 Natural or not?'], ['moons', '🪐 Planets and moons']].map(([m, t]) => `<button class="opt${s.mode === m ? ' on' : ''}" data-fact="satmode" data-v="${m}">${t}</button>`).join('')}</div></div>`;
+      <div class="stops">${[['launch', '🚀 Launcher 🔭'], ['sort', '🔍 Natural or not?'], ['moons', '🪐 Planets and moons 🔭']].map(([m, t]) => `<button class="opt${s.mode === m ? ' on' : ''}" data-fact="satmode" data-v="${m}">${t}</button>`).join('')}</div></div>`;
     if (s.mode === 'launch') {
       const f = s.fly, res = f && (f.end || (f.round ? 'orbit' : null));
       const say = { fall: '⬇️ <b>Too slow!</b> Gravity pulls it back down to the Earth.', orbit: '🔄 <b>Just right!</b> It keeps falling towards the Earth, but it moves sideways so fast that it keeps missing. It is in <b>orbit</b>: it is a satellite!', escape: '🚀 <b>Too fast!</b> It escapes the Earth\'s pull and flies off into space.' };
-      o += `<div class="card says${res === 'orbit' ? ' good' : ''}"><div class="card-title">🚀 Launch it sideways</div><p>Imagine a mountain so tall that its top is above the air. Launch a satellite sideways from the top.</p>
+      o += `<div class="card says${res === 'orbit' ? ' good' : ''}">${HUB.note('further')}<div class="card-title">🚀 Launch it sideways</div><p>Imagine a mountain so tall that its top is above the air. Launch a satellite sideways from the top.</p>
         <label class="flabel">Speed: <b>${s.speed} km per second</b> <span class="muted">(${Math.round(s.speed * 3600).toLocaleString('en-GB')} km per hour)</span></label>
         <input type="range" id="satSpeed" min="2" max="13" step=".5" value="${s.speed}" aria-label="Launch speed">
         <div class="navrow" style="margin-top:6px"><button class="btn go" data-fact="satgo">🚀 Launch!</button></div>
@@ -1401,20 +1403,26 @@ const SAT = {
       return o;
     }
     const P = PLANETS.find(p => p[0] === s.planet), nseen = PLANETS.filter(p => s.seen[p[0]]).length;
-    o += `<div class="card"><div class="card-title">🪐 Planets and their moons</div><p class="muted">Tap a planet to see its moons.</p>
+    o += `<div class="card">${HUB.note('further')}<div class="card-title">🪐 Planets and their moons</div><p class="muted">Tap a planet to see its moons. You don't need to remember how many moons each one has.</p>
       <div class="stops">${PLANETS.map(p => `<button class="opt sm${s.planet === p[0] ? ' on' : ''}${s.seen[p[0]] && s.planet !== p[0] ? ' done' : ''}" data-fact="satplanet" data-v="${p[0]}">${p[1]}</button>`).join('')}</div>
       <p class="job">${P[5]}</p><p class="muted">Looked at: ${nseen} of ${PLANETS.length}</p></div>`;
     if (nseen >= PLANETS.length) {
-      const ans = s.disc;
-      o += `<div class="card says${ans ? ' good' : ''}"><div class="card-title">🤔 Think about it</div><p>A satellite orbits a larger object. <b>Is the Earth a satellite of the Sun?</b></p>
-        <div class="navrow">${[['yes', '✅ Yes'], ['no', '❌ No']].map(([v, t]) => `<button class="opt${ans === v ? ' on' : ''}" data-fact="satdisc" data-v="${v}">${t}</button>`).join('')}</div>
-        ${ans ? `<p class="job">${ans === 'yes' ? 'Good thinking!' : 'Think again about the meaning.'} By the meaning of "satellite", <b>yes</b>: the Earth orbits the much larger Sun. But we call the Earth a <b>planet</b>. The word <b>moon</b> is for a natural satellite that orbits a <b>planet</b>.</p>` : ''}</div>`;
+      const ans = s.disc, wrong = s.discWrong || [];
+      o += `<div class="card says${ans ? ' good' : ''}"><div class="card-title">🤔 Think about it</div><p><b>Which planets have no moons at all?</b></p>
+        <div class="navrow">${fchoices('satdisc', NOMOON_OPTS, ans, wrong, 'mv')}</div>
+        ${ans ? '<p class="job">Yes! <b>Mercury</b> and <b>Venus</b> have no moons. They are the two planets closest to the Sun.</p>' : wrong.length ? '<p class="spot">Not quite. Look again at the planets.</p>' : ''}</div>`;
+      if (ans) {
+        const e = s.earthSat;
+        o += `<div class="card"><div class="card-title">🤔 One more to think about</div><p>A satellite orbits a larger object. <b>Is the Earth a satellite of the Sun?</b></p>
+        <div class="navrow">${[['yes', '✅ Yes'], ['no', '❌ No']].map(([v, t]) => `<button class="opt${e === v ? ' on' : ''}" data-fact="sateorth" data-v="${v}">${t}</button>`).join('')}</div>
+        ${e ? `<p class="job">${e === 'yes' ? 'Good thinking!' : 'Think again about the meaning.'} By the meaning of "satellite", <b>yes</b>: the Earth orbits the much larger Sun. But we call the Earth a <b>planet</b>. The word <b>moon</b> is for a natural satellite that orbits a <b>planet</b>.</p>` : ''}</div>`;
+      }
     }
     return o;
   }
 };
 
-// ---------- Ideas that changed (5SIC.01) ----------
+// ---------- Ideas that changed (SC5-WLD-1) ----------
 const geoPic = `<svg viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="44" fill="none" stroke="#c6d0f2" stroke-dasharray="3 4"/><circle cx="60" cy="60" r="26" fill="none" stroke="#c6d0f2" stroke-dasharray="3 4"/><circle cx="60" cy="60" r="11" fill="#3d7bff"/><circle cx="104" cy="60" r="10" fill="#ffc83d"/><circle cx="60" cy="34" r="5" fill="#d9653b"/><circle cx="41" cy="78" r="4" fill="#d9dce6"/></svg>`;
 const helioPic = `<svg viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="44" fill="none" stroke="#c6d0f2" stroke-dasharray="3 4"/><circle cx="60" cy="60" r="26" fill="none" stroke="#c6d0f2" stroke-dasharray="3 4"/><circle cx="60" cy="60" r="13" fill="#ffc83d"/><circle cx="104" cy="60" r="7" fill="#3d7bff"/><circle cx="60" cy="34" r="5" fill="#e8c27a"/><circle cx="111" cy="54" r="2.5" fill="#d9dce6"/></svg>`;
 const IDEA = {
@@ -1458,7 +1466,8 @@ const FACT = {
   satgo() { SAT.launch(); },
   satsort(el) { const s = state.sat, id = el.dataset.id, x = SATS.find(y => y[0] === id); if (x[3] === el.dataset.v) s.sort[id] = true; else s.sortWrong[id] = true; renderFlat(); },
   satplanet(el) { state.sat.planet = el.dataset.v; state.sat.seen[el.dataset.v] = true; renderFlat(); },
-  satdisc(el) { state.sat.disc = el.dataset.v; renderFlat(); },
+  satdisc(el) { const s = state.sat; if (el.dataset.v === 'mv') s.disc = 'mv'; else if (!s.discWrong.includes(el.dataset.v)) s.discWrong.push(el.dataset.v); renderFlat(); },
+  sateorth(el) { state.sat.earthSat = el.dataset.v; renderFlat(); },
   ideapick(el) { IDEAS.pick(el.dataset.v); renderFlat(); },
   ideanext() { IDEAS.next(); renderFlat(); },
   ideareset() { state.ideas = freshIdeas(); renderFlat(); }
@@ -1476,7 +1485,7 @@ function startSetup({ pin = 'bratislava', tilt = REAL_TILT, day, view } = {}) {
   if (view && state.view !== view) goView(view);
 }
 const MISSIONS = [
-  { id: 'summer', core: true, icon: '☀️', title: 'Summer in Slovakia',
+  { id: 'summer', start: true, icon: '☀️', title: 'Summer in Slovakia',
     task: 'Grab the Earth and drag it around the Sun until it is <b>summer in Slovakia</b>.',
     hint: 'Watch the red stick (the North Pole). Summer comes when the top half of the Earth leans <b>towards</b> the Sun.',
     setup: () => startSetup({ day: 14, view: 'space' }),
@@ -1488,61 +1497,61 @@ const MISSIONS = [
     setup: () => startSetup({ day: 59 }),
     check: () => { const mx = Math.max(...yearDL); return yearDL[Math.floor(state.day)] >= mx - 0.004; },
     win: () => `That's around <b>21 June</b> – the <b>summer solstice</b>. Slovakia gets about <b>${fmtHours(Math.max(...yearDL))}</b> of daylight!` },
-  { id: 'shadow', icon: '🕵️', title: 'Shadow detective',
-    task: 'Look at <b>The Sun in the sky</b> picture. Find the day when the midday shadow in Slovakia is the <b>longest</b>.',
-    hint: 'Long shadows happen when the Sun is low in the sky. When is the Sun at its lowest?',
-    setup: () => { startSetup({ day: 150 }); setSkyMode('shadow'); openPanelMobile(); },
-    check: () => { const mn = Math.min(...yearAlt); return yearAlt[Math.floor(state.day)] <= mn + 0.03; },
-    win: () => `Around <b>21 December</b> the midday Sun is only about <b>${Math.round(Math.min(...yearAlt))}°</b> high, so shadows are super long. That's the <b>winter solstice</b>! ❄️` },
   { id: 'closest', icon: '🤔', title: 'Closer = hotter?',
     task: 'Lots of people think summer happens because the Earth is <b>closer</b> to the Sun. Find the day when the Earth is <b>closest</b> to the Sun!',
     hint: 'Watch the <b>Distance from the Sun</b> box in the info panel. The number gets smaller as the Earth gets closer.',
     setup: () => { startSetup({ day: 171 }); openPanelMobile(); },
     check: () => dayGap(state.day, 3.5) <= 3,
     win: () => 'Surprise! The Earth is closest to the Sun in <b>early January</b> – that\'s <b>winter</b> in Slovakia! So being closer does <b>not</b> make summer. It\'s the <b>tilt</b> that causes the seasons. 🎉' },
-  { id: 'christmas', core: true, icon: '🎄', title: 'Christmas in Australia',
+  { id: 'christmas', start: true, icon: '🎄', title: 'Christmas in Australia',
     task: 'Move your pin to <b>Sydney, Australia</b>, then set the date to <b>Christmas Day (25 December)</b>. What season is it there?',
     hint: 'Choose Sydney from the place menu in the info panel. Then use the date slider.',
     setup: () => startSetup({ day: 280 }),
     check: () => state.pin.lat < -15 && dayGap(state.day, 358.5) <= 2,
     win: () => 'It\'s <b>SUMMER</b> in Australia at Christmas! 🏖️ When the northern half of the Earth leans away from the Sun, the southern half leans <b>towards</b> it.' },
-  { id: 'midnight', icon: '🌞', title: 'The Midnight Sun',
-    task: 'Find a place and a day where the Sun <b>never sets</b> – 24 hours of daylight!',
-    hint: 'Try <b>Tromsø</b> in Norway or the <b>North Pole</b>, in the summer.',
-    setup: () => startSetup({ day: 30 }),
-    check: () => atPin().dl >= 23.99,
-    win: () => 'Near the poles in summer, the Sun goes round and round the sky without setting. This is called the <b>Midnight Sun</b>. But in winter they get weeks of darkness! 🌑' },
   { id: 'notilt', icon: '🧍', title: 'A world with no seasons',
     task: 'What if the Earth stood up straight? Change the <b>tilt to 0°</b> and press play to watch what happens.',
     hint: 'Use the <b>Tilt</b> slider at the bottom of the screen.',
     setup: () => startSetup({ view: 'side' }),
     check: () => state.tilt <= 0.5,
-    win: () => 'With no tilt, every place gets <b>12 hours of daylight every day</b> of the year. No summer and no winter – <b>no seasons</b> at all!' },
-  { id: 'orbit', core: true, icon: '🛰️', title: 'Into orbit!',
-    task: 'In <b>Satellites</b>, launch a satellite from the mountain top so that it goes into <b>orbit</b>.',
-    hint: 'Too slow and it falls back down. Too fast and it flies off into space. Try a speed in between.',
-    setup: () => { state.sat = freshSat(); goView('sat'); },
-    check: () => !!state.sat.got.orbit,
-    win: () => 'Just right! It keeps falling towards the Earth, but it moves sideways so fast that it keeps missing. That is an <b>orbit</b>. 🛰️' },
+    win: () => 'With no tilt, every place gets <b>12 hours of daylight every day</b> of the year. No summer and no winter – <b>no seasons</b> at all! Places would still be warmer or colder because of where they are, but they would not have seasons.' },
   { id: 'satsort', icon: '🔍', title: 'Natural or made by people?',
     task: 'In <b>Satellites</b>, choose <b>Natural or not?</b> and sort all <b>6</b> satellites.',
     hint: 'Was it made by people? Then it is an artificial satellite.',
     setup: () => { state.sat = { ...freshSat(), mode: 'sort' }; goView('sat'); },
     check: () => SATS.every(x => state.sat.sort[x[0]]),
     win: () => 'The Moon and Phobos are <b>natural</b> satellites: moons. The space station, GPS and weather satellites and the Hubble telescope were <b>made by people</b>.' },
-  { id: 'moons', icon: '🪐', title: 'Moon spotter',
-    task: 'In <b>Satellites</b>, choose <b>Planets and moons</b>. Look at all <b>6</b> planets, then answer the question at the end.',
-    hint: 'Tap each planet. Which ones have no moons at all?',
-    setup: () => { state.sat = { ...freshSat(), mode: 'moons', seen: { earth: true } }; goView('sat'); },
-    check: () => PLANETS.every(p => state.sat.seen[p[0]]) && !!state.sat.disc,
-    win: () => 'Mercury and Venus have no moons. The Earth has one, Mars has two, and Jupiter and Saturn have dozens. A moon is a <b>natural satellite</b> that orbits a planet.' },
   { id: 'ideas', icon: '🕰️', title: 'Ideas that changed',
     task: 'In <b>Ideas that changed</b>, look at all the evidence. Does everything go round the Earth?',
     hint: 'Some evidence fits both ideas. Some evidence does not fit the old idea at all.',
     setup: () => { state.ideas = freshIdeas(); goView('ideas'); },
     check: () => state.ideas.done,
     win: () => 'The Earth and the planets go round the Sun. Scientists changed their idea because of new <b>evidence</b>, like Galileo\'s moons of Jupiter. 🔭' },
-  { id: 'supertilt', ext: true, icon: '🤸', title: 'Super-tilt!',
+  { id: 'shadow', tier: 'back', icon: '🕵️', title: 'Shadow detective',
+    task: 'Look at <b>The Sun in the sky</b> picture. Find the day when the midday shadow in Slovakia is the <b>longest</b>.',
+    hint: 'Long shadows happen when the Sun is low in the sky. When is the Sun at its lowest?',
+    setup: () => { startSetup({ day: 150 }); setSkyMode('shadow'); openPanelMobile(); },
+    check: () => { const mn = Math.min(...yearAlt); return yearAlt[Math.floor(state.day)] <= mn + 0.03; },
+    win: () => `Around <b>21 December</b> the midday Sun is only about <b>${Math.round(Math.min(...yearAlt))}°</b> high, so shadows are super long. That's the <b>winter solstice</b>! ❄️` },
+  { id: 'midnight', tier: 'further', icon: '🌞', title: 'The Midnight Sun',
+    task: 'Find a place and a day where the Sun <b>never sets</b> – 24 hours of daylight!',
+    hint: 'Try <b>Tromsø</b> in Norway or the <b>North Pole</b>, in the summer.',
+    setup: () => startSetup({ day: 30 }),
+    check: () => atPin().dl >= 23.99,
+    win: () => 'Near the poles in summer, the Sun goes round and round the sky without setting. This is called the <b>Midnight Sun</b>. But in winter they get weeks of darkness! 🌑' },
+  { id: 'orbit', tier: 'further', icon: '🛰️', title: 'Into orbit!',
+    task: 'In <b>Satellites</b>, launch a satellite from the mountain top so that it goes into <b>orbit</b>.',
+    hint: 'Too slow and it falls back down. Too fast and it flies off into space. Try a speed in between.',
+    setup: () => { state.sat = freshSat(); goView('sat'); },
+    check: () => !!state.sat.got.orbit,
+    win: () => 'Just right! It keeps falling towards the Earth, but it moves sideways so fast that it keeps missing. That is an <b>orbit</b>. 🛰️' },
+  { id: 'moons', tier: 'further', icon: '🪐', title: 'Moon spotter',
+    task: 'In <b>Satellites</b>, choose <b>Planets and moons</b>. Look at all <b>6</b> planets, then answer the question at the end.',
+    hint: 'Tap each planet. Which ones have no moons at all?',
+    setup: () => { state.sat = { ...freshSat(), mode: 'moons', seen: { earth: true } }; goView('sat'); },
+    check: () => PLANETS.every(p => state.sat.seen[p[0]]) && !!state.sat.disc,
+    win: () => 'Mercury and Venus have <b>no</b> moons. All the other planets here have at least one. A moon is a <b>natural satellite</b> that orbits a planet.' },
+  { id: 'supertilt', tier: 'further', icon: '🤸', title: 'Super-tilt!',
     task: 'Change the <b>tilt</b> and the <b>date</b> so that <b>Bratislava</b> gets 24 hours of daylight!',
     hint: 'You need a BIG tilt – more than 40°. Then find summer.',
     setup: () => startSetup({ day: 171 }),
@@ -1551,14 +1560,10 @@ const MISSIONS = [
 ];
 function updateStars() { $('#starCount').textContent = `${state.done.length}/${MISSIONS.length} ⭐`; }
 function renderMissionList() {
-  const list = $('#missionList'); list.innerHTML = '';
-  MISSIONS.forEach((ms, i) => {
-    const b = document.createElement('button');
-    b.className = `mission-item${state.done.includes(ms.id) ? ' done' : ''}`;
-    b.innerHTML = `<span class="em">${ms.icon}</span><span class="t">${i + 1}. ${ms.title}</span>${ms.ext ? '<span class="extn">➕ Extension</span>' : ''}<span class="star">⭐</span>`;
-    b.onclick = () => { $('#missionsModal').classList.add('hidden'); startMission(i); };
-    list.appendChild(b);
-  });
+  const list = $('#missionList');
+  list.innerHTML = HUB.starLine(MISSIONS, state.done) + HUB.missionList(MISSIONS, (ms, i) =>
+    `<button class="mission-item${state.done.includes(ms.id) ? ' done' : ''}" data-mi="${i}"><span class="em">${ms.icon}</span><span class="t">${i + 1}. ${ms.title}</span>${HUB.badge(HUB.tier(ms))}<span class="star">⭐</span></button>`);
+  list.querySelectorAll('[data-mi]').forEach(b => b.onclick = () => { $('#missionsModal').classList.add('hidden'); startMission(+b.dataset.mi); });
 }
 function startMission(i) {
   if (state.picking) setPicking(false);
@@ -1569,6 +1574,8 @@ function startMission(i) {
 function showMissionBanner() {
   const ms = MISSIONS[state.mission];
   showBanner(`Mission ${state.mission + 1} of ${MISSIONS.length}: ${ms.title}`, ms.task, ms.hint);
+  const t = HUB.tier(ms);
+  if (t !== 'core') $('#bannerKicker').insertAdjacentHTML('beforeend', ' ' + HUB.badge(t));
 }
 function checkMission(dt) {
   if (state.mission == null || state.picking) return;
@@ -1656,7 +1663,10 @@ function closePanelMobile() { panel.classList.remove('open'); }
 $('#panelToggle').onclick = () => panel.classList.contains('open') ? closePanelMobile() : openPanelMobile();
 $('#panelClose').onclick = closePanelMobile;
 // ================= Help, real life and "the science" for each camera view =================
-const TEACHERS_ALSO = '<p><b>Also:</b> <b>5TWSm.01</b> Know that a model presents an object, process or idea in a way that shows some of the important features.</p>';
+// Teacher notes: objectives come from ../hub/objectives.js. Every view also uses models (SC5-SKL-19).
+const TEACHERS_ALSO = () => '<p><b>Also:</b></p>' + HUB.objList(['SC5-SKL-19']);
+// The Zoom to Earth view (day and night) is Look back: children met day and night in earlier years.
+const VIEW_TIER = { earth: 'back' };
 const HELP = {
   space: {
     title: '🌌 Space view',
@@ -1667,13 +1677,13 @@ const HELP = {
       'Watch the red stick (the <b>axis</b>). Which way does it point?',
       'Open the info panel to see the <b>season</b> at your pin.',
     ],
-    look: 'Which way does the Earth go round: clockwise or anticlockwise?',
-    teachers: '<p><b>5ESs.01</b> Describe the orbit of the Earth around the Sun (limited to slight ellipse, anticlockwise direction and the duration).</p>',
+    look: 'Seen from above the North Pole, which way does the Earth go round: clockwise or anticlockwise?',
+    teachers: ['SC5-EAR-5'],
     card: '🌌 Space view: the Earth\'s orbit',
-    science: 'The Earth travels <b>anticlockwise</b> around the Sun. One trip takes one <b>year</b> (365 days). Its path is called an <b>orbit</b>. It is a slightly squashed circle: an <b>ellipse</b>.',
+    science: 'The Earth travels <b>anticlockwise</b> around the Sun (seen from above the North Pole). One trip takes one <b>year</b>: about <b>365¼ days</b>. The extra quarter days add up to the extra day in a leap year. Its path is called an <b>orbit</b>. It is a slightly squashed circle: an <b>ellipse</b>.',
     real: [
       ['⭕', 'The orbit is drawn more stretched than it really is. The real orbit is very nearly a <b>circle</b>.'],
-      ['⏱️', 'Here a whole year goes by in about a minute. In real life it takes <b>365 days</b>.'],
+      ['⏱️', 'Here a whole year goes by in about a minute. In real life it takes about <b>365¼ days</b>.'],
     ],
   },
   side: {
@@ -1683,10 +1693,11 @@ const HELP = {
       'Look at the red stick. It shows the Earth\'s <b>tilt</b>.',
       'Drag the date slider to <b>June</b>, then to <b>December</b>.',
       'Which half of the Earth leans <b>towards</b> the Sun each time?',
+      'Watch the red stick all year. It always points the same way in space, towards the North Star.',
       'Try the <b>Tilt</b> slider. What happens at 0°?',
     ],
     look: 'Check the season for the northern and southern halves in the info panel.',
-    teachers: '<p><b>5ESs.02</b> Describe how the tilt of the Earth can create different seasons in different places.</p>',
+    teachers: ['SC5-EAR-6'],
     card: '👀 Side view: the tilt',
     science: 'The Earth\'s <b>axis</b> is <b>tilted</b>, and the tilt causes the <b>seasons</b>. When the northern half leans <b>towards</b> the Sun, it has <b>summer</b>. At the same time the southern half leans away and has <b>winter</b>. The seasons are <b>opposite</b>.',
     real: [
@@ -1703,7 +1714,7 @@ const HELP = {
       'Change the date. Check <b>The Sun in the sky</b> card.',
     ],
     look: 'Pinch or scroll to zoom. Drag to look around.',
-    teachers: '<p><b>5ESs.02</b> Describe how the tilt of the Earth can create different seasons in different places.</p>',
+    teachers: ['SC5-EAR-6'],
     card: '🔍 Zoom to Earth: day and night',
     science: 'The Earth <b>spins</b> once a day. The side facing the Sun has <b>day</b>. The other side has <b>night</b>. When your half of the Earth leans towards the Sun, the Sun climbs higher and the days are longer.',
     real: [
@@ -1720,7 +1731,7 @@ const HELP = {
       '<b>Planets and moons</b>: tap each planet to see its moons.',
     ],
     look: 'A satellite is always falling, but it moves sideways so fast that it keeps missing the Earth!',
-    teachers: '<p><b>5ESs.03</b> Know that a satellite is an object in space that orbits a larger object and a moon is a natural satellite that orbits a planet.</p>',
+    teachers: ['SC5-EAR-7'],
     card: '🛰️ Satellites',
     science: 'A <b>satellite</b> is an object in space that <b>orbits</b> a larger object. A <b>moon</b> is a <b>natural</b> satellite that orbits a planet. Satellites made by people are <b>artificial</b> satellites.',
     real: [
@@ -1738,7 +1749,7 @@ const HELP = {
       'Decide: keep the old idea, or change it?',
     ],
     look: 'Some evidence fits both ideas. It can\'t tell you which one is right.',
-    teachers: '<p><b>5SIC.01</b> Describe how scientific knowledge and understanding changes over time through the use of evidence gained by enquiry.</p>',
+    teachers: ['SC5-WLD-1'],
     card: '🕰️ Ideas that changed',
     science: 'Scientists change their ideas when new <b>evidence</b> appears. People once thought everything went round the Earth. Evidence showed that the Earth and the planets go round the Sun.',
     real: [
@@ -1756,16 +1767,26 @@ const anyModalOpen = () => [...document.querySelectorAll('.modal')].some(m => !m
 function showHelp(v = state.view) {
   const h = HELP[v];
   $('#helpBody').innerHTML =
-    `<h2 id="helpTitle">${h.title}</h2>` +
+    `<h2 id="helpTitle">${h.title}</h2>` + HUB.note(VIEW_TIER[v]) +
     (firstHelp ? '<p class="help-welcome">🌍 Welcome to Seasons Explorer!</p>' : '') +
     `<h3 class="help-sec">🔬 The big question</h3><p class="help-q">${h.question}</p>` +
     `<h3 class="help-sec">👆 What to do</h3><ol class="help-steps">${h.steps.map(s => `<li>${s}</li>`).join('')}</ol>` +
     (h.look ? `<p class="help-look"><b>💡 Look out for:</b> ${h.look}</p>` : '') +
     '<p class="help-mission">🚀 Try the Missions to win stars!</p>' +
-    `<details class="teachers"><summary>For teachers</summary>${h.teachers}${TEACHERS_ALSO}</details>`;
+    `<details class="teachers"><summary>For teachers</summary>${HUB.objList(h.teachers)}${TEACHERS_ALSO()}${missionNotes()}</details>`;
   firstHelp = false;
   helpSeen.add(v);
   $('#helpModal').classList.remove('hidden');
+}
+// "Good missions to start with" (start: true) and the missions that are not Core, by level
+function missionNotes() {
+  const num = m => `${MISSIONS.indexOf(m) + 1} (${m.title})`;
+  const start = MISSIONS.filter(m => m.start).map(num);
+  const lines = ['back', 'further', 'next'].map(t => {
+    const ms = MISSIONS.filter(m => HUB.tier(m) === t);
+    return ms.length ? `${HUB.TIERS[t].em} ${HUB.TIERS[t].name}: ${ms.map(num).join(', ')}.` : '';
+  }).filter(Boolean);
+  return `<p>Good missions to start with: ${start.join(', ')}.</p>` + (lines.length ? `<p>${lines.join(' ')}</p>` : '');
 }
 function autoHelp(v) {
   if (NO_HELP || helpSeen.has(v) || anyModalOpen()) return;
@@ -1780,7 +1801,8 @@ function showModel() {
 }
 function updateViewCard(v) {
   $('#viewTitle').textContent = HELP[v].card;
-  $('#viewScience').innerHTML = `<b>🔬 The science</b>${HELP[v].science}`;
+  $('#viewScience').innerHTML = `${HUB.note(VIEW_TIER[v])}<b>🔬 The science</b>${HELP[v].science}`;
+  $('#viewNote').style.display = v === 'space' ? '' : 'none';
 }
 function onViewChanged(v) { updateViewCard(v); autoHelp(v); }
 const NO_HELP = /(^|[#&])nohelp=1(&|$)/.test(location.hash);
@@ -1813,6 +1835,7 @@ function resize() {
   fitCamera();
   camera.updateProjectionMatrix();
   $('#scaleNote').style.bottom = `${$('.dock').offsetHeight + 16}px`;
+  $('#viewNote').style.bottom = `${$('.dock').offsetHeight + (matchMedia('(max-width: 640px)').matches ? 16 : 36)}px`;
   refreshUI(true);
   // Re-frame the view after a real size change (e.g. rotating a tablet)
   if (lastSize && (Math.abs(w - lastSize[0]) > 40 || Math.abs(h - lastSize[1]) > 40)) goView(state.view);

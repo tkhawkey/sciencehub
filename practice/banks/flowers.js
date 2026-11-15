@@ -1,8 +1,9 @@
-/* Question bank: Flowers and flowering plants (Cambridge Primary Science 5Bs.01, 5Bs.02, 5Bs.03, 5Bp.02, 5Bp.03, 5Be.02)
+/* Question bank: Flowers and flowering plants (Year 5 Science Hub SC5-PLA-1, SC5-PLA-2, SC5-PLA-3, SC5-PLA-4, SC5-PLA-5, SC5-PLA-7)
    Each question is one object. "type" says which activity it is – see the engine (index.html) for the formats.
    In "sentence" questions the right choice is written first (the engine shuffles them).
    Facts match the Flower Lab explorer: only the Year 5 flower parts (petals, sepals, anthers, filaments, stamens, stigma, style,
    carpel, ovary); jobs only for petals, anthers, stigma and ovary (plus sepals); a fruit is the part that holds the seeds.
+   tier (no tier = Core): 'further' = flowers for moths (Flower Lab's "Night shift" mission).
    The flower drawing is copied from Flower Lab. Diagrams are drawn here (600 × 360). Label positions are in % across and down the diagram. */
 window.BANKS = window.BANKS || [];
 (() => {
@@ -30,7 +31,7 @@ const at = (deg, r) => pct(X0 + Math.sin(deg * Math.PI / 180) * r * S, Y0 - Math
 const FLOWERDG = `<svg class="dg" viewBox="0 0 600 360" role="img"><rect width="600" height="360" rx="16" fill="#eef4fb"/>${FLOWER(X0, Y0, S)}</svg>`;
 
 window.BANKS.push({
-  id: 'flowers', title: 'Flowers and flowering plants', icon: '🌸', objectives: '5Bs.01 · 5Bs.02 · 5Bs.03 · 5Bp.02 · 5Bp.03 · 5Be.02',
+  id: 'flowers', title: 'Flowers and flowering plants', icon: '🌸', objectives: 'SC5-PLA-1 · SC5-PLA-2 · SC5-PLA-3 · SC5-PLA-4 · SC5-PLA-5 · SC5-PLA-7',
   explorer: { name: 'Flower Lab', icon: '🌸', href: '../flower-lab/index.html' },
   intro: 'Plants that flower and plants that don\'t, the parts of a flower and their jobs, pollination, fruit, and the life cycle.',
   items: [
@@ -66,12 +67,15 @@ window.BANKS.push({
     items: [{ t: 'Grass', em: ph('grass-flower.jpg'), g: 0 }, { t: 'Oak tree', em: ph('oak-catkins.jpg'), g: 0 }, { t: 'Cactus', em: ph('cactus-flower.jpg'), g: 0 }, { t: 'Apple tree', em: ph('apple-blossom.jpg'), g: 0 },
       { t: 'Moss', em: ph('moss-capsules.jpg'), g: 1 }, { t: 'Fern', em: ph('fern-spores.jpg'), g: 1 }, { t: 'Pine tree', em: ph('pine-cone.jpg'), g: 1 }],
     explain: 'Grass, oak trees and cacti do flower, but their flowers can be easy to miss. Mosses and ferns make spores. Pine trees make seeds in cones, but no flowers.' },
-  { type: 'sort', prompt: 'Which pollinator is each flower best for?', groups: ['🐝 Bee', '🦋 Butterfly', '🌙 Moth', '🌬️ Wind'],
+  { type: 'sort', prompt: 'Which pollinator is each flower best for?', groups: ['🐝 Bee', '🦋 Butterfly', '🌬️ Wind'],
     items: [{ t: 'Blue, sweet scent, nectar, open in the day', g: 0 }, { t: 'Yellow, big petals to land on, sweet scent', g: 0 },
       { t: 'Bright red, a long tube with nectar at the bottom', g: 1 }, { t: 'Bright orange, a long tube, open in the day', g: 1 },
-      { t: 'White, strong scent in the evening', g: 2 }, { t: 'Pale, opens at night, nectar', g: 2 },
-      { t: 'No petals, dangling anthers, lots of light pollen', g: 3 }, { t: 'Small, dull, no scent, feathery stigma outside', g: 3 }],
-    explain: 'Bees see blue, purple and yellow well, but red poorly. Butterflies have long tongues for long tubes. Moths fly at night, so pale flowers and strong scent help. The wind can\'t see or smell, so wind flowers don\'t need bright petals.' },
+      { t: 'No petals, dangling anthers, lots of light pollen', g: 2 }, { t: 'Small, dull, no scent, feathery stigma outside', g: 2 }],
+    explain: 'Bees see blue, purple and yellow well, but red poorly. Butterflies have long tongues for long tubes. The wind can\'t see or smell, so wind flowers don\'t need bright petals.' },
+  { type: 'sort', tier: 'further', prompt: 'Is each flower best for a bee or a moth?', groups: ['🐝 Bee', '🌙 Moth'],
+    items: [{ t: 'Blue, sweet scent, open in the day', em: '💙', g: 0 }, { t: 'Yellow, big petals to land on', em: '💛', g: 0 },
+      { t: 'White, strong scent in the evening', em: '🤍', g: 1 }, { t: 'Pale, opens at night, nectar', em: '🌙', g: 1 }],
+    explain: 'Moths fly at night. Pale petals show up in the dark, and a strong scent helps them find the flower.' },
   { type: 'sort', prompt: 'To a scientist, is it a fruit?', groups: ['🍅 Fruit', '🥕 Not a fruit'],
     items: [{ t: 'Tomato', em: '🍅', g: 0 }, { t: 'Pepper', em: '🫑', g: 0 }, { t: 'Cucumber', em: '🥒', g: 0 }, { t: 'Pea pod', em: ph('pea-pod.jpg'), g: 0 }, { t: 'Apple', em: '🍎', g: 0 },
       { t: 'Carrot', em: '🥕', g: 1 }, { t: 'Potato', em: '🥔', g: 1 }, { t: 'Lettuce', em: '🥬', g: 1 }, { t: 'Broccoli', em: '🥦', g: 1 }],
@@ -123,7 +127,7 @@ window.BANKS.push({
   { type: 'sentence', prompt: 'Build a true sentence.',
     parts: ['Wind-pollinated flowers have', ['small, dull petals', 'big, bright petals'], 'and', ['no nectar', 'lots of nectar'], '.'],
     explain: 'The wind can\'t see or drink, so bright petals and nectar would be wasted.' },
-  { type: 'sentence', prompt: 'Build a true sentence.',
+  { type: 'sentence', tier: 'further', prompt: 'Build a true sentence.',
     parts: ['Flowers for moths are often', ['pale', 'red'], 'and smell strongly in the', ['evening', 'morning'], '.'],
     explain: 'Moths fly at night. Pale petals show up in the dark, and a strong scent helps them find the flower.' },
   { type: 'sentence', prompt: 'Build a true sentence.',

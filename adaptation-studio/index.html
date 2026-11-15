@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="../hub/objectives.js"></script><script src="../hub/levels.js"></script>
 <style>
   /* ================= Shared look (matches Seasons Explorer) ================= */
   :root {
@@ -239,9 +240,8 @@
     .banner { width: calc(100% - 20px); top: auto; bottom: 8px; }
     .bubble { max-width: 240px; font-size: 14.5px; }
   }
-  /* Lesson (core) missions, and extension missions */
-  .core { background: var(--yellow); color: var(--ink); border-radius: 8px; padding: 1px 7px; font-size: 12.5px; font-weight: 700; white-space: nowrap; }
-  .extn { background: #e8e0ff; color: #5a3fb0; border-radius: 8px; padding: 1px 7px; font-size: 12.5px; font-weight: 700; white-space: nowrap; }
+  /* Level badges come from ../hub/levels.js; keep them in normal case inside the banner */
+  .banner .kicker .lvl { text-transform: none; letter-spacing: 0; margin-left: 4px; }
 </style>
 <script type="importmap">
 { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/" },
@@ -321,7 +321,7 @@
 
 <script type="module">
 /* =====================================================================
-   Adaptation Studio v2 – Year 5 (Cambridge Primary Science 5Be.01, 5Be.03)
+   Adaptation Studio v2 – Year 5 (SC5-ADA-1, SC5-ADA-2)
    Sections: utilities · habitats · features · gauges · living things ·
    3D world (scenes, creature) · 2D plants · views · missions · start
    ===================================================================== */
@@ -1320,7 +1320,8 @@ function viewHabitats() {
       const n = o.features.filter(f => state.seen.has(`${o.id}:${f.id}`)).length;
       return `<button class="thumb" data-act="org" data-id="${o.id}"><img src="photos/${o.photo}" alt="" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'em',textContent:'${o.em}'}))"><span>${esc(o.name)}</span><small>${n ? `✓ ${n} of ${o.features.length}` : `${o.features.length} features`}</small></button>`;
     }).join('')}</div>`;
-    $('#drawer').innerHTML = `<div class="card"><h2>${HABITATS[h].icon} ${HABITATS[h].name}</h2><div class="science"><b>🔬 The science</b>Living things are <span class="term">adapted</span> to their <span class="term">habitat</span>. They have features that help them live there.</div>${HABITATS[h].facts.map(f => `<p>${f}</p>`).join('')}</div>
+    $('#drawer').innerHTML = `<div class="card"><p style="margin-top:0">An <span class="term">adaptation</span> is a feature that helps a living thing survive where it lives. Living things don't change their bodies when they move. A camel can't grow thick fur in the Arctic.</p></div>
+      <div class="card"><h2>${HABITATS[h].icon} ${HABITATS[h].name}</h2><div class="science"><b>🔬 The science</b>Living things are <span class="term">adapted</span> to their <span class="term">habitat</span>. They have features that help them live there.</div>${HABITATS[h].facts.map(f => `<p>${f}</p>`).join('')}</div>
       <div class="card"><p>Tap a living thing. Each one is <span class="term">adapted</span> to ${HABITATS[h].the}.</p></div>`;
     return;
   }
@@ -1477,6 +1478,7 @@ function viewEyes() {
     <div class="opts" style="margin-top:10px"><button class="opt" data-act="eyepreset" data-val="15">🦉 Owl</button><button class="opt" data-act="eyepreset" data-val="80">🐇 Rabbit</button></div></div>
     <div class="card" id="eyeReadout">${eyeReadout(state.eyeAngle)}</div>
     <div class="science"><b>🔬 The science</b><b>Prey</b> need a <b>wide view</b> to spot danger. <b>Predators</b> use <b>both eyes</b> to judge distance before they pounce.</div>
+    <div class="card"><p style="margin:0">This is a pattern, not a rule. Owls hunt with forward eyes, but some predators have eyes more to the sides.</p></div>
     <div class="card"><h3>✏️ Check</h3>${q('rabbit', 'Rabbits are prey. Where are their eyes?', 'sides')}${q('owl', 'Owls are predators. Where are their eyes?', 'front')}</div>`;
   afterRender = () => $('#eyeSlider').addEventListener('input', e => {
     state.eyeAngle = +e.target.value; $('#eyeSvg').outerHTML = eyesSVG(state.eyeAngle).svg; $('#eyeReadout').innerHTML = eyeReadout(state.eyeAngle);
@@ -1596,7 +1598,7 @@ function endHunt() {
 }
 
 // ---------- Predator & prey: the umbrella for face-offs, the hunt simulator, eyes and camouflage ----------
-const PP_TABS = [['faceoff', '⚔️ Face-offs'], ['hunt', '🦓 Hunt simulator'], ['eyes', '👀 Eyes'], ['camo', '🦎 Camouflage']];
+const PP_TABS = [['faceoff', '⚔️ Face-offs'], ['hunt', '🦓 Hunt simulator 🔭'], ['eyes', '👀 Eyes'], ['camo', '🦎 Camouflage']];
 const PP_VIEWS = PP_TABS.map(t => t[0]);
 function ppBar() {
   $('#habbar').style.left = '10px';
@@ -1777,7 +1779,7 @@ function viewHunt() {
   $('#flat').innerHTML = `<div class="camo-wrap"><canvas id="huntCanvas" aria-label="A lion creeping up on zebras, seen from above"></canvas>
     <div class="camo-hud"><span id="huntMsg">${huntRun ? 'The lion is creeping closer…' : 'Press ▶ Watch a hunt'}</span></div></div>`;
   const fmt = { more: 'More escapes', fewer: 'Fewer escapes', same: 'About the same' };
-  $('#drawer').innerHTML = `<div class="card"><h2>🦓 Hunt simulator</h2><p>What helps zebras escape from a lion?</p><p class="muted">A lion must get very close before it pounces. If a zebra <b>spots</b> it in time, the herd runs away.</p></div>
+  $('#drawer').innerHTML = `<div class="card">${HUB.note('further')}<h2>🦓 Hunt simulator</h2><p>What helps zebras escape from a lion?</p><p class="muted">A lion must get very close before it pounces. If a zebra <b>spots</b> it in time, the herd runs away.</p><p>Each hunt has some luck in it. Run lots of hunts and compare, rather than trusting one.</p></div>
     <div class="card"><h3>Set up the hunt</h3>${HUNT_SETTINGS.map(([k, name, opts]) => `<div class="gname">${name}</div><div class="opts">${opts.map(([v, t]) => `<button class="opt ${H.set[k] === v ? 'on' : ''}" data-act="hset" data-k="${k}" data-v="${v}">${t}</button>`).join('')}</div>`).join('')}</div>
     <div class="card"><button class="btn primary" data-act="hwatch" style="width:100%">▶ Watch a hunt</button>
       ${H.batches.length ? `<h3 style="margin-top:10px">Predict 🤔</h3><p class="muted" style="margin-top:0">Compared with your last 10 hunts, will these settings give…</p><div class="opts">${Object.entries(fmt).map(([v, t]) => `<button class="opt ${H.pred === v ? 'on' : ''}" data-act="hpred" data-v="${v}">${t}</button>`).join('')}</div>` : ''}
@@ -1866,11 +1868,11 @@ function huntBatch() {
 
 // ================= Missions =================
 const MISSIONS = [
-  { id: 'detective', core: true, icon: '🔍', title: 'Desert detective', task: 'Find <b>4 features</b> of desert animals or plants.', hint: 'Tap a living thing, then tap its features.',
+  { id: 'detective', start: true, icon: '🔍', title: 'Desert detective', task: 'Find <b>4 features</b> of desert animals or plants.', hint: 'Tap a living thing, then tap its features.',
     setup() { state.view = 'habitats'; state.hab = 'desert'; state.orgId = null; },
     on: ev => ev === 'feat' && [...state.seen].filter(k => orgById(k.split(':')[0]).home === 'desert').length >= 4,
     win: () => 'Desert living things have features that help them <b>keep cool</b> and <b>save water</b>. They are <b>adapted</b> to the desert.' },
-  { id: 'camel', core: true, icon: '🐫', title: 'Can a camel survive in the Arctic?', task: 'Predict, then move the <b>camel</b> to the <b>Arctic</b>.', hint: 'Think: freezing cold, icy wind, deep snow.',
+  { id: 'camel', start: true, icon: '🐫', title: 'Can a camel survive in the Arctic?', task: 'Predict, then move the <b>camel</b> to the <b>Arctic</b>.', hint: 'Think: freezing cold, icy wind, deep snow.',
     setup() { state.view = 'move'; setMoveOrg('camel', 'arctic'); },
     on: (ev, d) => ev === 'move' && d.org === 'camel' && d.to === 'arctic',
     win: d => moveSummary(d) + 'A camel is adapted to the hot, dry desert – not the Arctic. Look at the body heat gauge!' },
@@ -1886,26 +1888,14 @@ const MISSIONS = [
     setup() { state.view = 'design'; state.design.kind = 'animal'; state.design.hab = 'desert'; },
     on: (ev, d) => ev === 'design-ok' && d.hab === 'desert',
     win: () => 'Your creature is <b>adapted</b> to the desert: it keeps cool, saves water and walks on soft sand.' },
-  { id: 'design-move', icon: '🌧️', title: 'Now move it to the rainforest', task: 'Move your <b>desert design</b> to the <b>rainforest</b>.', hint: 'The rainforest is hot too – but wet, shady and full of trees to climb.',
-    setup() {
-      if (!state.designs.some(d => d.kind === 'animal')) { state.design.kind = 'animal'; state.design.hab = 'desert'; saveDesign(); }
-      const last = state.designs.slice().reverse().find(d => d.kind === 'animal');
-      state.view = 'move'; setMoveOrg(last.id, last.home === 'rainforest' ? null : 'rainforest');
-    },
-    on: (ev, d) => ev === 'move' && d.isDesign && d.to === 'rainforest',
-    win: d => moveSummary(d) + 'Both places are hot, but the rainforest is <b>wet</b> and full of trees.' },
   { id: 'camo', icon: '🦎', title: 'Make the prey harder to find', task: 'Hunt the <b>red</b> bugs. Then change their colour to make them <b>harder to find</b>, and hunt again.', hint: 'Which colour matches the background?',
     setup() { state.view = 'camo'; Object.assign(state.camo, { scene: 'woodland', colour: 'red', hunts: [], pred: null, msg: '' }); },
     on: (ev, d) => ev === 'hunt' && d.camo && d.hadNonCamo,
     win: () => 'When the colour matched the background, the bugs were much harder to spot. That is <b>camouflage</b>.' },
-  { id: 'eyes', core: true, icon: '👀', title: 'Predator or prey? Look at the eyes', task: 'Move the eyes to the front and the sides, then answer the two questions.', hint: 'Count the foxes it can spot.',
+  { id: 'eyes', start: true, icon: '👀', title: 'Predator or prey? Look at the eyes', task: 'Move the eyes to the front and the sides, then answer the two questions.', hint: 'Count the foxes it can spot.',
     setup() { state.view = 'eyes'; state.quiz = {}; },
     on: ev => ev === 'quiz' && state.quiz.rabbit === 'sides' && state.quiz.owl === 'front',
     win: () => '<b>Prey</b> often have eyes on the sides to spot danger. <b>Predators</b> often have eyes at the front to judge distance.' },
-  { id: 'herd', icon: '🦓', title: 'Safety in numbers', task: 'In the <b>Hunt simulator</b>, run 10 hunts with <b>1 zebra</b>, then 10 hunts with <b>20 zebras</b>. Which is safer?', hint: 'Only change the herd size. Keep everything else the same so it is a fair test.',
-    setup() { state.view = 'hunt'; Object.assign(state.hunt, { set: { herd: 1, eyes: 'sides', camo: 'on', pride: 'one', speed: 'fast' }, batches: [], pred: null, msg: '', preview: null }); },
-    on: (ev, d) => ev === 'hunt-batch' && d.batches.some(a => a.set.herd === 1 && d.batches.some(b => b.set.herd === 20 && ['eyes', 'camo', 'pride', 'speed'].every(k => a.set[k] === b.set[k]) && b.escaped > a.escaped)),
-    win: () => 'A big herd has lots of eyes. Someone is nearly always looking up, so the lion is spotted sooner. When they run, a crowd of stripes makes it hard for the lion to pick just one zebra. That is why many prey animals <b>live in groups</b>.' },
   { id: 'bothcamo', icon: '🍂', title: 'Camouflage on both sides', task: 'In the <b>Face-offs</b>, find <b>two</b> pairs where the predator <b>and</b> the prey both use camouflage.', hint: 'Use "Find an adaptation" and choose Camouflage.',
     setup() { state.view = 'faceoff'; state.fo.seen = new Set(); state.fo.tag = null; state.fo.id = 'lion'; },
     on: () => [...state.fo.seen].filter(id => bothCamo(FACEOFFS.find(f => f.id === id))).length >= 2,
@@ -1914,6 +1904,18 @@ const MISSIONS = [
     setup() { state.view = 'faceoff'; },
     on: () => state.fo.seen.size >= FACEOFFS.length,
     win: () => 'You have seen teeth and talons, speed and zigzags, camouflage, lookouts, burrows, spines and warning colours. Predators are adapted to <b>catch</b> food; prey are adapted to <b>stay safe</b>.' },
+  { id: 'design-move', tier: 'further', icon: '🌧️', title: 'Now move it to the rainforest', task: 'Move your <b>desert design</b> to the <b>rainforest</b>.', hint: 'The rainforest is hot too – but wet, shady and full of trees to climb.',
+    setup() {
+      if (!state.designs.some(d => d.kind === 'animal')) { state.design.kind = 'animal'; state.design.hab = 'desert'; saveDesign(); }
+      const last = state.designs.slice().reverse().find(d => d.kind === 'animal');
+      state.view = 'move'; setMoveOrg(last.id, last.home === 'rainforest' ? null : 'rainforest');
+    },
+    on: (ev, d) => ev === 'move' && d.isDesign && d.to === 'rainforest',
+    win: d => moveSummary(d) + 'Both places are hot, but the rainforest is <b>wet</b> and full of trees.' },
+  { id: 'herd', tier: 'further', icon: '🦓', title: 'Safety in numbers', task: 'In the <b>Hunt simulator</b>, run 10 hunts with <b>1 zebra</b>, then 10 hunts with <b>20 zebras</b>. Which is safer?', hint: 'Only change the herd size. Keep everything else the same so it is a fair test.',
+    setup() { state.view = 'hunt'; Object.assign(state.hunt, { set: { herd: 1, eyes: 'sides', camo: 'on', pride: 'one', speed: 'fast' }, batches: [], pred: null, msg: '', preview: null }); },
+    on: (ev, d) => ev === 'hunt-batch' && d.batches.some(a => a.set.herd === 1 && d.batches.some(b => b.set.herd === 20 && ['eyes', 'camo', 'pride', 'speed'].every(k => a.set[k] === b.set[k]) && b.escaped > a.escaped)),
+    win: () => 'A big herd has lots of eyes. Someone is nearly always looking up, so the lion is spotted sooner. When they run, a crowd of stripes makes it hard for the lion to pick just one zebra. That is why many prey animals <b>live in groups</b>.' }
 ];
 function moveSummary(d) {
   const pick = st => d.result.filter(r => r.now[0] === st).map(r => esc(r.f.label.toLowerCase()));
@@ -1943,7 +1945,7 @@ function startMission(i) {
   cancelHunt();
   state.mission = i; MISSIONS[i].setup(); render();
   const m = MISSIONS[i];
-  $('#bannerKicker').textContent = `Mission ${i + 1} of ${MISSIONS.length}: ${m.title}`;
+  $('#bannerKicker').innerHTML = `Mission ${i + 1} of ${MISSIONS.length}: ${m.title}${HUB.badge(HUB.tier(m))}`;
   $('#bannerText').innerHTML = m.task; $('#bannerHint').innerHTML = m.hint;
   $('#bannerHint').classList.add('hidden'); $('#hintBtn').textContent = '💡 Show a hint';
   $('#banner').classList.remove('hidden');
@@ -1965,11 +1967,18 @@ function closeModals() {
 }
 
 // ================= Help and "Real life?": one pop-up for the tab you are on =================
-const LO = {
-  be01: '<p><b>5Be.01</b> Describe how plants and animals are adapted to environments that are hot, cold, wet and/or dry.</p>',
-  be03: '<p><b>5Be.03</b> Describe the common adaptations of predator and prey animals.</p>',
-  m01: '<p><b>5TWSm.01</b> Know that a model presents an object, process or idea in a way that shows some of the important features.</p>',
-};
+// Objective codes for each tab; the wording comes from ../hub/objectives.js
+const LO = { be01: 'SC5-ADA-1', be03: 'SC5-ADA-2', m01: 'SC5-SKL-19' };
+// "For teachers": good first missions, and the missions that are not Core
+function teacherMissions() {
+  const n = m => MISSIONS.indexOf(m) + 1;
+  const start = MISSIONS.filter(m => m.start).map(n);
+  const extra = ['back', 'further', 'next'].map(t => {
+    const ms = MISSIONS.filter(m => HUB.tier(m) === t);
+    return ms.length ? `${HUB.TIERS[t].em} ${HUB.TIERS[t].name}: ${ms.map(m => `${n(m)} (${m.title})`).join(', ')}.` : '';
+  }).filter(Boolean).join(' ');
+  return `<p>Good missions to start with: ${start.join(', ')}.</p>${extra ? `<p>${extra}</p>` : ''}`;
+}
 const HELP = {
   habitats: { title: '🌍 Habitats', q: 'How are living things <b>adapted</b> to hot, cold, wet and dry habitats?',
     steps: ['Choose a habitat at the top.', 'Tap a living thing.', 'Tap the numbered circles to find its features.'],
@@ -1983,7 +1992,7 @@ const HELP = {
   faceoff: { title: '⚔️ Face-offs', q: 'How are <b>predators</b> adapted to catch food, and <b>prey</b> adapted to stay safe?',
     steps: ['Choose a face-off.', 'Tap an adaptation to find out more.', 'Use Find an adaptation to spot it in other face-offs.'],
     look: 'Each predator adaptation is matched by a prey adaptation ⇄.', lo: ['be03'] },
-  hunt: { title: '🦓 Hunt simulator', q: 'What helps zebras escape from a lion?',
+  hunt: { title: '🦓 Hunt simulator', tier: 'further', q: 'What helps zebras escape from a lion?',
     steps: ['Choose the settings.', 'Press ▶ Watch a hunt.', 'Change one setting and predict.', 'Press ⏩ Run 10 hunts to test it.'],
     look: 'Change just one setting at a time, so it is a fair test.', lo: ['be03', 'm01'] },
   eyes: { title: '👀 Eyes', q: 'Why do <b>predators</b> and <b>prey</b> have eyes in different places?',
@@ -2016,13 +2025,13 @@ let helpReady = false, helpPending = false, helpWelcomed = false;
 const NOHELP = new URLSearchParams(location.hash.slice(1)).get('nohelp') === '1';
 function showHelp(view = state.view) {
   const h = HELP[view]; seenHelp.add(view);
-  $('#helpBody').innerHTML = `<h2 id="helpTitle">${h.title}</h2>
+  $('#helpBody').innerHTML = `<h2 id="helpTitle">${h.title}</h2>${HUB.note(h.tier)}
     ${helpWelcomed ? '' : '<p class="help-welcome">🦊 Welcome to Adaptation Studio!</p>'}
     <div class="help-sec"><h3>🔬 The big question</h3><p>${h.q}</p></div>
     <div class="help-sec"><h3>👆 What to do</h3><ol>${h.steps.map(s => `<li>${s}</li>`).join('')}</ol></div>
     ${h.look ? `<div class="help-sec"><h3>💡 Look out for</h3><p>${h.look}</p></div>` : ''}
     <p class="help-sec">🚀 Try the Missions to win stars!</p>
-    <details class="teachers"><summary>For teachers</summary>${h.lo.map(k => LO[k]).join('')}</details>`;
+    <details class="teachers"><summary>For teachers</summary>${HUB.objList(h.lo.map(k => LO[k]))}${teacherMissions()}</details>`;
   helpWelcomed = true;
   openModal('#helpModal');
 }
@@ -2074,7 +2083,7 @@ const ACTIONS = {
   hpred: el => { state.hunt.pred = el.dataset.v; render(); },
   hbatch: () => huntBatch(),
   help: () => showHelp(), model: () => showModel(),
-  missions: () => { $('#missionList').innerHTML = MISSIONS.map((m, i) => `<button class="mission-item ${state.done.includes(m.id) ? 'done' : ''}" data-act="start-mission" data-i="${i}"><span class="em">${m.icon}</span><span class="t">${i + 1}. ${m.title}</span>${m.ext ? '<span class="extn">➕ Extension</span>' : ''}<span class="star">⭐</span></button>`).join(''); openModal('#missionsModal'); },
+  missions: () => { $('#missionList').innerHTML = HUB.starLine(MISSIONS, state.done) + HUB.missionList(MISSIONS, (m, i) => `<button class="mission-item ${state.done.includes(m.id) ? 'done' : ''}" data-act="start-mission" data-i="${i}"><span class="em">${m.icon}</span><span class="t">${i + 1}. ${m.title}</span>${HUB.badge(HUB.tier(m))}<span class="star">⭐</span></button>`); openModal('#missionsModal'); },
   'close-modal': closeModals,
   'reset-stars': () => { state.done = []; store.set('as2-done', []); updateStars(); ACTIONS.missions(); },
   'start-mission': el => { closeModals(); startMission(+el.dataset.i); },

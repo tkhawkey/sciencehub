@@ -1,4 +1,4 @@
-/* Question bank: Earth in Space (Cambridge Primary Science 5ESs.01, 5ESs.02, 5ESs.03)
+/* Question bank: Earth in Space (Year 5 Science Hub SC5-EAR-5, SC5-EAR-6, SC5-EAR-7)
    Each question is one object. "type" says which activity it is – see the engine (index.html) for the formats.
    In "sentence" questions the right choice is written first (the engine shuffles them); "answers" lists other true versions.
    Diagrams are drawn here (600 × 360). Label positions are in % across and down the diagram. */
@@ -60,7 +60,7 @@ const SEASONS = space(`<ellipse cx="300" cy="180" rx="205" ry="60" fill="none" s
   ${tiltedEarth(95, 180, 'right')}${tiltedEarth(505, 180, 'left')}`);
 
 window.BANKS.push({
-  id: 'earth-space', title: 'Earth in Space', icon: '🌍', objectives: '5ESs.01 · 5ESs.02 · 5ESs.03',
+  id: 'earth-space', title: 'Earth in Space', icon: '🌍', objectives: 'SC5-EAR-5 · SC5-EAR-6 · SC5-EAR-7',
   explorer: { name: 'Seasons Explorer', icon: '🌍', href: '../earth-seasons/index.html' },
   intro: 'The Earth\'s orbit around the Sun, how its tilt causes the seasons, and satellites.',
   items: [
@@ -85,7 +85,7 @@ window.BANKS.push({
     explain: 'On the left, the North Pole leans towards the Sun, so it is summer in the northern hemisphere. On the right, it leans away, so it is winter there.' },
 
   // ---------- Put in order ----------
-  { type: 'order', prompt: 'Put these in order, from the shortest time to the longest.', first: 'Shortest', last: 'Longest',
+  { type: 'order', tier: 'further', prompt: 'Put these in order, from the shortest time to the longest.', first: 'Shortest', last: 'Longest',
     items: ['A space station orbiting the Earth once', 'The Earth spinning once', 'The Moon orbiting the Earth once', 'The Earth orbiting the Sun once'],
     explain: 'About 90 minutes, 24 hours, about 27 days, then 365¼ days.' },
   { type: 'order', prompt: 'Starting with spring, put the seasons in order as the Earth orbits the Sun.', first: 'First', last: 'Last',
@@ -99,7 +99,7 @@ window.BANKS.push({
   { type: 'match', prompt: 'Match each word to its meaning.',
     pairs: [['Orbit', 'The path an object takes around another object'], ['Axis', 'An imaginary line the Earth spins around'], ['Satellite', 'An object in space that orbits a larger object'], ['Hemisphere', 'Half of the Earth'], ['Equator', 'An imaginary line around the middle of the Earth']],
     explain: 'These are the key words for this topic.' },
-  { type: 'match', prompt: 'Match each event to how long it takes.',
+  { type: 'match', tier: 'further', prompt: 'Match each event to how long it takes.',
     pairs: [['The Earth spins once', '24 hours'], ['The Earth orbits the Sun once', '365¼ days'], ['The Moon orbits the Earth once', 'About 27 days'], ['A space station orbits the Earth once', 'About 90 minutes']],
     explain: 'A day is one spin, and a year is one orbit of the Sun.' },
   { type: 'match', prompt: 'Match each word to its meaning.',
@@ -132,14 +132,20 @@ window.BANKS.push({
     explain: 'These are some of the most common mix-ups about the seasons.' },
   { type: 'tf', prompt: 'True or false?',
     statements: [
-      { s: 'Day and night happen because the Earth orbits the Sun.', a: false, why: 'Day and night happen because the Earth spins on its axis.' },
-      { s: 'Seen from above the North Pole, the Earth orbits the Sun clockwise.', a: false, why: 'It orbits anticlockwise.' },
+      { s: 'Seen from above the North Pole, the Earth orbits the Sun clockwise.', a: false, why: 'Seen from above the North Pole, it orbits anticlockwise.' },
       { s: 'Only people can make satellites.', a: false, why: 'The Moon is a natural satellite. Satellites made by people are artificial.' },
       { s: 'The Moon is a satellite of the Earth.', a: true, why: 'It orbits the Earth, which is larger than it.' },
       { s: 'Places on the Equator have about 12 hours of daylight all year.', a: true, why: 'The tilt makes little difference there, so day length hardly changes.' },
       { s: 'The Sun orbits the Earth.', a: false, why: 'The Earth orbits the Sun. The Sun is at the centre of the Solar System.' },
     ],
     explain: 'Watch out for these mix-ups!' },
+  { type: 'tf', tier: 'back', prompt: 'True or false?',
+    statements: [
+      { s: 'Day and night happen because the Earth orbits the Sun.', a: false, why: 'Day and night happen because the Earth spins on its axis.' },
+      { s: 'The Earth spins once every 24 hours.', a: true, why: 'One spin is one day.' },
+      { s: 'The side of the Earth facing the Sun has day.', a: true, why: 'The other side faces away from the Sun, so it has night.' },
+    ],
+    explain: 'Day and night come from the Earth spinning.' },
 
   // ---------- Sort into groups ----------
   { type: 'sort', prompt: 'What causes each of these?', groups: ['🔄 The Earth spinning', '☀️ The tilted Earth orbiting the Sun'],
@@ -153,7 +159,7 @@ window.BANKS.push({
   { type: 'venn', prompt: 'Sort these objects.', sets: ['Natural', 'Orbits the Earth'],
     items: [{ t: 'Moon', em: '🌕', in: [1, 1] }, { t: 'Sun', em: '☀️', in: [1, 0] }, { t: 'Mars', em: '🔴', in: [1, 0] }, { t: 'Space station', em: '🛰️', in: [0, 1] }, { t: 'Weather satellite', em: '📡', in: [0, 1] }, { t: 'Mars rover', em: '🚙', in: [0, 0] }],
     explain: 'The Moon is natural and orbits the Earth, so it goes in the middle. The Mars rover was made by people and is on Mars, so it goes outside.' },
-  { type: 'venn', prompt: 'Sort these places.', sets: ['Has 24 hours of daylight on some days', 'In the northern hemisphere'],
+  { type: 'venn', tier: 'further', prompt: 'Sort these places.', sets: ['Has 24 hours of daylight on some days', 'In the northern hemisphere'],
     items: [{ t: 'Tromsø, Norway', em: '🏔️', in: [1, 1] }, { t: 'North Pole', em: '🧊', in: [1, 1] }, { t: 'South Pole', em: '🐧', in: [1, 0] }, { t: 'Bratislava', em: '🏰', in: [0, 1] }, { t: 'London', em: '🏙️', in: [0, 1] }, { t: 'Sydney', em: '🦘', in: [0, 0] }, { t: 'Cape Town', em: '⛰️', in: [0, 0] }],
     explain: 'Only places near the poles get 24 hours of daylight in summer. The South Pole gets it in December.' },
 
@@ -176,7 +182,7 @@ window.BANKS.push({
       { q: 'In March and September every place has 12 hours. Why?', options: ['Neither hemisphere is leaning towards the Sun', 'The Earth stops spinning', 'The Earth is closest to the Sun', 'It is summer everywhere'], a: 0, why: 'At these times the tilt doesn\'t favour either hemisphere.' },
     ],
     explain: 'The further a place is from the Equator, the bigger the change in daylight through the year.' },
-  { type: 'table', prompt: 'Use the table to answer the questions.', caption: 'Some objects and their orbits',
+  { type: 'table', tier: 'further', prompt: 'Use the table to answer the questions.', caption: 'Some objects and their orbits',
     table: { head: ['Object', 'What it orbits', 'Time for one orbit'], rows: [['Moon', 'Earth', 'About 27 days'], ['Earth', 'Sun', '365¼ days'], ['Space station', 'Earth', 'About 90 minutes'], ['Mars', 'Sun', '687 days']] },
     questions: [
       { q: 'Which takes the shortest time to complete one orbit?', options: ['Moon', 'Earth', 'Space station', 'Mars'], a: 2, why: 'About 90 minutes.' },
@@ -196,7 +202,7 @@ window.BANKS.push({
   { type: 'odd', prompt: 'Which is the odd one out?', items: ['🌕 Moon', '🛰️ Space station', '📡 GPS satellite', '🔭 Hubble Space Telescope'], odd: 0,
     reasons: ['It is a natural satellite – the others were made by people', 'It does not orbit the Earth', 'It is the only one you can see from Earth'], reason: 0,
     explain: 'All four orbit the Earth, but only the Moon was not made by people.' },
-  { type: 'odd', prompt: 'Which is the odd one out?', items: ['🌷 Spring', '☀️ Summer', '🌙 Night', '❄️ Winter'], odd: 2,
+  { type: 'odd', tier: 'back', prompt: 'Which is the odd one out?', items: ['🌷 Spring', '☀️ Summer', '🌙 Night', '❄️ Winter'], odd: 2,
     reasons: ['Night is caused by the Earth spinning – the others by the tilted Earth orbiting the Sun', 'It is the coldest', 'It only happens in Slovakia'], reason: 0,
     explain: 'Spring, summer and winter are seasons. Night happens every day as the Earth spins.' },
 

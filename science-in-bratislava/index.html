@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="../hub/objectives.js"></script><script src="../hub/levels.js"></script>
 <style>
   /* ================= Shared look (matches the other Year 5 tools) ================= */
   :root {
@@ -379,11 +380,11 @@ const TOOL = { name: 'Science in Bratislava', store: 'sb-done', confetti: ['⭐'
 // person: [emoji, name, job, what they say, the science they use]. links: [[tool name, link]].
 const PLACES = {
   water: { em: '💧', name: 'The water works', x: 16, y: 30, topic: 'Filtering and clean water',
-    sci: 'Water from wells and the river is <b>filtered</b> through sand and gravel to take out bits. Then it is <b>tested</b> to make sure it is safe to drink.',
+    sci: 'Water from wells and the river is <b>filtered</b> through sand and gravel, then cleaned to kill germs. It is <b>tested</b> every day to make sure it is safe to drink.',
     person: ['🧑‍🔬', 'Zuzana', 'Water scientist', 'I take samples of water every day and test them, to check the water is clean and safe.', 'Filtering and testing water'],
     links: [['⚗️ Dissolving Lab: Separation station', '../dissolving-lab/index.html#view=sep&task=sand'], ['💧 Air and Water: Is it pure?', '../air-and-water/index.html#view=pure']] },
   cars: { em: '🚗', name: 'The car factory', x: 82, y: 22, topic: 'Air resistance and friction',
-    sci: 'Engineers shape cars so the air flows smoothly round them. Less <b>air resistance</b> means the car uses less fuel. They test tyres for good <b>friction</b> on wet roads.',
+    sci: 'Engineers shape cars so the air flows smoothly round them. Less <b>air resistance</b> means the car uses less fuel. They test tyres on wet roads. Good grip between tyres and road is <b>friction</b> too, and it keeps cars safe.',
     person: ['👷', 'Peter', 'Engineer', 'I design cars and test them in a wind tunnel. I want them to be safe and to use less fuel.', 'Forces: air resistance and friction'],
     links: [['🛝 Forces Playground', '../forces-playground/index.html#view=parachute']] },
   hospital: { em: '🏥', name: 'The hospital', x: 50, y: 16, topic: 'The human body and digestion',
@@ -391,7 +392,7 @@ const PLACES = {
     person: ['👩‍⚕️', 'Jana', 'Doctor', 'I find out why people have tummy aches. I need to know how food travels through the body.', 'The digestive system'],
     links: [['🍎 Digestion Journey', '../digestion-journey/index.html']] },
   pharmacy: { em: '💊', name: 'The pharmacy', x: 33, y: 46, topic: 'Dissolving medicines',
-    sci: 'Medicines must be measured very carefully. Some medicines are tablets that <b>dissolve</b> in water before you drink them.',
+    sci: 'Medicines must be measured very carefully. Some medicines are tablets that <b>dissolve</b> in water before you drink them. Only take medicine the way the label or a doctor says.',
     person: ['🧑‍⚕️', 'Martin', 'Pharmacist', 'I check that each person gets the right medicine and the right amount. Some tablets fizz and dissolve in water.', 'Dissolving and measuring'],
     links: [['🧂 Dissolving Lab', '../dissolving-lab/index.html#view=beaker']] },
   bakery: { em: '🥐', name: 'The bakery', x: 52, y: 40, topic: 'Melting and changes of state',
@@ -428,6 +429,12 @@ const PLACES = {
     links: [['🌍 Seasons Explorer', '../earth-seasons/index.html']] }
 };
 const PORDER = Object.keys(PLACES);
+// Science hunt: some topics fit two places, so either is right. { topic's place: { other place: why it fits too } }
+const ALSO = {
+  weather: { water: 'The water works cleans water from rivers and wells. That water comes from rain, in the water cycle.' },
+  zoo: { farm: 'Farmers choose animals and crops that suit the land and weather here.' },
+  vet: { zoo: 'Zoo keepers give each animal the right food too.' }
+};
 const JOBS = PORDER.map(id => PLACES[id].person[2]);
 const freshMap = () => ({ open: null, seen: {} });
 const freshPeople = () => ({ order: shuffle(PORDER), cur: null, job: {}, jobWrong: {}, sci: {}, sciWrong: {}, place: {}, placeWrong: null, done: {} });
@@ -437,7 +444,8 @@ const ACTIONS = {};
 
 // ================= The map (all three views use it) =================
 function mapStage(mode) {
-  const { w, h, narrow } = stageSize(), top = narrow ? 40 : 52, mh = h - top - 8, X = x => 10 + (w - 20) * x / 100, Y = y => top + mh * y / 100;
+  // The bottom strip is kept free for the note that the map is made up
+  const { w, h, narrow } = stageSize(), top = narrow ? 40 : 52, mh = h - top - (narrow ? 22 : 28), X = x => 10 + (w - 20) * x / 100, Y = y => top + mh * y / 100;
   let o = `<rect width="${w}" height="${h}" fill="#e7f3df"/>`;
   // Streets, parks, the Danube with two bridges, and the castle on its hill
   for (let k = 1; k < 8; k++) o += `<line x1="${X(k * 12.5)}" x2="${X(k * 12.5 - 4)}" y1="${Y(0)}" y2="${Y(52)}" stroke="#fff" stroke-width="5" opacity=".8"/>`;
@@ -450,13 +458,14 @@ function mapStage(mode) {
   PORDER.forEach(id => {
     const P = PLACES[id], cx = X(P.x), cy = Y(P.y), r = narrow ? 17 : 26;
     const on = (mode === 'map' && state.map.open === id) || (mode === 'people' && state.people.place[state.people.cur] === id) || (mode === 'hunt' && state.hunt.tap === id);
-    const seen = mode === 'map' ? state.map.seen[id] : mode === 'people' ? Object.values(state.people.place).includes(id) : state.hunt.found[id];
+    const seen = mode === 'map' ? state.map.seen[id] : mode === 'people' ? Object.values(state.people.place).includes(id) : Object.values(state.hunt.found).includes(id);
     const bad = mode === 'people' && state.people.placeWrong === id || mode === 'hunt' && state.hunt.badTap === id;
     o += `<g class="tapme" data-act="placetap" data-v="${id}"><circle cx="${cx}" cy="${cy}" r="${r + 4}" fill="${bad ? 'var(--coral)' : on ? 'var(--yellow)' : seen ? 'var(--green)' : '#fff'}" stroke="#1d2340" stroke-width="2"/>
       <text x="${cx}" y="${cy + r * .38}" text-anchor="middle" style="font-size:${r * 1.1}px">${P.em}</text>
       <text x="${cx}" y="${cy + r + (narrow ? 13 : 18)}" text-anchor="middle" class="wsmall"${narrow ? ' style="font-size:9.5px"' : ''}>${narrow ? P.name.replace(/^(The|A) /, '').replace(' near the city', '') : P.name}</text></g>`;
   });
-  return `<svg viewBox="0 0 ${w} ${h}" aria-label="A map of a city like Bratislava">${o}</svg>`;
+  o += `<text x="${w / 2}" y="${h - (narrow ? 6 : 9)}" text-anchor="middle" class="wsmall" style="font-size:${narrow ? 11 : 13}px;fill:var(--muted)">A made-up city like Bratislava. The jobs are real.</text>`;
+  return `<svg viewBox="0 0 ${w} ${h}" aria-label="A map of a made-up city like Bratislava">${o}</svg>`;
 }
 ACTIONS.placetap = el => { const v = VIEWS[state.view]; if (v.tap) v.tap(el.dataset.v); };
 
@@ -522,17 +531,21 @@ const HUNTV = {
     const say = t.i >= PORDER.length ? `All found! Mistakes: ${t.wrong}.` : `🔎 Where would you find science about: <b>${lc(PLACES[id].topic)}</b>?`;
     return `<div class="lay-top"><span class="scaletag">🔎 Science hunt</span><div class="readout">${say}</div></div>${mapStage('hunt')}`;
   },
+  // The topic's own place is right. So is any other place in ALSO.
   tap(id) {
-    const t = state.hunt, want = t.order[t.i]; if (t.i >= PORDER.length || t.tap === want) return;
-    if (id === want) { t.tap = id; t.badTap = null; t.found[id] = true; render(); }
+    const t = state.hunt, want = t.order[t.i]; if (t.i >= PORDER.length || t.tap) return;
+    if (id === want || (ALSO[want] && ALSO[want][id])) { t.tap = id; t.badTap = null; t.found[want] = id; render(); }
     else { t.wrong++; t.badTap = id; render(); }
   },
   drawer() {
-    const t = state.hunt, id = t.order[t.i], P = id && PLACES[id], got = t.tap === id, n = Object.keys(t.found).length;
+    const t = state.hunt, id = t.order[t.i], P = id && PLACES[id], got = !!t.tap, n = Object.keys(t.found).length;
+    const T = got && PLACES[t.tap], other = got && t.tap !== id;
     let o = '';
     if (t.i < PORDER.length) o += `<div class="card says${got ? ' good' : ''}"><h3>🔎 ${t.i + 1} of ${PORDER.length}</h3><p>Where would you find science about <b>${lc(P.topic)}</b>? Tap the place on the map.</p>
       ${t.badTap && !got ? `<p class="spot">💡 Not ${lc(PLACES[t.badTap].name)}. Think: who would need to know about ${lc(P.topic)}?</p>` : ''}
-      ${got ? `<p class="job">✅ Yes! ${P.em} <b>${P.name}</b>. ${P.sci}</p><div class="navrow"><button class="btn go" data-act="hnext">Next ▶</button></div>` : ''}</div>`;
+      ${got ? `<p class="job">✅ Yes! ${T.em} <b>${T.name}</b>. ${other ? `${ALSO[id][t.tap]} You could also choose ${lc(P.name)}.` : P.sci}</p>
+        ${!other && ALSO[id] ? `<p class="muted">${Object.keys(ALSO[id]).map(x => `${PLACES[x].em} ${PLACES[x].name} is right too.`).join(' ')}</p>` : ''}
+        <div class="navrow"><button class="btn go" data-act="hnext">Next ▶</button></div>` : ''}</div>`;
     else o += `<div class="card says good"><h3>🎉 You found them all!</h3><p>Mistakes: <b>${t.wrong}</b>.</p><button class="btn" data-act="hreset">↺ Play again</button></div>`;
     return o + `<div class="card"><h2>🔎 Science hunt</h2><p>Each question names a science topic from Year 5. Find the place in the city where people use it.</p><p class="muted">Found: ${n} of ${PORDER.length} · Mistakes: ${t.wrong}</p></div>`;
   }
@@ -552,34 +565,31 @@ const KEYWORDS = [
   ['🛠️', 'technology', 'tools and machines that people make, using science']
 ];
 const MISSIONS = [
-  { id: 'explore', core: true, icon: '🗺️', title: 'City explorer', task: 'Visit <b>8</b> places on the map and find out what science happens there.',
+  { id: 'explore', start: true, icon: '🗺️', title: 'City explorer', task: 'Visit <b>8</b> places on the map and find out what science happens there.',
     hint: 'Tap each circle on the map.', setup() { state.view = 'map'; state.map = freshMap(); }, on: (ev, d) => ev === 'seen' && d.n >= 8,
     win: () => 'Science happens all over the city: in hospitals, bakeries, factories and more.' },
   { id: 'every', icon: '🏙️', title: 'Every corner', task: 'Visit <b>all 12</b> places on the map.',
     hint: 'Look for the green circles: you have visited those already.', setup() { state.view = 'map'; }, on: (ev, d) => ev === 'seen' && d.n >= PORDER.length,
     win: () => 'Twelve places, and science in every one of them!' },
-  { id: 'people4', core: true, icon: '🧑‍🔬', title: 'Who works here?', task: 'For <b>4</b> people, find their job, the science they use, and where they work.',
+  { id: 'people4', start: true, icon: '🧑‍🔬', title: 'Who works here?', task: 'For <b>4</b> people, find their job, the science they use, and where they work.',
     hint: 'Read what each person says. Which words give you a clue?', setup() { state.view = 'people'; state.people = freshPeople(); }, on: (ev, d) => ev === 'person' && d.n >= 4,
     win: () => 'People use science in all kinds of jobs.' },
   { id: 'people12', icon: '👥', title: 'Science workers', task: 'Do it for <b>all 12</b> people.',
     hint: 'Ticks show the people you have already done.', setup() { state.view = 'people'; }, on: (ev, d) => ev === 'person' && d.n >= PORDER.length,
     win: () => 'Doctors, bakers, engineers, farmers, vets and more: they all use science at work.' },
-  { id: 'hunt', core: true, icon: '🔎', title: 'Science hunt', task: 'In <b>Science hunt</b>, find the place for every science topic.',
+  { id: 'hunt', start: true, icon: '🔎', title: 'Science hunt', task: 'In <b>Science hunt</b>, find the place for every science topic.',
     hint: 'Think about who would need to know about each topic.', setup() { state.view = 'hunt'; state.hunt = freshHunt(); }, on: ev => ev === 'hunt',
     win: () => 'You found where every Year 5 science topic is used in the city.' },
   { id: 'sharp', icon: '🎯', title: 'Sharp eyes', task: 'Finish the <b>Science hunt</b> with <b>no more than 1</b> mistake.',
     hint: 'Visit the places on the map first, to learn what happens there.', setup() { state.view = 'hunt'; state.hunt = freshHunt(); }, on: (ev, d) => ev === 'hunt' && d.wrong <= 1,
     win: () => 'Sharp eyes! You know where science is used around the city.' }
 ];
-const OBJ = {
-  '5SIC.02': 'Describe how science is used in their local area.',
-  '5SIC.04': 'Identify people who use science, including professionally, in their area and describe how they use science.'
-};
-const MAIN = ['5SIC.02', '5SIC.04'], SUPPORT = [];
+// Objective wording comes from ../hub/objectives.js (HUB.objList)
+const MAIN = ['SC5-WLD-2', 'SC5-WLD-4'], SUPPORT = [];
 const HELP = {
-  map: { q: 'Where is science used in our city?', steps: ['Tap a place on the map.', 'Read what science happens there, and who works there.', 'Follow a link to find out more in another tool.'], look: 'The green circles are places you have visited.', codes: ['5SIC.02', '5SIC.04'] },
-  people: { q: 'Who uses science in their job?', steps: ['Choose a person.', 'Choose their job, then the science they use.', 'Tap the place where they work.'], look: 'Read what each person says: it is full of clues.', codes: ['5SIC.04'] },
-  hunt: { q: 'Can you find where each science topic is used?', steps: ['Read the topic.', 'Tap the place on the map where people use it.'], look: 'Some topics could fit two places. Choose the best one.', codes: ['5SIC.02'] }
+  map: { q: 'Where is science used in our city?', steps: ['Tap a place on the map.', 'Read what science happens there, and who works there.', 'Follow a link to find out more in another tool.'], look: 'The green circles are places you have visited.', codes: ['SC5-WLD-2', 'SC5-WLD-4'] },
+  people: { q: 'Who uses science in their job?', steps: ['Choose a person.', 'Choose their job, then the science they use.', 'Tap the place where they work.'], look: 'Read what each person says: it is full of clues.', codes: ['SC5-WLD-4'] },
+  hunt: { q: 'Can you find where each science topic is used?', steps: ['Read the topic.', 'Tap the place on the map where people use it.'], look: 'Some topics could fit two places. Either one is right.', codes: ['SC5-WLD-2'] }
 };
 const MODEL = {
   map: [['🗺️', 'The map is a simple drawing of a city like Bratislava. It is not to scale, and the places are not at their real addresses.']],
@@ -610,7 +620,7 @@ function startMission(i) {
   state.mission = i; MISSIONS[i].setup();
   location.hash = 'view=' + state.view;
   const m = MISSIONS[i];
-  $('#bannerKicker').textContent = `Mission ${i + 1} of ${MISSIONS.length}: ${m.title}`;
+  $('#bannerKicker').innerHTML = `Mission ${i + 1} of ${MISSIONS.length}: ${esc(m.title)} ${HUB.badge(HUB.tier(m))}`;
   $('#bannerText').innerHTML = m.task; $('#bannerHint').innerHTML = m.hint;
   $('#bannerHint').classList.add('hidden'); $('#hintBtn').textContent = '💡 Show a hint';
   $('#banner').classList.remove('hidden');
@@ -635,7 +645,9 @@ let autoHelp = true, welcomed = false;
 function showHelp() {
   const H = HELP[state.view], V = VIEWS[state.view];
   helpSeen.add(state.view);
-  const core = MISSIONS.map((m, i) => m.core ? `${i + 1} (${m.title})` : null).filter(Boolean);
+  const core = MISSIONS.map((m, i) => m.start ? `${i + 1} (${m.title})` : null).filter(Boolean);
+  const extra = HUB.ORDER.filter(t => t !== 'core').map(t => { const ms = MISSIONS.map((m, i) => HUB.tier(m) === t ? `${i + 1} (${m.title})` : null).filter(Boolean);
+    return ms.length ? `${HUB.TIERS[t].em} ${HUB.TIERS[t].name}: ${ms.join(', ')}.` : ''; }).filter(Boolean);
   $('#helpBody').innerHTML = `<h2 id="helpTitle">${V.label.replace(/<[^>]+>/g, '').split(' ')[0]} ${V.name}</h2>
     ${welcomed ? '' : `<p class="welcome">Welcome to ${TOOL.name}!</p>`}
     <h3>🔬 The big question</h3><p>${H.q}</p>
@@ -643,8 +655,8 @@ function showHelp() {
     <p><b>💡 Look out for:</b> ${H.look}</p>
     <p>📖 Tap <b>Words</b> at the top to see what the key words mean.</p>
     <p>🚀 Try the <b>Missions</b> to win stars!</p>
-    <details class="teach"><summary>For teachers</summary>${H.codes.map(c => `<p><b>${c}</b> ${OBJ[c]}</p>`).join('')}
-      <h4>⏱ A 45-minute lesson</h4><p>Good missions to start with: ${core.join(', ')}.</p>
+    <details class="teach"><summary>For teachers</summary>${HUB.objList(H.codes)}
+      <h4>⏱ A 45-minute lesson</h4><p>Good missions to start with: ${core.join(', ')}.</p><p>${extra.length ? extra.join(' ') : 'All missions are ⭐ Core.'}</p>
       <h4>All of ${TOOL.name}'s objectives</h4><p>Main: ${MAIN.join(', ')}.${SUPPORT.length ? ` Supporting: ${SUPPORT.join(', ')}.` : ''}</p></details>`;
   welcomed = true;
   $('#helpModal').classList.remove('hidden');
@@ -670,8 +682,8 @@ const top0 = () => { $('#drawer').scrollTop = 0; };
 Object.assign(ACTIONS, {
   view(el) { closeModals(); state.view = el.dataset.view; location.hash = 'view=' + state.view; render(); top0(); },
   missions() {
-    $('#missionList').innerHTML = MISSIONS.map((m, i) => `<button class="mission-item${state.done.includes(m.id) ? ' done' : ''}" data-act="startMission" data-i="${i}">
-      <span class="em">${m.icon}</span><span class="t">${i + 1}. ${m.title}</span><span class="star">⭐</span></button>`).join('');
+    $('#missionList').innerHTML = HUB.starLine(MISSIONS, state.done) + HUB.missionList(MISSIONS, (m, i) => `<button class="mission-item${state.done.includes(m.id) ? ' done' : ''}" data-act="startMission" data-i="${i}">
+      <span class="em">${m.icon}</span><span class="t">${i + 1}. ${m.title} ${HUB.badge(HUB.tier(m))}</span><span class="star">⭐</span></button>`);
     $('#missionsModal').classList.remove('hidden');
   },
   startMission(el) { startMission(+el.dataset.i); },

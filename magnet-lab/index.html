@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="../hub/objectives.js"></script><script src="../hub/levels.js"></script>
 <style>
   /* ================= Shared look (matches Seed Lab and Dissolving Lab) ================= */
   :root {
@@ -477,7 +478,7 @@ const BENCH = {
       else if (!res) now += `<p>You predicted: <b>${b.pred[id] === 'yes' ? 'yes' : 'no'}</b>.</p><div class="navrow"><button class="btn go" data-act="btest">🧲 Bring the magnet near</button></div>`;
       else {
         const pulled = O[3] !== 'none', right = (b.pred[id] === 'yes') === pulled;
-        now += `<p class="job">${pulled ? (O[3] === 'weak' ? 'Pulled, but only a little.' : 'Pulled!') : 'Nothing happens.'} ${O[4]}</p><p class="muted">You predicted: ${b.pred[id]}. ${right ? '✅ Right!' : '❌ Not this time.'}</p>`;
+        now += `<p class="job">${pulled ? (O[3] === 'weak' ? 'Pulled, but only a little.' : 'Pulled!') : 'Nothing happens.'} ${O[4]}</p>${['cents', 'gold', 'euros'].includes(id) ? '<p>🪙 Try this with real coins. Results can change with how strong your magnet is.</p>' : ''}<p class="muted">You predicted: ${b.pred[id]}. ${right ? '✅ Right!' : '❌ Not this time.'}</p>`;
         if (pulled && !b.clipTest[id]) now += `<p>Is it a <b>magnet</b> itself? Check if it can pick up a paperclip.</p><div class="navrow"><button class="btn" data-act="bclip">📎 Can it pick up a paperclip?</button></div>`;
         if (b.clipTest[id]) now += `<p class="job">${O[1] === 'magnet' ? '📎 Yes! It pulls a paperclip by itself, so it is a <b>magnet</b>.' : '📎 No. It is pulled by a magnet, but it does not pull things itself. It is a <b>magnetic material</b>.'}</p>`;
         now += `<p><b>Now put it in a box.</b></p>`;
@@ -488,7 +489,7 @@ const BENCH = {
     return `${now}<div class="card"><h2>🧲 Test bench</h2><p>Which things does a magnet pull? Test each one, then sort it into a box.</p>
         <ul class="icons" style="margin:6px 0 0">${GROUPS.map(([g, nm, sub]) => `<li><span class="em">${nm.split(' ')[0]}</span><span><b>${nm.slice(nm.indexOf(' ') + 1)}</b>: ${g === 'magnet' ? 'an object that pulls magnetic materials, and can push or pull other magnets' : g === 'mat' ? 'a material that a magnet pulls, but which does not pull things itself' : 'a magnet does not pull it'}</span></li>`).join('')}</ul>
         <p class="muted">Sorted: ${n} of ${OORDER.length}</p></div>
-      ${metals ? '<div class="science"><b>🔬 The science</b>Not all metals are magnetic! Only a few are: <b>iron</b>, <b>steel</b>, <b>nickel</b> and <b>cobalt</b>. Aluminium, copper and gold are not.</div>' : ''}
+      ${metals ? '<div class="science"><b>🔬 The science</b>Not all metals are magnetic! <b>Iron</b>, <b>nickel</b>, <b>cobalt</b> and most kinds of <b>steel</b> are magnetic. Aluminium, copper and gold are not.</div>' : ''}
       <a class="seelab" href="../dissolving-lab/index.html#view=sep&task=iron">🧂 Use a magnet to separate a mixture in Dissolving Lab ▶</a>`;
   }
 };
@@ -970,7 +971,7 @@ const state = { view: 'bench', mission: null, done: store.get('ml-done', []),
   bench: freshBench(), which: freshWhich(), dist: freshDist(), inv: freshInv(), work: freshWork() };
 const KEYWORDS = [
   ['🧲', 'magnet', 'an object that pulls magnetic materials towards it, and can push or pull other magnets'],
-  ['📎', 'magnetic material', 'a material that a magnet pulls, but which does not pull things itself (iron, steel, nickel, cobalt)'],
+  ['📎', 'magnetic material', 'a material that a magnet pulls, but which does not pull things itself. Iron, nickel, cobalt and most kinds of steel are magnetic.'],
   ['🤝', 'attract', 'pull towards'],
   ['🙅', 'repel', 'push away'],
   ['🔴', 'poles', 'the two ends of a magnet, called north (N) and south (S)'],
@@ -980,19 +981,19 @@ const KEYWORDS = [
 // ================= Missions =================
 const NONMAG_METALS = ['alcan', 'copper', 'ring', 'gold'];
 const MISSIONS = [
-  { id: 'test', core: true, icon: '🧲', title: 'Test everything', task: 'Test every object on the <b>test bench</b>, and sort it into the right box.',
+  { id: 'test', start: true, icon: '🧲', title: 'Test everything', task: 'Test every object on the <b>test bench</b>, and sort it into the right box.',
     hint: 'Predict, then bring the magnet near. If it is pulled, check: can it pick up a paperclip by itself?',
     setup() { state.view = 'bench'; state.bench = freshBench(); }, on: (ev, d) => ev === 'placed' && d.n === OORDER.length,
     win: () => 'Magnets, magnetic materials and things that are not magnetic: all sorted!' },
   { id: 'metals', icon: '🥈', title: 'Not all metals', task: 'Find <b>3 metals</b> that are <b>not</b> magnetic.',
     hint: 'Look for shiny metal things. Does the magnet pull every one of them?',
     setup() { state.view = 'bench'; }, on: ev => ev === 'placed' && NONMAG_METALS.filter(o => state.bench.placed[o]).length >= 3,
-    win: () => 'Aluminium, copper and gold are metals, but they are not magnetic. Only iron, steel, nickel and cobalt are.' },
+    win: () => 'Aluminium, copper and gold are metals, but they are not magnetic. Iron, nickel, cobalt and most kinds of steel are magnetic.' },
   { id: 'coins', icon: '🪙', title: 'Coin check', task: 'Find out which <b>euro coins</b> the magnet pulls.',
     hint: 'There are three groups of coins on the test bench. Test and sort all three.',
     setup() { state.view = 'bench'; }, on: ev => ev === 'placed' && ['cents', 'gold', 'euros'].every(o => state.bench.placed[o]),
     win: () => '1, 2 and 5 cent coins are pulled: they have steel inside. 10, 20 and 50 cent coins are not. 1 and 2 euro coins are pulled only a little, by their middle part.' },
-  { id: 'which', core: true, icon: '🔍', title: 'Which one is the magnet?', task: 'Two grey bars look the same. Find out which one is the <b>magnet</b>.',
+  { id: 'which', start: true, icon: '🔍', title: 'Which one is the magnet?', task: 'Two grey bars look the same. Find out which one is the <b>magnet</b>.',
     hint: 'Bring your magnet\'s N end to each end of each bar. What can only a magnet do?',
     setup() { state.view = 'which'; state.which = { ...freshWhich(), mode: 'bars' }; }, on: ev => ev === 'which',
     win: () => 'Only a magnet can repel another magnet. Repelling is the sure test!' },
@@ -1000,7 +1001,7 @@ const MISSIONS = [
     hint: 'Turn one magnet round, so the same poles face each other.',
     setup() { state.view = 'which'; state.which = freshWhich(); }, on: ev => ev === 'repel',
     win: () => 'Like poles repel: N and N, or S and S, push each other away.' },
-  { id: 'wall', core: true, icon: '🧱', title: 'Through the wall', task: 'Find <b>3 materials</b> the magnet can pull through.',
+  { id: 'wall', start: true, icon: '🧱', title: 'Through the wall', task: 'Find <b>3 materials</b> the magnet can pull through.',
     hint: 'Put something in the gap, then slide the paperclip closer. Does it still jump?',
     setup() { state.view = 'dist'; state.dist = freshDist(); }, on: (ev, d) => ev === 'through' && d.n >= 3,
     win: () => 'The magnet pulls through materials that are not magnetic. The pull acts over a distance, even through a wall of card or glass.' },
@@ -1017,7 +1018,7 @@ const MISSIONS = [
     setup() { state.view = 'str'; state.inv = freshInv(); }, on: ev => ev === 'repeated',
     win: () => 'A bent paperclip spoiled one result. You did that test again to check it. Repeating makes results more reliable.' },
   { id: 'recycle', icon: '♻️', title: 'Recycling robot', task: 'On the recycling belt, lift out <b>every</b> piece of steel and iron in one round, and waste no more than 2 switch-ons.',
-    hint: 'Think about what each thing is made of. Only steel and iron are magnetic. Watch out: some things look alike!',
+    hint: 'Think about what each thing is made of. Here, only the steel and iron things are magnetic. Watch out: some things look alike!',
     setup() { state.view = 'work'; state.work = freshWork(); }, on: (ev, d) => ev === 'recycled' && d.perfect,
     win: () => 'Every piece of steel and iron lifted out, and hardly any electricity wasted. That is how real recycling plants sort metals!' }
 ];
@@ -1043,6 +1044,7 @@ function startMission(i) {
   location.hash = 'view=' + state.view;
   const m = MISSIONS[i];
   $('#bannerKicker').textContent = `Mission ${i + 1} of ${MISSIONS.length}: ${m.title}`;
+  if (HUB.tier(m) !== 'core') $('#bannerKicker').insertAdjacentHTML('beforeend', ' ' + HUB.badge(HUB.tier(m)));
   $('#bannerText').innerHTML = m.task; $('#bannerHint').innerHTML = m.hint;
   $('#bannerHint').classList.add('hidden'); $('#hintBtn').textContent = '💡 Show a hint';
   $('#banner').classList.remove('hidden');
@@ -1063,38 +1065,25 @@ function confetti() {
 }
 
 // ================= Help, key words and Real life =================
-const OBJ = {
-  '5Pe.01': 'Know the difference between a magnet and a magnetic material.',
-  '5Pe.02': 'Know that forces act over a distance between magnets, and between a magnet and a magnetic material.',
-  '5Pe.03': 'Know that magnets can have different magnetic strengths.',
-  '5TWSc.01': 'Sort, group and classify objects, materials and living things through testing, observation and using secondary information.',
-  '5TWSp.03': 'Make predictions, referring to relevant scientific knowledge and understanding within familiar and unfamiliar contexts.',
-  '5TWSp.04': 'Plan fair test investigations, identifying the independent, dependent and control variables.',
-  '5TWSp.05': 'Describe risks when planning practical work and consider how to minimise them.',
-  '5TWSc.04': 'Decide when observations and measurements need to be repeated to give more reliable data.',
-  '5TWSa.02': 'Describe patterns in results, including identifying any anomalous results.',
-  '5TWSa.05': 'Present and interpret results using tables, bar charts, dot plots and line graphs.',
-  '5TWSm.01': 'Know that a model presents an object, process or idea in a way that shows some of the important features.'
-};
-const MAIN = ['5Pe.01', '5Pe.02', '5Pe.03'], SUPPORT = ['5TWSc.01', '5TWSp.03', '5TWSp.04', '5TWSp.05', '5TWSc.04', '5TWSa.02', '5TWSa.05', '5TWSm.01'];
+const MAIN = ['SC5-MAG-1', 'SC5-MAG-2', 'SC5-MAG-3'], SUPPORT = ['SC5-SKL-17', 'SC5-SKL-4', 'SC5-SKL-5', 'SC5-SKL-6', 'SC5-SKL-10', 'SC5-SKL-13', 'SC5-SKL-12', 'SC5-SKL-19'];
 const HELP = {
   bench: { q: 'Which things does a magnet pull?', steps: ['Tap an object.', '<b>Predict</b>: will the magnet pull it?', 'Bring the magnet near. If it is pulled, check if it can pick up a paperclip by itself.', 'Put it in the right box.'],
-    look: 'Not all metals are magnetic!', codes: ['5Pe.01', '5TWSc.01', '5TWSp.03'] },
+    look: 'Not all metals are magnetic!', codes: ['SC5-MAG-1', 'SC5-SKL-17', 'SC5-SKL-4'] },
   which: { q: 'How can you tell a magnet from a magnetic material?', steps: ['Meet the poles: push two magnets together, then turn one round.', 'Then test the two grey bars.', 'Decide which bar is the magnet.'],
-    look: 'Only a magnet can <b>repel</b>.', codes: ['5Pe.01', '5Pe.02'] },
+    look: 'Only a magnet can <b>repel</b>.', codes: ['SC5-MAG-1', 'SC5-MAG-2'] },
   dist: { q: 'Can a magnet pull without touching?', steps: ['Slide the paperclip closer. Watch the pull bar and the arrow.', 'Put different materials in the gap.', 'Try the floating paperclip and the floating rings.'],
-    look: 'The pull gets stronger as the gap gets smaller.', codes: ['5Pe.02', '5TWSm.01'] },
+    look: 'The pull gets stronger as the gap gets smaller.', codes: ['SC5-MAG-2', 'SC5-SKL-19'] },
   str: { q: 'Are all magnets the same strength?', steps: ['Choose a question.', 'Choose <b>one</b> thing to change, what to measure, and what to keep the same.', 'Think about safety, then <b>predict</b>.', 'Measure 3 times, find the odd result, choose a chart and write a conclusion.'],
-    look: 'A bigger magnet is not always stronger.', codes: ['5Pe.03', '5TWSp.04', '5TWSp.05', '5TWSp.03', '5TWSc.04', '5TWSa.02', '5TWSa.05'] },
+    look: 'A bigger magnet is not always stronger.', codes: ['SC5-MAG-3', 'SC5-SKL-5', 'SC5-SKL-6', 'SC5-SKL-4', 'SC5-SKL-10', 'SC5-SKL-13', 'SC5-SKL-12'] },
   work: { q: 'How do we use magnets?', steps: ['Choose a slow or fast belt, then press <b>Start</b>.', 'When something made of <b>steel or iron</b> is under the magnet, tap to switch the magnet on.', 'Don\'t switch it on for things that are not magnetic: that wastes electricity.', 'Read about other magnets at work.'],
-    look: 'Food cans and drinks cans look alike. Do you know what each one is made of?', codes: ['5Pe.01', '5TWSp.03'] }
+    look: 'Food cans and drinks cans look alike. Do you know what each one is made of?', codes: ['SC5-MAG-1', 'SC5-SKL-4'] }
 };
 const MODEL = {
-  bench: [['🧲', 'The magnet here is drawn bigger to make it easy to see.']],
+  bench: [['🧲', 'The magnet here is drawn bigger to make it easy to see.'], ['🥄', 'Some stainless steel is not magnetic. Test things to find out.']],
   which: [['🔴', 'Real magnets are not always painted red and blue. Some have N and S marked, and some have no marks at all.']],
   dist: [['➡️', 'You can\'t see a magnet\'s pull in real life. The pull bar and the arrows are drawings to show it.']],
   str: [['📎', 'Real paperclips are not all exactly the same. That is one reason we repeat tests.'], ['🧲', 'Real magnets of the same kind can be different strengths. Your class may get different numbers.']],
-  work: [['🏭', 'A real recycling magnet is huge, and much stronger than a school magnet.']],
+  work: [['🏭', 'A real recycling magnet is huge, and much stronger than a school magnet.'], ['🥄', 'Some stainless steel is not magnetic. Test things to find out.']],
   all: [['➡️', 'You can\'t see a magnet\'s pull in real life. The pull bar and the arrows are drawings to show it.'], ['🧲', 'Real magnets of the same kind can be different strengths.'],
     ['📎', 'Real paperclips are not all exactly the same, which is one reason we repeat tests.'], ['🔍', 'The magnets here are drawn bigger to make them easy to see.']]
 };
@@ -1103,7 +1092,8 @@ let autoHelp = true, welcomed = false;
 function showHelp() {
   const H = HELP[state.view], V = VIEWS[state.view];
   helpSeen.add(state.view);
-  const core = MISSIONS.map((m, i) => m.core ? `${i + 1} (${m.title})` : null).filter(Boolean);
+  const start = MISSIONS.map((m, i) => m.start ? `${i + 1} (${m.title})` : null).filter(Boolean);
+  const extra = ['back', 'further', 'next'].map(t => { const ms = MISSIONS.map((m, i) => HUB.tier(m) === t ? `${i + 1} (${m.title})` : null).filter(Boolean); return ms.length ? `${HUB.TIERS[t].em} ${HUB.TIERS[t].name}: ${ms.join(', ')}.` : ''; }).filter(Boolean);
   $('#helpBody').innerHTML = `<h2 id="helpTitle">${V.label.replace(/<[^>]+>/g, '').split(' ')[0]} ${V.name}</h2>
     ${welcomed ? '' : '<p class="welcome">Welcome to Magnet Lab!</p>'}
     <h3>🔬 The big question</h3><p>${H.q}</p>
@@ -1111,8 +1101,8 @@ function showHelp() {
     <p><b>💡 Look out for:</b> ${H.look}</p>
     <p>📖 Tap <b>Words</b> at the top to see what the key words mean.</p>
     <p>🚀 Try the <b>Missions</b> to win stars!</p>
-    <details class="teach"><summary>For teachers</summary>${H.codes.map(c => `<p><b>${c}</b> ${OBJ[c]}</p>`).join('')}
-      <h4>⏱ A 45-minute lesson</h4><p>Good missions to start with: ${core.join(', ')}.</p>
+    <details class="teach"><summary>For teachers</summary>${HUB.objList(H.codes)}
+      <h4>⏱ A 45-minute lesson</h4><p>Good missions to start with: ${start.join(', ')}.</p><p>${extra.length ? extra.join(' ') : 'All missions are ⭐ Core.'}</p>
       <h4>All of Magnet Lab's objectives</h4><p>Main: ${MAIN.join(', ')}. Supporting: ${SUPPORT.join(', ')}.</p></details>`;
   welcomed = true;
   $('#helpModal').classList.remove('hidden');
@@ -1192,8 +1182,8 @@ const ACTIONS = {
   wkmag() { WORK.pulse(); if (state.work.dirty) { state.work.dirty = false; render(); } else renderStage(); },
   // Missions and pop-ups
   missions() {
-    $('#missionList').innerHTML = MISSIONS.map((m, i) => `<button class="mission-item${state.done.includes(m.id) ? ' done' : ''}" data-act="startMission" data-i="${i}">
-      <span class="em">${m.icon}</span><span class="t">${i + 1}. ${m.title}</span><span class="star">⭐</span></button>`).join('');
+    $('#missionList').innerHTML = HUB.starLine(MISSIONS, state.done) + HUB.missionList(MISSIONS, (m, i) => `<button class="mission-item${state.done.includes(m.id) ? ' done' : ''}" data-act="startMission" data-i="${i}">
+      <span class="em">${m.icon}</span><span class="t">${i + 1}. ${m.title} ${HUB.badge(HUB.tier(m))}</span><span class="star">⭐</span></button>`);
     $('#missionsModal').classList.remove('hidden');
   },
   startMission(el) { startMission(+el.dataset.i); },

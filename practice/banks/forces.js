@@ -1,13 +1,14 @@
-/* Question bank: Forces (Cambridge Primary Science 5Pf.01, 5Pf.02, 5Pf.03)
+/* Question bank: Forces (Year 5 Science SC5-FOR-1, SC5-FOR-2, SC5-FOR-3)
    Each question is one object. "type" says which activity it is – see the engine (index.html) for the formats.
    In "sentence" questions the right choice is written first (the engine shuffles them); "answers" lists other true versions.
-   Only the seven forces in 5Pf.01 are used: gravity, applied force, normal force, upthrust, friction, air resistance and water resistance.
-   Pictures are unlabelled force diagrams from the Forces Playground. Label positions are in % across and down the picture. */
+   Only the seven forces in SC5-FOR-1 are used: gravity, applied force, normal force, upthrust, friction, air resistance and water resistance.
+   Pictures are unlabelled force diagrams from the Forces Playground. Label positions are in % across and down the picture.
+   tier: 'next' = a Next year sneak peek (steady speed while moving, speeding up, the trolley, upthrust readings and floating). No tier = Core. */
 window.BANKS = window.BANKS || [];
 (() => {
 const P = f => `../forces-playground/pics/${f}`;
 window.BANKS.push({
-  id: 'forces', title: 'Forces', icon: '🛝', objectives: '5Pf.01, 5Pf.02, 5Pf.03',
+  id: 'forces', title: 'Forces', icon: '🛝', objectives: 'SC5-FOR-1 · SC5-FOR-2 · SC5-FOR-3',
   explorer: { name: 'Forces Playground', icon: '🛝', href: '../forces-playground/index.html' },
   intro: 'Naming forces, drawing force diagrams, balanced and unbalanced forces, parachutes, upthrust and friction.',
   items: [
@@ -21,7 +22,7 @@ window.BANKS.push({
     labels: [{ text: 'Upthrust', x: 78, y: 22, px: 50, py: 36 }, { text: 'Gravity', x: 78, y: 86, px: 50, py: 82 }],
     extra: ['Normal force', 'Water resistance'],
     explain: 'Gravity pulls the boat down. The water pushes it up with upthrust. They are balanced, so the boat floats.' },
-  { type: 'label', prompt: 'A trolley is pushed to the right at a steady speed. Label the forces on the trolley.', img: P('trolley.svg'), alt: 'A trolley with arrows pointing up, down, left and right',
+  { type: 'label', tier: 'next', prompt: 'A trolley is pushed to the right at a steady speed. Label the forces on the trolley.', img: P('trolley.svg'), alt: 'A trolley with arrows pointing up, down, left and right',
     labels: [{ text: 'Normal force', x: 78, y: 18, px: 53, py: 36 }, { text: 'Gravity', x: 78, y: 90, px: 53, py: 84 }, { text: 'Applied force', x: 86, y: 46, px: 78, py: 60 }, { text: 'Friction', x: 14, y: 46, px: 30, py: 60 }],
     extra: ['Upthrust', 'Water resistance'],
     explain: 'The person pushes forwards (applied force) and friction acts backwards, against the movement. Gravity pulls down and the floor pushes up (normal force).' },
@@ -30,7 +31,7 @@ window.BANKS.push({
   { type: 'order', prompt: 'A toy car rolls onto four different surfaces. Put them in order of how far it rolls.', first: 'Rolls furthest', last: 'Stops soonest',
     items: ['Ice', 'Wood', 'Carpet', 'Sandpaper'],
     explain: 'The rougher the surface, the more friction, and the sooner the car stops. Ice is the smoothest, sandpaper the roughest.' },
-  { type: 'order', prompt: 'Put the steps for measuring upthrust in order.', first: 'First', last: 'Last',
+  { type: 'order', tier: 'next', prompt: 'Put the steps for measuring upthrust in order.', first: 'First', last: 'Last',
     items: ['Hang the object on a force meter', 'Read the force meter in air', 'Lower the object into the water', 'Read the force meter again', 'Take the second reading away from the first'],
     explain: 'The reading in water is smaller. The difference between the two readings is the upthrust.' },
 
@@ -54,7 +55,7 @@ window.BANKS.push({
     text: 'A bigger parachute has more {air} resistance at the same speed, so it falls more {slowly} and takes {longer} to land.',
     extra: ['water', 'quickly', 'less'],
     explain: 'A bigger canopy pushes against more air, so air resistance balances gravity while it is still falling slowly.' },
-  { type: 'cloze', prompt: 'Fill the gaps about upthrust.',
+  { type: 'cloze', tier: 'next', prompt: 'Fill the gaps about upthrust.',
     text: 'A stone weighs 5 N on a force meter. In water the reading is only 3 N, because the water pushes up on it with {upthrust}. The upthrust is {2} N. We measure forces in {newtons}.',
     extra: ['friction', '8', 'metres'],
     explain: '5 N − 3 N = 2 N of upthrust.' },
@@ -63,15 +64,19 @@ window.BANKS.push({
   { type: 'tf', prompt: 'True or false?',
     statements: [
       { s: 'A book lying still on a table has no forces acting on it.', a: false, why: 'Gravity pulls it down and the table pushes it up. The forces are balanced, so it stays still.' },
-      { s: 'Friction acts in the opposite direction to the movement.', a: true, why: 'Friction always works against the movement, so it slows things down.' },
-      { s: 'Upthrust only acts on things that float.', a: false, why: 'Things that sink have upthrust too. It is just smaller than their weight.' },
-      { s: 'A skydiver falling at a steady speed has balanced forces.', a: true, why: 'Air resistance is the same size as gravity, so the skydiver doesn\'t speed up or slow down.' },
+      { s: 'Friction acts in the opposite direction to the movement.', a: true, why: 'Friction works against things sliding over each other, so it slows them down.' },
       { s: 'In a force diagram, a longer arrow means a bigger force.', a: true, why: 'The arrow shows the direction of the force, and its length shows how big it is.' },
     ],
     explain: 'Watch out for these common mix-ups!' },
+  { type: 'tf', tier: 'next', prompt: 'True or false?',
+    statements: [
+      { s: 'Upthrust only acts on things that float.', a: false, why: 'Things that sink have upthrust too. It is just smaller than their weight.' },
+      { s: 'A skydiver falling at a steady speed has balanced forces.', a: true, why: 'Air resistance is the same size as gravity, so the skydiver doesn\'t speed up or slow down.' },
+      { s: 'A moving object must always have unbalanced forces on it.', a: false, why: 'A trolley pushed at a steady speed is moving, but the push and friction are balanced.' },
+    ],
+    explain: 'Balanced forces don\'t always mean still.' },
   { type: 'tf', prompt: 'True or false?',
     statements: [
-      { s: 'A moving object must always have unbalanced forces on it.', a: false, why: 'A trolley pushed at a steady speed is moving, but the push and friction are balanced.' },
       { s: 'Gravity pulls things down towards the Earth.', a: true, why: 'Gravity pulls everything down, whether it is moving or still.' },
       { s: 'A car rolls further on sandpaper than on ice.', a: false, why: 'Sandpaper is rough, so there is more friction and the car stops sooner.' },
       { s: 'Forces are measured in newtons.', a: true, why: 'We write newtons as N, so 5 newtons is 5 N.' },
@@ -81,14 +86,14 @@ window.BANKS.push({
 
   // ---------- Sort into groups ----------
   { type: 'sort', prompt: 'Which force is slowing each one down?', groups: ['🧱 Friction', '💨 Air resistance', '💧 Water resistance'],
-    items: [{ t: 'Bike brakes on a wheel', g: 0 }, { t: 'A box sliding across a carpet', g: 0 }, { t: 'Rubbing your hands together', g: 0 }, { t: 'A falling feather', g: 1 }, { t: 'An open parachute', g: 1 }, { t: 'A paper plane gliding', g: 1 }, { t: 'A swimmer moving through a pool', g: 2 }, { t: 'A fish gliding forwards', g: 2 }],
+    items: [{ t: 'Bike brakes on a wheel', em: '🚲', g: 0 }, { t: 'A box sliding across a carpet', em: '📦', g: 0 }, { t: 'Rubbing your hands together', em: '🙌', g: 0 }, { t: 'A falling feather', em: '🪶', g: 1 }, { t: 'An open parachute', em: '🪂', g: 1 }, { t: 'A paper plane gliding', em: '✈️', g: 1 }, { t: 'A swimmer moving through a pool', em: '🏊', g: 2 }, { t: 'A fish gliding forwards', em: '🐟', g: 2 }],
     explain: 'Friction acts between surfaces. Air resistance acts on things moving through air, and water resistance on things moving through water.' },
   { type: 'sort', prompt: 'Is each force a push or a pull?', groups: ['👉 Push', '🤏 Pull'],
-    items: [{ t: 'Kicking a football', g: 0 }, { t: 'A table holding up a book', g: 0 }, { t: 'Water holding up a boat', g: 0 }, { t: 'Opening a drawer by its handle', g: 1 }, { t: 'Gravity on a falling apple', g: 1 }, { t: 'A dog tugging its lead', g: 1 }],
+    items: [{ t: 'Kicking a football', em: '⚽', g: 0 }, { t: 'A table holding up a book', em: '📕', g: 0 }, { t: 'Water holding up a boat', em: '⛵', g: 0 }, { t: 'Opening a drawer by its handle', em: '🗄️', g: 1 }, { t: 'Gravity on a falling apple', em: '🍎', g: 1 }, { t: 'A dog tugging its lead', em: '🐕', g: 1 }],
     explain: 'Every force is a push or a pull. The normal force and upthrust are pushes; gravity is a pull.' },
 
   // ---------- Carroll diagram ----------
-  { type: 'carroll', prompt: 'Sort these into the Carroll diagram.', rows: ['Moving', 'Still'], cols: ['Forces are balanced', 'Forces are unbalanced'],
+  { type: 'carroll', tier: 'next', prompt: 'Sort these into the Carroll diagram.', rows: ['Moving', 'Still'], cols: ['Forces are balanced', 'Forces are unbalanced'],
     items: [{ t: 'Skydiver at a steady speed', em: '🪂', r: 0, c: 0 }, { t: 'Trolley pushed at a steady speed', em: '🛒', r: 0, c: 0 }, { t: 'Skydiver who has just jumped', em: '⏩', r: 0, c: 1 }, { t: 'Box sliding and slowing down', em: '📦', r: 0, c: 1 }, { t: 'Book lying on a table', em: '📕', r: 1, c: 0 }, { t: 'Boat floating on calm water', em: '⛵', r: 1, c: 0 }],
     explain: 'Balanced forces mean an object stays still or keeps moving at a steady speed. Unbalanced forces make it speed up or slow down.' },
 
@@ -101,7 +106,7 @@ window.BANKS.push({
       { q: 'If they dropped the 30 cm parachute again, about how long would it take?', options: ['0.9 s', '1.6 s', '2.6 s', '3.5 s'], a: 1, why: 'It should be between the 20 cm time (1.19 s) and the 40 cm time (2.07 s).' },
     ],
     explain: 'The bigger the canopy, the longer the fall time. An anomalous result should be checked by doing it again.' },
-  { type: 'table', prompt: 'Some objects were weighed on a force meter in air and in water. Use the results.', caption: 'Force meter readings',
+  { type: 'table', tier: 'next', prompt: 'Some objects were weighed on a force meter in air and in water. Use the results.', caption: 'Force meter readings',
     table: { head: ['Object', 'In air', 'In water'], rows: [['Stone', '5 N', '3 N'], ['Metal weight', '8 N', '7 N'], ['Apple', '2 N', '0 N (it floats)']] },
     questions: [
       { q: 'How big is the upthrust on the stone?', options: ['2 N', '3 N', '5 N', '8 N'], a: 0, why: '5 N − 3 N = 2 N.' },
@@ -114,7 +119,7 @@ window.BANKS.push({
   { type: 'odd', prompt: 'Which is the odd one out?', items: ['Friction', 'Gravity', 'Air resistance', 'Water resistance'], odd: 1,
     reasons: ['It does not act against movement – the others all slow moving things down', 'It is the only force that is a push', 'It only acts on things that are moving'], reason: 0,
     explain: 'Friction, air resistance and water resistance all act against movement. Gravity pulls things down whether they are moving or not.' },
-  { type: 'odd', prompt: 'Which is the odd one out?', items: ['📕 Book on a table', '⛵ Boat floating still', '⏩ Skydiver who has just jumped', '🛒 Trolley at a steady speed'], odd: 2,
+  { type: 'odd', tier: 'next', prompt: 'Which is the odd one out?', items: ['📕 Book on a table', '⛵ Boat floating still', '⏩ Skydiver who has just jumped', '🛒 Trolley at a steady speed'], odd: 2,
     reasons: ['Its forces are unbalanced – the others all have balanced forces', 'It is the only one that is moving', 'It is the only one with gravity acting on it'], reason: 0,
     explain: 'The skydiver is speeding up, so gravity is bigger than air resistance. The trolley is moving too, but at a steady speed its forces are balanced.' },
   { type: 'odd', prompt: 'Which surface is the odd one out?', items: ['Ice', 'Glass', 'Sandpaper', 'Polished wood'], odd: 2,
@@ -127,7 +132,7 @@ window.BANKS.push({
     explain: 'The forces on a still object are the same size and act in opposite directions.' },
   { type: 'sentence', prompt: 'Build a true sentence.',
     parts: ['Friction acts in the', ['opposite', 'same'], 'direction to the movement, so it', ['slows', 'speeds'], 'things down.'],
-    explain: 'Friction always works against the movement.' },
+    explain: 'Friction works against things sliding over each other, so it slows them down.' },
   { type: 'sentence', prompt: 'Build a true sentence.',
     parts: ['In a force diagram, the arrow shows the', ['direction', 'colour'], 'of a force, and a longer arrow means a', ['bigger', 'smaller'], 'force.'],
     explain: 'Arrows start on the object and point the way the force acts. Their length shows the size.' },

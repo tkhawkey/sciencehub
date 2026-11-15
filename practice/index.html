@@ -101,6 +101,9 @@
   .progress span { flex: 1; min-width: 14px; height: 10px; border-radius: 5px; background: rgba(255,255,255,.2); }
   .progress span.done { background: var(--green); } .progress span.part { background: var(--yellow); } .progress span.miss { background: var(--orange); } .progress span.now { background: #fff; }
   .qhead { display: flex; gap: 10px; align-items: center; margin-bottom: 6px; }
+  .qhead { flex-wrap: wrap; }
+  .opt-toggle { display: inline-flex; align-items: center; gap: 8px; margin: 0 0 12px; padding: 8px 12px; border-radius: 14px; background: #fff; font-weight: 600; cursor: pointer; }
+  .opt-toggle input { width: 22px; height: 22px; accent-color: #5a3fb0; }
   .qtype { background: var(--soft); border-radius: 999px; padding: 3px 12px; font-weight: 600; font-size: 14.5px; }
   .prompt { font-size: 21px; font-weight: 600; margin: 4px 0 12px; }
   .hint { color: var(--muted); font-size: 15px; margin: -6px 0 12px; }
@@ -221,6 +224,7 @@
 </div>
 
 <!-- Question banks: one file per topic. Add a new topic by adding a file and a line here. -->
+<script src="../hub/levels.js"></script>
 <script src="banks/adaptations.js"></script>
 <script src="banks/earth-space.js"></script>
 <script src="banks/digestion.js"></script>
@@ -256,6 +260,8 @@ const starText = n => '⭐'.repeat(n) + '☆'.repeat(3 - n);
 
 // ================= Activity types =================
 /* How each type is written in a bank (every question also has type, prompt and, if you like, explain):
+   tier?     'back' (Look back), 'further' (Going further) or 'next' (Next year). Leave it out for Core.
+             Practice uses Core and Look back questions, plus the others only when "Include optional questions" is on.
    label     img or svg, alt, credit?, labels: [{ text, x, y, px, py }]  (x, y = box; px, py = what it points to; 0–100), extra?: [wrong labels]
    order     items: [words, or { t, em, size }] listed in the right order, first?, last?  (words for each end)
    match     pairs: [[word, meaning]], extra?: [wrong words]
@@ -291,6 +297,11 @@ const HINTS = {
   carroll: 'Tap an item, then tap the box where its row and column are both true.',
 };
 const SESSION_LEN = 10;
+// Levels: Core and Look back questions are always used; Going further and Next year only when the toggle is on
+const OPTIONAL = new Set(['further', 'next']);
+const qTier = it => window.HUB ? HUB.tier(it) : (it.tier || 'core');
+let withOptional = store.get('sp-optional', false);
+const usable = b => b.items.filter(it => withOptional || !OPTIONAL.has(qTier(it)));
 
 // ================= State =================
 const S = { screen: 'home', bank: null, mode: null, queue: [], i: 0, results: [], q: null };
@@ -551,15 +562,17 @@ function homeHTML() {
   return `<h1>Choose a topic</h1><div class="grid">${homeBanks().map(b => {
     const hidden = !SHOWN.includes(b.id);
     const st = Object.entries(best).filter(([k]) => k.startsWith(b.id + ':')).reduce((a, [, v]) => a + v, 0);
-    return `<button class="tile${hidden ? ' is-hidden' : ''}" data-act="bank" data-id="${b.id}"><span class="em">${b.icon}</span><span>${hidden ? '<span class="hidden-tag">Hidden from pupils</span><br>' : ''}<span class="t">${esc(b.title)}</span><br><span class="d">${esc(b.intro)}</span><br><span class="d">${esc(b.objectives)}</span><div class="stars">⭐ ${st} stars</div></span></button>`;
+    return `<button class="tile${hidden ? ' is-hidden' : ''}" data-act="bank" data-id="${b.id}"><span class="em">${b.icon}</span><span>${hidden ? '<span class="hidden-tag">Hidden from pupils</span><br>' : ''}<span class="t">${esc(b.title)}</span><br><span class="d">${esc(b.intro)}</span><div class="stars">⭐ ${st} stars</div></span></button>`;
   }).join('')}</div>`;
 }
 function topicHTML() {
   const b = S.bank, counts = {};
-  b.items.forEach(it => counts[it.type] = (counts[it.type] || 0) + 1);
+  usable(b).forEach(it => counts[it.type] = (counts[it.type] || 0) + 1);
+  const nOpt = b.items.filter(it => OPTIONAL.has(qTier(it))).length;
   const tile = (mode, em, name, desc, n) => `<button class="tile ${mode === 'mixed' ? 'big' : ''}" data-act="start" data-mode="${mode}"><span class="em">${em}</span><span><span class="t">${name}</span><br><span class="d">${desc}${n ? ` · ${n} question${n > 1 ? 's' : ''}` : ''}</span><div class="stars">${starText(best[`${b.id}:${mode}`] || 0)}</div></span></button>`;
   return `<h1>${b.icon} ${esc(b.title)}</h1>
-    ${b.explorer ? `<p><a class="btn" href="${b.explorer.href}">${b.explorer.icon} Back to ${esc(b.explorer.name)}</a></p>` : ''}<div class="grid">
+    ${b.explorer ? `<p><a class="btn" href="${b.explorer.href}">${b.explorer.icon} Back to ${esc(b.explorer.name)}</a></p>` : ''}
+    ${nOpt ? `<label class="opt-toggle"><input type="checkbox" data-act="optional" ${withOptional ? 'checked' : ''}> Include optional questions (🔭 ⏩)</label>` : ''}<div class="grid">
     ${tile('mixed', '🎲', 'Mixed practice', `${SESSION_LEN} questions of all kinds, chosen at random`, 0)}
     ${Object.keys(TYPES).filter(t => counts[t]).map(t => tile(t, TYPES[t].icon, TYPES[t].name, TYPES[t].desc, counts[t])).join('')}</div>`;
 }
@@ -580,7 +593,7 @@ function questionHTML() {
     <div class="qlayout ${parts.media ? 'split' : 'single'} t-${q.type}">
       ${parts.media ? `<section class="card media">${parts.media}</section>` : ''}
       <section class="card qside${!parts.media && PLACE_TYPES.has(q.type) && !q.revealed ? ' sidepool' : ''}"><div class="qscroll">
-        <div class="qhead"><span class="qtype">${T.icon} ${T.name}</span><span class="muted">Question ${S.i + 1} of ${S.queue.length}</span></div>
+        <div class="qhead"><span class="qtype">${T.icon} ${T.name}</span>${qTier(it) !== 'core' && window.HUB ? HUB.badge(qTier(it), true) : ''}<span class="muted">Question ${S.i + 1} of ${S.queue.length}</span></div>
         <div class="prompt">${esc(it.prompt)}</div>${HINTS[q.type] && !q.checked ? `<div class="hint">${HINTS[q.type]}</div>` : ''}
         ${parts.side}${fb}</div>
         ${PLACE_TYPES.has(q.type) && !q.revealed ? `<div class="qpool">${pool(q)}</div>` : ''}
@@ -599,8 +612,9 @@ function summaryHTML() {
 }
 function startSession(mode, items) {
   const b = S.bank;
-  S.mode = mode;
-  S.queue = items || (mode === 'mixed' ? shuffle(b.items).slice(0, SESSION_LEN) : shuffle(b.items.filter(it => it.type === mode)));
+  const queue = items || (mode === 'mixed' ? shuffle(usable(b)).slice(0, SESSION_LEN) : shuffle(usable(b).filter(it => it.type === mode)));
+  if (!queue.length) { S.screen = 'topic'; draw(); return; }
+  S.mode = mode; S.queue = queue;
   S.i = 0; S.results = []; S.q = prepare(S.queue[0]); S.screen = 'question';
   draw(); window.scrollTo({ top: 0 });
 }
@@ -621,6 +635,7 @@ const ACTIONS = {
   'close-help': () => { $('#helpModal').classList.add('hidden'); store.set('sp-help-seen', true); },
   bank: el => { S.bank = window.BANKS.find(b => b.id === el.dataset.id); S.screen = 'topic'; draw(); },
   start: el => startSession(el.dataset.mode),
+  optional: el => { withOptional = el.checked; store.set('sp-optional', withOptional); draw(); },
   'again-wrong': () => startSession(S.mode, S.queue.filter((_, k) => (S.results[k] || 0) < 1)),
   check, retry, reveal,
   next: () => {

@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="../hub/objectives.js"></script><script src="../hub/levels.js"></script>
 <style>
   /* ================= Shared look (matches Balanced Plate) ================= */
   :root {
@@ -226,9 +227,6 @@
     .brand { font-size: 18px; }
     .tl { display: none; }
   }
-  /* Lesson (core) missions, and extension missions */
-  .core { background: var(--yellow); color: var(--ink); border-radius: 8px; padding: 1px 7px; font-size: 12.5px; font-weight: 700; white-space: nowrap; }
-  .extn { background: #e8e0ff; color: #5a3fb0; border-radius: 8px; padding: 1px 7px; font-size: 12.5px; font-weight: 700; white-space: nowrap; }
 </style>
 </head>
 <body>
@@ -263,7 +261,6 @@
   <div class="modal-box">
     <button class="modal-x" data-act="closeModals" aria-label="Close">✕</button>
     <h2 id="missionsTitle">🚀 Missions</h2>
-    <p class="muted" style="margin-top:-4px">Missions marked <span class="extn">➕ Extension</span> go beyond the Year 5 objectives.</p>
     <div class="mission-list" id="missionList"></div>
     <div class="modal-actions"><button class="btn" data-act="resetStars">Reset stars</button><button class="btn primary" data-act="closeModals">Close</button></div>
   </div>
@@ -936,7 +933,7 @@ const PU = {
     sea:     ['Sea water', 'Sea', 35, '35 g', 'Lots of <b>salt</b>.', false],
     river:   ['River water', 'River', .3, 'about 0.3 g', 'A little: <b>minerals</b> from rocks and soil.', false],
     tap:     ['Tap water', 'Tap', .4, 'about 0.4 g', 'A little: <b>minerals</b>, like the white scale inside a kettle.', false],
-    rain:    ['Rain water', 'Rain', 0, 'almost nothing', 'Almost nothing. Rain is <b>nearly pure</b>.', true],
+    rain:    ['Rain water', 'Rain', 0, 'almost nothing', 'Almost nothing. Rain is <b>nearly pure</b>, but it can still pick up dirt and germs, so don\'t drink it.', true],
     mineral: ['Bottled mineral water', 'Mineral', .5, 'about 0.5 g', 'A little: the <b>minerals</b> written on its label.', false]
   },
   ORDER: ['sea', 'river', 'tap', 'rain', 'mineral'],
@@ -988,7 +985,7 @@ const PU = {
 
 // ================= River town =================
 // A made-up town by the River Danube. Spot the pollution, then use science and technology to make things better.
-// ================= Make your case (5SIC.03): use science to support a point =================
+// ================= Make your case (SC5-WLD-3): use science to support a point =================
 // Evidence cards: [id, text, kind]. kind: 'yes' / 'no' supports that side, 'op' is an opinion, 'x' is true but does not help.
 const CASE = {
   q: 'Should farms near the Danube use less fertiliser?',
@@ -1152,7 +1149,7 @@ const RT = {
       o += `<g class="place" data-place="${id}"><circle cx="${x}" cy="${y}" r="${r + 6}" fill="transparent"/><circle cx="${x}" cy="${y}" r="${r}" fill="${done ? 'var(--green)' : 'var(--yellow)'}" stroke="${on ? 'var(--ink)' : '#fff'}" stroke-width="${on ? 4 : 3}"/>`
         + `<text x="${x}" y="${y + (narrow ? 5 : 7)}" text-anchor="middle" style="font-size:${narrow ? 14 : 19}px;font-weight:700;fill:${done ? '#fff' : 'var(--ink)'}">${done ? '✓' : i + 1}</text></g>`;
     });
-    return `<div class="lay-top">${RT.meter('💧 River', rl)}${RT.meter('💨 Air', al)}</div>
+    return `<div class="lay-top">${RT.meter('💧 River', rl)}${RT.meter('💨 Air', al)}<span class="scaletag">🏰 A made-up town by the real River Danube.</span></div>
       <svg id="townSvg" viewBox="0 0 ${w} ${h}" aria-label="Devín, by the River Danube">${o}</svg>`;
   },
   answer(yes) {
@@ -1214,7 +1211,7 @@ document.addEventListener('pointercancel', () => { if (Chips.d) { Chips.d.ghost?
 // ================= Missions =================
 // Each mission sets up a view; activities call emit() when something happens, and on() says whether that completes it.
 const MISSIONS = [
-  { id: 'count', core: true, icon: '🔢', title: 'What is air made of?', task: 'Predict which gas there is most of in air. Then <b>count</b> the 100 particles and check.',
+  { id: 'count', start: true, icon: '🔢', title: 'What is air made of?', task: 'Predict which gas there is most of in air. Then <b>count</b> the 100 particles and check.',
     hint: 'Press <b>Sort them</b> to put the colours in rows. Each full row is 10.',
     setup() { state.view = 'air'; state.air = freshAir(); },
     on: ev => ev === 'count',
@@ -1224,27 +1221,7 @@ const MISSIONS = [
     setup() { state.view = 'air'; state.air = Object.assign(freshAir(), { level: 10000, predSaved: true, counted: true, counts: { n: '78', o: '21', x: '1' } }); },
     on: ev => ev === 'co2',
     win: () => 'Carbon dioxide <b>is</b> in the air, but only <b>4 in every 10,000</b> particles: <b>0.04%</b>. That is why you can\'t find it in just 100.' },
-  { id: 'explore', ext: true, icon: '🌍', title: 'Layer explorer', task: 'In <b>Around the Earth</b>, find out about all <b>5</b> layers of the atmosphere.',
-    hint: 'Point at each coloured layer in the picture, or tap it.',
-    setup() { state.view = 'earth'; state.earth = freshEarth(); },
-    on: (ev, d) => ev === 'explore' && d.seen === 5,
-    win: () => 'From the ground up: the <b>troposphere</b>, <b>stratosphere</b>, <b>mesosphere</b>, <b>thermosphere</b> and <b>exosphere</b>. Together they make the atmosphere: the layer of air all around the Earth.' },
-  { id: 'sky', ext: true, icon: '✈️', title: 'Sky high', task: 'In <b>Heights and temperature</b>, put all <b>9</b> things at the right height, then check.',
-    hint: 'Tap a layer to read about it. Each layer\'s card tells you what happens there.',
-    setup() { state.view = 'layers'; state.layers = freshLayers(); },
-    on: (ev, d) => ev === 'layers' && d.all,
-    win: () => 'Weather and clouds are in the <b>troposphere</b>, the ozone layer is in the <b>stratosphere</b>, meteors burn up in the <b>mesosphere</b>, the space station orbits in the <b>thermosphere</b> and some satellites are out in the <b>exosphere</b>.' },
-  { id: 'cold', ext: true, icon: '🥶', title: 'The coldest place', task: 'In <b>Heights and temperature</b>, drag the 🌡️ thermometer to the <b>coldest</b> part of the atmosphere.',
-    hint: 'Drag up and down on the temperature graph. Where does the red line go furthest to the left?',
-    setup() { state.view = 'layers'; state.layers = freshLayers(); },
-    on: (ev, d) => ev === 'probe' && d.km >= 80 && d.km <= 90,
-    win: () => 'The coldest place is the top of the <b>mesosphere</b>, about 85 km up: around <b>−90 °C</b>!' },
-  { id: 'hot', ext: true, icon: '🔥', title: 'Hot but thin', task: 'In <b>Heights and temperature</b>, find a height where it is <b>hotter than 500 °C</b>.',
-    hint: 'The temperature line goes off the graph in one layer. Look above the edge of space.',
-    setup() { state.view = 'layers'; state.layers = freshLayers(); },
-    on: (ev, d) => ev === 'probe' && d.t > 500,
-    win: () => 'The <b>thermosphere</b> gets very hot: 700 °C or more. But the air there is so thin that the few particles could hardly warm you at all, so it would not feel hot.' },
-  { id: 'wsteps', core: true, icon: '🌧️', title: 'Round and round', task: 'In <b>Water cycle</b>, answer all <b>4</b> "What happens next?" questions.',
+  { id: 'wsteps', start: true, icon: '🌧️', title: 'Round and round', task: 'In <b>Water cycle</b>, answer all <b>4</b> "What happens next?" questions.',
     hint: 'Think about what warmth does to water, what cooling does to water vapour, and which way water flows.',
     setup() { state.view = 'water'; state.water = freshWater(); },
     on: ev => ev === 'wsteps',
@@ -1264,7 +1241,7 @@ const MISSIONS = [
     setup() { state.view = 'pure'; state.pure = freshPure(); },
     on: ev => ev === 'pure',
     win: () => '<b>Most water is not pure</b>: sea, river, tap and mineral water all have substances dissolved in them, even though they look clear. Only rain water is nearly pure.' },
-  { id: 'spot', core: true, icon: '🔍', title: 'Pollution spotter', task: 'In <b>Devín</b>, look at all <b>6</b> places and decide which ones are causing pollution.',
+  { id: 'spot', start: true, icon: '🔍', title: 'Pollution spotter', task: 'In <b>Devín</b>, look at all <b>6</b> places and decide which ones are causing pollution.',
     hint: 'Pollution has two parts: it is caused by humans, and it contaminates (makes dirty and harmful) the air, water or land.',
     setup() { state.view = 'town'; state.town = freshTown(); },
     on: ev => ev === 'spot',
@@ -1278,7 +1255,27 @@ const MISSIONS = [
     hint: 'Each place that causes pollution has something that can help.',
     setup() { state.view = 'town'; state.town = Object.assign(freshTown(), { mode: 'fix' }); },
     on: ev => ev === 'clean',
-    win: () => 'Science and technology caused some of the pollution, but it also <b>helped</b> to clean it up: filters, water treatment, electric buses and recycling. Science can have good and bad effects on our local area.' }
+    win: () => 'Science and technology caused some of the pollution, but it also <b>helped</b> to clean it up: filters, water treatment, electric buses and recycling. Science can have good and bad effects on our local area.' },
+  { id: 'explore', tier: 'further', icon: '🌍', title: 'Layer explorer', task: 'In <b>Around the Earth</b>, find out about all <b>5</b> layers of the atmosphere.',
+    hint: 'Point at each coloured layer in the picture, or tap it.',
+    setup() { state.view = 'earth'; state.earth = freshEarth(); },
+    on: (ev, d) => ev === 'explore' && d.seen === 5,
+    win: () => 'From the ground up: the <b>troposphere</b>, <b>stratosphere</b>, <b>mesosphere</b>, <b>thermosphere</b> and <b>exosphere</b>. Together they make the atmosphere: the layer of air all around the Earth.' },
+  { id: 'sky', tier: 'further', icon: '✈️', title: 'Sky high', task: 'In <b>Heights and temperature</b>, put all <b>9</b> things at the right height, then check.',
+    hint: 'Tap a layer to read about it. Each layer\'s card tells you what happens there.',
+    setup() { state.view = 'layers'; state.layers = freshLayers(); },
+    on: (ev, d) => ev === 'layers' && d.all,
+    win: () => 'Weather and clouds are in the <b>troposphere</b>, the ozone layer is in the <b>stratosphere</b>, meteors burn up in the <b>mesosphere</b>, the space station orbits in the <b>thermosphere</b> and some satellites are out in the <b>exosphere</b>.' },
+  { id: 'cold', tier: 'further', icon: '🥶', title: 'The coldest place', task: 'In <b>Heights and temperature</b>, drag the 🌡️ thermometer to the <b>coldest</b> part of the atmosphere.',
+    hint: 'Drag up and down on the temperature graph. Where does the red line go furthest to the left?',
+    setup() { state.view = 'layers'; state.layers = freshLayers(); },
+    on: (ev, d) => ev === 'probe' && d.km >= 80 && d.km <= 90,
+    win: () => 'The coldest place is the top of the <b>mesosphere</b>, about 85 km up: around <b>−90 °C</b>!' },
+  { id: 'hot', tier: 'further', icon: '🔥', title: 'Hot but thin', task: 'In <b>Heights and temperature</b>, find a height where it is <b>hotter than 500 °C</b>.',
+    hint: 'The temperature line goes off the graph in one layer. Look above the edge of space.',
+    setup() { state.view = 'layers'; state.layers = freshLayers(); },
+    on: (ev, d) => ev === 'probe' && d.t > 500,
+    win: () => 'The <b>thermosphere</b> gets very hot: 700 °C or more. But the air there is so thin that the few particles could hardly warm you at all, so it would not feel hot.' }
 ];
 function emit(ev, data = {}) {
   if (state.mission == null) return;
@@ -1302,6 +1299,7 @@ function startMission(i) {
   location.hash = 'view=' + state.view;
   const m = MISSIONS[i];
   $('#bannerKicker').textContent = `Mission ${i + 1} of ${MISSIONS.length}: ${m.title}`;
+  if (HUB.tier(m) !== 'core') $('#bannerKicker').insertAdjacentHTML('beforeend', ' ' + HUB.badge(HUB.tier(m)));
   $('#bannerText').innerHTML = m.task; $('#bannerHint').innerHTML = m.hint;
   $('#bannerHint').classList.add('hidden'); $('#hintBtn').textContent = '💡 Show a hint';
   $('#banner').classList.remove('hidden');
@@ -1314,37 +1312,27 @@ function updateStars() { $('#starCount').textContent = `${state.done.filter(id =
 function closeModals() { document.querySelectorAll('.modal').forEach(m => m.classList.add('hidden')); }
 
 // ================= Help and "Real life?" pop-ups, one per tab =================
-// Curriculum statements, shown to teachers inside each tab's help
-const LEARN = {
-  '5ESp.01': 'Know that the Earth is surrounded by a layer of air called the atmosphere, which is a mixture of different gases (including nitrogen, carbon dioxide and oxygen).',
-  '5Cm.02': 'Understand that substances can be gaseous and know the common gases at room temperature (limited to oxygen, carbon dioxide, water vapour, nitrogen and hydrogen).',
-  '5ESp.02': 'Understand that most water on Earth is not pure and has dissolved substances in it.',
-  '5ESp.03': 'Understand that pollution is the introduction of substances by humans that harm the environment and identify examples of pollution.',
-  '5SIC.03': 'Use science to support points when discussing issues, situations or actions.',
-  '5SIC.05': 'Discuss how the use of science and technology can have positive and negative environmental effects on their local area.',
-  '5ESc.01': 'Describe the water cycle (limited to evaporation, condensation and precipitation).',
-  '5TWSm.01': 'Know that a model presents an object, process or idea in a way that shows some of the important features.'
-};
-// Help for each tab: [big question, steps, look out for, curriculum codes]
+// Each tab's objectives (codes) are looked up in ../hub/objectives.js for the teachers' help
+// Help for each tab: [big question, steps, look out for, objective codes]
 const HELP = {
   air: ['Which gas is there most of in the air?',
     ['Predict which gas there is most of, and say why.', 'Count the 100 particles of each gas.', 'Check your counts and look at the bar chart.', 'Zoom out to 10,000 and hunt for <b>carbon dioxide</b>.'],
-    'Press <b>Sort them</b> to put the colours in neat rows.', ['5ESp.01', '5Cm.02']],
+    'Press <b>Sort them</b> to put the colours in neat rows.', ['SC5-EAR-1', 'SC5-MAT-2']],
   earth: ['What are the layers of air all around the Earth?',
     ['Point at a layer, or tap it.', 'Read about what happens in that layer.', 'Explore all five layers.'],
-    'The layers are drawn much thicker than they really are.', ['5ESp.01']],
+    'The layers are drawn much thicker than they really are.', ['SC5-EAR-1']],
   layers: ['How high is each layer, and how does the temperature change as you go up?',
     ['Tap a layer to read about it.', 'Drag the 🌡️ up and down the graph.', 'Put the 9 things in the sky at the right height.', 'Press <b>Check</b>.'],
-    'Switch to <b>To scale</b> to see how thin the lower layers really are.', ['5ESp.01']],
+    'Switch to <b>To scale</b> to see how thin the lower layers really are.', ['SC5-EAR-1']],
   water: ['How does water go round and round between the sea, the air and the land?',
     ['<b>Step by step</b>: answer each "What happens next?" question.', '<b>Build it</b>: put the three key words in place.', '<b>Cup model</b>: make a water cycle in a cup.'],
-    'Try a ❄️ <b>Cold day</b> to see what falls on the mountain.', ['5ESc.01', '5TWSm.01']],
+    'Try a ❄️ <b>Cold day</b> to see what falls on the mountain.', ['SC5-EAR-4', 'SC5-SKL-19']],
   pure: ['Is clear water always <b>pure</b> water?',
     ['Choose <b>Pure</b> or <b>Not pure</b> for each water.', 'Write why you think that.', 'Press <b>Evaporate</b> and look in the dishes.', 'Answer the questions.'],
-    '<b>Pure</b> water is only water, with nothing else in it.', ['5ESp.02']],
+    '<b>Pure</b> water is only water, with nothing else in it.', ['SC5-EAR-2']],
   town: ['What is <b>pollution</b>, and how can science and technology help?',
     ['<b>Spot the pollution</b>: tap each numbered circle.', 'Decide: is it pollution? Yes or no.', '<b>Make it better</b>: choose a fix for each place.', 'Watch the river and the air get cleaner.', '<b>Make your case</b>: choose a side and support it with evidence.'],
-    'Check both parts of what <b>pollution</b> means.', ['5ESp.03', '5SIC.05', '5SIC.03']]
+    'Check both parts of what <b>pollution</b> means.', ['SC5-EAR-3', 'SC5-WLD-5', 'SC5-WLD-3']]
 };
 // Real life: how each tab's model is different, as [emoji, text]
 const PICS = ['🖼️', 'The pictures are simple drawings, <b>not to scale</b>.'];
@@ -1367,6 +1355,7 @@ const REAL = {
   water: [
     ['🌧️', 'Real <b>water vapour</b> is invisible, so it is only shown by faint arrows. The real water cycle is much slower: water can stay in the sea, in ice or underground for a very long time.'],
     ['⛰️', 'The mountain, the clouds and the sea are <b>not to scale</b>. Real clouds can form anywhere that air rises and cools, and rain falls on the sea and the lowlands too. Plants also give off water vapour, which isn\'t shown.'],
+    ['🏞️', 'Water also evaporates from lakes, rivers, wet ground and plants, not just the sea.'],
     ['🥤', 'The <b>water cycle in a cup</b> is a model of a model! In a real cup, the drops take a few minutes to form. Ask an adult to pour the warm water.']],
   pure: [
     ['🧪', 'The amounts are for <b>1 litre</b> of each water. In a classroom you would only evaporate a small amount, so there would be much less left. Real amounts change from place to place, and from one brand of mineral water to another.'],
@@ -1381,15 +1370,25 @@ const tabName = id => VIEWS[id].label.replace(/<[^>]+>/g, '');
 const helpSeen = new Set(), NOHELP = new URLSearchParams(location.hash.slice(1)).get('nohelp') === '1';
 function showHelp() {
   const [q, steps, look, codes] = HELP[state.view];
-  $('#helpBody').innerHTML = `<h2 id="helpTitle">${tabName(state.view)}</h2>
+  $('#helpBody').innerHTML = `<h2 id="helpTitle">${tabName(state.view)}</h2>${HUB.note(VIEWS[state.view].tier)}
     ${helpSeen.size ? '' : '<p style="margin:0 0 6px"><b>Welcome to Air and Water! 👋</b></p>'}
     <h3 class="help-sec">🔬 The big question</h3><p class="help-q">${q}</p>
     <h3 class="help-sec">👆 What to do</h3><ol class="help-steps">${steps.map(t => `<li>${t}</li>`).join('')}</ol>
     ${look ? `<h3 class="help-sec">💡 Look out for</h3><p style="margin:4px 0">${look}</p>` : ''}
     <p style="margin:10px 0 0">🚀 Try the <b>Missions</b> to win stars!</p>
-    <details class="teach"><summary>For teachers</summary>${codes.map(c => `<p><b>${c}</b> ${LEARN[c]}</p>`).join('')}</details>`;
+    <details class="teach"><summary>For teachers</summary>${HUB.objList(codes)}${missionNotes()}</details>`;
   helpSeen.add(state.view);
   $('#helpModal').classList.remove('hidden');
+}
+// "Good missions to start with" (start: true) and the missions that are not Core, by level
+function missionNotes() {
+  const num = m => `${MISSIONS.indexOf(m) + 1} (${m.title})`;
+  const start = MISSIONS.filter(m => m.start).map(num);
+  const lines = ['back', 'further', 'next'].map(t => {
+    const ms = MISSIONS.filter(m => HUB.tier(m) === t);
+    return ms.length ? `${HUB.TIERS[t].em} ${HUB.TIERS[t].name}: ${ms.map(num).join(', ')}.` : '';
+  }).filter(Boolean);
+  return `<p>Good missions to start with: ${start.join(', ')}.</p>` + (lines.length ? `<p>${lines.join(' ')}</p>` : '');
 }
 // Never on top of another pop-up: then it waits until the tab is next drawn
 function autoHelp() {
@@ -1474,11 +1473,11 @@ const VIEWS = {
     }
   },
   earth: {
-    label: '🌍 <span class="tl">Around the Earth</span>',
+    label: '🌍 <span class="tl">Around the Earth</span>', tier: 'further',
     stage: () => EV.stage(),
     drawer() {
       const e = state.earth, L = LAYERS.find(x => x.id === e.sel);
-      return `<div class="card"><h2>Layers of the atmosphere</h2>
+      return `${HUB.note('further')}<div class="card"><h2>Layers of the atmosphere</h2>
           <div class="science"><b>🔬 The science</b>The <b>atmosphere</b> is the layer of air all around the Earth. It has <b>five</b> layers.</div>
           <p>Point at a layer in the picture, or tap it, to find out about it. You can use these buttons too.</p>
           <div class="stops layerbtns" style="margin-top:6px">${LAYERS.map(x => `<button class="opt${x.id === e.sel ? ' on' : ''}" data-act="elayer" data-l="${x.id}">${x.name}${e.seen.includes(x.id) ? ' <span class="tick">✔</span>' : ''}</button>`).join('')}</div>
@@ -1489,14 +1488,14 @@ const VIEWS = {
     }
   },
   layers: {
-    label: '🌡️ <span class="tl">Heights and temperature</span>',
+    label: '🌡️ <span class="tl">Heights and temperature</span>', tier: 'further',
     stage: () => LY.stage(),
     drawer() {
       const s = state.layers, L = LAYERS.find(x => x.id === s.sel);
       const says = s.said ? `<div class="card says${s.said.ok ? ' good' : ''}"><h3>🔎 Check</h3>${s.said.ok ? `<p>${s.said.text}</p>` : `<ul>${s.said.msgs.slice(0, 3).map(t => `<li>${t}</li>`).join('')}</ul>`}</div>` : '';
       const chips = SKYORDER.map(id => `<button class="chip${s.chip === id ? ' sel' : s.placed[id] != null ? ' on' : ''}" data-kind="sky" data-id="${id}"><span class="em">${picHTML(SKY[id][0])}</span>${SKY[id][1]}</button>`).join('');
       const placed = Object.keys(s.placed).length;
-      return `<div class="card"><h2>Heights and temperature</h2>
+      return `${HUB.note('further')}<div class="card"><h2>Heights and temperature</h2>
           <div class="science"><b>🔬 The science</b>The <b>atmosphere</b> has five layers, one above the other. As you go up, the <b>temperature</b> changes in a different way in each layer.</div>
           <p>Here the five layers are stacked up from the ground. Drag the 🌡️ up and down the graph to see the temperature.</p>
           <div class="stops"><button class="opt${s.scale ? '' : ' on'}" data-act="lscale" data-v="0">↕ Not to scale</button><button class="opt${s.scale ? ' on' : ''}" data-act="lscale" data-v="1">📏 To scale</button></div>
@@ -1581,7 +1580,8 @@ const VIEWS = {
       const right = PU.ORDER.filter(id => u.pred[id] === PU.SAMPLES[id][5]).length;
       return `${finished ? `<div class="card says good"><h2>Is it pure?</h2>
           <div class="science"><b>🔬 The science</b>Most water on Earth is <b>not pure</b>. It has substances <b>dissolved</b> in it, even when it looks clear.</div>
-          <p>Rain is nearly pure because it comes from water that <b>evaporated</b>: when water evaporates, the dissolved substances are left behind, just like in the dishes.</p></div>` : ''}
+          <p>Rain is nearly pure because it comes from water that <b>evaporated</b>: when water evaporates, the dissolved substances are left behind, just like in the dishes. But rain can still pick up dirt and germs, so don't drink it.</p>
+          <p><b>⚠️ Clear water is not always safe to drink.</b> Germs and some harmful substances can't be seen.</p></div>` : ''}
         <div class="card says${finished ? '' : ' wq'}">${finished ? '' : '<h2>Is it pure?</h2>'}<h3>❓ What do the dishes show?</h3>${qs}</div>
         <div class="card"><h3>📋 What was left from 1 litre</h3>
           <table class="gtable ptable"><tr><th>Water</th><th>Left behind</th><th>You said</th></tr>
@@ -1637,7 +1637,7 @@ function renderStage() { const v = VIEWS[state.view]; $('#stage').innerHTML = v.
 function render() {
   const v = VIEWS[state.view];
   $('#tabs').innerHTML = Object.entries(VIEWS).map(([id, x]) =>
-    `<button class="btn${id === state.view ? ' active' : ''}" data-act="view" data-view="${id}" aria-label="${x.label.replace(/<[^>]+>/g, '').replace(/^\S+ /, '')}">${x.label}</button>`).join('');
+    `<button class="btn${id === state.view ? ' active' : ''}" data-act="view" data-view="${id}" aria-label="${x.label.replace(/<[^>]+>/g, '').replace(/^\S+ /, '')}${x.tier ? ` (${HUB.TIERS[x.tier].name})` : ''}">${x.label}${x.tier ? ` ${HUB.TIERS[x.tier].em}` : ''}</button>`).join('');
   const keep = $('#drawer').scrollTop, same = render.last === state.view;
   $('#drawer').innerHTML = v.drawer();
   renderStage();
@@ -1683,8 +1683,8 @@ const ACTIONS = {
   elayer(el) { state.earth.sel = el.dataset.l; EV.hide(); if (!state.earth.seen.includes(el.dataset.l)) { state.earth.seen.push(el.dataset.l); emit('explore', { seen: state.earth.seen.length }); } render(); },
   lpopclose() { EV.hide(); state.earth.sel = null; renderStage(); },
   missions() {
-    $('#missionList').innerHTML = MISSIONS.map((m, i) => `<button class="mission-item${state.done.includes(m.id) ? ' done' : ''}" data-act="startMission" data-i="${i}">
-      <span class="em">${m.icon}</span><span class="t">${i + 1}. ${m.title}</span>${m.ext ? '<span class="extn">➕ Extension</span>' : ''}<span class="star">⭐</span></button>`).join('');
+    $('#missionList').innerHTML = HUB.starLine(MISSIONS, state.done) + HUB.missionList(MISSIONS, (m, i) => `<button class="mission-item${state.done.includes(m.id) ? ' done' : ''}" data-act="startMission" data-i="${i}">
+      <span class="em">${m.icon}</span><span class="t">${i + 1}. ${m.title}</span>${HUB.badge(HUB.tier(m))}<span class="star">⭐</span></button>`);
     $('#missionsModal').classList.remove('hidden');
   },
   startMission(el) { startMission(+el.dataset.i); },
@@ -1799,7 +1799,7 @@ addEventListener('resize', () => { fitBanner(); clearTimeout(resizeT); resizeT =
 
 // ================= Start =================
 // Test hooks: #level=10000&sorted=1&pred=o&counted=1&found=0,1,2,3&pct=0.04&lens=40,40&seed=5&wrong=4 sets up the air grid;
-// #mission=1 starts a mission; #nohelp=1 stops the help popping up by itself
+// #mission=count (a mission id, or its index) starts a mission; #nohelp=1 stops the help popping up by itself
 const hp = new URLSearchParams(location.hash.slice(1));
 if (VIEWS[hp.get('view')]) state.view = hp.get('view');
 {
@@ -1847,7 +1847,8 @@ if (VIEWS[hp.get('view')]) state.view = hp.get('view');
   if (hp.has('fixed')) hp.get('fixed').split(',').filter(id => RT.PLACES[id]).forEach(id => { t.fixed[id] = true; });
 }
 updateStars();
-if (MISSIONS[hp.get('mission')]) startMission(+hp.get('mission'));
+const hm = MISSIONS.findIndex(m => m.id === hp.get('mission')), hmi = hm >= 0 ? hm : MISSIONS[hp.get('mission')] ? +hp.get('mission') : -1;
+if (hmi >= 0) startMission(hmi);
 else render();
 if (hp.has('check')) { if (state.view === 'layers') LY.check(); else AIR.check(); }
 </script>

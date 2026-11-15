@@ -1,4 +1,6 @@
-/* Question bank: Particles, states and water (Cambridge Primary Science 5Cm.01, 5Cm.02, 5Cc.01, 5Cp.02)
+/* Question bank: Particles, states and water (Year 5 Science SC5-MAT-1, SC5-MAT-2, SC5-MAT-5, SC5-MAT-4)
+   Levels: questions only about solids and liquids are Look back (tier 'back'); wax melting and floating are Going further;
+   warm water dissolving sugar faster is Next year (as in the Dissolving bank).
    Each question is one object. "type" says which activity it is – see the engine (index.html) for the formats.
    In "sentence" questions the right choice is written first (the engine shuffles them).
    Numbers match the Particle Playground explorer: water melts at 0 °C and boils at 100 °C, wax melts at about 60 °C,
@@ -25,7 +27,7 @@ const THERMO = `<svg class="dg" viewBox="0 0 600 360" role="img"><rect width="60
   <text x="450" y="${ty(100) + 6}" font-size="26" text-anchor="middle">♨️</text><text x="450" y="${ty(20) + 6}" font-size="26" text-anchor="middle">💧</text><text x="450" y="${ty(-10) + 6}" font-size="26" text-anchor="middle">🧊</text></svg>`;
 
 window.BANKS.push({
-  id: 'particles', title: 'Particles, states and water', icon: '🫧', objectives: '5Cm.01 · 5Cm.02 · 5Cc.01 · 5Cp.02',
+  id: 'particles', title: 'Particles, states and water', icon: '🫧', objectives: 'SC5-MAT-1 · SC5-MAT-2 · SC5-MAT-5 · SC5-MAT-4',
   explorer: { name: 'Particle Playground', icon: '🫧', href: '../particle-playground/index.html' },
   intro: 'Solids, liquids and gases in the particle model, melting and boiling, evaporation and condensation, dissolving, and why water is odd.',
   items: [
@@ -54,7 +56,7 @@ window.BANKS.push({
   // ---------- Match up ----------
   { type: 'match', prompt: 'Match each change to what happens.',
     pairs: [['Melting', 'A solid turns into a liquid'], ['Freezing', 'A liquid turns into a solid'], ['Evaporation', 'A liquid turns into a gas'], ['Condensation', 'A gas turns into a liquid'], ['Dissolving', 'A substance spreads out in a liquid to make a solution']],
-    explain: 'Melting and evaporation need heating. Freezing and condensation happen when something cools down.' },
+    explain: 'Melting and evaporation happen when something warms up. Freezing and condensation happen when something cools down.' },
   { type: 'match', prompt: 'Match each state to its particles.',
     pairs: [['Solid', 'Close together in a pattern; they vibrate on the spot'], ['Liquid', 'Close together, no pattern; they slide past each other'], ['Gas', 'Far apart; they move quickly in all directions']],
     explain: 'This is the particle model. It explains why solids keep their shape, liquids flow, and gases spread out.' },
@@ -87,13 +89,17 @@ window.BANKS.push({
   // ---------- True or false ----------
   { type: 'tf', prompt: 'True or false?',
     statements: [
-      { s: 'In a solid, the particles do not move at all.', a: false, why: 'They vibrate on the spot, but stay in their places.' },
       { s: 'A gas spreads out to fill its container.', a: true, why: 'Its particles are far apart and move quickly in all directions.' },
-      { s: 'In a liquid, the particles are far apart.', a: false, why: 'In a liquid they are close together, but not in a pattern.' },
-      { s: 'Liquids can flow because their particles slide past each other.', a: true, why: 'That is also why a liquid takes the shape of its container.' },
       { s: 'Particles get bigger when they are heated.', a: false, why: 'The particles stay the same size. They move faster and further apart.' },
     ],
     explain: 'The particle model explains how solids, liquids and gases behave.' },
+  { type: 'tf', tier: 'back', prompt: 'True or false?',
+    statements: [
+      { s: 'In a solid, the particles do not move at all.', a: false, why: 'They vibrate on the spot, but stay in their places.' },
+      { s: 'In a liquid, the particles are far apart.', a: false, why: 'In a liquid they are close together, but not in a pattern.' },
+      { s: 'Liquids can flow because their particles slide past each other.', a: true, why: 'That is also why a liquid takes the shape of its container.' },
+    ],
+    explain: 'The particle model explains how solids and liquids behave.' },
   { type: 'tf', prompt: 'True or false?',
     statements: [
       { s: 'Water only evaporates when it boils.', a: false, why: 'Water evaporates at any temperature. It is just faster when it is warmer.' },
@@ -106,10 +112,14 @@ window.BANKS.push({
   { type: 'tf', prompt: 'True or false?',
     statements: [
       { s: 'Water gets bigger when it freezes.', a: true, why: '100 ml of water freezes into about 109 ml of ice.' },
-      { s: 'Solid wax floats in melted wax.', a: false, why: 'It sinks, like most solids in their own liquid. Ice floating is unusual.' },
       { s: 'Water can dissolve many different substances.', a: true, why: 'Salt, sugar and instant coffee all dissolve in water.' },
-      { s: 'Every substance melts at 0 °C.', a: false, why: 'Different substances melt at different temperatures. Wax melts at about 60 °C.' },
       { s: 'Frozen water pipes can burst.', a: true, why: 'The water expands when it freezes, and pushes on the pipe.' },
+    ],
+    explain: 'Water acts differently from many other substances.' },
+  { type: 'tf', tier: 'further', prompt: 'True or false?',
+    statements: [
+      { s: 'Solid wax floats in melted wax.', a: false, why: 'It sinks, like most solids in their own liquid. Ice floating is unusual.' },
+      { s: 'Every substance melts at 0 °C.', a: false, why: 'Different substances melt at different temperatures. Wax melts at about 60 °C.' },
     ],
     explain: 'Water acts differently from many other substances.' },
 
@@ -120,7 +130,7 @@ window.BANKS.push({
     explain: 'Liquids go in the middle: their particles are close together and can move around. Solids are close together but stay in place. Gases move around but are far apart.' },
 
   // ---------- Read the table ----------
-  { type: 'table', prompt: 'The table shows the melting points of some substances.', caption: 'Melting points',
+  { type: 'table', tier: 'further', prompt: 'The table shows the melting points of some substances.', caption: 'Melting points',
     table: { head: ['Substance', 'Melting point'], rows: [['Water (ice)', '0 °C'], ['Chocolate', 'about 34 °C'], ['Candle wax', 'about 60 °C'], ['Iron', 'about 1,500 °C']] },
     questions: [
       { q: 'Which melts at the lowest temperature?', options: ['Water (ice)', 'Chocolate', 'Candle wax', 'Iron'], a: 0, why: 'Ice melts at 0 °C.' },
@@ -144,7 +154,7 @@ window.BANKS.push({
       { q: 'Why does ice float in water?', options: ['It expands when it freezes, so it is lighter than the same amount of water', 'It is colder than the water', 'It is a different colour'], a: 0, why: 'Most solids shrink and sink. Water is odd: ice floats.' },
     ],
     explain: 'Water expands when it solidifies. Most substances, like wax, shrink.' },
-  { type: 'table', prompt: 'A class timed how long a spoonful of sugar took to dissolve in water at different temperatures. (The numbers are made up.)', caption: 'Time for sugar to dissolve',
+  { type: 'table', tier: 'next', prompt: 'A class timed how long a spoonful of sugar took to dissolve in water at different temperatures. (The numbers are made up.)', caption: 'Time for sugar to dissolve',
     table: { head: ['Water temperature', 'Time to dissolve'], rows: [['5 °C', '120 seconds'], ['20 °C', '60 seconds'], ['40 °C', '30 seconds'], ['60 °C', '15 seconds']] },
     questions: [
       { q: 'At which temperature did the sugar dissolve fastest?', options: ['5 °C', '20 °C', '40 °C', '60 °C'], a: 3, why: 'It took only 15 seconds at 60 °C.' },
@@ -155,17 +165,17 @@ window.BANKS.push({
 
   // ---------- Odd one out ----------
   { type: 'odd', prompt: 'Which is the odd one out?', items: ['🔥 Melting', '🔥 Evaporating', '🔥 Boiling', '❄️ Condensing'], odd: 3,
-    reasons: ['It happens when something cools down – the others need heating', 'It only happens to water', 'It makes a solid'], reason: 0,
+    reasons: ['It happens when something cools down – the others happen when it warms up', 'It only happens to water', 'It makes a solid'], reason: 0,
     explain: 'Condensing happens when a gas cools and turns into a liquid.' },
   { type: 'odd', prompt: 'Which is the odd one out?', items: ['🧂 Salt', '🍬 Sugar', '🏖️ Sand', '☕ Instant coffee'], odd: 2,
     reasons: ['It does not dissolve in water – the others do', 'It is the only one that is a solid', 'It is the only one you can eat'], reason: 0,
     explain: 'Salt, sugar and instant coffee dissolve to make solutions. Sand sinks to the bottom.' },
-  { type: 'odd', prompt: 'Which is the odd one out?', items: ['💧 Water', '🥛 Milk', '🧊 Ice', '🫗 Cooking oil'], odd: 2,
+  { type: 'odd', tier: 'back', prompt: 'Which is the odd one out?', items: ['💧 Water', '🥛 Milk', '🧊 Ice', '🫗 Cooking oil'], odd: 2,
     reasons: ['It is a solid – the others are liquids', 'It is the only one made of water', 'It is the only one that is cold'], reason: 0,
     explain: 'Ice is a solid: its particles are in a pattern and only vibrate on the spot.' },
 
   // ---------- Build a sentence ----------
-  { type: 'sentence', prompt: 'Build a true sentence.',
+  { type: 'sentence', tier: 'back', prompt: 'Build a true sentence.',
     parts: ['In a solid, the particles are', ['close together', 'far apart'], 'and they', ['vibrate on the spot', 'move quickly in all directions'], '.'],
     explain: 'That is why a solid keeps its shape.' },
   { type: 'sentence', prompt: 'Build a true sentence.',

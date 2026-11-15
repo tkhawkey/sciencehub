@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="../hub/objectives.js"></script><script src="../hub/levels.js"></script>
 <style>
   /* ================= Shared look (matches Air and Water) ================= */
   :root {
@@ -176,7 +177,6 @@
   }
   /* Lesson (core) missions, and extension missions */
   .core { background: var(--yellow); color: var(--ink); border-radius: 8px; padding: 1px 7px; font-size: 12.5px; font-weight: 700; white-space: nowrap; }
-  .extn { background: #e8e0ff; color: #5a3fb0; border-radius: 8px; padding: 1px 7px; font-size: 12.5px; font-weight: 700; white-space: nowrap; }
 </style>
 </head>
 <body>
@@ -365,7 +365,10 @@ const PB = {
     if (S.bp != null && b.temp === S.bp) note = `At ${S.bp} °C, water <b>boils</b> and turns into water vapour. This is the <b>boiling point</b>.`;
     if (b.sub === 'water' && ph === 'solid') note += ' Look: the particles in ice are in an <b>open</b> pattern, a tiny bit further apart than in liquid water.';
     if (b.sub === 'wax' && b.temp > 100) note += ' Wax needs to be very much hotter than this to boil.';
-    return `<h3>${title}: ${S.names[ph]}</h3><ul class="facts">${lines.map(l => `<li>${l}</li>`).join('')}</ul>${note ? `<p class="spot">${note.trim()}</p>` : ''}`;
+    if (b.sub === 'water' && ph === 'gas') note += ' Water vapour is invisible. The white cloud you see over a kettle is tiny drops of liquid water.';
+    // Solid and liquid (melting) are Look back; wax is Going further; the gas (boiling) is Core
+    const lvl = b.sub === 'wax' ? 'further' : ph === 'gas' ? 'core' : 'back';
+    return `${lvl === 'core' ? '' : `<p style="margin:0 0 6px">${HUB.badge(lvl, true)}</p>`}<h3>${title}: ${S.names[ph]}</h3><ul class="facts">${lines.map(l => `<li>${l}</li>`).join('')}</ul>${note ? `<p class="spot">${note.trim()}</p>` : ''}`;
   },
   setTemp(T) {
     const b = state.box, before = PB.phase(b.sub, b.temp);
@@ -582,11 +585,14 @@ const DS = {
 
 // ================= Gases =================
 const GASES = {
-  hydrogen: { name: 'Hydrogen', col: '#ff8fa3', move: '⬆ floats up', facts: ['The <b>lightest</b> gas of all, so a balloon of it floats up.', 'It is used as a fuel, even for some rockets.', 'It burns very easily, so party balloons use helium instead.'] },
-  oxygen:   { name: 'Oxygen', col: '#7fd1ff', move: '⬇ sinks slowly', facts: ['About <b>21%</b> of the air.', 'We <b>breathe it in</b>, and so do other animals.', 'Things need it to burn.'] },
-  nitrogen: { name: 'Nitrogen', col: '#b5a6ff', move: '⬇ sinks slowly', facts: ['About <b>78%</b> of the air: most of it!', 'Nearly as heavy as air, so a balloon of it sinks slowly.', 'Plants need it to grow.'] },
-  co2:      { name: 'Carbon dioxide', col: '#9be39b', move: '⬇ sinks quickly', facts: ['Only about <b>0.04%</b> of the air.', 'We <b>breathe it out</b>, and plants take it in.', 'It makes the bubbles in fizzy drinks. It is heavier than air.'] },
-  vapour:   { name: 'Water vapour', col: '#d6ecff', move: 'in the air', facts: ['Water as a <b>gas</b>. It is invisible.', 'It is in the air all around us, made when water <b>evaporates</b>.', 'You can\'t fill a balloon with it at room temperature: it would <b>condense</b> back into water. It stays a gas when it is spread out in the air.'] }
+  hydrogen: { name: 'Hydrogen', col: '#ff8fa3', facts: ['It is used as a fuel, even for some rockets.', 'It burns very easily, so party balloons use helium instead.', 'Hydrogen is a gas, but there is almost none in the air around us.'],
+    weight: 'It is the <b>lightest</b> gas of all, so a balloon of it floats up.' },
+  oxygen:   { name: 'Oxygen', col: '#7fd1ff', weight: 'A balloon of it sinks slowly.', facts: ['About <b>21%</b> of the air.', 'We <b>breathe it in</b>, and so do other animals.', 'Things need it to burn.'] },
+  nitrogen: { name: 'Nitrogen', col: '#b5a6ff', facts: ['About <b>78%</b> of the air: most of it!', 'It does not burn, and things don\'t burn in it.'],
+    weight: 'It is nearly as heavy as air, so a balloon of it sinks slowly.' },
+  co2:      { name: 'Carbon dioxide', col: '#9be39b', facts: ['Only about <b>0.04%</b> of the air.', 'We <b>breathe it out</b>, and plants take it in.', 'It makes the bubbles in fizzy drinks.'],
+    weight: 'It is heavier than air, so a balloon of it sinks quickly.' },
+  vapour:   { name: 'Water vapour', col: '#d6ecff', facts: ['Water as a <b>gas</b>. It is invisible.', 'It is in the air all around us, made when water <b>evaporates</b>.', 'You can\'t fill a balloon with it at room temperature: it would <b>condense</b> back into water. It stays a gas when it is spread out in the air.'] }
 };
 const GORDER = ['hydrogen', 'oxygen', 'nitrogen', 'co2', 'vapour'];
 // At room temperature (about 20 °C): 0 solid, 1 liquid, 2 gas
@@ -607,7 +613,7 @@ const GS = {
         o += `<g class="tapme" data-gas="vapour"><rect x="${cx - br * 1.2}" y="${base - br * 2.4}" width="${br * 2.4}" height="${br * 2.6}" fill="transparent"/><path d="M${cx - br * .6} ${base - br * 1.1} h${br * 1.2} l-${br * .12} ${br * 1.1} h-${br * .96}Z" fill="#d6ecff" stroke="#7d8db0" stroke-width="2.5"/>`
           + [-.3, 0, .3].map(f => `<path class="rise" style="--d:-${br}px" d="M${cx + f * br} ${base - br * 1.25} q5 -${br * .3} 0 -${br * .6}" stroke="#8fb8e6" stroke-width="2.5" fill="none" stroke-dasharray="4 4"/>`).join('')
           + `${on ? `<circle cx="${cx}" cy="${base - br * 1.2}" r="${br * 1.35}" fill="none" stroke="var(--yellow)" stroke-width="4"/>` : ''}</g>`;
-        o += `<text x="${cx}" y="${floor + 22}" text-anchor="middle" class="wsmall">${G.name}</text><text x="${cx}" y="${floor + 40}" text-anchor="middle" class="gsmall" style="font-size:12px">${G.move}</text>`;
+        o += `<text x="${cx}" y="${floor + 22}" text-anchor="middle" class="wsmall">${G.name}</text><text x="${cx}" y="${floor + 40}" text-anchor="middle" class="gsmall" style="font-size:12px">in the air</text>`;
         return;
       }
       const [fx, cy] = pos[id], cx = w * fx;
@@ -616,7 +622,7 @@ const GS = {
         + `<ellipse cx="${cx - br * .35}" cy="${cy - br * .45}" rx="${br * .15}" ry="${br * .28}" fill="rgba(255,255,255,.6)"/></g>`;
       // Hydrogen's label sits beside it, clear of its string
       const up = id === 'hydrogen', ly = up ? cy : floor + 22, lx = up ? cx + br * 1.2 : cx, anchor = up ? 'start' : 'middle';
-      o += `<text x="${lx}" y="${ly}" text-anchor="${anchor}" class="wsmall">${narrow && id === 'co2' ? 'CO₂' : G.name}</text><text x="${lx}" y="${ly + 18}" text-anchor="${anchor}" class="gsmall" style="font-size:12px">${G.move}</text>`;
+      o += `<text x="${lx}" y="${ly}" text-anchor="${anchor}" class="wsmall">${narrow && id === 'co2' ? 'CO₂' : G.name}</text>`;
       if (s.seen.includes(id)) o += `<text x="${cx + br}" y="${cy - br}" class="glabel" style="fill:var(--green)">✓</text>`;
     });
     return `<div class="lay-top"><span class="scaletag">🎈 Five gases</span><div class="readout">All five are <b>gases</b> at room temperature. Tap each one.</div></div>
@@ -686,32 +692,17 @@ document.addEventListener('pointercancel', () => { if (Chips.d) { Chips.d.ghost?
 // ================= Missions =================
 // Each mission sets up a view; activities call emit() when something happens, and on() says whether that completes it.
 const MISSIONS = [
-  { id: 'melt', core: true, icon: '🧊', title: 'Melt the ice', task: 'In <b>Particle box</b>, the water is frozen. Make the ice <b>melt</b>.',
-    hint: 'Ice melts at its melting point. Warm it up with the temperature slider.',
-    setup() { state.view = 'box'; state.box = { sub: 'water', temp: -10 }; },
-    on: (ev, d) => ev === 'phase' && d.sub === 'water' && d.ph === 'liquid',
-    win: () => 'Ice melts at <b>0 °C</b>. The particles start to move around and slide past each other: the solid has become a <b>liquid</b>.' },
   { id: 'boil', icon: '♨️', title: 'Boil the water', task: 'In <b>Particle box</b>, turn the water into a <b>gas</b>.',
     hint: 'Water boils at its boiling point. How hot is that?',
     setup() { state.view = 'box'; state.box = { sub: 'water', temp: 20 }; },
     on: (ev, d) => ev === 'phase' && d.sub === 'water' && d.ph === 'gas',
     win: () => 'Water boils at <b>100 °C</b>. The particles move so fast that they spread far apart: the water has become <b>water vapour</b>, a gas.' },
-  { id: 'wax', icon: '🕯️', title: 'Melt the wax', task: 'In <b>Particle box</b>, choose <b>wax</b> and make it melt. Is its melting point the same as water\'s?',
-    hint: 'Wax melts at about 60 °C.',
-    setup() { state.view = 'box'; state.box = { sub: 'wax', temp: 20 }; },
-    on: (ev, d) => ev === 'phase' && d.sub === 'wax' && d.ph === 'liquid',
-    win: () => 'This wax melts at about <b>60 °C</b>. Different substances have different melting points. Water melts at 0 °C.' },
-  { id: 'float', icon: '🛟', title: 'Make the wax float', task: 'In <b>Water is odd</b>, drop the ice into water. Then try to make the solid wax <b>float</b>. Can you?',
-    hint: 'Try more than once. Then look at the close-ups of the particles.',
-    setup() { state.view = 'odd'; state.odd = freshOdd(); },
-    on: ev => ev === 'why',
-    win: () => 'Solid wax always sinks in melted wax. Most solids do! Ice floats because, when water freezes, its particles move a little <b>further apart</b>. Water is <b>odd</b>.' },
   { id: 'measure', icon: '📏', title: 'Measure the change', task: 'In <b>Water is odd</b>, choose <b>Freeze and measure</b>. Read the volume of the ice and the solid wax.',
     hint: 'Use the close-ups. Each small mark is 1 ml.',
     setup() { state.view = 'odd'; state.odd = Object.assign(freshOdd(), { mode: 'freeze' }); },
     on: ev => ev === 'measure',
     win: () => 'Water <b>expands</b> (gets bigger) when it freezes: 100 ml became about 109 ml of ice. Wax <b>shrinks</b> when it becomes solid, like most substances.' },
-  { id: 'evap', core: true, icon: '☀️', title: 'Where did the water go?', task: 'In <b>Evaporate & condense</b>, predict, then leave the three jugs for a day. How much water evaporated from the warmest jug?',
+  { id: 'evap', start: true, icon: '☀️', title: 'Where did the water go?', task: 'In <b>Evaporate & condense</b>, predict, then leave the three jugs for a day. How much water evaporated from the warmest jug?',
     hint: 'It started with 100 ml. Take away what is left.',
     setup() { state.view = 'evap'; state.evap = freshEvap(); },
     on: ev => ev === 'evap',
@@ -731,11 +722,26 @@ const MISSIONS = [
     setup() { state.view = 'gas'; state.gas = freshGas(); },
     on: (ev, d) => ev === 'gases' && d.n === 5,
     win: () => 'Oxygen, nitrogen, carbon dioxide, hydrogen and water vapour are all <b>gases at room temperature</b>.' },
-  { id: 'sort', core: true, icon: '🗂️', title: 'Solid, liquid or gas?', task: 'In <b>Gases</b>, choose <b>Sort them</b> and sort all <b>12</b> into solids, liquids and gases at room temperature.',
+  { id: 'sort', start: true, icon: '🗂️', title: 'Solid, liquid or gas?', task: 'In <b>Gases</b>, choose <b>Sort them</b> and sort all <b>12</b> into solids, liquids and gases at room temperature.',
     hint: 'All five gases from the balloons are gases at room temperature.',
     setup() { state.view = 'gas'; state.gas = Object.assign(freshGas(), { mode: 'sort' }); },
     on: ev => ev === 'sort',
-    win: () => 'At room temperature, salt, iron, wood and wax are <b>solids</b>, water, milk and oil are <b>liquids</b>, and the five gases are <b>gases</b>.' }
+    win: () => 'At room temperature, salt, iron, wood and wax are <b>solids</b>, water, milk and oil are <b>liquids</b>, and the five gases are <b>gases</b>.' },
+  { id: 'melt', tier: 'back', icon: '🧊', title: 'Melt the ice', task: 'In <b>Particle box</b>, the water is frozen. Make the ice <b>melt</b>.',
+    hint: 'Ice melts at its melting point. Warm it up with the temperature slider.',
+    setup() { state.view = 'box'; state.box = { sub: 'water', temp: -10 }; },
+    on: (ev, d) => ev === 'phase' && d.sub === 'water' && d.ph === 'liquid',
+    win: () => 'Ice melts at <b>0 °C</b>. The particles start to move around and slide past each other: the solid has become a <b>liquid</b>.' },
+  { id: 'wax', tier: 'further', icon: '🕯️', title: 'Melt the wax', task: 'In <b>Particle box</b>, choose <b>wax</b> and make it melt. Is its melting point the same as water\'s?',
+    hint: 'Wax melts at about 60 °C.',
+    setup() { state.view = 'box'; state.box = { sub: 'wax', temp: 20 }; },
+    on: (ev, d) => ev === 'phase' && d.sub === 'wax' && d.ph === 'liquid',
+    win: () => 'This wax melts at about <b>60 °C</b>. Different substances have different melting points. Water melts at 0 °C.' },
+  { id: 'float', tier: 'further', icon: '🛟', title: 'Make the wax float', task: 'In <b>Water is odd</b>, drop the ice into water. Then try to make the solid wax <b>float</b>. Can you?',
+    hint: 'Try more than once. Then look at the close-ups of the particles.',
+    setup() { state.view = 'odd'; state.odd = freshOdd(); },
+    on: ev => ev === 'why',
+    win: () => 'Solid wax always sinks in melted wax. Most solids do! Ice floats because, when water freezes, its particles move a little <b>further apart</b>. Water is <b>odd</b>.' }
 ];
 function emit(ev, data = {}) {
   if (state.mission == null) return;
@@ -760,6 +766,7 @@ function startMission(i) {
   location.hash = 'view=' + state.view;
   const m = MISSIONS[i];
   $('#bannerKicker').textContent = `Mission ${i + 1} of ${MISSIONS.length}: ${m.title}`;
+  if (HUB.tier(m) !== 'core') $('#bannerKicker').insertAdjacentHTML('beforeend', ' ' + HUB.badge(HUB.tier(m)));
   $('#bannerText').innerHTML = m.task; $('#bannerHint').innerHTML = m.hint;
   $('#bannerHint').classList.add('hidden'); $('#hintBtn').textContent = '💡 Show a hint';
   $('#banner').classList.remove('hidden');
@@ -796,7 +803,7 @@ const VIEWS = {
       return `<div class="card"><h2>Particle box</h2>
           <p class="bigq">🔬 What happens to the particles when something melts or boils?</p>
           <p>Everything is made of tiny <b>particles</b>. Change the temperature and watch how the particles behave.</p>
-          <div class="stops">${Object.entries(SUBS).map(([id, x]) => `<button class="opt${id === b.sub ? ' on' : ''}" data-act="bsub" data-s="${id}">${x.em} ${x.name}</button>`).join('')}</div>
+          <div class="stops">${Object.entries(SUBS).map(([id, x]) => `<button class="opt${id === b.sub ? ' on' : ''}" data-act="bsub" data-s="${id}">${x.em} ${x.name}${id === 'wax' ? ' 🔭' : ''}</button>`).join('')}</div>
           <div class="slide"><span>❄️</span><input type="range" id="tempSlider" min="-20" max="120" step="1" value="${b.temp}" aria-label="Temperature"><span>🔥</span></div>
           <div class="stops">${presets.map(([T, n]) => `<button class="opt" data-act="bpreset" data-t="${T}">${n}</button>`).join('')}</div></div>
         <div class="card" id="stateCard">${PB.stateCard()}</div>
@@ -896,7 +903,7 @@ const VIEWS = {
           <div class="stops"><button class="opt${s.mode === 'balloons' ? ' on' : ''}" data-act="gmode" data-m="balloons">🎈 Five gases</button><button class="opt${s.mode === 'sort' ? ' on' : ''}" data-act="gmode" data-m="sort">🗂️ Sort them</button></div></div>`;
       if (s.mode === 'balloons') {
         const G = GASES[s.open];
-        const card = G ? `<div class="card says good" id="gasCard"><h3><span class="sw" style="background:${G.col}"></span> ${G.name}</h3><p><b>A gas at room temperature</b> ✔</p><ul class="facts">${G.facts.map(f => `<li>${f}</li>`).join('')}</ul></div>`
+        const card = G ? `<div class="card says good" id="gasCard"><h3><span class="sw" style="background:${G.col}"></span> ${G.name}</h3><p><b>A gas at room temperature</b> ✔</p><ul class="facts">${G.facts.map(f => `<li>${f}</li>`).join('')}</ul>${G.weight ? `<p style="margin:8px 0 2px"><span class="lvl lvl-next">⏩ Next year: gases have weight too</span></p><p class="muted" style="margin:0">${G.weight}</p>` : ''}</div>`
           : `<div class="card says"><h3>👆 Tap a balloon</h3><p>Each balloon holds a different gas. Tap one to find out about it. Don't forget the cup of water!</p></div>`;
         return `${top}<div class="science"><b>🔬 The science</b>In a gas, the particles are <b>far apart</b> and move <b>quickly</b> in all directions. That is why a gas spreads out to fill its container.</div>
           ${card}<p class="muted" style="margin:0 4px">You have looked at ${s.seen.length} of 5 gases.</p>`;
@@ -912,34 +919,26 @@ const VIEWS = {
 };
 
 // ================= Help and "Real life?" pop-ups: one tab at a time =================
-// Curriculum statements, exactly as worded in the teacher's objectives
-const CODES = {
-  '5Cm.01': 'Use the particle model to describe solid, liquids (including solutions) and gases.',
-  '5Cm.02': 'Understand that substances can be gaseous and know the common gases at room temperature (limited to oxygen, carbon dioxide, water vapour, nitrogen and hydrogen).',
-  '5Cc.01': 'Describe the processes of evaporation and condensation, using the particle model and relating the processes to changes in temperature.',
-  '5Cp.02': 'Know the main properties of water (limited to boiling point, melting point, expands when it solidifies, and its ability to dissolve a range of substances) and know that water acts differently from many other substances.',
-  '5TWSm.01': 'Know that a model presents an object, process or idea in a way that shows some of the important features.'
-};
 const HELP = {
   box: { q: 'What happens to the particles when something melts or boils?',
     steps: ['Choose <b>water</b> or <b>wax</b>.', 'Slide the temperature up and down.', 'Watch how the particles move in a <b>solid</b>, a <b>liquid</b> and a <b>gas</b>.'],
     look: 'Find the temperature where each one <b>melts</b>. Is it the same?',
-    codes: ['5Cm.01', '5Cp.02'] },
+    codes: ['SC5-MAT-1', 'SC5-MAT-4'] },
   odd: { q: 'How is water different from other substances when it freezes?',
     steps: ['<b>Float test</b>: drop ice into water, then solid wax into melted wax.', 'Answer the question about why.', '<b>Freeze and measure</b>: read the new volumes in the close-ups.'],
     look: 'Compare how far apart the particles are in each close-up.',
-    codes: ['5Cp.02', '5Cm.01'] },
+    codes: ['SC5-MAT-4', 'SC5-MAT-1'] },
   evap: { q: 'How does temperature change evaporation and condensation?',
     steps: ['<b>Evaporation</b>: predict, then leave three jugs for a day.', 'Read the jugs and work out how much water <b>evaporated</b>.', '<b>Condensation</b>: wait 5 minutes, then explain the drops on the cold can.'],
     look: 'Watch the close-ups: particles escape from the water\'s surface.',
-    codes: ['5Cc.01', '5Cm.01'] },
+    codes: ['SC5-MAT-5', 'SC5-MAT-1'] },
   dis: { q: 'Which substances dissolve in water, and where do they go?',
     steps: ['Choose a substance.', 'Predict: will it <b>dissolve</b>?', 'Stir it in and look at the close-up of the particles.', 'Test all six.'],
     look: 'In a <b>solution</b>, every water particle is still there.',
-    codes: ['5Cm.01', '5Cp.02'] },
+    codes: ['SC5-MAT-1', 'SC5-MAT-4'] },
   gas: { q: 'Which substances are gases at room temperature?',
     steps: ['Tap each balloon, and the cup of water.', 'Read about each <b>gas</b>.', 'Choose <b>Sort them</b>: put 12 things into solid, liquid or gas.'],
-    codes: ['5Cm.02', '5Cm.01'] }
+    codes: ['SC5-MAT-2', 'SC5-MAT-1'] }
 };
 // "Real life?" bullets: two that are true for every tab, then each tab's own
 const REAL_ALL = [
@@ -948,10 +947,11 @@ const REAL_ALL = [
 ];
 const REAL_GAS = ['💨', 'In a real gas, the particles are <b>much further apart</b> and move <b>much faster</b> than in the picture: hundreds of metres every second!'];
 const REAL_WAX = ['🕯️', 'There are many kinds of <b>wax</b>. Most melt somewhere between about 45 °C and 70 °C. This tool uses <b>about 60 °C</b>.'];
+const REAL_WATER = ['🌡️', 'Water melts at 0 °C and boils at 100 °C. These are for normal air pressure at sea level.'];
 const REAL_HOT = ['⚠️', 'Hot wax and boiling water can burn. Only try these with an adult.'];
 const REAL = {
-  box: [REAL_GAS, REAL_WAX, REAL_HOT],
-  odd: [['📏', 'The volumes (109 ml of ice and 90 ml of wax) are <b>typical</b> results. Real ones depend on the container and how carefully you measure.'], REAL_WAX, REAL_HOT],
+  box: [REAL_WATER, REAL_GAS, REAL_WAX, REAL_HOT],
+  odd: [REAL_WATER, ['📏', 'The volumes (109 ml of ice and 90 ml of wax) are <b>typical</b> results. Real ones depend on the container and how carefully you measure.'], REAL_WAX, REAL_HOT],
   evap: [['📏', 'The water lost from the jugs is a <b>typical</b> result. Real results depend on the room, the container and how long you wait.'], REAL_GAS],
   dis: [['📏', 'The results of dissolving are <b>typical</b>. Real results depend on how much you add and how warm the water is.']],
   gas: [REAL_GAS, ['🎈', 'Hydrogen burns very easily, so party balloons that float are filled with <b>helium</b> instead.']]
@@ -969,8 +969,10 @@ function showHelp() {
     <h3 class="help-sec">👆 What to do</h3><ol class="help-steps">${H.steps.map(s => `<li>${s}</li>`).join('')}</ol>
     ${H.look ? `<p class="help-look"><b>💡 Look out for:</b> ${H.look}</p>` : ''}
     <p class="muted" style="margin:4px 0">🚀 Try the <b>Missions</b> to win stars!</p>
-    <details class="teachers"><summary>For teachers</summary>${H.codes.map(c => `<p><b>${c}</b> ${CODES[c]}</p>`).join('')}
-      <p><b>Also: 5TWSm.01</b> ${CODES['5TWSm.01']}</p></details>`;
+    <details class="teachers"><summary>For teachers</summary>${HUB.objList(H.codes)}
+      <p><b>Also: SC5-SKL-19</b> ${HUB.objText('SC5-SKL-19')}</p>
+      <p>Good missions to start with: ${MISSIONS.map((m, i) => m.start ? `${i + 1} (${m.title})` : null).filter(Boolean).join(', ')}.</p>
+      <p>${['back', 'further', 'next'].map(t => { const ms = MISSIONS.map((m, i) => HUB.tier(m) === t ? `${i + 1} (${m.title})` : null).filter(Boolean); return ms.length ? `${HUB.TIERS[t].em} ${HUB.TIERS[t].name}: ${ms.join(', ')}.` : ''; }).filter(Boolean).join(' ')}</p></details>`;
   helpFirst = false;
   $('#helpModal').classList.remove('hidden');
 }
@@ -1021,8 +1023,8 @@ const ACTIONS = {
   gcheck() { GS.check(); },
   greset() { state.gas = Object.assign(freshGas(), { mode: 'sort', seen: state.gas.seen }); render(); },
   missions() {
-    $('#missionList').innerHTML = MISSIONS.map((m, i) => `<button class="mission-item${state.done.includes(m.id) ? ' done' : ''}" data-act="startMission" data-i="${i}">
-      <span class="em">${m.icon}</span><span class="t">${i + 1}. ${m.title}</span>${m.ext ? '<span class="extn">➕ Extension</span>' : ''}<span class="star">⭐</span></button>`).join('');
+    $('#missionList').innerHTML = HUB.starLine(MISSIONS, state.done) + HUB.missionList(MISSIONS, (m, i) => `<button class="mission-item${state.done.includes(m.id) ? ' done' : ''}" data-act="startMission" data-i="${i}">
+      <span class="em">${m.icon}</span><span class="t">${i + 1}. ${m.title}</span>${HUB.badge(HUB.tier(m))}<span class="star">⭐</span></button>`);
     $('#missionsModal').classList.remove('hidden');
   },
   startMission(el) { startMission(+el.dataset.i); },

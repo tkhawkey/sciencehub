@@ -1,13 +1,14 @@
-/* Question bank: A balanced diet (Cambridge Primary Science 5Bp.01)
+/* Question bank: A balanced diet (SC5-BOD-2)
    Each question is one object. "type" says which activity it is – see the engine (index.html) for the formats.
    In "sentence" questions the right choice is written first (the engine shuffles them); "answers" lists other true versions.
    Food groups follow a healthy-eating plate: fruit and vegetables, starchy foods, protein, dairy, and oils and spreads.
+   tier: 'further' = Going further (the food-label questions, as in Label detective); no tier = Core.
    The picture is from Balanced Plate. Label positions are in % across and down the picture. */
 window.BANKS = window.BANKS || [];
 (() => {
 const P = f => `../balanced-plate/pics/${f}`;
 window.BANKS.push({
-  id: 'diet', title: 'A balanced diet', icon: '🍽️', objectives: '5Bp.01',
+  id: 'diet', title: 'A balanced diet', icon: '🍽️', objectives: 'SC5-BOD-2',
   explorer: { name: 'Balanced Plate', icon: '🍽️', href: '../balanced-plate/index.html' },
   intro: 'The food groups, what each one is for, and why humans and other animals need a balanced diet.',
   items: [
@@ -37,7 +38,7 @@ window.BANKS.push({
 
   // ---------- Fill the gaps ----------
   { type: 'cloze', prompt: 'Fill the gaps about a balanced diet.',
-    text: 'A {balanced} diet has foods from all the food groups, in the right amounts. You should eat at least {5} portions of fruit and vegetables a day. The best drink is {water}.',
+    text: 'A {balanced} diet has foods from all the food groups, in the right amounts. Many countries suggest at least {5} portions of fruit and vegetables a day. The best drink is {water}.',
     extra: ['fizzy', '1', 'sweets'],
     explain: 'Eating a balanced diet, with enough food, keeps you healthy.' },
   { type: 'cloze', prompt: 'Fill the gaps about animals.',
@@ -78,7 +79,7 @@ window.BANKS.push({
       { q: 'Who ate at least 5 portions?', options: ['Ana and Cara', 'Ben and Dev', 'Only Cara', 'Everyone'], a: 0, why: 'Ana ate 6 and Cara ate 5.' },
       { q: 'How many more portions does Ben need to reach 5 a day?', options: ['2', '3', '4', '5'], a: 1, why: '5 − 2 = 3 more portions.' },
     ],
-    explain: 'Try to eat at least 5 portions of fruit and vegetables every day.' },
+    explain: 'Many countries suggest at least 5 a day.' },
   { type: 'table', prompt: 'Use the table about zoo animals to answer the questions.', caption: 'What some animals eat',
     table: { head: ['Animal', 'Main foods'], rows: [['Giant panda', 'Bamboo'], ['Lion', 'Meat'], ['Cow', 'Grass and hay'], ['Garden bird', 'Seeds, insects and berries']] },
     questions: [
@@ -88,7 +89,7 @@ window.BANKS.push({
     ],
     explain: 'A balanced diet is different for each animal.' },
   // Food labels: amounts are per 100 g (or 100 ml), so the sums use halves, doubles and simple multiples
-  { type: 'table', prompt: 'These are parts of the labels on three breakfast cereals. Use them to answer the questions.', caption: 'Each 100 g of cereal contains',
+  { type: 'table', tier: 'further', prompt: 'These are parts of the labels on three breakfast cereals. Use them to answer the questions.', caption: 'Each 100 g of cereal contains',
     table: { head: ['Cereal', 'Sugar', 'Fibre'], rows: [['Oat Crunch', '6 g', '10 g'], ['Honey Flakes', '20 g', '5 g'], ['Choco Pops', '36 g', '3 g']] },
     questions: [
       { q: 'Which cereal has the most fibre?', options: ['Oat Crunch', 'Honey Flakes', 'Choco Pops'], a: 0, why: 'Oat Crunch has 10 g of fibre in every 100 g.' },
@@ -96,7 +97,7 @@ window.BANKS.push({
       { q: 'How much more sugar does Choco Pops have than Oat Crunch, in every 100 g?', options: ['6 g', '16 g', '30 g', '42 g'], a: 2, why: '36 g − 6 g = 30 g more.' },
     ],
     explain: 'Comparing labels helps you choose food with less sugar and more fibre.' },
-  { type: 'table', prompt: 'These are parts of the labels on two tins of soup. Each tin holds 400 g.', caption: 'Each 100 g of soup contains',
+  { type: 'table', tier: 'further', prompt: 'These are parts of the labels on two tins of soup. Each tin holds 400 g.', caption: 'Each 100 g of soup contains',
     table: { head: ['Soup', 'Protein', 'Salt'], rows: [['Tomato soup', '1 g', '0.5 g'], ['Lentil soup', '6 g', '0.5 g']] },
     questions: [
       { q: 'Which soup has more protein?', options: ['Tomato soup', 'Lentil soup', 'They are the same'], a: 1, why: 'Lentils are a good source of protein: 6 g in every 100 g.' },
@@ -104,7 +105,7 @@ window.BANKS.push({
       { q: 'Kai eats half a tin (200 g) of tomato soup. How much salt does he eat?', options: ['0.5 g', '1 g', '2 g', '200 g'], a: 1, why: '200 g is double 100 g, so 0.5 g × 2 = 1 g.' },
     ],
     explain: 'Labels show what is in every 100 g, so you can work out how much is in the amount you really eat.' },
-  { type: 'table', prompt: 'These are parts of the labels on four drinks.', caption: 'Each 100 ml of drink contains',
+  { type: 'table', tier: 'further', prompt: 'These are parts of the labels on four drinks.', caption: 'Each 100 ml of drink contains',
     table: { head: ['Drink', 'Sugar'], rows: [['Water', '0 g'], ['Milk', '5 g'], ['Apple juice', '10 g'], ['Cola', '11 g']] },
     questions: [
       { q: 'Which drink has no sugar?', options: ['Water', 'Milk', 'Apple juice', 'Cola'], a: 0, why: 'Water has 0 g of sugar. It is the best drink when you are thirsty.' },

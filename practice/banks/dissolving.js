@@ -1,14 +1,15 @@
-/* Question bank: Dissolving and separating (Cambridge Primary Science 5Cp.01, 5Cc.02, 5Cc.03)
+/* Question bank: Dissolving and separating (Year 5 Science Hub SC5-MAT-3, SC5-MAT-6, SC5-MAT-7)
    Each question is one object. "type" says which activity it is – see the engine (index.html) for the formats.
    In "sentence" questions the right choice is written first (the engine shuffles them).
    Facts match the Dissolving Lab explorer: salt, sugar and instant coffee dissolve in water but not in cooking oil; sand, chalk and candle wax
    don't dissolve; the mass stays the same; warm water dissolves sugar faster and dissolves more of it; filter paper can't remove
    dissolved salt; evaporating gets the salt back, and a cold lid gets the water back too. Plain words only: no "suspension",
-   "saturated" or "solubility". Children never taste anything. */
+   "saturated" or "solubility". Children never taste anything.
+   tier (no tier = Core): 'next' = how much dissolves and warm water (Year 6 work); 'back' = sieve, filter and magnet (earlier years). */
 window.BANKS = window.BANKS || [];
 (() => {
 window.BANKS.push({
-  id: 'dissolving', title: 'Dissolving and separating', icon: '🧂', objectives: '5Cp.01 · 5Cc.02 · 5Cc.03',
+  id: 'dissolving', title: 'Dissolving and separating', icon: '🧂', objectives: 'SC5-MAT-3 · SC5-MAT-6 · SC5-MAT-7',
   explorer: { name: 'Dissolving Lab', icon: '🧂', href: '../dissolving-lab/index.html' },
   intro: 'What dissolves, and in which liquid? Where does it go? How do you make it dissolve faster, and how do you get it back?',
   items: [
@@ -16,11 +17,11 @@ window.BANKS.push({
   // ---------- Match up ----------
   { type: 'match', prompt: 'Match each word to its meaning.',
     pairs: [['Solute', 'The solid that dissolves'], ['Solvent', 'The liquid it dissolves in'], ['Solution', 'The see-through liquid you get when a solid dissolves'], ['Dissolve', 'Break up into tiny particles that spread out in a liquid']],
-    explain: 'In salt water, salt is the solute, water is the solvent, and salt water is the solution.' },
+    explain: 'In salt water, salt is the solute, water is the solvent, and salt water is the solution. A solution can still be coloured, like coffee.' },
   { type: 'match', prompt: 'Match each word to its meaning.',
     pairs: [['Mixture', 'Two or more things mixed together that can be separated again'], ['Reversible', 'Can be changed back'], ['Evaporate', 'Turn from a liquid into a gas'], ['Condense', 'Turn from a gas back into a liquid']],
     explain: 'Dissolving is reversible: evaporate the water, and the solid is left behind.' },
-  { type: 'match', prompt: 'Which equipment separates each mixture?',
+  { type: 'match', tier: 'back', prompt: 'Which equipment separates each mixture?',
     pairs: [['Sieve', 'Rice and flour'], ['Filter paper', 'Sand and water'], ['Magnet', 'Iron filings and sand'], ['Evaporating dish', 'Salt from salt water']],
     explain: 'A sieve for big and small bits, a filter for a solid in a liquid, a magnet for iron, and evaporating for a dissolved solid.' },
 
@@ -36,7 +37,7 @@ window.BANKS.push({
   { type: 'sort', prompt: 'Is it a solution, or just a mixture?', groups: ['🥤 A solution', '🥣 Just a mixture'],
     items: [{ t: 'Salt water', em: '🧂', g: 0 }, { t: 'Sugar water', em: '🍬', g: 0 }, { t: 'Instant coffee', em: '☕', g: 0 },
       { t: 'Sand and water', em: '🏖️', g: 1 }, { t: 'Chalk and water', em: '🖍️', g: 1 }, { t: 'Muddy water', em: '🟤', g: 1 }, { t: 'Oil and water', em: '🫒', g: 1 }],
-    explain: 'A solution is see-through, with no bits, layer or cloud. All solutions are mixtures, but not all mixtures are solutions.' },
+    explain: 'A solution is see-through, with no bits, layer or cloud. It can still be coloured, like coffee. All solutions are mixtures, but not all mixtures are solutions.' },
   { type: 'sort', prompt: 'Does it dissolve in water?', groups: ['✅ Dissolves', '❌ Does not dissolve'],
     items: [{ t: 'Salt', em: '🧂', g: 0 }, { t: 'Sugar', em: '🍬', g: 0 }, { t: 'Instant coffee', em: '☕', g: 0 }, { t: 'Sand', em: '🏖️', g: 1 }, { t: 'Chalk', em: '🖍️', g: 1 }, { t: 'Candle wax', em: '🕯️', g: 1 }],
     explain: 'Chalk makes water cloudy, but cloudy means it has not dissolved. Leave it, and the chalk settles at the bottom.' },
@@ -61,9 +62,13 @@ window.BANKS.push({
       { s: 'Everything that dissolves in water also dissolves in oil.', a: false, why: 'Salt and sugar dissolve in water, but not in cooking oil.' },
       { s: 'Nothing dissolves in cooking oil.', a: false, why: 'Some things do. The colour in paprika dissolves in oil and turns it orange.' },
     ] },
-  { type: 'tf', prompt: 'True or false?',
+  { type: 'tf', tier: 'next', prompt: 'True or false?',
     statements: [
       { s: 'Warm water can dissolve more sugar than cold water.', a: true, why: 'Keep adding spoonfuls, and warm water takes more before no more will dissolve.' },
+      { s: 'You can keep adding sugar to water, and it will always dissolve.', a: false, why: 'In the end, no more will dissolve. The extra sugar sits at the bottom.' },
+    ] },
+  { type: 'tf', prompt: 'True or false?',
+    statements: [
       { s: 'Stirring makes sugar dissolve faster.', a: true, why: 'Stirring moves the sugar around, so it meets fresh water.' },
       { s: 'If water goes cloudy, the solid has dissolved.', a: false, why: 'Cloudy means tiny bits are floating in it: it has not dissolved.' },
       { s: 'Sand dissolves in water if you stir it for long enough.', a: false, why: 'Sand never dissolves in water. It sinks to the bottom.' },
@@ -83,7 +88,7 @@ window.BANKS.push({
   { type: 'sentence', prompt: 'Build a true sentence.',
     parts: ['In salt water, the salt is the', ['solute', 'solvent'], 'and the water is the', ['solvent', 'solute'], '.'],
     explain: 'The solute is the solid that dissolves. The solvent is the liquid it dissolves in.' },
-  { type: 'sentence', prompt: 'Build a true sentence.',
+  { type: 'sentence', tier: 'next', prompt: 'Build a true sentence.',
     parts: ['Sugar dissolves', ['faster', 'slower'], 'in warm water, and warm water can dissolve', ['more', 'less'], 'of it.'],
     explain: 'In warm water, the particles move faster, so the sugar particles break away and spread out more quickly.' },
   { type: 'sentence', prompt: 'Build a true sentence.',
@@ -91,7 +96,7 @@ window.BANKS.push({
     explain: 'Whether something dissolves depends on the solid and on the liquid.' },
 
   // ---------- Read the table ----------
-  { type: 'table', prompt: 'A class timed how long a spoonful of sugar took to dissolve in water at different temperatures. They did each test three times.', caption: 'Time for the sugar to dissolve (seconds)',
+  { type: 'table', tier: 'next', prompt: 'A class timed how long a spoonful of sugar took to dissolve in water at different temperatures. They did each test three times.', caption: 'Time for the sugar to dissolve (seconds)',
     table: { head: ['Water', 'Try 1', 'Try 2', 'Try 3'], rows: [['10 °C', '68', '70', '67'], ['20 °C', '40', '18', '39'], ['40 °C', '22', '23', '21'], ['60 °C', '15', '16', '14']] },
     questions: [
       { q: 'Which result does not fit the pattern?', options: ['10 °C, try 1', '20 °C, try 2', '40 °C, try 3', '60 °C, try 1'], a: 1, why: 'At 20 °C the other tries were 40 and 39 seconds, but try 2 was only 18.' },

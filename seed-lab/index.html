@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="../hub/objectives.js"></script><script src="../hub/levels.js"></script>
 <style>
   /* ================= Shared look (matches Particle Playground) ================= */
   :root {
@@ -222,9 +223,8 @@
   details.teach { margin: 12px 0; font-size: 13px; color: var(--muted); }
   details.teach summary { cursor: pointer; font-weight: 600; min-height: 32px; }
   details.teach p { margin: 4px 0; }
-  /* Lesson (core) missions, and extension missions */
-  .core { background: var(--yellow); color: var(--ink); border-radius: 8px; padding: 1px 7px; font-size: 12.5px; font-weight: 700; white-space: nowrap; }
-  .extn { background: #e8e0ff; color: #5a3fb0; border-radius: 8px; padding: 1px 7px; font-size: 12.5px; font-weight: 700; white-space: nowrap; }
+  details.teach h4 { margin: 8px 0 2px; font-size: 13px; color: var(--ink); }
+  .banner .kicker .lvl { text-transform: none; letter-spacing: 0; }
 </style>
 </head>
 <body>
@@ -308,6 +308,8 @@ const VORDER = ['water', 'temp', 'light', 'soil'];
 const startPot = () => ({ water: 'wet', temp: 'warm', light: 'light', soil: 'soil' });
 // Settings that stop bean seeds germinating. If one of these is kept the same for every pot, nothing germinates
 // anywhere, so the test can't show whether the thing being changed makes a difference.
+// Added to the temperature result: beans like it warm, but not every seed does
+const TEMP_NOTE = 'The best temperature depends on the kind of seed.';
 const BLOCKS = { water: ['dry', 'none of the pots had any <b>water</b>'], temp: ['cold', 'all the pots were <b>cold</b>'] };
 // What could be measured, and whether it fits a question about germination
 const MEASURES = [
@@ -544,7 +546,7 @@ const LAB = {
         ${claimOk ? `<div class="card wq"><h3>2. Use <b>science</b> to explain it</h3><p class="muted">Why did this happen?</p>
           ${choices('pwhy', why.map((w, k) => [String(k), w[0]]), L.why, L.whyWrong, whyRight)}
           ${L.why != null && !whyOk ? `<p class="spot">💡 ${why[+L.why][2]}</p>` : ''}</div>` : ''}
-        ${whyOk ? `<div class="science"><b>🔬 The science</b>${LAB.claimOpts().find(o => o[0] === eff)[1]} ${why[+whyRight][0]}</div>` : ''}
+        ${whyOk ? `<div class="science"><b>🔬 The science</b>${LAB.claimOpts().find(o => o[0] === eff)[1]} ${why[+whyRight][0]}${L.iv === 'temp' ? ' ' + TEMP_NOTE : ''}</div>` : ''}
         ${whyOk ? `<div class="card wq"><h3>3. How could you <b>improve</b> your investigation?</h3><p class="muted">Choose one idea.</p>
           ${IMPROVE.map(([t, ok], k) => `<button class="opt${L.imp === k && ok ? ' done' : L.impTried.includes(k) && !ok ? ' wrong' : ''}" data-act="pimp" data-v="${k}"${L.impTried.includes(k) && !ok ? ' disabled' : ''}>${t}</button>`).join('')}
           ${imp ? `<p class="${impOk ? 'job' : 'spot'}">${impOk ? '✅ Good idea! ' : '💡 '}${imp[2]}</p>` : ''}</div>` : ''}
@@ -553,7 +555,7 @@ const LAB = {
     // The write-up of the whole investigation
     const pred = LAB.predOpts().find(o => o[0] === L.pred)[1], eff = LAB.effect(), keep = VORDER.filter(k => k !== L.iv).map(k => lc(VARS[k].opts[L.groups[0][k]][1]));
     const mean = gi => { const xs = g.map((n, i) => i === anom ? 9 : n).filter((_, i) => groupOf(i) === gi); return xs.reduce((a, b) => a + b, 0) / xs.length; };
-    return `<div class="science"><b>🔬 The science</b>${LAB.claimOpts().find(o => o[0] === eff)[1]} ${WHY[L.iv].find(w => w[1])[0]}</div>
+    return `<div class="science"><b>🔬 The science</b>${LAB.claimOpts().find(o => o[0] === eff)[1]} ${WHY[L.iv].find(w => w[1])[0]}${L.iv === 'temp' ? ' ' + TEMP_NOTE : ''}</div>
       <div class="card says good report">${bar}<h3>🏁 My investigation</h3>
         <p><b class="k">Question</b>Does ${V.the} affect how many bean seeds germinate?</p>
         <p><b class="k">Variables</b>I changed ${V.the}. I measured how many of the 10 seeds germinated. I kept the same: ${keep.join(', ')}, the type of seed, the number of seeds, the size of the pots and how long we waited.</p>
@@ -570,22 +572,18 @@ const LAB = {
 
 // ================= Missions =================
 // Each mission sets up the lab; the lab calls emit() when something happens, and on() says whether that completes it.
+// start: a good mission to start a lesson with. tier: 'further' etc. (no tier = Core). Grouped by level; saved stars use the ids.
 const MISSIONS = [
-  { id: 'water', core: true, icon: '💧', title: 'Do seeds need water?', task: 'Plan a <b>fair test</b> to find out if bean seeds need water to germinate. Predict, then run it.',
+  { id: 'water', start: true, icon: '💧', title: 'Do seeds need water?', task: 'Plan a <b>fair test</b> to find out if bean seeds need water to germinate. Predict, then run it.',
     hint: 'Change only the water. Water Group A, and give Group B no water.',
     setup() { state.view = 'bench'; state.lab = freshLab(); },
     on: (ev, d) => ev === 'ran' && d.iv === 'water' && d.eff !== 'none',
     win: () => 'The seeds with no water did not germinate at all. Seeds need <b>water</b> to germinate.' },
-  { id: 'temp', core: true, icon: '❄️', title: 'Too cold?', task: 'Find out if temperature affects germination, with a fair test.',
+  { id: 'temp', start: true, icon: '❄️', title: 'Too cold?', task: 'Find out if temperature affects germination, with a fair test.',
     hint: 'Change only the temperature. Put one group somewhere cold (4 °C) and keep the other warm.',
     setup() { state.view = 'bench'; state.lab = freshLab(); },
     on: (ev, d) => ev === 'ran' && d.iv === 'temp' && d.eff !== 'none',
-    win: () => 'Hardly any seeds germinated in the cold. Seeds need a <b>suitable temperature</b> to germinate.' },
-  { id: 'light', icon: '🌑', title: 'Does light matter?', task: 'Test whether bean seeds need <b>light</b> to germinate. Make a prediction first!',
-    hint: 'Change only the light. Put one group in the dark.',
-    setup() { state.view = 'bench'; state.lab = freshLab(); },
-    on: (ev, d) => ev === 'ran' && d.iv === 'light' && d.eff !== 'none',
-    win: () => 'Surprise! The seeds germinated just as well in the dark. Bean seeds <b>don\'t need light</b> to germinate. But look at the seedlings: the ones in the dark are <b>taller, thinner and yellow</b>. They are searching for light, and they need light to turn green and keep growing.' },
+    win: () => 'Hardly any seeds germinated in the cold. Seeds need a <b>suitable temperature</b> to germinate. The best temperature depends on the kind of seed.' },
   { id: 'odd', icon: '🔍', title: 'The odd one out', task: 'Run any fair test, draw a <b>bar chart</b> of your results, then find the result that does not fit the pattern and decide what to do about it.',
     hint: 'After the results, press Next to draw the chart. Look for a pot that is very different from the other pots in its group.',
     setup() { state.view = 'bench'; state.lab = freshLab(); },
@@ -611,16 +609,21 @@ const MISSIONS = [
     setup() { state.view = 'spread'; state.sp = freshSp(); state.sp.part = 'flaps'; },
     on: ev => ev === 'flaps',
     win: () => 'Wind, water, hitching a ride, seeds as food, bursting, drop and roll, and shakers: <b>7 ways</b> seeds travel!' },
-  { id: 'sorted', core: true, icon: '🔍', title: 'Seed detective', task: 'Sort all 19 seeds into the 7 ways seeds travel. There are two rounds.',
-    hint: 'Look at the shape of each seed. Wings? Hooks? Juicy fruit? Holes like a pepper pot?',
+  { id: 'sorted', start: true, icon: '🔍', title: 'Seed detective', task: 'Sort the seeds in round 1 into the ways seeds travel. Round 2 is extra.',
+    hint: 'Look at the shape of each seed. Wings? Hooks? Juicy fruit? A pod that dries out?',
     setup() { state.view = 'spread'; state.sp = freshSp(); state.sp.part = 'sort'; },
     on: ev => ev === 'sorted',
-    win: () => 'You can read the clues in a seed\'s shape, just like a botanist (a plant scientist)!' },
+    win: () => 'You can read the clues in a seed\'s shape, just like a botanist (a plant scientist)! Wind, water, animals and bursting pods all carry seeds away.' },
   { id: 'fitted', icon: '🗺️', title: 'Seed for the place', task: 'Choose the best kind of seed for each of the 4 places.',
     hint: 'Think about what is around each plant: wind, water, furry animals or hungry birds?',
     setup() { state.view = 'spread'; state.sp = freshSp(); state.sp.part = 'fit'; },
     on: ev => ev === 'fitted',
-    win: () => 'Each plant\'s seeds are suited to where it grows, so they can travel somewhere new.' }
+    win: () => 'Each plant\'s seeds are suited to where it grows, so they can travel somewhere new.' },
+  { id: 'light', tier: 'further', icon: '🌑', title: 'Does light matter?', task: 'Test whether bean seeds need <b>light</b> to germinate. Make a prediction first!',
+    hint: 'Change only the light. Put one group in the dark.',
+    setup() { state.view = 'bench'; state.lab = freshLab(); },
+    on: (ev, d) => ev === 'ran' && d.iv === 'light' && d.eff !== 'none',
+    win: () => 'Surprise! The seeds germinated just as well in the dark. Bean seeds <b>don\'t need light</b> to germinate. But look at the seedlings: the ones in the dark are <b>taller, thinner and yellow</b>. They are searching for light, and they need light to turn green and keep growing.' }
 ];
 function emit(ev, data = {}) {
   if (state.mission == null) return;
@@ -643,7 +646,7 @@ function startMission(i) {
   state.mission = i; MISSIONS[i].setup();
   location.hash = 'view=' + state.view;
   const m = MISSIONS[i];
-  $('#bannerKicker').textContent = `Mission ${i + 1} of ${MISSIONS.length}: ${m.title}`;
+  $('#bannerKicker').innerHTML = `Mission ${i + 1} of ${MISSIONS.length}: ${esc(m.title)} ${HUB.badge(HUB.tier(m))}`;
   $('#bannerText').innerHTML = m.task; $('#bannerHint').innerHTML = m.hint;
   $('#bannerHint').classList.add('hidden'); $('#hintBtn').textContent = '💡 Show a hint';
   $('#banner').classList.remove('hidden');
@@ -710,8 +713,9 @@ const TYPES = {
   shake: ['🧂', 'Shakers', 'The wind sways the seed head, and tiny seeds <b>shake out</b> of holes, like pepper from a pepper pot.', '#e6dcf3', 'a pepper-pot head with holes', 'Shaken out']
 };
 const TORDER = ['wind', 'water', 'hitch', 'food', 'burst', 'roll', 'shake'];
-// Seven boxes is a lot at once, so the sort is done in two rounds
-const ROUNDS = [['wind', 'water', 'hitch', 'food'], ['burst', 'roll', 'shake']];
+// Seven boxes is a lot at once, so the sort is done in two rounds.
+// Round 1 (Core): wind, water, animals (hooks and eating) and bursting pods. Round 2 (Going further): drop and roll, and shakers.
+const ROUNDS = [['wind', 'water', 'hitch', 'food', 'burst'], ['roll', 'shake']];
 // [name, how it travels, why (shown when sorted), clue (shown after a wrong try)]
 const SEEDS = {
   dandelion: ['Dandelion', 'wind', 'Its fluffy <b>parachute</b> catches the wind and carries the seed far away.', 'Look at the fluffy top. What could lift it up?'],
@@ -887,9 +891,10 @@ const SP = {
       const left = roundSeeds(sp.round).filter(id => !sp.placed[id]), L = sp.last, allDone = SORDER.every(id => sp.placed[id]);
       const said = L ? (L.ok ? `<div class="card says good"><h3>✅ ${SEEDS[L.id][0]}: ${TYPES[SEEDS[L.id][1]][1].toLowerCase()}</h3><p>${SEEDS[L.id][2]}</p></div>`
         : `<div class="card says"><h3>💡 Not ${TYPES[L.bin][1].toLowerCase()}</h3><p>${SEEDS[L.id][3]}</p></div>`) : '';
-      return `${said}<div class="card">${nav}<h2 style="margin-top:8px">🔍 Sort the seeds</h2><p>The <b>shape</b> of a seed gives you a clue! Choose a seed, then tap where it belongs.</p></div>
+      return `${said}<div class="card">${nav}${sp.round === 1 ? HUB.note('further') : ''}<h2 style="margin-top:8px">🔍 Sort the seeds</h2><p>The <b>shape</b> of a seed gives you a clue! Choose a seed, then tap where it belongs.</p></div>
         ${left.length ? `<div class="card"><div class="seedcards">${left.map(id => `<button class="seedcard${sp.sel === id ? ' sel' : ''}" data-act="spick" data-v="${id}">${seedSvg(id)}<span>${SEEDS[id][0]}</span></button>`).join('')}</div></div>`
-          : !allDone ? `<div class="card says good"><h3>✅ Round 1 done!</h3><p>Now sort the seeds that burst, drop and roll, or shake.</p></div><div class="checkbar"><button class="btn go" data-act="sround">Next: round 2 ▶</button></div>`
+          : !allDone ? `<div class="card says good"><h3>✅ Round 1 done!</h3><p>Wind, water, animals and bursting pods all carry seeds away.</p><p>Round 2 is extra: seeds that drop and roll, or shake out. ${HUB.badge('further')}</p></div>
+          <div class="checkbar"><button class="btn" data-act="sround">🔭 Round 2</button><button class="btn go" data-act="spart" data-v="fit">Next: seed for the place ▶</button></div>`
           : `<div class="card says good"><h3>🎉 You sorted all ${SORDER.length} seeds!</h3><p>Look for the clue:</p><ul class="icons" style="margin:0">${TORDER.map(t => `<li><span class="em">${TYPES[t][0]}</span><span><b>${TYPES[t][1]}</b>: ${TYPES[t][4]}</span></li>`).join('')}</ul></div>
           <div class="checkbar"><button class="btn go" data-act="spart" data-v="fit">Next: seed for the place ▶</button></div>`}
         ${Object.keys(sp.placed).length ? '<div class="card"><button class="btn" data-act="sreset">↺ Start the sort again</button></div>' : ''}`;
@@ -1008,7 +1013,8 @@ const VIEWS = {
         const dvOk = L.dv === 'germ', dvBad = MEASURES.find(m => m[0] === L.dv && !m[2]);
         return `<div class="card">${bar}<h2>🌱 Germination test</h2><p>Do bean seeds need water, warmth, light or soil to <b>germinate</b> (start to grow)? Plan a <b>fair test</b>.</p></div>
           <div class="card"><h3>1. What will you <b>change</b>?</h3><p class="muted">This is the <span class="term">independent variable</span>. Change only one thing.</p>
-            <div class="stops">${VORDER.map(k => `<button class="opt${L.iv === k ? ' on' : ''}" data-act="piv" data-k="${k}">${VARS[k].opts[Object.keys(VARS[k].opts)[0]][0]} ${VARS[k].name}</button>`).join('')}</div></div>
+            <div class="stops">${VORDER.map(k => `<button class="opt${L.iv === k ? ' on' : ''}" data-act="piv" data-k="${k}">${VARS[k].opts[Object.keys(VARS[k].opts)[0]][0]} ${VARS[k].name}${k === 'light' ? ' ' + HUB.badge('further') : ''}</button>`).join('')}</div>
+            ${L.iv === 'light' ? HUB.note('further') : ''}</div>
           <div class="card wq"><h3>2. What will you <b>measure</b>?</h3><p class="muted">This is the <span class="term">dependent variable</span>: what you think will change.</p>
             ${MEASURES.map(([id, t]) => `<button class="opt${L.dv === id && dvOk ? ' done' : L.dvWrong.includes(id) ? ' wrong' : ''}" data-act="pdv" data-k="${id}"${L.dvWrong.includes(id) ? ' disabled' : ''}>${t}</button>`).join('')}
             ${dvBad ? `<p class="spot">💡 ${dvBad[3]}</p>` : ''}</div>
@@ -1059,6 +1065,7 @@ const VIEWS = {
         : `<div class="card says${right ? ' good' : ''}"><h3>${right ? '✅ Your prediction was right!' : '❌ Your prediction was not right'}</h3>
           <p>${eff === 'same' ? `In this test, ${V.the} made <b>no real difference</b>.` : `Pots that were <b>${lc(V.opts[eff][1])}</b> had many more seeds germinate.`}</p>${yours}
           ${right ? '' : '<p>That is fine! Scientists often find their predictions were wrong. That is how we learn something new.</p>'}
+          ${L.iv === 'temp' && eff !== 'same' ? `<p>${TEMP_NOTE}</p>` : ''}
           ${L.iv === 'light' ? '<p>🔎 <b>Look closely</b> at the seedlings. The ones in the dark germinated, but they are <b>taller, thinner and pale yellow</b>. They are growing fast to search for light, and they can\'t make the green <span class="term">chlorophyll</span> without it.</p>' : ''}</div>`;
       return `${verdict}
         <div class="card">${bar}<h3>📋 Results</h3>${resultsTable()}
@@ -1088,16 +1095,7 @@ const HELP = {
     steps: ['Choose one thing to <b>change</b>, and what to <b>measure</b>.', 'Set up two groups of pots. Make it a <b>fair test</b>.',
       '<b>Predict</b>, then fast forward 10 days.', 'Follow the step bar to draw a <b>bar chart</b> and write a <b>conclusion</b>.'],
     look: 'Change only <b>one</b> thing. Keep everything else the same.',
-    codes: [['5Bp.04', 'Describe seed germination and know that seeds, in general, require water and an appropriate temperature to germinate.'],
-      ['5TWSp.03', 'Make predictions, referring to relevant scientific knowledge and understanding within familiar and unfamiliar contexts.'],
-      ['5TWSp.04', 'Plan fair test investigations, identifying the independent, dependent and control variables.'],
-      ['5TWSc.04', 'Decide when observations and measurements need to be repeated to give more reliable data.'],
-      ['5TWSc.08', 'Collect and record observations and/or measurements in tables and diagrams appropriate to the type of scientific enquiry.'],
-      ['5TWSa.01', 'Describe the accuracy of predictions, based on results.'],
-      ['5TWSa.02', 'Describe patterns in results, including identifying any anomalous results.'],
-      ['5TWSa.03', 'Make a conclusion from results informed by scientific understanding.'],
-      ['5TWSa.04', 'Suggest how an investigation could be improved and explain any proposed changes.'],
-      ['5TWSa.05', 'Present and interpret results using tables, bar charts, dot plots and line graphs.']]
+    codes: [['SC5-PLA-6'], ['SC5-SKL-4'], ['SC5-SKL-5'], ['SC5-SKL-10'], ['SC5-SKL-11'], ['SC5-SKL-14'], ['SC5-SKL-13'], ['SC5-SKL-15'], ['SC5-SKL-16'], ['SC5-SKL-12']]
   },
   spread: {
     title: '🌬️ Spreading seeds',
@@ -1105,17 +1103,16 @@ const HELP = {
     steps: ['<b>Why spread?</b> Look at the pictures, then answer.', '<b>Ways to travel:</b> open all 8 flaps.',
       '<b>Sort the seeds</b> into the ways they travel.', '<b>Seed for the place:</b> choose the best seed for each place.'],
     look: 'The <b>shape</b> of a seed is a clue to how it travels.',
-    codes: [['5Bp.03', 'Describe how flowering plants reproduce by pollination, fruit and seed production, and seed dispersal. <span class="muted">(Here: seed dispersal. Pollination, fruit and seed production are in <a href="../flower-lab/index.html#view=pollen">Flower Lab</a>.)</span>'],
-      ['5Be.02', 'Describe how flowering plants are adapted to attract pollinators and promote seed dispersal. <span class="muted">(Here: seed dispersal. Attracting pollinators is in <a href="../flower-lab/index.html#view=design">Flower Lab</a>.)</span>']]
+    codes: [['SC5-PLA-5', '<span class="muted">(Here: seed dispersal. Pollination, fruit and seed production are in <a href="../flower-lab/index.html#view=pollen">Flower Lab</a>.)</span>'],
+      ['SC5-PLA-7', '<span class="muted">(Here: seed dispersal. Attracting pollinators is in <a href="../flower-lab/index.html#view=design">Flower Lab</a>.)</span>']]
   },
   grow: {
     title: '🫘 Watch it germinate',
     q: 'What happens when a seed <b>germinates</b> (starts to grow)?',
     steps: ['<b>Predict</b>: does the root or the shoot come out first?', 'Put the 5 stages in <b>order</b>. Tap a stage, then tap its place. Or drag it.', 'Move the <b>time-lapse</b> slider to check your order.'],
     look: 'What comes out of the seed first, and which way does it grow?',
-    codes: [['5Bp.04', 'Describe seed germination and know that seeds, in general, require water and an appropriate temperature to germinate.'],
-      ['5TWSp.03', 'Make predictions, referring to relevant scientific knowledge and understanding within familiar and unfamiliar contexts.'],
-      ['5Bp.02', 'Know the stages in the life cycle of a flowering plant. <span class="muted">(The whole life cycle is in <a href="../flower-lab/index.html#view=cycle">Flower Lab</a>.)</span>']]
+    codes: [['SC5-PLA-6'], ['SC5-SKL-4'],
+      ['SC5-PLA-4', '<span class="muted">(The whole life cycle is in <a href="../flower-lab/index.html#view=cycle">Flower Lab</a>.)</span>']]
   }
 };
 // Real life: the differences for each tab, plus one that is true for both
@@ -1145,7 +1142,9 @@ function showHelp() {
     <h3>👆 What to do</h3><ol>${H.steps.map(s => `<li>${s}</li>`).join('')}</ol>
     <p><b>💡 Look out for:</b> ${H.look}</p>
     <p>🚀 Try the <b>Missions</b> to win stars!</p>
-    <details class="teach"><summary>For teachers</summary>${H.codes.map(([c, t]) => `<p><b>${c}</b> ${t}</p>`).join('')}</details>`;
+    <details class="teach"><summary>For teachers</summary>${H.codes.map(([c, note]) => `<p><b>${c}</b> ${HUB.objText(c)}${note ? ' ' + note : ''}</p>`).join('')}
+      <h4>⏱ A lesson</h4><p>Good missions to start with: ${MISSIONS.map((m, i) => m.start ? `${i + 1} (${m.title})` : null).filter(Boolean).join(', ')}.</p>
+      <p>${['back', 'further', 'next'].map(t => [t, MISSIONS.map((m, i) => HUB.tier(m) === t ? `${i + 1} (${m.title})` : null).filter(Boolean)]).filter(x => x[1].length).map(([t, l]) => `${HUB.TIERS[t].em} ${HUB.TIERS[t].name}: ${l.join(', ')}.`).join(' ')} Seed detective: round 2 is 🔭 Going further.</p></details>`;
   welcomed = true;
   $('#helpModal').classList.remove('hidden');
 }
@@ -1237,8 +1236,8 @@ const ACTIONS = {
   gcheck() { const G = state.gr; GSTAGES.forEach(([id], i) => { if (G.order[i]) G.marks[i] = G.order[i] === id; }); G.ordered = GSTAGES.every((_, i) => G.marks[i] === true); render(); },
   greset() { state.gr = freshGr(); render(); $('#drawer').scrollTop = 0; },
   missions() {
-    $('#missionList').innerHTML = MISSIONS.map((m, i) => `<button class="mission-item${state.done.includes(m.id) ? ' done' : ''}" data-act="startMission" data-i="${i}">
-      <span class="em">${m.icon}</span><span class="t">${i + 1}. ${m.title}</span>${m.ext ? '<span class="extn">➕ Extension</span>' : ''}<span class="star">⭐</span></button>`).join('');
+    $('#missionList').innerHTML = HUB.starLine(MISSIONS, state.done) + HUB.missionList(MISSIONS, (m, i) => `<button class="mission-item${state.done.includes(m.id) ? ' done' : ''}" data-act="startMission" data-i="${i}">
+      <span class="em">${m.icon}</span><span class="t">${i + 1}. ${m.title} ${HUB.badge(HUB.tier(m))}</span><span class="star">⭐</span></button>`);
     $('#missionsModal').classList.remove('hidden');
   },
   startMission(el) { startMission(+el.dataset.i); },
@@ -1317,7 +1316,8 @@ $('#stage').addEventListener('click', e => {
     const sp = state.sp, bin = e.target.closest('[data-bin]')?.dataset.bin;
     if (!bin || !sp.sel) return;
     const ok = SEEDS[sp.sel][1] === bin; sp.last = { id: sp.sel, bin, ok };
-    if (ok) { sp.placed[sp.sel] = true; sp.sel = null; if (SORDER.every(id => sp.placed[id])) emit('sorted'); }
+    // The Seed detective mission (Core) is done when round 1 is sorted; round 2 is extra
+    if (ok) { sp.placed[sp.sel] = true; sp.sel = null; if (roundSeeds(0).every(id => sp.placed[id])) emit('sorted'); }
     render(); $('#drawer').scrollTop = 0; return;
   }
   const L = state.lab, col = e.target.closest('[data-col]'), bar = e.target.closest('[data-bar]');

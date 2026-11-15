@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="../hub/objectives.js"></script><script src="../hub/levels.js"></script>
 <style>
   /* ================= Shared look (matches the other Year 5 tools) ================= */
   :root {
@@ -185,6 +186,60 @@
     .whichwrap { padding-top: 64px; } .whichwrap .pool { grid-template-columns: 1fr; }
     .bins.five { grid-template-columns: 1fr 1fr; } .bins.five .bin h3 { font-size: 12.5px; }
     .srcgrid { padding-top: 64px; grid-template-columns: 1fr; }
+  }
+
+  /* ---------- Use a key ---------- */
+  .banner .kicker .lvl { text-transform: none; letter-spacing: 0; }
+  .keywrap { position: absolute; inset: 0; padding: 52px 10px 10px; display: flex; flex-direction: column; gap: 8px; }
+  .kthumbs { flex: none; display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 6px; }
+  .kthumb { position: relative; display: flex; flex-direction: column; min-width: 0; border: 3px solid #fff; background: #fff; border-radius: 12px; padding: 0; overflow: hidden; cursor: pointer; font: inherit; font-weight: 700; font-size: 14px; color: var(--ink); box-shadow: 0 3px 0 rgba(0,0,0,.12); }
+  .kthumb .kimg { display: block; height: 52px; background: #e6f3e0; pointer-events: none; }
+  .kthumb .kimg img, .kthumb .kimg .ph { width: 100%; height: 100%; object-fit: cover; display: grid; place-items: center; font-size: 26px; }
+  .kthumb .credit { display: none; }
+  .kthumb .kname { padding: 2px 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center; }
+  .kthumb.on { border-color: var(--yellow); box-shadow: 0 0 0 3px var(--yellow); }
+  .kthumb.named { border-color: var(--green); }
+  .kthumb .tick { position: absolute; top: 3px; right: 3px; width: 22px; height: 22px; border-radius: 50%; background: var(--green); color: #fff; display: grid; place-items: center; font-size: 13px; }
+  .keywrap.big .kthumbs { flex: 1; min-height: 0; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .keywrap.big .kthumb { font-size: 17px; }
+  .keywrap.big .kthumb .kimg { flex: 1; height: auto; min-height: 0; }
+  .kphotos { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .kphotos .photo { min-height: 0; height: 100%; }
+  .kphotos .photo img { height: 100%; object-fit: cover; }
+  .kphotos .photo .ph { height: 100%; aspect-ratio: auto; }
+  .kcap { position: absolute; left: 6px; top: 6px; background: rgba(255,255,255,.92); border-radius: 8px; padding: 2px 8px; font-size: 14px; font-weight: 700; }
+  .kparts { display: flex; gap: 6px; padding: 8px; }
+  .kparts .opt { flex: 1; padding: 6px 4px; }
+  .knum { flex: none; display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: var(--blue); color: #fff; font-weight: 700; font-size: 16px; }
+  .knum.sm { width: 22px; height: 22px; font-size: 13px; }
+  .kq { display: flex; align-items: center; gap: 8px; font-size: 19px; font-weight: 700; margin: 10px 0 4px !important; line-height: 1.25; }
+  .kyn .opt { flex: 1; font-size: 18px; }
+  .ktrail { list-style: none; padding: 0; margin: 6px 0; }
+  .ktrail li { display: flex; align-items: center; gap: 6px; padding: 3px 0; font-size: 15px; line-height: 1.25; }
+  .ktrail li > span:nth-child(2) { flex: 1; }
+  .ktrail .ky, .ktrail .kn { border-radius: 8px; padding: 1px 8px; font-size: 14px; }
+  .ktrail .ky { background: #c9f2df; color: #0b6644; } .ktrail .kn { background: #ffe0e3; color: #a3202c; }
+  .keylist { position: absolute; inset: 0; padding: 52px 10px 10px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+  .kstep { flex: none; display: flex; gap: 10px; align-items: flex-start; background: #fff; border-radius: 14px; padding: 8px 10px; box-shadow: 0 3px 0 rgba(0,0,0,.08); }
+  .kbody { flex: 1; min-width: 0; }
+  .kqt { font-weight: 700; font-size: 17px; line-height: 1.25; padding: 3px 0; }
+  .kgo { display: flex; flex-wrap: wrap; gap: 2px 16px; font-size: 15px; margin-top: 3px; }
+  .kgo span { display: inline-flex; align-items: center; gap: 4px; }
+  .kgo svg { vertical-align: middle; }
+  .kgap { min-height: 44px; border: 2px dashed #b7c3ea; border-radius: 12px; background: #f7f9ff; display: flex; align-items: center; padding: 4px 10px; font-weight: 700; font-size: 16px; color: var(--muted); cursor: pointer; }
+  .kgap.ready { border-color: #e0a800; background: #fffbea; color: var(--ink); }
+  .kgap.over { border-style: solid; border-color: var(--green); }
+  .kgap.ok { border-style: solid; border-color: var(--green); background: #c9f2df; color: var(--ink); cursor: default; }
+  .kgap.bad { border-style: solid; border-color: var(--coral); background: #ffe0e3; }
+  .bank .chip { text-align: left; }
+  @media (max-width: 760px) {
+    .keywrap, .keylist { padding: 64px 6px 6px; gap: 6px; } .sortwrap.ksort { padding-top: 64px; }
+    .kthumbs { gap: 3px; } .kthumb { font-size: 12px; border-width: 2px; } .kthumb .kimg { height: 36px; }
+    .kthumb .tick { width: 16px; height: 16px; font-size: 10px; }
+    .keywrap.big .kthumbs { gap: 6px; } .keywrap.big .kthumb { font-size: 13px; }
+    .kphotos { gap: 6px; } .kcap { font-size: 12px; padding: 1px 6px; }
+    .kqt { font-size: 15px; } .kgo { font-size: 13.5px; } .kstep { padding: 6px 8px; gap: 8px; } .kgap { font-size: 14px; }
+    .kq { font-size: 17px; }
   }
 
   /* ---------- Pictures drawn on the stage ---------- */
@@ -429,7 +484,7 @@ const SCENES = {
     ['Which flower is the prettiest?', null], ['Do taller sunflowers have bigger flower heads?', 'pattern'], ['Should we have a picnic today?', null]] },
   kitchen: { name: 'The kitchen', em: '🍳', pics: ['🍌', '🧂', '🥛', '🧊', '🍰', '🥕', '🍎', '🫖'], qs: [
     ['Does salt dissolve faster in hot water or cold water?', 'fair'], ['How does a banana change over a week?', 'time'], ['Who invented the fridge?', 'research'],
-    ['Is chocolate cake the best cake?', null], ['Which of these foods are fruits, and which are vegetables?', 'classify'], ['What should we have for dinner?', null]] },
+    ['Is chocolate cake the best cake?', null], ['Which of these foods are fruits?', 'classify'], ['What should we have for dinner?', null]] },
   playground: { name: 'The playground', em: '🛝', pics: ['☀️', '🐦', '🌳', '☁️', '⚽', '🛝', '🏃', '🎒'], qs: [
     ['Does a ball bounce higher on concrete or on grass?', 'fair'], ['Do taller children run faster?', 'pattern'], ['How does my shadow change during the day?', 'time'],
     ['Which birds visit the playground?', 'classify'], ['Is football more fun than tag?', null], ['How is the soft rubber under the swings made?', 'research']] }
@@ -442,7 +497,7 @@ const RESEARCH = [
       ['ad', '🛍️', 'An advert', 'Buy the SuperScope 3000! See all 12 planets from your bedroom! Only €99!', false, 'An advert wants to sell you something. Its "facts" may not be true.'],
       ['friend', '🗣️', 'A friend says', 'I think there are about 20 planets.', false, 'That is a guess, not a checked fact.'],
       ['agency', '💻', 'A space agency website', 'Eight planets orbit our Sun. The smallest is Mercury and the largest is Jupiter.', true, 'Space scientists wrote it. They study the planets.'],
-      ['old', '📜', 'An old book (1990)', 'There are nine planets. Pluto is the smallest planet.', false, 'It is out of date. In 2006, scientists decided Pluto is a dwarf planet.'],
+      ['old', '📜', 'An old book (1990)', 'There are nine planets. Pluto is the smallest planet.', false, 'It is out of date. In 2006, scientists decided Pluto is a dwarf planet. Old books can still be useful for finding out what people used to think.'],
       ['side', '📗', 'A science book', 'The Sun is a star. It is very, very hot.', false, 'That is true, but it does not answer the question.'],
       ['expert', '👩‍🔬', 'A video by an astronomer', 'We know of eight planets going round our Sun, and lots of smaller objects too.', true, 'An astronomer is an expert who studies space.']],
     whyQ: 'Why should you leave out the old book?', whys: [['a', 'It is out of date. Scientists have found out more since it was written.', true], ['b', 'Old books are too long.', false], ['c', 'It has no pictures.', false]] },
@@ -599,31 +654,289 @@ ACTIONS.fcheck = () => {
 ACTIONS.fwhy = el => { const f = state.facts; f.why = el.dataset.v; if (f.why !== 'a') { if (!f.whyWrong.includes(f.why)) f.whyWrong.push(f.why); } else { f.done[f.r] = true; emit('facts', { n: Object.keys(f.done).length }); } render(); };
 ACTIONS.fnext = el => { const done = state.facts.done; state.facts = { ...freshFacts(), r: +el.dataset.v, done }; render(); top0(); };
 
+// ================= 5. Use a key =================
+// Flower Lab's photos (and its whole oak tree from Adaptation Studio), with the same credits. A missing photo falls back to the emoji.
+// All from Wikimedia Commons; ../flower-lab/photos/credits.json has the link to each one.
+const KCREDITS = {
+  'sunflower.jpg': 'Photo: daryl_mitchell, CC BY-SA 2.0', 'sunflower-clue.jpg': 'Photo: Brandon Weeks, CC BY 3.0',
+  'apple-tree.jpg': 'Photo: Mars 2002, CC BY-SA 3.0', 'apple-blossom.jpg': 'Photo: Billpowellisalive, CC BY-SA 3.0',
+  'grass.jpg': 'Photo: Julian Paren, CC BY-SA 2.0', 'grass-flower.jpg': 'Photo: Hectonichus, CC BY-SA 4.0',
+  'oak-catkins.jpg': 'Photo: Famartin, CC BY-SA 4.0', '../adaptation-studio/photos/oak.jpg': 'Photo: David Hawgood, CC BY-SA 2.0',
+  'cactus.jpg': 'Photo: Diego Delso, CC BY-SA 3.0', 'cactus-flower.jpg': 'Photo: DataEcologist, CC BY-SA 4.0',
+  'moss.jpg': 'Photo: Tomas Pocius, CC0', 'moss-capsules.jpg': 'Photo: jacilluch, CC BY-SA 2.0',
+  'fern.jpg': 'Photo: Christian Berg, CC BY 4.0', 'fern-spores.jpg': 'Photo: Krzysztof Ziarnek, Kenraiz, CC BY-SA 4.0',
+  'pine.jpg': 'Photo: Ruslan Kastani, CC BY-SA 4.0', 'pine-cone.jpg': 'Photo: Wilfredor, CC0'
+};
+const kphoto = (file, em, alt = '') => {
+  const src = file.includes('/') ? file : `../flower-lab/photos/${file}`, c = KCREDITS[file];
+  return `<img src="${src}" alt="${esc(alt)}" onerror="this.outerHTML='<div class=&quot;ph&quot;>${em}</div>'">${c ? `<span class="credit">${esc(c)}</span>` : ''}`;
+};
+// The key questions: [question, a tip the question gives you]. 'green' and 'pretty' are wrong choices in "Finish a key".
+const KQ = {
+  flowers: ['Does it make flowers?', 'Look closely. Some flowers are small and green, with no petals.'],
+  cones: ['Does it make cones?', 'A cone is hard and woody, with scales.'],
+  spores: ['Does it make spores under its leaves?', 'Look for brown dots under the leaves. They are full of spores.'],
+  bright: ['Does it have bright flowers with petals?', 'Bright flowers are easy to see. They can be white, pink, yellow or red.'],
+  spines: ['Is it covered in sharp spines?', 'Spines are hard, sharp points.'],
+  tree: ['Is it a tree, with a thick woody trunk?', 'A trunk is the thick, hard stem of a tree.'],
+  green: ['Is it green?', ''],
+  pretty: ['Is it pretty?', '']
+};
+// The 8 plants from Flower Lab. yes = the questions it answers "yes" to. hint = shown after a wrong answer to that question.
+const KPLANTS = {
+  sunflower: { name: 'Sunflower', a: 'a sunflower', em: '🌻', img: 'sunflower.jpg', clue: 'sunflower-clue.jpg', yes: ['flowers', 'bright', 'green'],
+    fact: 'Sunflowers make big, bright flowers.',
+    hint: { flowers: 'Look at the close-up. The big yellow head is a flower.', bright: 'Look at the big yellow petals.', spines: 'Look again. Can you see any sharp spines?', tree: 'Look at the whole plant. The stem is green. It is not a woody trunk.' } },
+  grass: { name: 'Grass', a: 'grass', em: '🌾', img: 'grass.jpg', clue: 'grass-flower.jpg', yes: ['flowers', 'green'],
+    fact: 'Grass makes flowers too. They are small and green, with no petals.',
+    hint: { flowers: 'Look at the close-up. The feathery tops are tiny flowers.', bright: 'Grass flowers are small and dull. They have no bright petals.', tree: 'Look at the whole plant. Can you see a woody trunk?' } },
+  oak: { name: 'Oak tree', a: 'an oak tree', em: '🌳', img: '../adaptation-studio/photos/oak.jpg', clue: 'oak-catkins.jpg', yes: ['flowers', 'tree', 'green'],
+    fact: 'Oak trees make flowers. The dangly catkins are made of tiny flowers.',
+    hint: { flowers: 'Look at the close-up. The dangly catkins are made of tiny flowers.', bright: 'Oak flowers are small and green. They have no bright petals.', tree: 'Look at the whole plant. Can you see the thick trunk?' } },
+  apple: { name: 'Apple tree', a: 'an apple tree', em: '🍏', img: 'apple-tree.jpg', clue: 'apple-blossom.jpg', yes: ['flowers', 'bright', 'tree', 'green'],
+    fact: 'Apple blossom is flowers. Later, the flowers turn into apples.',
+    hint: { flowers: 'Look at the close-up. Blossom is lots of flowers.', bright: 'Look at the close-up. Can you see the white and pink petals?', spines: 'Look again. Can you see any sharp spines?', tree: 'Look at the whole plant. Can you see the woody trunk?' } },
+  cactus: { name: 'Cactus', a: 'a cactus', em: '🌵', img: 'cactus.jpg', clue: 'cactus-flower.jpg', yes: ['flowers', 'bright', 'spines', 'green'],
+    fact: 'A cactus is a flowering plant. Its flowers can be big and bright.',
+    hint: { flowers: 'Look at the close-up. What is growing on top of the cactus?', bright: 'Look at the close-up. Are the flowers easy to see?', spines: 'Look at the whole plant. Can you see the sharp spines?' } },
+  fern: { name: 'Fern', a: 'a fern', em: '🌿', img: 'fern.jpg', clue: 'fern-spores.jpg', yes: ['spores', 'green'],
+    fact: 'Ferns never make flowers. They make spores under their leaves.',
+    hint: { flowers: 'Look under the leaves. The brown dots are not flowers.', cones: 'Look at both photos. Can you see any cones?', spores: 'Look at the close-up. The brown dots under the leaves are full of spores.' } },
+  moss: { name: 'Moss', a: 'moss', em: '🟩', img: 'moss.jpg', clue: 'moss-capsules.jpg', yes: ['green'],
+    fact: 'Moss never makes flowers. It makes spores in little cases on stalks.',
+    hint: { flowers: 'The little cases on stalks are not flowers. They are full of spores.', cones: 'Look at both photos. Can you see any cones?', spores: 'Moss spores grow in little cases on stalks. They are not under leaves.' } },
+  pine: { name: 'Pine tree', a: 'a pine tree', em: '🌲', img: 'pine.jpg', clue: 'pine-cone.jpg', yes: ['cones', 'tree', 'green'],
+    fact: 'Pine trees never make flowers. They make seeds in cones.',
+    hint: { flowers: 'A cone is not a flower. Pine trees never make flowers.', cones: 'Look at the close-up. What are the two brown things?' } }
+};
+const has = (id, q) => KPLANTS[id].yes.includes(q);
+// The order of the plant cards (A to H), mixed up so it isn't the order of the key
+const KORDER = ['apple', 'moss', 'cactus', 'grass', 'pine', 'sunflower', 'fern', 'oak'], KL = 'ABCDEFGH';
+// A key: { step number: [question, where "yes" goes, where "no" goes] }. A number is the next step, a word is a plant.
+const KEY1 = { 1: ['flowers', 4, 2], 2: ['cones', 'pine', 3], 3: ['spores', 'fern', 'moss'], 4: ['bright', 5, 7], 5: ['spines', 'cactus', 6], 6: ['tree', 'apple', 'sunflower'], 7: ['tree', 'oak', 'grass'] };
+// "Finish a key": a different key for the same plants, with steps 5 and 7 missing
+const KEY2 = { 1: ['tree', 2, 4], 2: ['cones', 'pine', 3], 3: ['bright', 'apple', 'oak'], 4: ['flowers', 5, 7], 5: ['spines', 'cactus', 6], 6: ['bright', 'sunflower', 'grass'], 7: ['spores', 'fern', 'moss'] };
+const KGAPS = [5, 7], KCHIPS = ['spines', 'spores', 'cones', 'green', 'pretty'];
+const kLeaves = (K, t) => typeof t === 'number' ? [...kLeaves(K, K[t][1]), ...kLeaves(K, K[t][2])] : [t];
+// The steps a plant passes through on the way to "upto": [[step, answer yes?]]
+const kWalk = (id, upto) => { const out = []; let nd = 1; while (typeof nd === 'number' && nd !== upto) { const y = has(id, KEY1[nd][0]); out.push([nd, y]); nd = y ? KEY1[nd][1] : KEY1[nd][2]; } return out; };
+const kTo = t => typeof t === 'number' ? `go to <b>${t}</b>` : `<b>${KPLANTS[t].em} ${KPLANTS[t].name}</b>`;
+// Does question q fit the gap? Every plant on the Yes side must say yes, and every plant on the No side must say no.
+function kWhy(gap, q) {
+  const Y = kLeaves(KEY2, KEY2[gap][1]), N = kLeaves(KEY2, KEY2[gap][2]), all = [...Y, ...N];
+  if (q === 'pretty') return 'That is an opinion. People would give different answers. A key needs questions with one true answer.';
+  if (all.every(p => has(p, q)) || !all.some(p => has(p, q))) return `All the plants that reach step ${gap} would answer "${has(all[0], q) ? 'yes' : 'no'}". The question does not split them into two groups.`;
+  const a = Y.find(p => !has(p, q)); if (a) return `The ${lc(KPLANTS[a].name)} would answer "no". But it is on the Yes side.`;
+  const b = N.find(p => has(p, q)); if (b) return `The ${lc(KPLANTS[b].name)} would answer "yes". But it is on the No side.`;
+  return '';
+}
+// "Build a key": 6 seeds from Seed Lab, drawn the same way
+const SEEDPIC = {
+  dandelion: () => { let o = '<line x1="20" y1="37" x2="20" y2="17" stroke="#8a6a3a" stroke-width="1.5"/><ellipse cx="20" cy="35" rx="1.8" ry="3.5" fill="#6b4b22"/>';
+    for (let a = -75; a <= 75; a += 15) { const r = a * Math.PI / 180, x = 20 + 14 * Math.sin(r), y = 17 - 13 * Math.cos(r); o += `<line x1="20" y1="17" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="#9aa3b5" stroke-width="1"/><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="1.6" fill="#c9cfdc"/>`; }
+    return o; },
+  sycamore: () => '<path d="M19 27 C13 19 6 11 3 4 C10 5 18 13 21 25 Z" fill="#d6b77a" stroke="#8a6a3a"/><path d="M21 27 C27 19 34 11 37 4 C30 5 22 13 19 25 Z" fill="#d6b77a" stroke="#8a6a3a"/><circle cx="17" cy="28" r="4" fill="#8a6a3a"/><circle cx="23" cy="28" r="4" fill="#8a6a3a"/>',
+  cherry: () => '<path d="M21 3 Q14 13 12 24" stroke="#5c7a2e" stroke-width="2" fill="none"/><path d="M21 3 Q27 13 28 22" stroke="#5c7a2e" stroke-width="2" fill="none"/><path d="M21 4 Q29 1 33 6 Q26 8 21 4Z" fill="#5fbf4f"/><circle cx="12" cy="29" r="7.5" fill="#d6283a"/><circle cx="28" cy="27" r="7.5" fill="#c41d30"/><circle cx="9" cy="26" r="2" fill="#fff" opacity=".6"/>',
+  burdock: () => { let o = '<circle cx="20" cy="20" r="9" fill="#8a6a3a"/>';
+    for (let a = 0; a < 360; a += 30) { const r = a * Math.PI / 180, x1 = 20 + 9 * Math.cos(r), y1 = 20 + 9 * Math.sin(r), x2 = 20 + 16 * Math.cos(r), y2 = 20 + 16 * Math.sin(r);
+      o += `<path d="M${x1.toFixed(1)} ${y1.toFixed(1)} L${x2.toFixed(1)} ${y2.toFixed(1)} q${(2 * Math.cos(r + 1.6)).toFixed(1)} ${(2 * Math.sin(r + 1.6)).toFixed(1)} ${(-1.5 * Math.cos(r)).toFixed(1)} ${(-1.5 * Math.sin(r)).toFixed(1)}" stroke="#6b4b22" stroke-width="1.5" fill="none"/>`; }
+    return o; },
+  acorn: () => '<line x1="20" y1="3" x2="20" y2="10" stroke="#6b4b22" stroke-width="2"/><ellipse cx="20" cy="25" rx="8.5" ry="11" fill="#c58b3f"/><path d="M10 20 Q20 6 30 20 Z" fill="#7a5a2e"/><path d="M13 17 L27 17 M15 13 L25 13" stroke="#5a4020"/>',
+  pea: () => '<path d="M3 31 Q20 40 37 21 Q23 31 3 31 Z" fill="#6cbf4a" stroke="#3f8a2a"/><path d="M5 29 Q20 18 35 19" stroke="#3f8a2a" stroke-width="3" fill="none"/><circle cx="13" cy="31" r="3.5" fill="#a3e27f"/><circle cx="20" cy="30" r="3.5" fill="#a3e27f"/><circle cx="27" cy="27" r="3.5" fill="#a3e27f"/><circle cx="10" cy="12" r="3" fill="#a3e27f"/><path d="M14 10 l5 -2 M14 14 l5 0" stroke="#9aa3b5"/>'
+};
+const seedSvg = (id, s = 46) => `<svg viewBox="0 0 40 40" width="${s}" height="${s}" aria-hidden="true">${SEEDPIC[id]()}</svg>`;
+const BSEEDS = ['dandelion', 'sycamore', 'burdock', 'cherry', 'acorn', 'pea'];
+const BNAME = { dandelion: 'Dandelion', sycamore: 'Sycamore', burdock: 'Burdock', cherry: 'Cherry', acorn: 'Acorn', pea: 'Pea' };
+// Questions to choose from: [question, the seeds that say yes]. "Is it a seed?" doesn't split them; "Is it pretty?" is an opinion.
+const BQ = {
+  wings: ['Does it have wings or a parachute?', ['dandelion', 'sycamore']], fluffy: ['Is it fluffy?', ['dandelion']],
+  hooks: ['Does it have tiny hooks?', ['burdock']], fruit: ['Is it inside a juicy fruit?', ['cherry']], red: ['Is it red?', ['cherry']],
+  cap: ['Does it have a little cap on top?', ['acorn']], pod: ['Is it inside a pod?', ['pea']], seed: ['Is it a seed?', BSEEDS], pretty: ['Is it pretty?', []]
+};
+const bHas = (id, q) => BQ[q][1].includes(id);
+const bNode = seeds => ({ seeds, q: null, put: {}, yes: null, no: null });
+// The next group that still needs a question (or still needs sorting), or null when the key is finished
+const bCur = n => n.seeds.length < 2 ? null : !n.yes ? n : bCur(n.yes) || bCur(n.no);
+// The finished steps, numbered top to bottom
+const bSteps = root => { const out = [], q = [root]; while (q.length) { const n = q.shift(); if (n.yes) { out.push(n); q.push(n.yes, n.no); } } return out; };
+const seedName = id => `${seedSvg(id, 26)} ${BNAME[id]}`;
+
+const freshFin = () => ({ chips: shuffle(KCHIPS), put: {}, sel: null, bad: null, mistakes: 0 });
+const freshBld = () => ({ root: bNode(BSEEDS.slice()), sel: null, msg: null });
+const freshKey = () => ({ part: 1, cur: null, node: 1, wrong: [], named: {}, fin: freshFin(), bld: freshBld() });
+
+// One step of a key, written out like a real key
+const kStep = (num, qText, yes, no, qHtml) => `<div class="kstep"><span class="knum">${num}</span><div class="kbody">${qHtml || `<div class="kqt">${qText}</div>`}<div class="kgo"><span>✔ Yes → ${yes}</span><span>✖ No → ${no}</span></div></div></div>`;
+
+const KEYV = {
+  sel: () => state.key.part === 2 ? state.key.fin.sel : state.key.part === 3 ? state.key.bld.sel : null,
+  pick(id) {
+    const k = state.key;
+    if (k.part === 2) { k.fin.sel = k.fin.sel === id ? null : id; k.fin.bad = null; }
+    if (k.part === 3) { k.bld.sel = k.bld.sel === id ? null : id; k.bld.msg = null; }
+    render();
+  },
+  drop(id, to) {
+    const k = state.key;
+    if (k.part === 2) {
+      const f = k.fin, gap = +to; if (!KGAPS.includes(gap) || f.put[gap]) return;
+      if (kWhy(gap, id)) { f.mistakes++; f.bad = { gap, q: id }; }
+      else { f.put[gap] = id; f.sel = null; f.bad = null; }
+      render();
+      if (KGAPS.every(g => f.put[g])) emit('keyfinished', { mistakes: f.mistakes });
+    }
+    if (k.part === 3) {
+      const b = k.bld, N = bCur(b.root); if (!N || !N.q || N.put[id] || !N.seeds.includes(id)) return;
+      if ((to === 'yes') !== bHas(id, N.q)) { b.msg = ['💡', `Look again at the ${lc(BNAME[id])}. ${BQ[N.q][0]}`]; render(); return; }
+      N.put[id] = to; b.sel = null; b.msg = null;
+      if (N.seeds.every(s => N.put[s])) { N.yes = bNode(N.seeds.filter(s => N.put[s] === 'yes')); N.no = bNode(N.seeds.filter(s => N.put[s] === 'no')); }
+      render();
+      if (!bCur(b.root)) emit('keybuilt');
+    }
+  },
+  stage() { return [KEYV.stage1, KEYV.stage2, KEYV.stage3][state.key.part - 1](); },
+  drawer() {
+    const k = state.key;
+    const parts = `<div class="card kparts">${[[1, '🔑 Follow'], [2, '🧩 Finish'], [3, '🌱 Build 🔭']].map(([p, t]) => `<button class="opt${k.part === p ? ' on' : ''}" data-act="kpart" data-v="${p}">${t}</button>`).join('')}</div>`;
+    return parts + [KEYV.drawer1, KEYV.drawer2, KEYV.drawer3][k.part - 1]();
+  },
+  // ---------- Part 1: follow the key ----------
+  stage1() {
+    const k = state.key, P = k.cur && KPLANTS[k.cur], i = KORDER.indexOf(k.cur), done = P && typeof k.node === 'string';
+    const thumbs = KORDER.map((id, j) => { const Q = KPLANTS[id], nm = k.named[id];
+      return `<button class="kthumb${k.cur === id ? ' on' : ''}${nm ? ' named' : ''}" data-act="kplant" data-v="${id}" aria-label="${nm ? Q.name : `Plant ${KL[j]}`}"><span class="kimg">${kphoto(Q.img, Q.em)}</span>
+        <span class="kname">${P ? (nm ? Q.em : KL[j]) : nm ? `${Q.em} ${Q.name}` : `Plant ${KL[j]}`}</span>${nm ? '<span class="tick">✓</span>' : ''}</button>`; }).join('');
+    const say = !P ? 'Tap a plant to start.' : done ? `✅ Plant ${KL[i]} is ${P.a}!` : 'Look at both photos. Then answer the question.';
+    return `<div class="lay-top"><span class="scaletag">🔑 Follow the key</span><div class="readout">${say}</div></div>
+      <div class="keywrap${P ? '' : ' big'}"><div class="kthumbs">${thumbs}</div>
+      ${P ? `<div class="kphotos"><div class="photo">${kphoto(P.img, P.em, `Plant ${KL[i]}: the whole plant`)}<span class="kcap">Whole plant</span></div>
+        <div class="photo">${kphoto(P.clue, P.em, `Plant ${KL[i]}: a close-up`)}<span class="kcap">🔍 Close-up</span></div></div>` : ''}</div>`;
+  },
+  drawer1() {
+    const k = state.key, n = Object.keys(k.named).length, P = k.cur && KPLANTS[k.cur], i = KORDER.indexOf(k.cur);
+    let o = '';
+    if (P) {
+      const done = typeof k.node === 'string';
+      const trail = kWalk(k.cur, k.node).map(([nd, y]) => `<li><span class="knum sm">${nd}</span><span>${KQ[KEY1[nd][0]][0]}</span><b class="${y ? 'ky' : 'kn'}">${y ? 'Yes' : 'No'}</b></li>`).join('');
+      o += `<div class="card says${done ? ' good' : ''}"><h2>${done ? `${P.em} ${P.name}` : `🔑 Plant ${KL[i]}`}</h2>${trail ? `<ol class="ktrail">${trail}</ol>` : ''}`;
+      if (!done) {
+        const q = KEY1[k.node][0], right = has(k.cur, q) ? 'yes' : 'no';
+        o += `<p class="kq"><span class="knum">${k.node}</span>${KQ[q][0]}</p><p class="muted">💡 ${KQ[q][1]}</p>
+          <div class="navrow kyn">${choices('kans', [['yes', '✔ Yes'], ['no', '✖ No']], null, k.wrong, right)}</div>
+          ${k.wrong.length ? `<p class="spot">👀 ${P.hint[q]}</p>` : ''}`;
+      } else o += `<p class="job">✅ Plant ${KL[i]} is <b>${P.a}</b>. ${P.fact}</p>${n < KORDER.length ? '<div class="navrow"><button class="btn go" data-act="knext">Next plant ▶</button></div>' : ''}`;
+      o += '</div>';
+    }
+    if (n === KORDER.length) o += `<div class="science"><b>🔬 The science</b>You named all 8 plants with one key! A <span class="term">key</span> asks yes/no questions about things you can see. Each answer takes you to the next question. At the end, only one name is left. Now try <b>🧩 Finish</b>.</div>`;
+    o += `<div class="card"><h2>🔑 Follow the key</h2><p>A <span class="term">key</span> is a set of yes/no questions. Answer them one by one to find a plant's name.</p>
+      <p class="muted">Named: ${n} of ${KORDER.length}${n ? ` · ${KORDER.filter(id => k.named[id]).map(id => KPLANTS[id].em).join(' ')}` : ''}</p>${n ? '<button class="linkbtn" data-act="kreset">↺ Start again</button>' : ''}</div>`;
+    return o;
+  },
+  // ---------- Part 2: finish the key ----------
+  stage2() {
+    const f = state.key.fin, n = KGAPS.filter(g => f.put[g]).length;
+    const steps = Object.keys(KEY2).map(Number).map(nd => {
+      const [q, y, no] = KEY2[nd], put = f.put[nd];
+      const gap = KGAPS.includes(nd) ? `<div class="kgap${put ? ' ok' : f.sel ? ' ready' : ''}${f.bad && f.bad.gap === nd ? ' bad' : ''}"${put ? '' : ` data-drop="${nd}"`}>${put ? KQ[put][0] : '❓ A question is missing'}</div>` : '';
+      return kStep(nd, KQ[q][0], kTo(y), kTo(no), gap);
+    }).join('');
+    const say = n === 2 ? '✅ The key is finished!' : f.sel ? 'Now tap a gap in the key.' : 'Choose a question in the panel. Then tap a gap.';
+    return `<div class="lay-top"><span class="scaletag">🧩 Finish the key</span><div class="readout">${say}</div></div><div class="keylist">${steps}</div>`;
+  },
+  drawer2() {
+    const f = state.key.fin, n = KGAPS.filter(g => f.put[g]).length, left = f.chips.filter(c => !Object.values(f.put).includes(c));
+    let o = '';
+    if (f.bad) o += `<div class="card says"><h3>💡 Not that one</h3><p><b>${KQ[f.bad.q][0]}</b></p><p>${kWhy(f.bad.gap, f.bad.q)}</p></div>`;
+    if (n === KGAPS.length) o += `<div class="card says good"><h3>🎉 The key is finished!</h3><p>Mistakes: <b>${f.mistakes}</b>.${f.mistakes ? ' Can you do it with no mistakes?' : ' Brilliant!'}</p><button class="btn" data-act="kreset">↺ Try again</button></div>
+      <div class="science"><b>🔬 The science</b>A good key question has one true answer: yes or no. It splits the things into two groups. "Is it pretty?" is an opinion, so it can't go in a key.</div>`;
+    else o += `<div class="card"><h3>🧩 Choose a question</h3><p>Tap a question, then tap a gap in the key. Or drag it.</p>
+      <div class="bank">${left.map(c => `<button class="chip${f.sel === c ? ' sel' : ''}" data-drag="${c}">${KQ[c][0]}</button>`).join('')}</div></div>`;
+    return o + `<div class="card"><h2>🧩 Finish the key</h2><p>This key names the same 8 plants. But two questions are missing!</p>
+      <p>Check each gap. Do the plants on the <b>Yes</b> side all answer "yes"?</p><p class="muted">Gaps filled: ${n} of ${KGAPS.length} · Mistakes: ${f.mistakes}</p></div>`;
+  },
+  // ---------- Part 3: build your own key (Going further) ----------
+  stage3() {
+    const b = state.key.bld, N = bCur(b.root);
+    if (!N) {
+      const steps = bSteps(b.root), num = s => steps.indexOf(s) + 1, to = c => c.seeds.length === 1 ? `<b>${seedName(c.seeds[0])}</b>` : `go to <b>${num(c)}</b>`;
+      return `<div class="lay-top"><span class="scaletag">🌱 Your key</span><div class="readout">✅ Every seed has its own name at the end.</div></div>
+        <div class="keylist">${steps.map(s => kStep(num(s), BQ[s.q][0], to(s.yes), to(s.no))).join('')}</div>`;
+    }
+    if (!N.q) return `<div class="lay-top"><span class="scaletag">🌱 Build a key</span><div class="readout">Which question splits these seeds into two groups?</div></div>
+      <div class="sortwrap ksort"><div class="pool">${N.seeds.map(id => `<div class="pcard"><div class="ph">${seedSvg(id)}</div><span>${BNAME[id]}</span></div>`).join('')}</div></div>`;
+    const pool = N.seeds.filter(id => !N.put[id]).map(id => `<button class="pcard${b.sel === id ? ' sel' : ''}" data-drag="${id}"><div class="ph">${seedSvg(id)}</div><span>${BNAME[id]}</span></button>`).join('');
+    const bins = [['yes', '✔ Yes'], ['no', '✖ No']].map(([v, t]) => `<div class="bin${b.sel ? ' ready' : ''}" data-drop="${v}"><h3>${t}</h3><div class="bsub">${BQ[N.q][0]}</div>
+      <div class="in">${N.seeds.filter(id => N.put[id] === v).map(id => `<div class="mini"><div class="ph">${seedSvg(id, 34)}</div>${BNAME[id]}</div>`).join('')}</div></div>`).join('');
+    return `<div class="lay-top"><span class="scaletag">🌱 Build a key</span><div class="readout"><b>${BQ[N.q][0]}</b> ${b.sel ? 'Now tap Yes or No.' : 'Tap a seed.'}</div></div>
+      <div class="sortwrap ksort"><div class="pool">${pool}</div><div class="bins">${bins}</div></div>`;
+  },
+  drawer3() {
+    const b = state.key.bld, N = bCur(b.root), steps = bSteps(b.root);
+    let o = HUB.note('further');
+    if (b.msg) o += `<div class="card says"><p>${b.msg[0]} ${b.msg[1]}</p></div>`;
+    if (!N) o += `<div class="card says good"><h3>🎉 Your key works!</h3><p>Every seed has its own name at the end. Try it: choose a seed and follow your questions.</p><button class="btn" data-act="kreset">↺ Build another key</button></div>`;
+    else if (!N.q) o += `<div class="card wq"><h3>❓ Choose a question</h3><p>These seeds: <b>${N.seeds.map(id => BNAME[id]).join(', ')}</b>.</p><p>Which question splits them into two groups?</p>
+      ${Object.keys(BQ).map(q => `<button class="opt" data-act="kbq" data-v="${q}">${BQ[q][0]}</button>`).join('')}</div>`;
+    else o += `<div class="card"><h3>🗂️ Sort the seeds</h3><p><b>${BQ[N.q][0]}</b></p><p>Tap a seed, then tap Yes or No. Or drag it.</p></div>`;
+    if (N && steps.length) o += `<div class="card"><h3>🔑 Your key so far</h3><ol class="ktrail">${steps.map((s, j) => `<li><span class="knum sm">${j + 1}</span><span>${BQ[s.q][0]}</span></li>`).join('')}</ol></div>`;
+    return o + `<div class="card"><h2>🌱 Build your own key</h2><p>Make a key for 6 seeds from Seed Lab. Use yes/no questions about what you can see.</p>
+      <p class="muted">Keep going until every seed is on its own.</p></div>`;
+  }
+};
+ACTIONS.kpart = el => { state.key.part = +el.dataset.v; render(); top0(); };
+ACTIONS.kplant = el => { const k = state.key; k.cur = el.dataset.v; k.node = k.named[k.cur] ? k.cur : 1; k.wrong = []; render(); top0(); };
+ACTIONS.kans = el => {
+  const k = state.key; if (!k.cur || typeof k.node !== 'number') return;
+  const [q, y, n] = KEY1[k.node], right = has(k.cur, q) ? 'yes' : 'no';
+  if (el.dataset.v !== right) { if (!k.wrong.includes(el.dataset.v)) k.wrong.push(el.dataset.v); render(); return; }
+  k.node = right === 'yes' ? y : n; k.wrong = [];
+  if (typeof k.node === 'string') { k.named[k.cur] = true; render(); emit('keynamed', { n: Object.keys(k.named).length }); } else render();
+};
+ACTIONS.knext = () => { const k = state.key, i = KORDER.indexOf(k.cur), next = [...KORDER.slice(i + 1), ...KORDER.slice(0, i)].find(id => !k.named[id]);
+  if (next) { k.cur = next; k.node = 1; k.wrong = []; } render(); top0(); };
+ACTIONS.kbq = el => {
+  const b = state.key.bld, N = bCur(b.root), q = el.dataset.v; if (!N || N.q) return;
+  const yes = N.seeds.filter(s => bHas(s, q));
+  if (q === 'pretty') b.msg = ['💭', 'That is an opinion. People would give different answers. Choose a question about what you can see.'];
+  else if (!yes.length || yes.length === N.seeds.length) b.msg = ['🤔', `Every seed here would answer "${yes.length ? 'yes' : 'no'}". Choose a question that splits them into two groups.`];
+  else { N.q = q; b.msg = null; }
+  render(); top0();
+};
+ACTIONS.kreset = () => { const k = state.key;
+  if (k.part === 1) { k.named = {}; k.cur = null; k.node = 1; k.wrong = []; }
+  if (k.part === 2) k.fin = freshFin();
+  if (k.part === 3) k.bld = freshBld();
+  render(); top0(); };
+
+state.key = freshKey();
+
 // ================= Views =================
 const VIEWS = {
   types: { label: '🔬 <span class="tl">Five types</span>', name: 'Five ways to find out', ...TYPESV },
   which: { label: '🗂️ <span class="tl">Which enquiry?</span>', name: 'Which enquiry?', ...SORTV },
   ask: { label: '❓ <span class="tl">Ask a question</span>', name: 'Ask a question', ...ASKV },
-  facts: { label: '📚 <span class="tl">Find the facts</span>', name: 'Find the facts', ...FACTSV }
+  facts: { label: '📚 <span class="tl">Find the facts</span>', name: 'Find the facts', ...FACTSV },
+  key: { label: '🔑 <span class="tl">Use a key</span>', name: 'Use a key', ...KEYV }
 };
 const KEYWORDS = [
   ['🔍', 'enquiry', 'a way of finding out the answer to a question'], ['⚖️', 'fair test', 'a test where you change one thing and keep everything else the same'],
   ['👀', 'observe', 'look carefully, and notice what happens'], ['📈', 'pattern', 'something that happens again and again, in the same way'],
   ['🗂️', 'classify', 'sort things into groups'], ['📚', 'research', 'finding out what other people have already discovered'],
   ['📄', 'source', 'where information comes from: a book, a website or a person'], ['✅', 'evidence', 'facts that help to answer a question'],
-  ['💭', 'opinion', 'what someone thinks or likes. It is not a fact.']
+  ['💭', 'opinion', 'what someone thinks or likes. It is not a fact.'],
+  ['🔑', 'key', 'a set of yes/no questions that helps you name something'], ['🟤', 'spores', 'tiny specks, like dust, that can grow into new ferns or mosses']
 ];
 const MISSIONS = [
-  { id: 'types', core: true, icon: '🔬', title: 'Meet the five', task: 'Look at all <b>5</b> types of enquiry.',
+  { id: 'types', start: true, icon: '🔬', title: 'Meet the five', task: 'Look at all <b>5</b> types of enquiry.',
     hint: 'Tap each card on the screen.', setup() { state.view = 'types'; state.types = { open: null, seen: {} }; }, on: ev => ev === 'types',
     win: () => 'Fair testing, observing over time, pattern seeking, identifying and classifying, and research: five ways to find out.' },
-  { id: 'sort', core: true, icon: '🗂️', title: 'Which enquiry?', task: 'Put all <b>12</b> questions with the best type of enquiry.',
+  { id: 'sort', start: true, icon: '🗂️', title: 'Which enquiry?', task: 'Put all <b>12</b> questions with the best type of enquiry.',
     hint: 'Ask yourself: what would I actually do to find out?', setup() { state.view = 'which'; state.sort = freshSort(); }, on: ev => ev === 'sorted',
     win: () => 'Every question sorted. Choosing the right enquiry is the first step to a good answer.' },
   { id: 'sharp', icon: '🎯', title: 'Sharp sorter', task: 'Sort all 12 questions with <b>no more than 1</b> mistake.',
     hint: 'Read each question carefully. Look at the list of the five types.', setup() { state.view = 'which'; state.sort = freshSort(); }, on: (ev, d) => ev === 'sorted' && d.mistakes <= 1,
     win: () => 'Sharp thinking! You know the five types of enquiry well.' },
-  { id: 'ask', core: true, icon: '❓', title: 'Science questions', task: 'In <b>Ask a question</b>, finish one place: decide which questions science can answer, and how.',
+  { id: 'ask', start: true, icon: '❓', title: 'Science questions', task: 'In <b>Ask a question</b>, finish one place: decide which questions science can answer, and how.',
     hint: 'An opinion, like "which is the prettiest?", can\'t be answered by science.', setup() { state.view = 'ask'; state.ask = freshAsk(); }, on: ev => ev === 'scene',
     win: () => 'Science can answer questions you can test, watch, measure or look up. It can\'t answer opinions.' },
   { id: 'allscenes', icon: '🗺️', title: 'Question collector', task: 'Finish <b>all 3</b> places in <b>Ask a question</b>.',
@@ -634,25 +947,32 @@ const MISSIONS = [
     win: () => 'You chose sources that answer the question and can be trusted.' },
   { id: 'trust', icon: '🕵️', title: 'Trust detective', task: 'Finish <b>all 4</b> research questions in <b>Find the facts</b>.',
     hint: 'After each one, choose the next question at the bottom of the panel.', setup() { state.view = 'facts'; }, on: (ev, d) => ev === 'facts' && d.n === RESEARCH.length,
-    win: () => 'Four research questions answered, with sources you can trust. Brilliant research!' }
+    win: () => 'Four research questions answered, with sources you can trust. Brilliant research!' },
+  { id: 'key-follow', icon: '🔑', title: 'Follow the key', task: 'In <b>Use a key</b>, name all <b>8</b> plants.',
+    hint: 'Look at both photos. The close-up often shows the answer.', setup() { state.view = 'key'; state.key = freshKey(); }, on: (ev, d) => ev === 'keynamed' && d.n === KORDER.length,
+    win: () => 'All 8 plants named! A key asks yes/no questions until only one name is left.' },
+  { id: 'key-finish', icon: '🧩', title: 'Finish the key', task: 'In <b>Use a key</b>, fill both gaps in the key with <b>no</b> mistakes.',
+    hint: 'Look at the plants on the Yes side. They must all answer "yes".', setup() { state.view = 'key'; Object.assign(state.key, { part: 2, fin: freshFin() }); }, on: (ev, d) => ev === 'keyfinished' && d.mistakes === 0,
+    win: () => 'A perfect key! Each question has one true answer, and it splits the plants into two groups.' },
+  { id: 'key-build', tier: 'further', icon: '🌱', title: 'Build a key', task: 'Build your own key for <b>6</b> seeds.',
+    hint: 'Choose a question that splits the seeds into two groups.', setup() { state.view = 'key'; Object.assign(state.key, { part: 3, bld: freshBld() }); }, on: ev => ev === 'keybuilt',
+    win: () => 'You built your own key! Now anyone can use it to name these seeds.' }
 ];
-const OBJ = {
-  '5TWSp.01': 'Ask scientific questions and select appropriate scientific enquiries to use.',
-  '5TWSp.02': 'Know the features of the five main types of scientific enquiry (research, fair testing, observing over time, identifying and classifying, and pattern seeking).',
-  '5TWSc.07': 'Use a range of secondary information sources to research and select relevant evidence to answer questions.'
-};
-const MAIN = ['5TWSp.01', '5TWSp.02', '5TWSc.07'], SUPPORT = [];
+// Objective wording comes from ../hub/objectives.js (HUB.objList)
+const MAIN = ['SC5-SKL-1', 'SC5-SKL-2', 'SC5-SKL-3', 'SC5-SKL-18'], SUPPORT = [];
 const HELP = {
-  types: { q: 'How do scientists find things out?', steps: ['Tap each of the five cards.', 'Read what you do, and the example from a Year 5 topic.'], look: 'Each type of enquiry suits a different kind of question.', codes: ['5TWSp.02'] },
-  which: { q: 'Which type of enquiry is best for each question?', steps: ['Tap a question.', 'Tap the type of enquiry that suits it best. Or drag it.'], look: 'Think about what you would actually <b>do</b> to find out.', codes: ['5TWSp.02', '5TWSp.01'] },
-  ask: { q: 'Which questions can science answer?', steps: ['Choose a place.', 'For each question: can science answer it?', 'If yes, choose the best type of enquiry.'], look: 'Questions about what people like or want can\'t be answered by science.', codes: ['5TWSp.01', '5TWSp.02'] },
-  facts: { q: 'Which sources can you trust?', steps: ['Read the question.', 'Tap every source you would use.', 'Check, then explain one choice.'], look: 'A good source answers the question, is up to date, and is not trying to sell you something.', codes: ['5TWSc.07'] }
+  types: { q: 'How do scientists find things out?', steps: ['Tap each of the five cards.', 'Read what you do, and the example from a Year 5 topic.'], look: 'Each type of enquiry suits a different kind of question.', codes: ['SC5-SKL-2'] },
+  which: { q: 'Which type of enquiry is best for each question?', steps: ['Tap a question.', 'Tap the type of enquiry that suits it best. Or drag it.'], look: 'Think about what you would actually <b>do</b> to find out.', codes: ['SC5-SKL-2', 'SC5-SKL-1'] },
+  ask: { q: 'Which questions can science answer?', steps: ['Choose a place.', 'For each question: can science answer it?', 'If yes, choose the best type of enquiry.'], look: 'Questions about what people like or want can\'t be answered by science.', codes: ['SC5-SKL-1', 'SC5-SKL-2'] },
+  facts: { q: 'Which sources can you trust?', steps: ['Read the question.', 'Tap every source you would use.', 'Check, then explain one choice.'], look: 'A good source answers the question, is up to date, and is not trying to sell you something.', codes: ['SC5-SKL-3'] },
+  key: { q: 'How can a key help you name a plant?', steps: ['Tap a plant.', 'Look at both photos.', 'Answer each yes/no question. The key takes you to its name.', 'Then try 🧩 Finish and 🌱 Build.'], look: 'The close-up photo often shows the answer.', codes: ['SC5-SKL-18'] }
 };
 const MODEL = {
   types: [['📋', 'Real investigations often mix more than one type of enquiry.']],
   which: [['🤔', 'Some questions could be answered in more than one way. Here, each one has a best answer.']],
   ask: [['🖼️', 'The places are simple pictures. Look around your own garden, kitchen and playground for real questions.']],
   facts: [['📄', 'The sources here are made up, and much shorter than real ones. Real research means reading carefully.']],
+  key: [['🔑', 'Real keys can be much longer. Scientists use keys to name plants and animals they find.'], ['📷', 'A photo shows one moment. In winter, an apple tree has no flowers to look at.']],
   all: [['🧑‍🔬', 'Real scientists use all five types of enquiry, and often more than one in the same project.'], ['🔍', 'In real research, always check a fact in more than one good source.']]
 };
 
@@ -678,7 +998,7 @@ function startMission(i) {
   state.mission = i; MISSIONS[i].setup();
   location.hash = 'view=' + state.view;
   const m = MISSIONS[i];
-  $('#bannerKicker').textContent = `Mission ${i + 1} of ${MISSIONS.length}: ${m.title}`;
+  $('#bannerKicker').innerHTML = `Mission ${i + 1} of ${MISSIONS.length}: ${esc(m.title)} ${HUB.badge(HUB.tier(m))}`;
   $('#bannerText').innerHTML = m.task; $('#bannerHint').innerHTML = m.hint;
   $('#bannerHint').classList.add('hidden'); $('#hintBtn').textContent = '💡 Show a hint';
   $('#banner').classList.remove('hidden');
@@ -703,7 +1023,9 @@ let autoHelp = true, welcomed = false;
 function showHelp() {
   const H = HELP[state.view], V = VIEWS[state.view];
   helpSeen.add(state.view);
-  const core = MISSIONS.map((m, i) => m.core ? `${i + 1} (${m.title})` : null).filter(Boolean);
+  const core = MISSIONS.map((m, i) => m.start ? `${i + 1} (${m.title})` : null).filter(Boolean);
+  const extra = HUB.ORDER.filter(t => t !== 'core').map(t => { const ms = MISSIONS.map((m, i) => HUB.tier(m) === t ? `${i + 1} (${m.title})` : null).filter(Boolean);
+    return ms.length ? `${HUB.TIERS[t].em} ${HUB.TIERS[t].name}: ${ms.join(', ')}.` : ''; }).filter(Boolean);
   $('#helpBody').innerHTML = `<h2 id="helpTitle">${V.label.replace(/<[^>]+>/g, '').split(' ')[0]} ${V.name}</h2>
     ${welcomed ? '' : `<p class="welcome">Welcome to ${TOOL.name}!</p>`}
     <h3>🔬 The big question</h3><p>${H.q}</p>
@@ -711,8 +1033,8 @@ function showHelp() {
     <p><b>💡 Look out for:</b> ${H.look}</p>
     <p>📖 Tap <b>Words</b> at the top to see what the key words mean.</p>
     <p>🚀 Try the <b>Missions</b> to win stars!</p>
-    <details class="teach"><summary>For teachers</summary>${H.codes.map(c => `<p><b>${c}</b> ${OBJ[c]}</p>`).join('')}
-      <h4>⏱ A 45-minute lesson</h4><p>Good missions to start with: ${core.join(', ')}.</p>
+    <details class="teach"><summary>For teachers</summary>${HUB.objList(H.codes)}
+      <h4>⏱ A 45-minute lesson</h4><p>Good missions to start with: ${core.join(', ')}.</p>${extra.length ? `<p>${extra.join(' ')}</p>` : ''}
       <h4>All of ${TOOL.name}'s objectives</h4><p>Main: ${MAIN.join(', ')}.${SUPPORT.length ? ` Supporting: ${SUPPORT.join(', ')}.` : ''}</p></details>`;
   welcomed = true;
   $('#helpModal').classList.remove('hidden');
@@ -738,8 +1060,8 @@ const top0 = () => { $('#drawer').scrollTop = 0; };
 Object.assign(ACTIONS, {
   view(el) { closeModals(); state.view = el.dataset.view; location.hash = 'view=' + state.view; render(); top0(); },
   missions() {
-    $('#missionList').innerHTML = MISSIONS.map((m, i) => `<button class="mission-item${state.done.includes(m.id) ? ' done' : ''}" data-act="startMission" data-i="${i}">
-      <span class="em">${m.icon}</span><span class="t">${i + 1}. ${m.title}</span><span class="star">⭐</span></button>`).join('');
+    $('#missionList').innerHTML = HUB.starLine(MISSIONS, state.done) + HUB.missionList(MISSIONS, (m, i) => `<button class="mission-item${state.done.includes(m.id) ? ' done' : ''}" data-act="startMission" data-i="${i}">
+      <span class="em">${m.icon}</span><span class="t">${i + 1}. ${m.title} ${HUB.badge(HUB.tier(m))}</span><span class="star">⭐</span></button>`);
     $('#missionsModal').classList.remove('hidden');
   },
   startMission(el) { startMission(+el.dataset.i); },

@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="../hub/objectives.js"></script><script src="../hub/levels.js"></script>
 <style>
   /* ================= Shared look (matches Seed Lab) ================= */
   :root {
@@ -196,7 +197,8 @@
   .mission-item .em { font-size: 25px; } .mission-item .t { flex: 1; font-weight: 600; }
   .mission-item .star { font-size: 21px; filter: grayscale(1); opacity: .35; }
   .mission-item.done .star { filter: none; opacity: 1; }
-  .core { background: var(--yellow); color: var(--ink); border-radius: 8px; padding: 1px 7px; font-size: 12.5px; font-weight: 700; white-space: nowrap; }
+  .banner .kicker .lvl { text-transform: none; letter-spacing: 0; }
+  .safe { background: #ffe9e3; border-left: 5px solid var(--coral); border-radius: 12px; padding: 8px 10px; margin: 8px 0 0; font-size: 15.5px; }
   .win-emoji { font-size: 56px; text-align: center; }
   .win-text { font-size: 17.5px; line-height: 1.5; margin-bottom: 14px; }
   .confetti { position: fixed; top: -40px; font-size: 26px; z-index: 40; pointer-events: none; animation: fall linear forwards; }
@@ -430,7 +432,7 @@ const LIQUIDS = { water: ['Water', '💧', '#bfe3ff', '#7fb2ff'], oil: ['Cooking
 const KEYWORDS = [
   ['🧂', 'solute', 'the solid that dissolves'],
   ['💧', 'solvent', 'the liquid it dissolves in'],
-  ['🥤', 'solution', 'the see-through liquid you get when a solid dissolves'],
+  ['🥤', 'solution', 'the see-through liquid you get when a solid dissolves. It can still be coloured.'],
   ['🌀', 'dissolve', 'when a solid breaks up into tiny particles that spread out in a liquid'],
   ['🥣', 'mixture', 'two or more things mixed together that can be separated again'],
   ['🔁', 'reversible', 'can be changed back']
@@ -628,7 +630,7 @@ const FULL = {
       ${['sugar', 'salt'].map(s => `<tr><td>${SOLIDS[s][1]} ${SOLIDS[s][0]}</td>${['cold', 'warm'].map(t => `<td>${f.found[key(s, t)] ? `<b>${CAP[s][t]}</b> spoonfuls (${CAP[s][t] * 5} g)` : '<span class="muted">?</span>'}</td>`).join('')}</tr>`).join('')}</table></div>` : '';
     const both = f.found[key('sugar', 'cold')] && f.found[key('sugar', 'warm')];
     const pred = `<div class="card wq${f.pred ? '' : ' says'}"><h3>🤔 Predict first</h3><p>Which will dissolve <b>more</b> sugar?</p>${predict('fpred', [['cold', '❄️ Cold water'], ['warm', '♨️ Warm water'], ['same', 'They will dissolve the same amount']], f.pred)}</div>`;
-    return `${full ? `<div class="card says good"><h3>🛑 No more will dissolve</h3><p>${cap} spoonful${cap > 1 ? 's' : ''} (${cap * 5} g) of ${lc(S[0])} dissolved in 25 mL of ${f.temp} water. After that, no more would dissolve: the extra ${lc(S[0])} sits at the bottom.</p></div>` : ''}
+    return `${HUB.note('next')}${full ? `<div class="card says good"><h3>🛑 No more will dissolve</h3><p>${cap} spoonful${cap > 1 ? 's' : ''} (${cap * 5} g) of ${lc(S[0])} dissolved in 25 mL of ${f.temp} water. After that, no more would dissolve: the extra ${lc(S[0])} sits at the bottom.</p></div>` : ''}
       ${f.pred ? '' : pred}
       <div class="card"><h2>🥄 Keep adding</h2><p>How much ${lc(S[0])} can dissolve in a small glass of water? Add a spoonful at a time and stir, until no more will dissolve.</p>
         <p style="margin:6px 0 2px"><b>Solid</b></p><div class="stops">${['sugar', 'salt'].map(s => `<button class="opt sm${f.solid === s ? ' on' : ''}" data-act="fsolid" data-v="${s}">${SOLIDS[s][1]} ${SOLIDS[s][0]}</button>`).join('')}</div>
@@ -854,9 +856,10 @@ const FT = {
     if (t.step === 0) {
       const keepList = t.iv ? [...FORDER.filter(k => k !== t.iv).map(k => [k, FV[k].name, true]), ['sugar', 'The amount of sugar (1 spoonful)', true], ['time', 'The time it takes', false, 'That is what you <b>measure</b>, so it can\'t stay the same!'], [t.iv, V.name, false, `${V.name} is what you are <b>changing</b>!`]] : [];
       const dvOk = t.dv === 'time', bad = MEASURE.find(m => m[0] === t.dv && !m[2]);
-      return `<div class="card">${bar}<h2>⏱️ What makes it dissolve faster?</h2><p>Plan a <b>fair test</b>: change one thing, and keep everything else the same.</p></div>
+      return `<div class="card">${bar}<h2>⏱️ What makes it dissolve faster?</h2><p>Plan a <b>fair test</b>: change one thing, and keep everything else the same.</p>${SAFE}</div>
         <div class="card"><h3>1. What will you <b>change</b>?</h3><p class="muted">This is the <span class="term">independent variable</span>: the one thing you change.</p>
-          <div class="stops">${FORDER.map(k => `<button class="opt${t.iv === k ? ' on' : ''}" data-act="ftiv" data-v="${k}">${FV[k].opts[0][1].split(' ')[0]} ${FV[k].name}</button>`).join('')}</div></div>
+          <div class="stops">${FORDER.map(k => `<button class="opt${t.iv === k ? ' on' : ''}" data-act="ftiv" data-v="${k}">${FV[k].opts[0][1].split(' ')[0]} ${FV[k].name}${k === 'temp' ? ' ' + HUB.badge('next') : ''}</button>`).join('')}</div>
+          ${t.iv === 'temp' ? HUB.note('next') : ''}</div>
         <div class="card wq"><h3>2. What will you <b>measure</b>?</h3><p class="muted">This is the <span class="term">dependent variable</span>: what you measure.</p>
           ${MEASURE.map(([id, txt]) => `<button class="opt${t.dv === id && dvOk ? ' done' : t.dvWrong.includes(id) ? ' wrong' : ''}" data-act="ftdv" data-v="${id}"${t.dvWrong.includes(id) ? ' disabled' : ''}>${txt}</button>`).join('')}
           ${bad ? `<p class="spot">💡 ${bad[3]}</p>` : ''}</div>
@@ -938,9 +941,9 @@ const FT = {
       ${chartOk ? `<div class="card"><h3>📋 Averages</h3><table class="gtable"><tr><th>${V.name}</th><th>Average time</th></tr>${FT.order().map(i => `<tr><td>${FV[t.iv].short(t.beakers[i][t.iv])}</td><td><b>${me[i]} s</b></td></tr>`).join('')}</table><p class="muted">The average: add the 3 tries and divide by 3.</p></div>
         <div class="card wq"><h3>2. Conclusion</h3><p>Finish the sentence. <b>We found that…</b></p>${choices('ftclaim', claims.map(([v, s]) => [v, `…${lc(s)}`]), t.claim, t.claimWrong, claims[0][0])}
           ${t.claim && !claimOk ? '<p class="spot">💡 Look at your chart again. Which way do the times go?</p>' : ''}</div>` : ''}
-      ${claimOk ? `<div class="card wq"><h3>3. Why?</h3><p><b>This is because…</b></p>${choices('ftwhy', why.map((w, k) => [String(k), w[0]]), t.why, t.whyWrong, whyRight)}
+      ${claimOk ? `<div class="card wq"><h3>3. Why?</h3>${t.iv === 'temp' ? HUB.badge('next', true) : ''}<p><b>This is because…</b></p>${choices('ftwhy', why.map((w, k) => [String(k), w[0]]), t.why, t.whyWrong, whyRight)}
         ${t.why != null && !whyOk ? `<p class="spot">💡 ${why[+t.why][2]}</p>` : ''}</div>` : ''}
-      ${whyOk ? `<div class="science"><b>🔬 The science</b>We found that ${lc(claims[0][1])} This is because ${lc(why[+whyRight][0])}
+      ${whyOk ? `<div class="science"><b>🔬 The science</b>${t.iv === 'temp' ? HUB.badge('next', true) + ' ' : ''}We found that ${lc(claims[0][1])} This is because ${lc(why[+whyRight][0])}
           <p class="muted" style="margin-top:6px">You predicted: ${lc(claims.find(c => c[0] === t.pred)[1])} ${t.pred === claims[0][0] ? '✅' : '❌'}</p></div>
         <div class="card"><button class="btn" data-act="ftreset">↺ Plan a new test</button></div>` : ''}`;
   }
@@ -967,6 +970,10 @@ const SEPSAY = {
   water: { lid: [1, 'The water evaporates. When the water vapour touches the cold lid, it <b>condenses</b> (turns back into liquid water). The drops run down and drip into the second dish. Salt in one dish, water in the other!'], evap: [0, 'You got the salt back, but the water went off into the air. How could you catch it?'], filter: [0, 'The salt goes straight through the filter paper with the water.'], sieve: [0, 'Everything goes through the sieve.'], magnet: [0, 'Salt is not magnetic. Nothing happens.'] },
   triple: {}
 };
+// Jobs that are not Core: the sieve, filter and magnet jobs look back at earlier years; the 2-step job goes further
+const SEP_TIER = { rice: 'back', sand: 'back', iron: 'back', triple: 'further' };
+// The safety box at the start of the fair test planner and the Separation station
+const SAFE = '<p class="safe">⚠️ <b>At home:</b> never taste anything. An adult handles hot water. Use small amounts and wipe up spills.</p>';
 const freshSep = () => ({ task: 'rice', tool: null, last: null, done: {}, t: 0, step: 0, tripleSaid: null, filterZoom: false });
 state.sep = freshSep();
 const SEP = {
@@ -1038,10 +1045,10 @@ const SEP = {
   },
   drawer() {
     const s = state.sep, T = SEP.task(), L = s.last, slow = SEP.slow(), k = s.t;
-    const tasks = `<div class="card"><h2>⚗️ Separation station</h2><p>A <span class="term">mixture</span> can be separated again. Choose a job, then choose the right equipment from the shelf.</p>
-      <div class="stops">${TASKS.map(([id, , goal]) => `<button class="opt sm${s.task === id ? ' on' : s.done[id] ? ' done' : ''}" data-act="stask" data-v="${id}">${s.done[id] ? '✔ ' : ''}${goal.replace(' (2 steps!)', '')}</button>`).join('')}</div></div>`;
+    const tasks = `<div class="card"><h2>⚗️ Separation station</h2><p>A <span class="term">mixture</span> can be separated again. Choose a job, then choose the right equipment from the shelf.</p>${SAFE}
+      <div class="stops">${TASKS.map(([id, , goal]) => `<button class="opt sm${s.task === id ? ' on' : s.done[id] ? ' done' : ''}" data-act="stask" data-v="${id}">${s.done[id] ? '✔ ' : ''}${goal.replace(' (2 steps!)', '')}${SEP_TIER[id] ? ' ' + HUB.TIERS[SEP_TIER[id]].em : ''}</button>`).join('')}</div></div>`;
     const triple = T[0] === 'triple';
-    const shelf = `<div class="card"><h3>🧰 The shelf</h3><p class="muted">${triple ? (s.step === 0 ? 'Step 1: what will you do first?' : s.step === 1 ? 'Step 2: the salt water went through. Now what?' : '') : `Which will ${lc(T[2])}`}</p>
+    const shelf = `<div class="card">${HUB.note(SEP_TIER[T[0]])}<h3>🧰 The shelf</h3><p class="muted">${triple ? (s.step === 0 ? 'Step 1: what will you do first?' : s.step === 1 ? 'Step 2: the salt water went through. Now what?' : '') : `Which will ${lc(T[2])}`}</p>
       <div class="seedcards">${TOOLS.map(([id, em, nm]) => `<button class="seedcard${L && L.tool === id ? ' sel' : ''}" data-act="stool" data-v="${id}"${slow && !(triple && s.step === 1) ? ' disabled' : ''}><span style="font-size:30px">${em}</span><span>${nm}</span></button>`).join('')}</div></div>`;
     const res = L ? `<div class="card says${L.ok ? ' good' : ''}"><h3>${L.ok ? '✅ It worked!' : '💡 Not quite'}</h3><p>${L.msg}</p></div>` : '';
     const lapse = slow && (!triple || s.step >= 2) ? `<div class="card"><h3>⏩ Time-lapse</h3><p class="muted">Evaporating at room temperature takes days. Move the slider.</p>
@@ -1079,16 +1086,17 @@ const SEP = {
 const VIEWS = {
   beaker: { label: '🧪 <span class="tl">Beaker</span>', name: 'The beaker', ...BK },
   mass: { label: '⚖️ <span class="tl">Where?</span>', name: 'Where did it go?', ...MASS },
-  full: { label: '🥄 <span class="tl">Full up</span>', name: 'Keep adding', ...FULL },
+  full: { label: '🥄⏩ <span class="tl">Full up</span>', name: 'Keep adding', ...FULL },
   mix: { label: '🥣 <span class="tl">Mixtures</span>', name: 'Solution or just a mixture?', ...MIX },
   speed: { label: '⏱️ <span class="tl">Faster?</span>', name: 'What makes it dissolve faster?', ...FT },
   sep: { label: '⚗️ <span class="tl">Separate</span>', name: 'Separation station', ...SEP }
 };
 
 // ================= Missions =================
-// core: one of the three missions for a 45-minute lesson
+// start: one of the three missions for a 45-minute lesson. tier: 'back' | 'further' | 'next' (no tier = Core).
+// Grouped by level: Core, then Look back, Going further, Next year. Saved stars use the ids, not the order.
 const MISSIONS = [
-  { id: 'dissolve', core: true, icon: '🧪', title: 'Will it dissolve?', task: 'Test every solid in <b>water</b> and in <b>cooking oil</b>. That is 12 tests!',
+  { id: 'dissolve', start: true, icon: '🧪', title: 'Will it dissolve?', task: 'Test every solid in <b>water</b> and in <b>cooking oil</b>. That is 12 tests!',
     hint: 'Choose a solid and a liquid, predict, add a spoonful and stir. Use the results table to see what is left.',
     setup() { state.view = 'beaker'; state.beaker = freshBeaker(); }, on: ev => ev === 'tested',
     win: () => 'Salt, sugar and coffee dissolve in water, but not in oil. Sand, chalk and candle wax don\'t dissolve in either. Other things, like the colour in paprika, do dissolve in oil. Whether something dissolves depends on the <b>solid</b> and the <b>liquid</b>.' },
@@ -1096,23 +1104,19 @@ const MISSIONS = [
     hint: 'Weigh the water and the salt, predict, stir, then look at the balance again.',
     setup() { state.view = 'mass'; state.mass = freshMass(); }, on: ev => ev === 'mass',
     win: () => 'The mass stayed the same, so the salt is still there. Its particles are spread out between the water particles.' },
-  { id: 'full', icon: '🥄', title: 'Full up', task: 'Find out how much sugar dissolves in <b>cold</b> water and in <b>warm</b> water.',
-    hint: 'Keep adding spoonfuls until one will not dissolve. Then try the other water.',
-    setup() { state.view = 'full'; state.full = freshFull(); }, on: ev => ev === 'full',
-    win: () => 'Warm water dissolved more sugar than cold water. In the end, no more will dissolve, and the extra sits at the bottom.' },
-  { id: 'mix', core: true, icon: '🥣', title: 'Solution or mixture?', task: 'Sort all 7 into <b>solutions</b> and <b>other mixtures</b>.',
+  { id: 'mix', start: true, icon: '🥣', title: 'Solution or mixture?', task: 'Sort all 7 into <b>solutions</b> and <b>other mixtures</b>.',
     hint: 'A solution is see-through, with no bits, no layer and no cloud. It can still be coloured!',
     setup() { state.view = 'mix'; state.mix = freshMix(); }, on: ev => ev === 'sortedmix',
     win: () => 'All solutions are mixtures, but not all mixtures are solutions.' },
   { id: 'speed', icon: '⏱️', title: 'Speed it up', task: 'Plan and run a <b>fair test</b>: what makes sugar dissolve faster? Finish with a conclusion.',
-    hint: 'Change only one thing. Make everything else the same in every beaker.',
+    hint: 'Try changing the stirring, or the size of the grains. Change only that one thing. Keep everything else the same.',
     setup() { state.view = 'speed'; state.ft = freshFt(); }, on: ev => ev === 'concluded',
     win: () => 'A fair test, a chart and a conclusion. That is how scientists find out what makes a difference.' },
   { id: 'odd', icon: '🔍', title: 'The odd one out', task: 'Run a fair test, then find the result that does not fit, and decide what to do about it.',
     hint: 'After the results, look at the dot plot. Which dot is far from its two partners?',
     setup() { state.view = 'speed'; state.ft = freshFt(); }, on: ev => ev === 'repeated',
     win: () => 'You found the <b>anomalous result</b> and did that test again to check it. Repeating makes results more reliable.' },
-  { id: 'salt', core: true, icon: '🧂', title: 'Get the salt back', task: 'In the <b>Separation station</b>, get the salt back from salt water.',
+  { id: 'salt', start: true, icon: '🧂', title: 'Get the salt back', task: 'In the <b>Separation station</b>, get the salt back from salt water.',
     hint: 'Can the filter paper catch dissolved salt? What happens to water left in a dish?',
     setup() { state.view = 'sep'; state.sep = freshSep(); state.sep.task = 'salt'; }, on: ev => ev === 'separated' && state.sep.done.salt,
     win: () => 'The water evaporated and the salt was left behind. Dissolving is <b>reversible</b>: we got the solute back.' },
@@ -1120,14 +1124,18 @@ const MISSIONS = [
     hint: 'The water goes into the air as it evaporates. What could catch it and turn it back into liquid?',
     setup() { state.view = 'sep'; state.sep = freshSep(); state.sep.task = 'water'; }, on: ev => ev === 'separated' && state.sep.done.water,
     win: () => 'The water evaporated, then <b>condensed</b> on the cold lid and dripped into the other dish. Solute and solvent, both back!' },
-  { id: 'tools', icon: '🧲', title: 'Sieve, filter, magnet', task: 'Separate rice from flour, sand from water, and iron filings from sand.',
+  { id: 'tools', tier: 'back', icon: '🧲', title: 'Sieve, filter, magnet', task: 'Separate rice from flour, sand from water, and iron filings from sand.',
     hint: 'Think about the size of the bits, whether there is a liquid, and what is magnetic.',
     setup() { state.view = 'sep'; state.sep = freshSep(); }, on: () => ['rice', 'sand', 'iron'].every(x => state.sep.done[x]),
     win: () => 'A sieve for big and small bits, a filter for a solid in a liquid, and a magnet for iron. The right tool for each mixture!' },
-  { id: 'triple', icon: '🏆', title: 'Triple trouble', task: 'Separate a mixture of <b>sand, salt and water</b>. You will need 2 steps.',
+  { id: 'triple', tier: 'further', icon: '🏆', title: 'Triple trouble', task: 'Separate a mixture of <b>sand, salt and water</b>. You will need 2 steps.',
     hint: 'What should you do first, so the sand is not left mixed up with the salt?',
     setup() { state.view = 'sep'; state.sep = freshSep(); state.sep.task = 'triple'; }, on: ev => ev === 'separated' && state.sep.done.triple,
-    win: () => 'Filter first to catch the sand, then evaporate to get the salt. Three things, separated!' }
+    win: () => 'Filter first to catch the sand, then evaporate to get the salt. Three things, separated!' },
+  { id: 'full', tier: 'next', icon: '🥄', title: 'Full up', task: 'Find out how much sugar dissolves in <b>cold</b> water and in <b>warm</b> water.',
+    hint: 'Keep adding spoonfuls until one will not dissolve. Then try the other water.',
+    setup() { state.view = 'full'; state.full = freshFull(); }, on: ev => ev === 'full',
+    win: () => 'Warm water dissolved more sugar than cold water. In the end, no more will dissolve, and the extra sits at the bottom.' }
 ];
 function emit(ev, data = {}) {
   if (state.mission == null) return;
@@ -1150,7 +1158,7 @@ function startMission(i) {
   state.mission = i; MISSIONS[i].setup();
   location.hash = 'view=' + state.view;
   const m = MISSIONS[i];
-  $('#bannerKicker').textContent = `Mission ${i + 1} of ${MISSIONS.length}: ${m.title}`;
+  $('#bannerKicker').innerHTML = `Mission ${i + 1} of ${MISSIONS.length}: ${esc(m.title)} ${HUB.badge(HUB.tier(m))}`;
   $('#bannerText').innerHTML = m.task; $('#bannerHint').innerHTML = m.hint;
   $('#bannerHint').classList.add('hidden'); $('#hintBtn').textContent = '💡 Show a hint';
   $('#banner').classList.remove('hidden');
@@ -1171,35 +1179,21 @@ function confetti() {
 }
 
 // ================= Help, key words and Real life =================
-const OBJ = {
-  '5Cp.01': 'Know that the ability of a solid to dissolve and the ability of a liquid to act as a solvent are properties of the solid and liquid.',
-  '5Cc.02': 'Understand that dissolving is a reversible process and investigate how to separate the solvent and solute after a solution is formed.',
-  '5Cc.03': 'Investigate and describe the process of dissolving (using the terms solute, solvent, solution), and relate it to making a mixture.',
-  '5Cm.01': 'Use the particle model to describe solids, liquids (including solutions) and gases.',
-  '5TWSp.03': 'Make predictions, referring to relevant scientific knowledge and understanding within familiar and unfamiliar contexts.',
-  '5TWSp.04': 'Plan fair test investigations, identifying the independent, dependent and control variables.',
-  '5TWSp.05': 'Describe risks when planning practical work and consider how to minimise them.',
-  '5TWSc.03': 'Choose equipment to carry out an investigation and use it appropriately.',
-  '5TWSc.05': 'Take appropriately accurate measurements.',
-  '5TWSc.06': 'Carry out practical work safely.',
-  '5TWSa.02': 'Describe patterns in results, including identifying any anomalous results.',
-  '5TWSa.05': 'Present and interpret results using tables, bar charts, dot plots and line graphs.',
-  '5TWSm.01': 'Know that a model presents an object, process or idea in a way that shows some of the important features.'
-};
-const MAIN = ['5Cp.01', '5Cc.02', '5Cc.03'], SUPPORT = ['5Cm.01', '5TWSp.03', '5TWSp.04', '5TWSp.05', '5TWSc.03', '5TWSc.05', '5TWSc.06', '5TWSa.02', '5TWSa.05', '5TWSm.01'];
+// Objective wording comes from ../hub/objectives.js (HUB.objList)
+const MAIN = ['SC5-MAT-3', 'SC5-MAT-6', 'SC5-MAT-7'], SUPPORT = ['SC5-MAT-1', 'SC5-SKL-4', 'SC5-SKL-5', 'SC5-SKL-6', 'SC5-SKL-7', 'SC5-SKL-9', 'SC5-SKL-8', 'SC5-SKL-13', 'SC5-SKL-12', 'SC5-SKL-19'];
 const HELP = {
   beaker: { q: 'Which solids <b>dissolve</b>? Does it depend on the liquid?', steps: ['Choose a <b>solid</b> and a <b>liquid</b>.', '<b>Predict</b>: will it dissolve?', 'Add a spoonful and stir. Watch the beaker <b>and</b> the particles.', 'Test every solid in water and in oil.'],
-    look: 'A solution is <b>see-through</b>, but it can be coloured. Cloudy means it has <b>not</b> dissolved.', codes: ['5Cc.03', '5Cp.01', '5Cm.01', '5TWSp.03', '5TWSm.01'] },
+    look: 'A solution is <b>see-through</b>, but it can be coloured. Cloudy means it has <b>not</b> dissolved.', codes: ['SC5-MAT-7', 'SC5-MAT-3', 'SC5-MAT-1', 'SC5-SKL-4', 'SC5-SKL-19'] },
   mass: { q: 'When salt dissolves, where does it go?', steps: ['Weigh the water, then weigh the salt.', '<b>Predict</b> the mass after stirring.', 'Stir it in and read the balance.'],
-    look: 'Add the two masses together. What do you get?', codes: ['5Cc.03', '5Cm.01', '5TWSc.05', '5TWSp.03'] },
+    look: 'Add the two masses together. What do you get?', codes: ['SC5-MAT-7', 'SC5-MAT-1', 'SC5-SKL-9', 'SC5-SKL-4'] },
   full: { q: 'How much sugar can dissolve in water? Does warm water hold more?', steps: ['<b>Predict</b> first.', 'Add spoonfuls one at a time until no more will dissolve.', 'Try cold water, then warm water. Then try salt.'],
-    look: 'When no more will dissolve, the extra sits at the bottom.', codes: ['5Cp.01', '5TWSp.03'] },
+    look: 'When no more will dissolve, the extra sits at the bottom.', codes: ['SC5-MAT-3', 'SC5-SKL-4'] },
   mix: { q: 'Is every mixture a solution?', steps: ['<b>Predict</b> first.', 'Tap a mixture, then tap its box. Or drag it.', 'Solutions go in the inner box.'],
-    look: 'A solution is see-through, with no bits, no layer and no cloud.', codes: ['5Cc.03'] },
+    look: 'A solution is see-through, with no bits, no layer and no cloud. It can still be coloured.', codes: ['SC5-MAT-7'] },
   speed: { q: 'What makes sugar dissolve faster?', steps: ['Choose <b>one</b> thing to change, what to measure, and what to keep the same.', 'Set up the beakers, choose equipment and plan for safety.', '<b>Predict</b>, measure, then run the test.', 'Find the odd result, choose a chart and write a conclusion.'],
-    look: 'Change only <b>one</b> thing. If you change two, you can\'t tell which one made the difference.', codes: ['5TWSp.03', '5TWSp.04', '5TWSp.05', '5TWSc.03', '5TWSc.05', '5TWSc.06', '5TWSa.02', '5TWSa.05'] },
+    look: 'Change only <b>one</b> thing. If you change two, you can\'t tell which one made the difference.', codes: ['SC5-SKL-4', 'SC5-SKL-5', 'SC5-SKL-6', 'SC5-SKL-7', 'SC5-SKL-9', 'SC5-SKL-8', 'SC5-SKL-13', 'SC5-SKL-12'] },
   sep: { q: 'How can we separate a mixture, and get a dissolved solid back?', steps: ['Choose a job.', 'Choose the right equipment from the shelf.', 'For evaporating, use the <b>time-lapse</b> slider.'],
-    look: 'Filter paper can\'t catch dissolved salt: its particles are far too small.', codes: ['5Cc.02', '5Cm.01', '5TWSc.06'] }
+    look: 'Filter paper can\'t catch dissolved salt: its particles are far too small.', codes: ['SC5-MAT-6', 'SC5-MAT-1', 'SC5-SKL-8'] }
 };
 const MODEL = {
   beaker: [['🥄', 'Every test here uses one spoonful. In real life, if you add lots of a solid, some of it might not dissolve.']],
@@ -1216,7 +1210,9 @@ let autoHelp = true, welcomed = false;
 function showHelp() {
   const H = HELP[state.view], V = VIEWS[state.view];
   helpSeen.add(state.view);
-  const core = MISSIONS.map((m, i) => m.core ? `${i + 1} (${m.title})` : null).filter(Boolean);
+  const start = MISSIONS.map((m, i) => m.start ? `${i + 1} (${m.title})` : null).filter(Boolean);
+  const extra = ['back', 'further', 'next'].map(t => [t, MISSIONS.map((m, i) => HUB.tier(m) === t ? `${i + 1} (${m.title})` : null).filter(Boolean)]).filter(x => x[1].length)
+    .map(([t, l]) => `${HUB.TIERS[t].em} ${HUB.TIERS[t].name}: ${l.join(', ')}.`).join(' ');
   $('#helpBody').innerHTML = `<h2 id="helpTitle">${V.label.replace(/<[^>]+>/g, '').split(' ')[0]} ${V.name}</h2>
     ${welcomed ? '' : '<p class="welcome">Welcome to Dissolving Lab!</p>'}
     <h3>🔬 The big question</h3><p>${H.q}</p>
@@ -1224,8 +1220,8 @@ function showHelp() {
     <p><b>💡 Look out for:</b> ${H.look}</p>
     <p>📖 Tap <b>Words</b> at the top to see what the key words mean.</p>
     <p>🚀 Try the <b>Missions</b> to win stars!</p>
-    <details class="teach"><summary>For teachers</summary>${H.codes.map(c => `<p><b>${c}</b> ${OBJ[c]}</p>`).join('')}
-      <h4>⏱ A 45-minute lesson</h4><p>Good missions to start with: ${core.join(', ')}.</p>
+    <details class="teach"><summary>For teachers</summary>${HUB.objList(H.codes)}
+      <h4>⏱ A 45-minute lesson</h4><p>Good missions to start with: ${start.join(', ')}.</p><p>${extra}</p>
       <h4>All of Dissolving Lab's objectives</h4><p>Main: ${MAIN.join(', ')}. Supporting: ${SUPPORT.join(', ')}.</p></details>`;
   welcomed = true;
   $('#helpModal').classList.remove('hidden');
@@ -1317,8 +1313,8 @@ const ACTIONS = {
   stool(el) { SEP.use(el.dataset.v); },
   // Missions and pop-ups
   missions() {
-    $('#missionList').innerHTML = MISSIONS.map((m, i) => `<button class="mission-item${state.done.includes(m.id) ? ' done' : ''}" data-act="startMission" data-i="${i}">
-      <span class="em">${m.icon}</span><span class="t">${i + 1}. ${m.title}</span><span class="star">⭐</span></button>`).join('');
+    $('#missionList').innerHTML = HUB.starLine(MISSIONS, state.done) + HUB.missionList(MISSIONS, (m, i) => `<button class="mission-item${state.done.includes(m.id) ? ' done' : ''}" data-act="startMission" data-i="${i}">
+      <span class="em">${m.icon}</span><span class="t">${i + 1}. ${m.title} ${HUB.badge(HUB.tier(m))}</span><span class="star">⭐</span></button>`);
     $('#missionsModal').classList.remove('hidden');
   },
   startMission(el) { startMission(+el.dataset.i); },

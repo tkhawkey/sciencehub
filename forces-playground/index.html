@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="../hub/objectives.js"></script><script src="../hub/levels.js"></script>
 <style>
   /* ================= Shared look (matches Digestion Journey) ================= */
   :root {
@@ -235,9 +236,8 @@
   .card.says.good { border-color: var(--green); background: #effbf5; }
   .science { background: #fff6d6; border: 3px solid var(--yellow); border-radius: 16px; padding: 10px 14px; margin: 8px 0; }
   .science > b:first-child { display: block; font-size: 14px; text-transform: uppercase; letter-spacing: .04em; color: #8a5a00; margin-bottom: 2px; }
-  /* Lesson (core) missions, and extension missions */
-  .core { background: var(--yellow); color: var(--ink); border-radius: 8px; padding: 1px 7px; font-size: 12.5px; font-weight: 700; white-space: nowrap; }
-  .extn { background: #e8e0ff; color: #5a3fb0; border-radius: 8px; padding: 1px 7px; font-size: 12.5px; font-weight: 700; white-space: nowrap; }
+  .lvl-part { margin: 4px 0 6px; }
+  .banner .kicker .lvl { text-transform: none; letter-spacing: 0; }
 </style>
 </head>
 <body>
@@ -306,7 +306,7 @@ const store = {
 };
 
 // ================= Forces =================
-// Only the seven forces named in 5Pf.01
+// Only the seven forces named in SC5-FOR-1
 const FORCES = {
   gravity:  { name: 'Gravity',          c: '#e8414f' },
   normal:   { name: 'Normal force',     c: '#3d7bff' },
@@ -324,6 +324,7 @@ const UNIT = 40, MAXLEN = 5;   // arrow lengths go up in steps of 40, from 1 to 
 // hint: a nudge for a missing force. extra: why a force doesn't belong. dir: a nudge for a force pointing the wrong way.
 // optional: a force that is really there but too small to matter: [direction, why it can be left out, nudge if it points the wrong way].
 // moments: the same picture at different times (just jumped / steady speed); each moment has its own intro, rules and win.
+// tier: 'next' marks a scene or moment that is a Next year sneak peek (missing = Core).
 const SCENES = [
   { id: 'book', icon: '📕', label: 'Book', at: [500, 352],
     speed: { label: '⏸️ Still', now: 0, was: [], note: 'The book is not moving.' },
@@ -397,7 +398,7 @@ const SCENES = [
         draw: () => skyBack(true) + plane() + diver(300, 128, .8, -40, .22) + diver(352, 166, .8, -32, .3) + diver(445, 232, .8, -24, .4) + diver(580, 330, .8, -16),
         rules: [['>', 'gravity', 'air', 'The skydiver is <b>speeding up</b>, so the pull down is <b>bigger</b> than the push up. Make the gravity arrow <b>longer</b> than the air resistance arrow.']],
         win: 'Gravity is <b>bigger</b> than air resistance. The forces are <b>unbalanced</b>, so the skydiver speeds up. The faster they fall, the bigger the air resistance gets…' },
-      { key: 'steady', label: 'Steady speed',
+      { key: 'steady', label: 'Steady speed', tier: 'next',
         intro: 'A little later, the skydiver is falling at a <b>steady speed</b>: no faster and no slower. What forces are acting on the skydiver now?',
         speed: { label: '▶️ Steady speed', now: .75, was: [.75, .75, .75] },
         draw: () => skyBack(false) + diver(385, 90, .8, 0, .22) + diver(450, 170, .8, 0, .3) + diver(515, 250, .8, 0, .4) + diver(580, 330, .8, 0),
@@ -434,9 +435,9 @@ const SCENES = [
     },
     optional: { air: ['left', 'That\'s true, there is a little! But it is tiny for a slow box, so you can leave it out.', 'Air resistance works against the movement, so it would point to the <b>left</b>.'] },
     dir: { gravity: 'Gravity always pulls <b>down</b>, towards the Earth.', normal: 'The floor pushes the box <b>up</b>.',
-      friction: 'Friction works <b>against</b> the movement. The box slides to the right, so friction points to the <b>left</b>.' },
+      friction: 'Friction works <b>against</b> things sliding over each other, so it slows them down. The box slides to the right, so friction points to the <b>left</b>.' },
     win: 'Friction points <b>backwards</b>, against the movement, so the box slows down. Nothing pushes it forwards any more. Gravity and the normal force are <b>balanced</b>, so it doesn\'t move up or down.' },
-  { id: 'trolley', icon: '🛒', label: 'Trolley', at: [600, 395],
+  { id: 'trolley', icon: '🛒', label: 'Trolley', at: [600, 395], tier: 'next',
     need: { gravity: 'down', normal: 'up', applied: 'right', friction: 'left' },
     moments: [
       { key: 'steady', label: 'Steady speed',
@@ -467,7 +468,7 @@ const SCENES = [
     optional: { air: ['left', 'That\'s true, there is a little! But it is tiny at walking speed, so you can leave it out.', 'Air resistance works against the movement, so it would point to the <b>left</b>.'] },
     dir: { gravity: 'Gravity always pulls <b>down</b>, towards the Earth.', normal: 'The floor pushes the trolley <b>up</b>.',
       applied: 'The person pushes the trolley forwards, to the <b>right</b>.',
-      friction: 'Friction works <b>against</b> the movement. The trolley moves to the right, so friction points to the <b>left</b>.' } },
+      friction: 'Friction works <b>against</b> things sliding over each other, so it slows them down. The trolley moves to the right, so friction points to the <b>left</b>.' } },
   { id: 'fish', icon: '🐟', label: 'Fish', at: [500, 340],
     speed: { label: '🐢 Slowing down', now: .2, was: [.65, .5, .35] },
     draw: () => FISH_BACK + trail(FISH_PIC, [-420, -230, -90]),
@@ -1224,23 +1225,19 @@ addEventListener('resize', () => { if (state.view === 'ramp' && state.ramp.pendi
 // got() collects things done during this mission (scenes solved, objects tested…) and says whether the whole list is done.
 const got = (id, all) => { state.mseen.add(id); return all.every(x => state.mseen.has(x)); };
 const SURFS = ['ice', 'wood', 'carpet', 'sandpaper'];
+// Grouped by level: Core first, then Next year (tier). start: a good mission to start a lesson with.
 const MISSIONS = [
-  { id: 'still', core: true, icon: '📕', title: 'Still, but not empty', task: 'In <b>Force arrows</b>, draw the right forces on the <b>book</b> and on the <b>boat</b>.',
+  { id: 'still', start: true, icon: '📕', title: 'Still, but not empty', task: 'In <b>Force arrows</b>, draw the right forces on the <b>book</b> and on the <b>boat</b>.',
     hint: 'Something pulls everything down. What pushes back up: the table, or the water?',
     setup() { state.view = 'arrows'; state.scene = 0; state.checked = null; },
     on: (ev, d) => ev === 'solved' && got(d.id, ['book', 'boat']),
     win: () => 'Still objects have forces on them too! The forces are <b>balanced</b>: the same size, pushing in opposite directions.' },
-  { id: 'skydiver', core: true, icon: '🪂', title: 'Falling fast, falling steady', task: 'Draw the forces on the <b>skydiver</b> for <b>both</b> moments: just jumped, and steady speed.',
-    hint: 'Just jumped: gravity is bigger. Steady speed: the two arrows are the same length.',
+  { id: 'skydiver', start: true, icon: '🪂', title: 'Falling fast', task: 'In <b>Force arrows</b>, draw the forces on the <b>skydiver</b> who has <b>just jumped</b>.',
+    hint: 'The skydiver is speeding up. Which arrow should be longer?',
     setup() { state.view = 'arrows'; state.scene = 2; state.moment.skydiver = 0; state.checked = null; },
-    on: (ev, d) => ev === 'solved' && got(d.id, ['skydiver-jump', 'skydiver-steady']),
-    win: () => 'Speeding up: the forces are <b>unbalanced</b>. Steady speed: the forces are <b>balanced</b>, even though the skydiver is still moving!' },
-  { id: 'trolley', icon: '🛒', title: 'Push harder!', task: 'Draw the forces on the <b>trolley</b> for <b>both</b> moments: steady speed, and speeding up.',
-    hint: 'Steady speed: the push and friction are the same size. Speeding up: the push is bigger.',
-    setup() { state.view = 'arrows'; state.scene = 4; state.moment.trolley = 0; state.checked = null; },
-    on: (ev, d) => ev === 'solved' && got(d.id, ['trolley-steady', 'trolley-faster']),
-    win: () => 'When the push forwards is <b>bigger</b> than friction, the trolley speeds up. When they are the <b>same size</b>, it keeps going at a steady speed.' },
-  { id: 'slowing', core: true, icon: '🐟', title: 'Slowing down', task: 'Draw the forces on the sliding <b>box</b> and on the gliding <b>fish</b>.',
+    on: (ev, d) => ev === 'solved' && d.id === 'skydiver-jump',
+    win: () => 'Gravity is <b>bigger</b> than air resistance. The forces are <b>unbalanced</b>, so the skydiver speeds up.' },
+  { id: 'slowing', start: true, icon: '🐟', title: 'Slowing down', task: 'Draw the forces on the sliding <b>box</b> and on the gliding <b>fish</b>.',
     hint: 'Nothing pushes them forwards any more. Which force slows each one down? It points <b>backwards</b>.',
     setup() { state.view = 'arrows'; state.scene = 3; state.checked = null; },
     on: (ev, d) => ev === 'solved' && got(d.id, ['box', 'fish']),
@@ -1250,11 +1247,6 @@ const MISSIONS = [
     setup() { state.view = 'parachute'; Object.assign(state.chute, { drops: [], oddUsed: false, shown: '0.00', msg: null, answer: null }); },
     on: (ev, d) => ev === 'pconclude' && d.a === 'longer',
     win: () => 'A bigger canopy has more air resistance at the same speed, so it falls more slowly. And you spotted an <b>anomalous</b> result, just like a real scientist!' },
-  { id: 'tank', icon: '🛁', title: 'Upthrust detective', task: 'In the <b>Upthrust tank</b>, find the upthrust on all <b>3 objects</b>.',
-    hint: 'Upthrust = the reading in air − the reading in water.',
-    setup() { state.view = 'tank'; Object.assign(state.tank, { obj: 'stone', level: 0, step: 'air', val: 0, msg: null, results: {} }); },
-    on: (ev, d) => ev === 'tdone' && got(d.obj, ['stone', 'steel', 'apple']),
-    win: () => 'Water pushes up on everything in it. When the upthrust is as big as the object\'s weight, it <b>floats</b>, like the apple.' },
   { id: 'friction', icon: '🚗', title: 'Friction finder', task: 'In the <b>Friction ramp</b>, make a prediction, test all <b>4 surfaces</b>, and find which one has the most friction.',
     hint: 'The surface with the most friction stops the car soonest.',
     setup() { state.view = 'ramp'; Object.assign(state.ramp, { runs: [], shown: null, answer: null, pending: null, msg: null }); },
@@ -1269,7 +1261,22 @@ const MISSIONS = [
     hint: 'Find the last number before the red line, then count on the small marks. Each one is 1 cm.',
     setup() { state.view = 'ramp'; Object.assign(state.ramp, { shown: null, pending: null, msg: null }); },
     on: (ev, d) => ev === 'rread' && d.first && got(d.surf, SURFS),
-    win: () => 'Reading a scale carefully gives <b>accurate measurements</b>. Brilliant measuring!' }
+    win: () => 'Reading a scale carefully gives <b>accurate measurements</b>. Brilliant measuring!' },
+  { id: 'skydiver-steady', tier: 'next', icon: '🪂', title: 'Falling steady', task: 'In <b>Force arrows</b>, draw the forces on the <b>skydiver</b> falling at a <b>steady speed</b>.',
+    hint: 'Steady speed: no faster and no slower. The two arrows are the same length.',
+    setup() { state.view = 'arrows'; state.scene = 2; state.moment.skydiver = 1; state.checked = null; },
+    on: (ev, d) => ev === 'solved' && d.id === 'skydiver-steady',
+    win: () => 'Steady speed: the forces are <b>balanced</b>, even though the skydiver is still moving!' },
+  { id: 'trolley', tier: 'next', icon: '🛒', title: 'Push harder!', task: 'Draw the forces on the <b>trolley</b> for <b>both</b> moments: steady speed, and speeding up.',
+    hint: 'Steady speed: the push and friction are the same size. Speeding up: the push is bigger.',
+    setup() { state.view = 'arrows'; state.scene = 4; state.moment.trolley = 0; state.checked = null; },
+    on: (ev, d) => ev === 'solved' && got(d.id, ['trolley-steady', 'trolley-faster']),
+    win: () => 'When the push forwards is <b>bigger</b> than friction, the trolley speeds up. When they are the <b>same size</b>, it keeps going at a steady speed.' },
+  { id: 'tank', tier: 'next', icon: '🛁', title: 'Upthrust detective', task: 'In the <b>Upthrust tank</b>, find the upthrust on all <b>3 objects</b>.',
+    hint: 'Upthrust = the reading in air − the reading in water.',
+    setup() { state.view = 'tank'; Object.assign(state.tank, { obj: 'stone', level: 0, step: 'air', val: 0, msg: null, results: {} }); },
+    on: (ev, d) => ev === 'tdone' && got(d.obj, ['stone', 'steel', 'apple']),
+    win: () => 'Water pushes up on everything in it. When the upthrust is as big as the object\'s weight, it <b>floats</b>, like the apple.' }
 ];
 function emit(ev, data = {}) {
   if (state.mission == null) return;
@@ -1293,7 +1300,7 @@ function startMission(i) {
   state.mission = i; state.mseen = new Set(); MISSIONS[i].setup();
   location.hash = 'view=' + state.view;
   const m = MISSIONS[i];
-  $('#bannerKicker').textContent = `Mission ${i + 1} of ${MISSIONS.length}: ${m.title}`;
+  $('#bannerKicker').innerHTML = `Mission ${i + 1} of ${MISSIONS.length}: ${m.title} ${HUB.badge(HUB.tier(m))}`;
   $('#bannerText').innerHTML = m.task; $('#bannerHint').innerHTML = m.hint;
   $('#bannerHint').classList.add('hidden'); $('#hintBtn').textContent = '💡 Show a hint';
   $('#banner').classList.remove('hidden');
@@ -1323,9 +1330,9 @@ const VIEWS = {
     after: () => A.mount(),
     drawer() {
       const list = A.list(), s = A.scene();
-      const scenes = SCENES.map((x, i) => `<button class="opt${i === state.scene ? ' on' : ''}" data-act="scene" data-i="${i}">${x.icon} ${x.label}${A.solved(x) ? ' <span class="tick">✔</span>' : ''}</button>`).join('');
+      const scenes = SCENES.map((x, i) => `<button class="opt${i === state.scene ? ' on' : ''}" data-act="scene" data-i="${i}">${x.icon} ${x.label}${x.tier ? ' ' + HUB.TIERS[x.tier].em : ''}${A.solved(x) ? ' <span class="tick">✔</span>' : ''}</button>`).join('');
       const b = SCENES[state.scene], moments = b.moments ? `<div class="stops moments">${b.moments.map((m, i) =>
-        `<button class="opt${i === (state.moment[b.id] || 0) ? ' on' : ''}" data-act="moment" data-i="${i}">${m.label}${state.solved.includes(`${b.id}-${m.key}`) ? ' <span class="tick">✔</span>' : ''}</button>`).join('')}</div>` : '';
+        `<button class="opt${i === (state.moment[b.id] || 0) ? ' on' : ''}" data-act="moment" data-i="${i}">${m.label}${m.tier ? ' ' + HUB.TIERS[m.tier].em : ''}${state.solved.includes(`${b.id}-${m.key}`) ? ' <span class="tick">✔</span>' : ''}</button>`).join('')}</div>` : '';
       const chips = Object.entries(FORCES).map(([id, f]) =>
         `<button class="chip" style="--c:${f.c}" data-f="${id}"${list.some(a => a.f === id) ? ' disabled' : ''}>${f.name}</button>`).join('');
       const rows = list.map(a => `<li style="--c:${FORCES[a.f].c}"><span class="n">${FORCES[a.f].name}</span>
@@ -1335,7 +1342,7 @@ const VIEWS = {
         <div class="card"><h2>Force arrows</h2>
           <div class="science"><b>🔬 The science</b>A <b>force</b> is a push or a pull. An object can have <b>more than one force</b> on it. An arrow shows which way each force acts.</div>
           <div class="scenes">${scenes}</div></div>
-        <div class="card">${moments}<p>${s.intro}</p>
+        <div class="card">${moments}${HUB.note(HUB.tier(s))}<p>${s.intro}</p>
           <p class="muted">Drag a force onto the picture. Then drag the end of its arrow to point it the right way. A <b>longer</b> arrow means a <b>bigger</b> force.</p>
           <div class="chips">${chips}</div></div>
         <div class="checkbar"><button class="btn go" data-act="check"${list.length ? '' : ' disabled'}>✔ Check</button></div>
@@ -1392,9 +1399,11 @@ const VIEWS = {
       }).join('');
       return `
         <div class="card"><h2>Upthrust tank</h2>
+          <div class="science"><b>🔬 The science</b>Everything feels lighter in water, because the water pushes up on it. This push is called <b>upthrust</b>.</div>
           <p>Hang an object on the force meter, then raise the tank of water around it. What happens to the reading?</p>
           <div class="stops">${objs}</div>
           <label class="slider"><span>⬆️ Raise the tank</span><input type="range" id="tLevel" min="0" max="100" value="${Math.round(t.level * 100)}"></label></div>
+        <p class="lvl-part">${HUB.badge('next', true)}</p>
         <div class="card">${task}
           ${t.msg && t.step !== 'done' ? `<p class="spot"><span>${t.msg[0]}</span> ${t.msg[1]}</p>` : ''}</div>
         ${done.length ? `<div class="card"><h3>📋 Results</h3><table class="results"><tr><th>Object</th><th>In air</th><th>In water</th><th>Upthrust</th></tr>${rows}</table>
@@ -1412,6 +1421,7 @@ const VIEWS = {
       const rows = r.runs.map((x, i) => `<tr><td>${i + 1}</td><td>${R.SURF[x.surf].icon} ${R.SURF[x.surf].label}</td><td>${x.cm} cm</td></tr>`).join('');
       return `
         <div class="card"><h2>Friction ramp</h2>
+          <p class="lvl-note lvl-back">↩️ You met friction in Year 3. Now you'll measure it.</p>
           <p>On which surface does the toy car roll the furthest? Choose a surface, then let the car go.</p>
           <p class="muted">To keep the test fair, it is the <b>same car</b>, on the <b>same ramp</b>, let go from the <b>same place</b> every time. Only the surface changes.</p>
           ${pr.saved ? `<p class="mine">🤔 You predicted <b>${R.SURF[pr.surf].icon} ${R.SURF[pr.surf].label}</b>, because “${esc(pr.why.trim())}”</p>
@@ -1462,7 +1472,7 @@ const IDEA = {
   ],
   end: 'On Earth, a feather falls slowly because of <b>air resistance</b>, not because it is light. Without air, heavy and light things fall together. People believed the old idea for a very long time. Scientists changed it because of new <b>evidence</b> from experiments.'
 };
-// ================= Ideas that changed (5SIC.01) =================
+// ================= Ideas that changed (SC5-WLD-1) =================
 // An old idea, a new idea, and evidence cards shown one at a time. After each card the child decides:
 // keep the old idea, or change it? A card that fits both ideas can't settle it; a card that doesn't fit the old idea should change it.
 const IDEAS = {
@@ -1496,13 +1506,14 @@ const IDEAS = {
 };
 
 // ================= Help (❓): one pop-up per tab =================
+// Objective wording comes from ../hub/objectives.js
 const CUR = {
-  sic1: '<p><b>5SIC.01</b> Describe how scientific knowledge and understanding changes over time through the use of evidence gained by enquiry.</p>',
-  f1: '<p><b>5Pf.01</b> Identify a range of forces (limited to gravity, applied forces, normal forces, upthrust, friction, air resistance and water resistance).</p>',
-  f2: '<p><b>5Pf.02</b> Know that an object may have multiple forces acting upon it, even when at rest.</p>',
-  f3: '<p><b>5Pf.03</b> Use force diagrams to show the name and direction of forces acting on an object.</p>',
-  sc5: '<p><b>5TWSc.05</b> Take appropriately accurate measurements.</p>',
-  sm1: '<p><b>5TWSm.01</b> Know that a model presents an object, process or idea in a way that shows some of the important features.</p>'
+  sic1: HUB.objList(['SC5-WLD-1']),
+  f1: HUB.objList(['SC5-FOR-1']),
+  f2: HUB.objList(['SC5-FOR-2']),
+  f3: HUB.objList(['SC5-FOR-3']),
+  sc5: HUB.objList(['SC5-SKL-9']),
+  sm1: HUB.objList(['SC5-SKL-19'])
 };
 const HELP = {
   arrows: { q: 'What forces act on an object, and which way does each one push or pull?',
@@ -1526,6 +1537,12 @@ const HELP = {
     tip: 'Watch the <b>friction</b> arrow as the car slows down.',
     cur: CUR.f1 + CUR.sc5 }
 };
+// For teachers: good missions to start a lesson with, and the missions that are not Core, by level
+function MISSION_NOTE() {
+  const nums = f => MISSIONS.map((m, i) => f(m) ? `${i + 1} (${m.title})` : null).filter(Boolean).join(', ');
+  const extra = HUB.ORDER.filter(t => t !== 'core').map(t => { const l = nums(m => HUB.tier(m) === t); return l ? `<p>${HUB.TIERS[t].em} ${HUB.TIERS[t].name}: ${l}.</p>` : ''; }).join('');
+  return `<p>Good missions to start with: ${nums(m => m.start)}.</p>${extra}`;
+}
 // Help pops up the first time each tab is opened in this visit (not saved, so a new class sees it again)
 const helpSeen = new Set();
 let noHelp = false, welcomed = false;
@@ -1538,7 +1555,7 @@ function showHelp(id = state.view) {
     <h3>👆 What to do</h3><ol>${h.steps.map(s => `<li>${s}</li>`).join('')}</ol>
     ${h.tip ? `<h3>💡 Look out for</h3><p>${h.tip}</p>` : ''}
     <p>🚀 Try the <b>Missions</b> to win stars!</p>
-    <details class="teach"><summary>For teachers</summary>${h.cur}</details>`;
+    <details class="teach"><summary>For teachers</summary>${h.cur}${MISSION_NOTE()}</details>`;
   welcomed = true; helpSeen.add(id);
   $('#helpModal').classList.remove('hidden');
 }
@@ -1601,8 +1618,8 @@ const ACTIONS = {
   answer() { A.answer(); },
   closeFb() { state.checked = null; A.showFb(); },
   missions() {
-    $('#missionList').innerHTML = MISSIONS.map((m, i) => `<button class="mission-item${state.done.includes(m.id) ? ' done' : ''}" data-act="startMission" data-i="${i}">
-      <span class="em">${m.icon}</span><span class="t">${i + 1}. ${m.title}</span>${m.ext ? '<span class="extn">➕ Extension</span>' : ''}<span class="star">⭐</span></button>`).join('');
+    $('#missionList').innerHTML = HUB.starLine(MISSIONS, state.done) + HUB.missionList(MISSIONS, (m, i) => `<button class="mission-item${state.done.includes(m.id) ? ' done' : ''}" data-act="startMission" data-i="${i}">
+      <span class="em">${m.icon}</span><span class="t">${i + 1}. ${m.title}</span>${HUB.badge(HUB.tier(m))}<span class="star">⭐</span></button>`);
     $('#missionsModal').classList.remove('hidden');
   },
   startMission(el) { startMission(+el.dataset.i); },

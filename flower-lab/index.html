@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="../hub/objectives.js"></script><script src="../hub/levels.js"></script>
 <style>
   /* ================= Shared look (matches Seed Lab) ================= */
   :root {
@@ -190,7 +191,7 @@
   .mission-item .em { font-size: 25px; } .mission-item .t { flex: 1; font-weight: 600; }
   .mission-item .star { font-size: 21px; filter: grayscale(1); opacity: .35; }
   .mission-item.done .star { filter: none; opacity: 1; }
-  .core { background: var(--yellow); color: var(--ink); border-radius: 8px; padding: 1px 7px; font-size: 12.5px; font-weight: 700; white-space: nowrap; }
+  .banner .kicker .lvl { text-transform: none; letter-spacing: 0; }
   .win-emoji { font-size: 56px; text-align: center; }
   .win-text { font-size: 17.5px; line-height: 1.5; margin-bottom: 14px; }
   .confetti { position: fixed; top: -40px; font-size: 26px; z-index: 40; pointer-events: none; animation: fall linear forwards; }
@@ -541,7 +542,8 @@ const SORT = {
         <div class="navrow" style="margin-top:6px"><button class="btn" data-act="sclue">${s.clue[P[0]] ? '↩ Whole plant' : '🔍 Look for clues'}</button></div>
         <p style="margin-top:8px"><b>Where does it go?</b></p><div class="navrow">${SBINS.map(([b, t]) => `<button class="opt" data-act="sbin" data-v="${b}">${t}</button>`).join('')}</div></div>` : '';
     const intro = `<div class="card"><h2>🌼 Flowering or not?</h2><p>A <span class="term">flowering plant</span> is a plant that makes flowers. Do all plants make flowers? Look for clues!</p>
-      <p class="muted">${n} of ${PLANTS.length} sorted.${n ? '' : ' Tap a plant to start.'}</p>${n ? '<button class="linkbtn" data-act="sreset">↺ Start again</button>' : ''}</div>`;
+      <p class="muted">${n} of ${PLANTS.length} sorted.${n ? '' : ' Tap a plant to start.'}</p>${n ? '<button class="linkbtn" data-act="sreset">↺ Start again</button>' : ''}</div>
+      <a class="seelab" href="../science-skills/index.html#view=key">🔑 Name these plants with a key in Science Skills ▶</a>`;
     if (all) return `${said}<div class="card says good"><h3>🎉 All sorted!</h3><p>5 of these plants make flowers. 3 never do.</p>
         ${s.pred ? `<p class="muted">You predicted: ${s.pred === 'yes' ? 'every plant makes flowers.' : 'some plants never make flowers.'} ${s.pred === 'no' ? '✅ You were right!' : '❌ Not this time: moss, ferns and pine trees never make flowers.'}</p>` : ''}</div>
       <div class="science"><b>🔬 The science</b>Not all plants make flowers. <b>Mosses</b> and <b>ferns</b> make <span class="term">spores</span> instead. <b>Conifers</b>, like pine trees, make seeds in <b>cones</b>, but no flowers. Some flowering plants have flowers that are small and easy to miss, like grass and oak trees.</div>
@@ -676,13 +678,13 @@ const DIS = {
   },
   drawer() {
     const p = state.parts, now = DIS.layerNow(), found = NAMES.filter(n => p.named[n]).length;
-    const modes = `<div class="stops">${[['explore', '🔍 Explore'], ['test', '🙈 Test']].map(([m, t]) => `<button class="opt sm${p.mode === m ? ' on' : ''}" data-act="dmode" data-v="${m}">${t}</button>`).join('')}</div>`;
+    const modes = `<div class="stops">${[['explore', '🔍 Explore'], ['test', '🙈🔭 Test']].map(([m, t]) => `<button class="opt sm${p.mode === m ? ' on' : ''}" data-act="dmode" data-v="${m}">${t}</button>`).join('')}</div>`;
     const cut = !now ? `<div class="card"><h3>🔪 Inside the carpel</h3><p>${p.cut ? 'Inside the ovary are tiny parts. After pollination, they can grow into <b>seeds</b>.' : 'What is inside the ovary? Cut the carpel open to find out.'}</p>
       <div class="navrow"><button class="btn${p.cut ? '' : ' go'}" data-act="dcut">${p.cut ? '↩ Put it back together' : '🔪 Cut the carpel open'}</button></div></div>` : '';
     if (p.mode === 'test') {
       const right = NAMES.filter(n => p.marks[n] === true).length, wrong = NAMES.filter(n => p.marks[n] === false).length, left = p.bank.filter(n => !Object.values(p.placed).includes(n));
       return `${right === NAMES.length ? `<div class="card says good"><h3>🎉 All 9 labels are right!</h3><p>You know every part of a flower.</p></div>` : wrong ? `<div class="card says"><h3>🔎 ${right} right so far</h3><p>The red labels are in the wrong place. Tap one to take it off, then try again.</p></div>` : ''}
-        <div class="card"><h2>🙈 No peeking!</h2>${modes}<p style="margin-top:6px">All the parts are on the tray. Put each label in the right box: tap a label, then tap its box. Or drag it there.</p>
+        <div class="card">${HUB.note('further')}<h2>🙈 No peeking!</h2>${modes}<p style="margin-top:6px">All the parts are on the tray. Put each label in the right box: tap a label, then tap its box. Or drag it there.</p>
           <div class="bank" style="margin-top:8px">${left.map(n => `<button class="chip${p.sel === n ? ' sel' : ''}" data-drag="${n}">${cap(n)}</button>`).join('')}</div></div>
         ${cut}
         <div class="checkbar"><button class="btn go" data-act="dcheck"${Object.keys(p.placed).length ? '' : ' disabled'}>✔ Check my labels</button></div>`;
@@ -722,7 +724,7 @@ const DIS = {
 };
 
 // ================= 3. What does each part do? =================
-// [icon, name, job (short, for matching), the job explained]. Sepals are extra: not in 5Bs.03, but children ask.
+// [icon, name, job (short, for matching), the job explained]. Sepals are extra: not in SC5-PLA-3, but children ask.
 const JOBS = {
   petal: ['🌸', 'Petals', 'Attract pollinators', 'Bright petals attract insects, like bees and butterflies, and other <span class="term">pollinators</span>: animals that carry pollen from flower to flower.'],
   anther: ['🟡', 'Anthers', 'Make pollen', 'The anthers make <span class="term">pollen</span>: a fine, yellow dust. A flower needs pollen to make seeds.'],
@@ -1020,8 +1022,8 @@ const DES = {
     const d = state.des, s = DES.scores(d.f), top = DES.top(d.f), G = d.gauge || d.target, T = WHO.find(x => x[0] === G);
     const locked = state.mission != null && MISSIONS[state.mission].target;
     const who = `<div class="card"><h2>🎨 Design a flower</h2><p>A <span class="term">pollinator</span> is an animal that carries pollen from flower to flower. Design a flower for one!</p>
-      <p style="margin-top:6px"><b>Who is your flower for?</b></p><div class="stops">${WHO.map(([w, em, n]) => `<button class="opt sm${d.target === w ? ' on' : ''}" data-act="dtarget" data-v="${w}"${locked ? ' disabled' : ''}>${em} ${w === 'wind' ? 'The wind' : n}</button>`).join('')}</div>
-      ${d.target === 'moth' ? '<p class="muted">Moths fly in the evening and at night.</p>' : d.target === 'wind' ? '<p class="muted">The wind is not an animal, but it carries pollen too.</p>' : ''}</div>`;
+      <p style="margin-top:6px"><b>Who is your flower for?</b></p><div class="stops">${WHO.map(([w, em, n]) => `<button class="opt sm${d.target === w ? ' on' : ''}" data-act="dtarget" data-v="${w}"${locked ? ' disabled' : ''}>${em} ${w === 'wind' ? 'The wind' : n}${w === 'moth' ? ' 🔭' : ''}</button>`).join('')}</div>
+      ${d.target === 'moth' ? HUB.note('further') + '<p class="muted">Moths fly in the evening and at night.</p>' : d.target === 'wind' ? '<p class="muted">The wind is not an animal, but it carries pollen too.</p>' : ''}</div>`;
     const feats = `<div class="card"><h3>🌸 Your flower</h3>${FEATS.map(([k, t, opts]) => `<div class="frow"><span>${t}</span><div class="stops">${opts.map(([v, l]) => `<button class="opt sm${d.f[k] === v ? ' on' : ''}" data-act="dfeat" data-k="${k}" data-v="${v}">${l}</button>`).join('')}</div></div>`).join('')}</div>`;
     const predCard = `<div class="card wq${d.shown ? '' : ' says'}"><h3>🤔 Predict first</h3><p>Who will visit your flower the most?</p>${predict('dpred', WHO.map(([w, em, n]) => [w, `${em} ${w === 'wind' ? 'The wind' : `The ${lc(n)}`}`]), d.pred)}</div>`;
     if (!d.shown) return `${who}${feats}${predCard}`;
@@ -1116,7 +1118,7 @@ const STAGES = [
   ['seedling', 'Seedling', 'A young plant with its first leaves.'],
   ['adult', 'Adult plant', 'The plant grows big and strong, with lots of leaves.'],
   ['flower', 'Flowering', 'The plant makes flowers.'],
-  ['poll', 'Pollination', 'Pollen moves from an anther to a stigma.'],
+  ['poll', 'Pollination', 'Pollen moves from an anther to a stigma. Then the pollen joins with a tiny part inside the ovary.'],
   ['fruit', 'Fruit and seeds', 'Seeds form, inside the fruit.'],
   ['disp', 'Seed dispersal', 'The seeds are carried away from the plant.']
 ];
@@ -1227,25 +1229,22 @@ function setTest() { Object.assign(state.parts, { mode: 'test', rm: Object.fromE
 
 // ================= Missions =================
 // Each mission sets up a view; the view calls emit() when something happens, and on() says whether that completes it.
-// core: one of the three missions for a 45-minute lesson
+// start: one of the three missions for a 45-minute lesson. tier: 'further' etc. (no tier = Core).
+// Grouped by level: Core first, then Going further. Saved stars use the ids, not the order.
 const MISSIONS = [
   { id: 'sorted', icon: '🌼', title: 'Does every plant have flowers?', task: 'Sort all 8 plants: do they make <b>flowers</b>, or not? Look for clues!',
     hint: 'Tap a plant, then tap 🔍 Look for clues. Some flowers are tiny and green!',
     setup() { state.view = 'sort'; state.sort = freshSort(); }, on: ev => ev === 'sorted',
     win: () => 'Not all plants make flowers! Mosses and ferns make <b>spores</b>, and pine trees make seeds in <b>cones</b>. But grass, oak trees and cacti <b>do</b> make flowers.' },
-  { id: 'dissect', core: true, icon: '🔪', title: 'Take it apart', task: 'Take the flower apart, from the outside in. Then tap every part on the tray to find all <b>9 names</b>.',
+  { id: 'dissect', start: true, icon: '🔪', title: 'Take it apart', task: 'Take the flower apart, from the outside in. Then tap every part on the tray to find all <b>9 names</b>.',
     hint: 'Sepals first, then petals, then stamens, then the carpel. On the tray, tap the anther, filament, stigma, style and ovary too.',
     setup() { state.view = 'parts'; state.parts = freshParts(); }, on: ev => ev === 'dissected',
     win: () => 'Sepals, petals, stamens (an anther on a filament) and the carpel (stigma, style and ovary). You took a flower apart like a <b>botanist</b>: a scientist who studies plants!' },
-  { id: 'test', icon: '🙈', title: 'No peeking!', task: 'Put all <b>9 labels</b> in the right places on the dissection tray.',
-    hint: 'A stamen is an anther on a filament. The carpel is the stigma, the style and the ovary.',
-    setup() { state.view = 'parts'; state.parts = freshParts(); setTest(); }, on: ev => ev === 'tested',
-    win: () => 'All 9 labels, with no peeking! You know every part of a flower.' },
-  { id: 'jobs', core: true, icon: '🛠️', title: 'What\'s my job?', task: 'Match each part of the flower to its <b>job</b>.',
+  { id: 'jobs', start: true, icon: '🛠️', title: 'What\'s my job?', task: 'Match each part of the flower to its <b>job</b>.',
     hint: 'Tap each part on the flower first, to find out its job.',
     setup() { state.view = 'jobs'; state.jobs = freshJobs(); }, on: ev => ev === 'matched',
     win: () => 'Petals attract pollinators, anthers make pollen, the stigma catches pollen, and the ovary is where seeds form. Every part has a job!' },
-  { id: 'bee', core: true, icon: '🐝', title: 'Busy bee', task: 'Take the bee from one flower to the other. Then fast forward time until the flower has grown a <b>fruit</b>.',
+  { id: 'bee', start: true, icon: '🐝', title: 'Busy bee', task: 'Take the bee from one flower to the other. Then fast forward time until the flower has grown a <b>fruit</b>.',
     hint: 'Drag the bee to flower A first, so it picks up pollen. Then take it to flower B. Then predict, and move the slider all the way.',
     setup() { state.view = 'pollen'; state.pol = freshPol(); }, on: ev => ev === 'grown',
     win: () => 'Pollen went from an anther to a stigma: <b>pollination</b>. Then seeds formed, and the ovary grew into a <b>fruit</b>.' },
@@ -1253,10 +1252,6 @@ const MISSIONS = [
     hint: 'The wind can\'t see, smell or drink! Think about the petals, where the anthers and stigma are, and the pollen.',
     setup() { state.view = 'design'; state.des = freshDes(); state.des.target = 'wind'; }, on: (ev, d) => ev === 'designed' && d.target === 'wind',
     win: () => 'Small, dull petals, no scent or nectar, dangling anthers, a stigma outside the flower and lots of light pollen: just like <b>grass</b> flowers!' },
-  { id: 'moth', icon: '🌙', title: 'Night shift', target: 'moth', task: 'Design a flower for a <b>moth</b>. Moths fly in the evening and at night.',
-    hint: 'What shows up in the dark? What can a moth follow when it is too dark to see far?',
-    setup() { state.view = 'design'; state.des = freshDes(); state.des.target = 'moth'; }, on: (ev, d) => ev === 'designed' && d.target === 'moth',
-    win: () => 'Pale petals show up in the dark, and a strong evening scent leads the moth to the flower. Honeysuckle and evening primrose are like this.' },
   { id: 'fruit', icon: '🍅', title: 'Is it a fruit?', task: 'Sort all 11 foods: is each one a <b>fruit</b>, or not?',
     hint: 'A scientist asks: does it hold seeds?',
     setup() { state.view = 'fruit'; state.fruit = freshFruit(); state.fruit.ex = 'sort'; }, on: ev => ev === 'fruitsorted',
@@ -1264,7 +1259,15 @@ const MISSIONS = [
   { id: 'cycle', icon: '🔄', title: 'Round and round', task: 'Complete the life cycle wheel with <b>no mistakes</b>.',
     hint: 'Start at the seed and go round clockwise. What does a seed do first?',
     setup() { state.view = 'cycle'; state.cyc = freshCyc(); }, on: ev => ev === 'cycled',
-    win: () => 'Seed, germination, seedling, adult plant, flowering, pollination, fruit and seeds, seed dispersal… and round again!' }
+    win: () => 'Seed, germination, seedling, adult plant, flowering, pollination, fruit and seeds, seed dispersal… and round again!' },
+  { id: 'test', tier: 'further', icon: '🙈', title: 'No peeking!', task: 'Put all <b>9 labels</b> in the right places on the dissection tray.',
+    hint: 'A stamen is an anther on a filament. The carpel is the stigma, the style and the ovary.',
+    setup() { state.view = 'parts'; state.parts = freshParts(); setTest(); }, on: ev => ev === 'tested',
+    win: () => 'All 9 labels, with no peeking! You know every part of a flower.' },
+  { id: 'moth', tier: 'further', icon: '🌙', title: 'Night shift', target: 'moth', task: 'Design a flower for a <b>moth</b>. Moths fly in the evening and at night.',
+    hint: 'What shows up in the dark? What can a moth follow when it is too dark to see far?',
+    setup() { state.view = 'design'; state.des = freshDes(); state.des.target = 'moth'; }, on: (ev, d) => ev === 'designed' && d.target === 'moth',
+    win: () => 'Pale petals show up in the dark, and a strong evening scent leads the moth to the flower. Honeysuckle and evening primrose are like this.' }
 ];
 function emit(ev, data = {}) {
   if (state.mission == null) return;
@@ -1287,7 +1290,7 @@ function startMission(i) {
   state.mission = i; MISSIONS[i].setup();
   location.hash = 'view=' + state.view;
   const m = MISSIONS[i];
-  $('#bannerKicker').textContent = `Mission ${i + 1} of ${MISSIONS.length}: ${m.title}`;
+  $('#bannerKicker').innerHTML = `Mission ${i + 1} of ${MISSIONS.length}: ${esc(m.title)} ${HUB.badge(HUB.tier(m))}`;
   $('#bannerText').innerHTML = m.task; $('#bannerHint').innerHTML = m.hint;
   $('#bannerHint').classList.add('hidden'); $('#hintBtn').textContent = '💡 Show a hint';
   $('#banner').classList.remove('hidden');
@@ -1310,34 +1313,27 @@ function confetti() {
 }
 
 // ================= Help and Real life: one pop-up each, about the tab you are on =================
-const OBJ = {
-  '5Bs.01': 'Know that not all plants produce flowers.',
-  '5Bs.02': 'Identify the parts of a flower (limited to petals, sepals, anthers, filaments, stamens, stigma, style, carpel and ovary).',
-  '5Bs.03': 'Describe the functions of the parts of a flower (limited to petals, anthers, stigma and ovary).',
-  '5Bp.02': 'Know the stages in the life cycle of a flowering plant.',
-  '5Bp.03': 'Describe how flowering plants reproduce by pollination, fruit and seed production, and seed dispersal. <span class="muted">(Here: pollination, fruit and seed production. Seed dispersal is in <a href="../seed-lab/index.html#view=spread">Seed Lab</a>.)</span>',
-  '5Be.02': 'Describe how flowering plants are adapted to attract pollinators and promote seed dispersal. <span class="muted">(Here: attracting pollinators. Seed dispersal is in <a href="../seed-lab/index.html#view=spread">Seed Lab</a>.)</span>',
-  '5TWSc.01': 'Sort, group and classify objects, materials and living things through testing, observation and using secondary information.',
-  '5TWSm.01': 'Know that a model presents an object, process or idea in a way that shows some of the important features.',
-  '5TWSm.02': 'Use models, including diagrams, to represent and describe scientific phenomena and ideas.',
-  '5TWSp.03': 'Make predictions, referring to relevant scientific knowledge and understanding within familiar and unfamiliar contexts.'
+// Objective wording comes from ../hub/objectives.js. These notes say which part is in this tool.
+const OBJ_NOTE = {
+  'SC5-PLA-5': '<span class="muted">(Here: pollination, fruit and seed production. Seed dispersal is in <a href="../seed-lab/index.html#view=spread">Seed Lab</a>.)</span>',
+  'SC5-PLA-7': '<span class="muted">(Here: attracting pollinators. Seed dispersal is in <a href="../seed-lab/index.html#view=spread">Seed Lab</a>.)</span>'
 };
-const MAIN = ['5Bs.01', '5Bs.02', '5Bs.03', '5Bp.02', '5Bp.03', '5Be.02'], SUPPORT = ['5TWSc.01', '5TWSm.01', '5TWSm.02', '5TWSp.03'];
+const MAIN = ['SC5-PLA-1', 'SC5-PLA-2', 'SC5-PLA-3', 'SC5-PLA-4', 'SC5-PLA-5', 'SC5-PLA-7'], SUPPORT = ['SC5-SKL-17', 'SC5-SKL-19', 'SC5-SKL-20', 'SC5-SKL-4'];
 const HELP = {
   sort: { q: 'Do <b>all</b> plants make flowers?', steps: ['<b>Predict</b> first.', 'Tap a plant to look at it. Tap <b>🔍 Look for clues</b> to look closer.', 'Put it in a box: <b>makes flowers</b> or <b>no flowers</b>. Tap the box, or drag the plant there.'],
-    look: 'Some flowers are tiny and green, and easy to miss!', codes: ['5Bs.01', '5TWSc.01'] },
+    look: 'Some flowers are tiny and green, and easy to miss!', codes: ['SC5-PLA-1', 'SC5-SKL-17'] },
   parts: { q: 'What are the parts of a flower?', steps: ['Take the flower apart, from the <b>outside in</b>. Tap each part, or drag it to the tray.', 'Tap each part on the tray to find its <b>name</b>.', 'Cut the carpel open to see inside.', 'Switch to <b>🙈 Test</b> and put the labels on yourself.'],
-    look: 'A <b>stamen</b> is an anther on a filament. The <b>carpel</b> is the stigma, style and ovary.', codes: ['5Bs.02', '5TWSm.01', '5TWSm.02'] },
+    look: 'A <b>stamen</b> is an anther on a filament. The <b>carpel</b> is the stigma, style and ovary.', codes: ['SC5-PLA-2', 'SC5-SKL-19', 'SC5-SKL-20'] },
   jobs: { q: 'What job does each part of a flower do?', steps: ['Tap a part of the flower to find out its job.', 'Match each part to its job: tap a part, then tap its job. Or drag it.', 'Press <b>Check</b>.'],
-    look: 'The four jobs to learn: <b>petals</b>, <b>anthers</b>, <b>stigma</b> and <b>ovary</b>.', codes: ['5Bs.03', '5TWSm.02'] },
+    look: 'The four jobs to learn: <b>petals</b>, <b>anthers</b>, <b>stigma</b> and <b>ovary</b>.', codes: ['SC5-PLA-3', 'SC5-SKL-20'] },
   pollen: { q: 'How does a flower make seeds and fruit?', steps: ['Drag the bee to one flower, then to the other. Or tap the flowers.', '<b>Predict</b> what will happen next.', 'Move the <b>time-lapse</b> slider to watch the fruit grow.', 'Try <b>🌬️ Wind</b> to see pollen blow from flower to flower.'],
-    look: 'Where does the pollen start, and where does it end up?', codes: ['5Bp.03', '5TWSm.01', '5TWSm.02', '5TWSp.03'] },
+    look: 'Where does the pollen start, and where does it end up?', codes: ['SC5-PLA-5', 'SC5-SKL-19', 'SC5-SKL-20', 'SC5-SKL-4'] },
   design: { q: 'How are flowers suited to the pollinators that visit them?', steps: ['Choose who your flower is for.', 'Choose its features: colour, petals, shape, scent and more.', '<b>Predict</b> who will visit most. Then see the gauges.', 'Tap a gauge to see why.'],
-    look: 'Every feature counts. Think about what each pollinator can see, smell and drink.', codes: ['5Be.02', '5TWSp.03', '5TWSm.01'] },
+    look: 'Every feature counts. Think about what each pollinator can see, smell and drink.', codes: ['SC5-PLA-7', 'SC5-SKL-4', 'SC5-SKL-19'] },
   fruit: { q: 'Where do fruits come from?', steps: ['Look at an apple, a pea and a tomato turning from flower to fruit.', '<b>Predict</b> before you look.', 'Then sort the foods: is it a <b>fruit</b>?'],
-    look: 'To a scientist, a fruit holds the <b>seeds</b>. Not all fruits are sweet!', codes: ['5Bp.03', '5TWSc.01', '5TWSp.03'] },
+    look: 'To a scientist, a fruit holds the <b>seeds</b>. Not all fruits are sweet!', codes: ['SC5-PLA-5', 'SC5-SKL-17', 'SC5-SKL-4'] },
   cycle: { q: 'What are the stages in the life of a flowering plant?', steps: ['Start at the seed. Choose a stage, then tap its box on the wheel. Or drag it.', 'Go round <b>clockwise</b>.', 'Then watch a <b>sunflower</b> go all the way round.'],
-    look: 'It is a cycle: the seeds start it all again.', codes: ['5Bp.02', '5TWSm.02'] }
+    look: 'It is a cycle: the seeds start it all again.', codes: ['SC5-PLA-4', 'SC5-SKL-20'] }
 };
 const MODEL = {
   sort: [['📅', 'Many plants only flower at one time of year. An oak tree\'s catkins hang for a few weeks in spring, so you might not see them.'],
@@ -1366,15 +1362,17 @@ let autoHelp = true, welcomed = false;
 function showHelp() {
   const H = HELP[state.view], V = VIEWS[state.view];
   helpSeen.add(state.view);
-  const core = MISSIONS.map((m, i) => m.core ? `${i + 1} (${m.title})` : null).filter(Boolean);
+  const start = MISSIONS.map((m, i) => m.start ? `${i + 1} (${m.title})` : null).filter(Boolean);
+  const extra = ['back', 'further', 'next'].map(t => [t, MISSIONS.map((m, i) => HUB.tier(m) === t ? `${i + 1} (${m.title})` : null).filter(Boolean)]).filter(x => x[1].length)
+    .map(([t, l]) => `${HUB.TIERS[t].em} ${HUB.TIERS[t].name}: ${l.join(', ')}.`).join(' ');
   $('#helpBody').innerHTML = `<h2 id="helpTitle">${V.label.replace(/<[^>]+>/g, '').split(' ')[0]} ${V.name}</h2>
     ${welcomed ? '' : '<p class="welcome">Welcome to Flower Lab!</p>'}
     <h3>🔬 The big question</h3><p>${H.q}</p>
     <h3>👆 What to do</h3><ol>${H.steps.map(s => `<li>${s}</li>`).join('')}</ol>
     <p><b>💡 Look out for:</b> ${H.look}</p>
     <p>🚀 Try the <b>Missions</b> to win stars!</p>
-    <details class="teach"><summary>For teachers</summary>${H.codes.map(c => `<p><b>${c}</b> ${OBJ[c]}</p>`).join('')}
-      <h4>⏱ A 45-minute lesson</h4><p>Good missions to start with: ${core.join(', ')}.</p>
+    <details class="teach"><summary>For teachers</summary>${H.codes.map(c => `<p><b>${c}</b> ${HUB.objText(c)}${OBJ_NOTE[c] ? ' ' + OBJ_NOTE[c] : ''}</p>`).join('')}
+      <h4>⏱ A 45-minute lesson</h4><p>Good missions to start with: ${start.join(', ')}.</p><p>${extra}</p>
       <h4>All of Flower Lab's objectives</h4><p>Main: ${MAIN.join(', ')}. Supporting: ${SUPPORT.join(', ')}.</p></details>`;
   welcomed = true;
   $('#helpModal').classList.remove('hidden');
@@ -1443,8 +1441,8 @@ const ACTIONS = {
   creset() { clearTimeout(CYC.timer); state.cyc = freshCyc(); render(); $('#drawer').scrollTop = 0; },
   // Missions and pop-ups
   missions() {
-    $('#missionList').innerHTML = MISSIONS.map((m, i) => `<button class="mission-item${state.done.includes(m.id) ? ' done' : ''}" data-act="startMission" data-i="${i}">
-      <span class="em">${m.icon}</span><span class="t">${i + 1}. ${m.title}</span><span class="star">⭐</span></button>`).join('');
+    $('#missionList').innerHTML = HUB.starLine(MISSIONS, state.done) + HUB.missionList(MISSIONS, (m, i) => `<button class="mission-item${state.done.includes(m.id) ? ' done' : ''}" data-act="startMission" data-i="${i}">
+      <span class="em">${m.icon}</span><span class="t">${i + 1}. ${m.title} ${HUB.badge(HUB.tier(m))}</span><span class="star">⭐</span></button>`);
     $('#missionsModal').classList.remove('hidden');
   },
   startMission(el) { startMission(+el.dataset.i); },

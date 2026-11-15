@@ -1,8 +1,9 @@
-/* Question bank: Seeds and seed dispersal (Cambridge Primary Science 5Bp.03, 5Bp.04)
+/* Question bank: Seeds and seed dispersal (Year 5 Science Hub SC5-PLA-5, SC5-PLA-6)
    Each question is one object. "type" says which activity it is – see the engine (index.html) for the formats.
    In "sentence" questions the right choice is written first (the engine shuffles them).
    Facts match the Seed Lab explorer: bean seeds need water and warmth (not light or soil) to germinate, and seeds travel in
    7 ways: wind, water, hitching a ride, seeds as food, bursting, drop and roll, and shakers.
+   tier (no tier = Core): 'further' = light and germination (Seed Lab's "Does light matter?" mission).
    The seed drawings are copied from Seed Lab. Diagrams are drawn here (600 × 360). Label positions are in % across and down the diagram. */
 window.BANKS = window.BANKS || [];
 (() => {
@@ -59,7 +60,7 @@ const BEAN = `<svg class="dg" viewBox="0 0 600 360" role="img"><rect width="600"
   <path d="M258 196 Q270 168 300 170 L294 186 Z" fill="#c7a46a" stroke="#a88b4e" stroke-width="2"/><path d="M342 204 Q338 226 312 230 L318 214 Z" fill="#c7a46a" stroke="#a88b4e" stroke-width="2"/></svg>`;
 
 window.BANKS.push({
-  id: 'seeds', title: 'Seeds and seed dispersal', icon: '🌱', objectives: '5Bp.03 · 5Bp.04',
+  id: 'seeds', title: 'Seeds and seed dispersal', icon: '🌱', objectives: 'SC5-PLA-5 · SC5-PLA-6',
   explorer: { name: 'Seed Lab', icon: '🌱', href: '../seed-lab/index.html' },
   intro: 'What seeds need to germinate, why plants spread their seeds, and the seven ways seeds travel.',
   items: [
@@ -104,12 +105,16 @@ window.BANKS.push({
       { t: 'Poppy', em: pic('poppy'), g: 2 }, { t: 'Snapdragon', em: pic('snapdragon'), g: 2 }],
     explain: 'Pods that dry and twist burst open. Heavy nuts drop and roll. Seed heads with holes shake their seeds out, like a pepper pot.' },
   { type: 'sort', prompt: 'Does a bean seed need this to germinate?', groups: ['✅ Needs it', '❌ Doesn\'t need it'],
-    items: [{ t: 'Water', em: '💧', g: 0 }, { t: 'Warmth', em: '🌡️', g: 0 }, { t: 'Light', em: '☀️', g: 1 }, { t: 'Soil', em: '🟫', g: 1 }, { t: 'Plant food from a shop', em: '🧴', g: 1 }],
-    explain: 'Seeds need water and a suitable temperature to germinate. A bean has its own food store, so it can germinate in the dark, even on damp cotton wool.' },
+    items: [{ t: 'Water', em: '💧', g: 0 }, { t: 'Warmth', em: '🌡️', g: 0 }, { t: 'Soil', em: '🟫', g: 1 }, { t: 'Plant food from a shop', em: '🧴', g: 1 }],
+    explain: 'Seeds need water and a suitable temperature to germinate. A bean has its own food store, so it can germinate even on damp cotton wool.' },
 
   // ---------- Fill the gaps ----------
   { type: 'cloze', prompt: 'Fill the gaps about germination.',
-    text: 'Seeds need {water} and a suitable {temperature} to germinate. Bean seeds do not need {light} to germinate, because each seed has its own {food} store.',
+    text: 'Seeds need {water} and a suitable {temperature} to germinate. The seed takes in water and {swells}. Then the {root} grows down.',
+    extra: ['soil', 'colour', 'shrinks'],
+    explain: 'The root comes out first. Then the shoot grows up and the first leaves open.' },
+  { type: 'cloze', tier: 'further', prompt: 'Fill the gaps about light and germination.',
+    text: 'Bean seeds do not need {light} to germinate, because each seed has its own {food} store.',
     extra: ['soil', 'colour'],
     explain: 'Once the seedling has used up its food store, it needs light to make more food.' },
   { type: 'cloze', prompt: 'Fill the gaps about seed dispersal.',
@@ -121,11 +126,18 @@ window.BANKS.push({
   { type: 'tf', prompt: 'True or false?',
     statements: [
       { s: 'Seeds need water to germinate.', a: true, why: 'The seed takes in water, swells and splits its coat.' },
-      { s: 'Bean seeds need light to germinate.', a: false, why: 'They germinate in the dark too, using their food store. (Some seeds, like lettuce, do need light.)' },
       { s: 'Bean seeds kept in a fridge (4 °C) will germinate quickly.', a: false, why: 'In the cold, the changes inside a seed are very slow, so hardly any germinate.' },
       { s: 'Seeds need soil to germinate.', a: false, why: 'Bean seeds germinate on damp cotton wool, as long as they have water and warmth.' },
-      { s: 'A seedling grown in the dark is tall, thin and yellow.', a: true, why: 'It grows fast to search for light, and it can\'t make the green chlorophyll without light.' },
     ] },
+  { type: 'tf', tier: 'further', prompt: 'True or false?',
+    statements: [
+      { s: 'Bean seeds need light to germinate.', a: false, why: 'They germinate in the dark too, using their food store. (Some seeds, like lettuce, do need light.)' },
+      { s: 'A seedling grown in the dark is tall, thin and yellow.', a: true, why: 'It grows fast to search for light, and it can\'t make the green chlorophyll without light.' },
+      { s: 'A seedling needs light to keep growing.', a: true, why: 'Once its food store is used up, it needs light to make more food.' },
+    ] },
+  { type: 'sort', tier: 'further', prompt: 'Does a bean seed need this to germinate?', groups: ['✅ Needs it', '❌ Doesn\'t need it'],
+    items: [{ t: 'Water', em: '💧', g: 0 }, { t: 'Warmth', em: '🌡️', g: 0 }, { t: 'Light', em: '☀️', g: 1 }, { t: 'Soil', em: '🟫', g: 1 }],
+    explain: 'A bean has its own food store, so it can germinate in the dark. It needs light later, to keep growing.' },
   { type: 'tf', prompt: 'True or false?',
     statements: [
       { s: 'All seeds are carried by the wind.', a: false, why: 'There are seven ways seeds travel, including water, animals and bursting pods.' },
@@ -155,7 +167,7 @@ window.BANKS.push({
     explain: 'Under the parent plant it is shady, and all the seedlings compete for the same water and space.' },
   { type: 'sentence', prompt: 'Build a true sentence.',
     parts: ['In the cold, bean seeds', ['hardly germinate', 'germinate faster'], 'because the changes inside the seed', ['are very slow', 'need light'], '.'],
-    explain: 'Seeds need a suitable temperature. 4 °C is cold, but not freezing, so the seeds are still alive and wait.' },
+    explain: 'Seeds need a suitable temperature. 4 °C is cold, but not freezing, so the seeds are still alive and wait. The best temperature depends on the kind of seed.' },
   { type: 'sentence', prompt: 'Build a true sentence.',
     parts: ['Burdock seeds have tiny', ['hooks', 'wings'], 'so they', ['catch on animals\' fur', 'float on rivers'], '.'],
     explain: 'They fall off somewhere else, far from the parent plant. That is hitching a ride.' },

@@ -1,8 +1,9 @@
-/* Question bank: Air and water (Cambridge Primary Science 5ESp.01, 5Cm.02, 5ESp.02, 5ESp.03, 5SIC.05, 5ESc.01)
+/* Question bank: Air and water (Year 5 Science Hub SC5-EAR-1, SC5-MAT-2, SC5-EAR-2, SC5-EAR-3, SC5-WLD-5, SC5-EAR-4)
    Each question is one object. "type" says which activity it is – see the engine (index.html) for the formats.
    In "sentence" questions the right choice is written first (the engine shuffles them).
    Numbers match the Air and Water explorer: air is 78% nitrogen, 21% oxygen, about 1% other gases and 0.04% carbon dioxide.
-   Pollution follows 5ESp.03: harmful substances added to the environment by humans, so natural events are not pollution.
+   Pollution follows SC5-EAR-3: harmful substances added to the environment by humans, so natural events are not pollution.
+   Questions about the layers of the atmosphere (names, heights, ozone, meteors, the space station) are tier 'further'.
    Diagrams are drawn here (600 × 360). Label positions are in % across and down the diagram. */
 window.BANKS = window.BANKS || [];
 (() => {
@@ -28,13 +29,13 @@ const CYCLE = `<svg class="dg" viewBox="0 0 600 360" role="img"><rect width="600
   ${[400, 420, 440, 460, 480].map((x, k) => `<path d="M${x} ${114 + (k % 2) * 16} l-3 14" stroke="#2f7fd8" stroke-width="3" stroke-linecap="round"/><path d="M${x - 4} ${138 + (k % 2) * 10} l-3 12" stroke="#2f7fd8" stroke-width="3" stroke-linecap="round"/>`).join('')}</svg>`;
 
 window.BANKS.push({
-  id: 'air-water', title: 'Air and water', icon: '💨', objectives: '5ESp.01 · 5Cm.02 · 5ESp.02 · 5ESp.03 · 5SIC.05 · 5ESc.01',
+  id: 'air-water', title: 'Air and water', icon: '💨', objectives: 'SC5-EAR-1 · SC5-MAT-2 · SC5-EAR-2 · SC5-EAR-3 · SC5-WLD-5 · SC5-EAR-4',
   explorer: { name: 'Air and Water', icon: '💨', href: '../air-and-water/index.html' },
   intro: 'What air is made of, the layers of the atmosphere, the water cycle, pure and impure water, and pollution.',
   items: [
 
   // ---------- Label the diagram ----------
-  { type: 'label', prompt: 'Label the layers of the atmosphere, from the ground up.', svg: LAYERS, alt: 'Five coloured layers stacked on top of the ground',
+  { type: 'label', tier: 'further', prompt: 'Label the layers of the atmosphere, from the ground up.', svg: LAYERS, alt: 'Five coloured layers stacked on top of the ground',
     labels: [{ text: 'Troposphere', x: 13, y: 83, ...pct(300, 300) }, { text: 'Stratosphere', x: 87, y: 66, ...pct(300, 238) }, { text: 'Mesosphere', x: 13, y: 48, ...pct(300, 175) },
       { text: 'Thermosphere', x: 87, y: 32, ...pct(300, 115) }, { text: 'Exosphere', x: 13, y: 15, ...pct(300, 54) }],
     extra: ['Hydrosphere'],
@@ -48,7 +49,7 @@ window.BANKS.push({
   { type: 'order', prompt: 'Put the water cycle in order.', first: 'First', last: 'Last',
     items: ['The Sun warms the sea', 'Water evaporates and rises as water vapour', 'The water vapour cools and condenses into clouds', 'The drops fall as rain or snow', 'Rivers carry the water back to the sea'],
     explain: 'Then the Sun warms the sea again, and the cycle goes round and round.' },
-  { type: 'order', prompt: 'Put the layers of the atmosphere in order, starting from the ground.', first: 'Nearest the ground', last: 'Furthest out',
+  { type: 'order', tier: 'further', prompt: 'Put the layers of the atmosphere in order, starting from the ground.', first: 'Nearest the ground', last: 'Furthest out',
     items: ['Troposphere', 'Stratosphere', 'Mesosphere', 'Thermosphere', 'Exosphere'],
     explain: 'We live in the troposphere. The exosphere fades away into space.' },
   { type: 'order', prompt: 'One litre of each water was evaporated. Put them in order of how much was left behind in the dish.', first: 'Most left behind', last: 'Least left behind',
@@ -60,7 +61,7 @@ window.BANKS.push({
     pairs: [['Nitrogen', 'Most of the air: about 78%'], ['Oxygen', 'About 21% of the air. We breathe it in.'], ['Carbon dioxide', 'Only about 0.04% of the air. Plants use it.'],
       ['Water vapour', 'The gas that water turns into when it evaporates'], ['Hydrogen', 'The lightest gas of all']],
     explain: 'All five are common gases at room temperature. Air is a mixture of gases.' },
-  { type: 'match', prompt: 'Match each layer of the atmosphere to what happens there.',
+  { type: 'match', tier: 'further', prompt: 'Match each layer of the atmosphere to what happens there.',
     pairs: [['Troposphere', 'Weather and clouds'], ['Stratosphere', 'The ozone layer'], ['Mesosphere', 'Meteors burn up'], ['Thermosphere', 'The space station orbits'], ['Exosphere', 'The air fades away into space']],
     explain: 'Almost all the weather happens in the troposphere, the layer nearest the ground.' },
   { type: 'match', prompt: 'Match each part of the water cycle to what it means.',
@@ -102,14 +103,20 @@ window.BANKS.push({
     statements: [
       { s: 'Air is mostly oxygen.', a: false, why: 'Air is mostly nitrogen: about 78%. Oxygen is about 21%.' },
       { s: 'There is carbon dioxide in the air.', a: true, why: 'There is only a tiny amount: about 4 particles in every 10,000.' },
-      { s: 'The atmosphere is the layer of air around the Earth.', a: true, why: 'It is made of five layers, from the troposphere up to the exosphere.' },
-      { s: 'All our weather happens in the stratosphere.', a: false, why: 'Almost all weather happens in the troposphere, the layer nearest the ground.' },
-      { s: 'The ozone layer is in the stratosphere.', a: true, why: 'It protects living things from the Sun\'s harmful UV light.' },
+      { s: 'The atmosphere is the layer of air around the Earth.', a: true, why: 'It is a mixture of gases, mostly nitrogen and oxygen.' },
     ],
     explain: 'Watch out for these common mix-ups!' },
+  { type: 'tf', tier: 'further', prompt: 'True or false?',
+    statements: [
+      { s: 'All our weather happens in the stratosphere.', a: false, why: 'Almost all weather happens in the troposphere, the layer nearest the ground.' },
+      { s: 'The ozone layer is in the stratosphere.', a: true, why: 'It protects living things from the Sun\'s harmful UV light.' },
+      { s: 'Meteors burn up in the mesosphere.', a: true, why: 'Most meteors (shooting stars) burn up high in this layer.' },
+    ],
+    explain: 'The atmosphere has five layers, from the troposphere up to the exosphere.' },
   { type: 'tf', prompt: 'True or false?',
     statements: [
       { s: 'Clear water is always pure.', a: false, why: 'Tap water and mineral water look clear, but they have substances dissolved in them.' },
+      { s: 'Clear water is always safe to drink.', a: false, why: 'Clear water is not always safe to drink. Germs and some harmful substances can\'t be seen.' },
       { s: 'Sea water has salt dissolved in it.', a: true, why: 'One litre of sea water leaves about 35 g of salt when it evaporates.' },
       { s: 'Water vapour is an invisible gas.', a: true, why: 'You cannot see water vapour. Clouds and steam are tiny drops of liquid water.' },
       { s: 'Clouds are made of water vapour.', a: false, why: 'Clouds are made of tiny drops of liquid water (or ice) that formed when water vapour condensed.' },
@@ -147,7 +154,7 @@ window.BANKS.push({
       { q: 'Why can\'t you find carbon dioxide in just 100 particles of air?', options: ['There is so little: only 4 in every 10,000', 'Carbon dioxide is invisible', 'Air has no carbon dioxide'], a: 0, why: 'Carbon dioxide is only about 0.04% of the air.' },
     ],
     explain: 'Air is a mixture: about 78% nitrogen, 21% oxygen and 1% other gases, including a tiny amount of carbon dioxide.' },
-  { type: 'table', prompt: 'Use the table about the layers of the atmosphere.', caption: 'The layers of the atmosphere',
+  { type: 'table', tier: 'further', prompt: 'Use the table about the layers of the atmosphere.', caption: 'The layers of the atmosphere',
     table: { head: ['Layer', 'Height', 'Going up, it gets…'], rows: [['Troposphere', '0 to 12 km', 'colder'], ['Stratosphere', '12 to 50 km', 'warmer'], ['Mesosphere', '50 to 85 km', 'colder (down to −90 °C)'], ['Thermosphere', '85 to 600 km', 'much hotter']] },
     questions: [
       { q: 'A plane is flying 11 km up. Which layer is it in?', options: ['Troposphere', 'Stratosphere', 'Mesosphere', 'Thermosphere'], a: 0, why: 'The troposphere goes from the ground up to about 12 km.' },
