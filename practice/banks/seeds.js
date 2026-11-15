@@ -187,6 +187,19 @@ window.BANKS.push({
       { q: 'Which way of travelling took seeds furthest here?', options: ['Wind', 'Bursting', 'Drop and roll'], a: 0, why: 'Both wind seeds went much further than the others.' },
       { q: 'How much further did the sycamore seed go than the conker?', options: ['5 m', '35 m', '40 m', '45 m'], a: 1, why: '40 m − 5 m = 35 m.' },
     ] },
+
+  // ---------- Use a key (branching keys) ----------
+  { type: 'key', mode: 'name', prompt: 'Use the key to name each seed.',
+    key: { q: 'Does it have wings or a parachute?', yes: { q: 'Is it fluffy?', yes: 'Dandelion', no: 'Sycamore' }, no: { q: 'Does it have tiny hooks?', yes: 'Burdock', no: 'Cherry' } },
+    things: [{ pic: 'dandelion', alt: 'A seed with a fluffy parachute', at: 'Dandelion' }, { pic: 'sycamore', alt: 'A seed with two wings', at: 'Sycamore' },
+      { pic: 'burdock', alt: 'A round seed case with hooks', at: 'Burdock' }, { pic: 'cherry', alt: 'Two red juicy fruits', at: 'Cherry' }],
+    explain: 'Wings and parachutes catch the wind. Hooks stick to fur. Juicy fruits get eaten.' },
+  { type: 'key', mode: 'finish', prompt: 'Finish the key. Choose the missing questions.',
+    key: { q: 'Is it carried by the wind?', gap: true, yes: { q: 'Is it fluffy?', yes: 'Dandelion', no: 'Sycamore' }, no: { q: 'Is it inside a juicy fruit?', gap: true, yes: 'Cherry', no: 'Pea' } },
+    things: [{ pic: 'dandelion', at: 'Dandelion' }, { pic: 'sycamore', at: 'Sycamore' }, { pic: 'cherry', at: 'Cherry' }, { pic: 'pea', at: 'Pea' }],
+    extra: ['Is it a seed?', 'Is it pretty?'],
+    explain: 'Every one of them is a seed, so "Is it a seed?" doesn\'t split them. Dandelion and sycamore seeds travel on the wind.' },
+
   ]
 });
 })();

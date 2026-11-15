@@ -87,6 +87,8 @@
     .qlayout { height: auto; min-height: 0; }
     .qlayout.split { grid-template-columns: 1fr; }
     .media { position: sticky; top: 68px; z-index: 5; max-height: 48vh; }
+    .t-key .media { position: static; max-height: none; overflow-x: auto; }
+    .kq { font-size: 12.5px; padding: 2px 4px; } .kend { font-size: 11px; padding: 2px 1px; } .kend b { font-size: 10px; letter-spacing: -.3px; } .kend .slot { padding: 1px; border-width: 2px; } .kend .tok.pic { padding: 1px; } .kend .tok.pic img { height: 62px; } .kend .tok.pic svg { width: 40px; height: 40px; } .tok.pic img { width: 66px; height: 66px; } .kpic img { height: 52px; } .kpic svg { width: 40px; height: 40px; } .kyn { font-size: 12px; }
     .figure.svgfig { width: min(100%, calc(44vh * 1.667)); }
     .figure.imgfig img { max-height: 42vh; }
     .venn { width: min(100%, calc(42vh * 1.58)); }
@@ -121,6 +123,33 @@
   .slot .tok { margin: 0; }
 
   /* label */
+
+  /* Use a key: a branching key drawn as a tree */
+  .t-key .media { align-items: stretch; justify-content: flex-start; }
+  .ktree { position: relative; width: 100%; margin: 4px 0; flex: none; }
+  .ktree > svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .ktree path { fill: none; stroke: #9aa7cf; stroke-width: 3; stroke-linejoin: round; }
+  .kq, .kend { position: absolute; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; border-radius: 14px; font-weight: 700; line-height: 1.2; }
+  .kq { background: #fff; border: 2px solid #c9d3f0; box-shadow: 0 3px 0 rgba(0,0,0,.08); padding: 3px 6px; font-size: 14.5px; }
+  .kq.kgap { padding: 2px; border: 0; background: none; box-shadow: none; }
+  .kq.kgap .slot { width: 100%; height: 100%; min-width: 0; font-size: 13.5px; }
+  .kq.kgap .slot .tok { font-size: 13.5px; padding: 4px 6px; min-height: 0; line-height: 1.15; }
+  .kend { background: #f4f6ff; border: 2px solid #dfe5f7; padding: 3px; gap: 3px; font-size: 14px; justify-content: flex-start; }
+  .kend b { line-height: 1.1; padding-top: 2px; }
+  .kend .slot { flex: 1; width: 100%; min-width: 0; min-height: 0; padding: 2px; }
+  .kend.kname { padding: 3px; justify-content: center; }
+  .kpic { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; }
+  .kpic img { max-width: 100%; width: 72px; height: 62px; object-fit: cover; border-radius: 9px; display: block; }
+  .kpic svg { width: 58px; height: 58px; display: block; }
+  .kyn { position: absolute; transform: translate(-50%, -50%); border-radius: 999px; padding: 0 9px; font-size: 13px; font-weight: 700; background: #eef1fb; color: #5b6386; }
+  .kyn.yes { background: #dcf6ea; color: #0b6644; } .kyn.no { background: #ffe6e8; color: #a3202c; }
+  .tok.pic { padding: 3px; position: relative; flex: none; }
+  .tok.pic img, .tok.pic svg { flex: none; }
+  .tok.pic img { width: 84px; height: 84px; object-fit: cover; border-radius: 9px; display: block; }
+  .tok.pic svg { width: 64px; height: 64px; display: block; }
+  .tok.pic .mark { position: absolute; top: -4px; right: -4px; background: #fff; border-radius: 50%; width: 22px; height: 22px; display: grid; place-items: center; font-size: 14px; }
+  .kend .tok.pic img { width: 100%; max-width: 84px; height: 76px; }
+  .kend .tok.pic svg { width: 58px; height: 58px; }
   .figure { position: relative; margin: 0 auto; }
   .figure img, .figure svg.dg { display: block; width: 100%; height: auto; border-radius: 16px; }
   .figure svg.lines { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
@@ -272,7 +301,13 @@ const starText = n => '⭐'.repeat(n) + '☆'.repeat(3 - n);
    table     caption?, table: { head: [], rows: [[]] }, questions: [{ q, options: [], a, why? }]
    tf        statements: [{ s, a: true/false, why }]
    odd       items: [], odd, reasons: [], reason
-   sentence  parts: [words, [right choice, wrong choice…], words…], answers?: [[option for each gap]]  (when more than one version is true) */
+   sentence  parts: [words, [right choice, wrong choice…], words…], answers?: [[option for each gap]]  (when more than one version is true)
+   key       a branching key drawn as a tree. key: { q, yes, no }, where yes and no are another { q, yes, no } or a name (words).
+             Yes branches are drawn on the left. Keep it to 4–6 names so it fits on a phone.
+             mode: 'name'   – things: [{ img or pic or em, alt, at: the name it belongs at }], credit?. The child puts each picture at its name.
+                              pic is one of the Seed Lab drawings: dandelion, sycamore, burdock, cherry, acorn, pea.
+             mode: 'finish' – put gap: true on 1–2 questions; extra: [wrong questions]. The child fills the missing questions.
+                              Check no wrong question also works in a gap, and the gaps can't swap. */
 const TYPES = {
   label: { icon: '🏷️', name: 'Label the diagram', desc: 'Put the labels in the right places.' },
   order: { icon: '🔢', name: 'Put in order', desc: 'Put things in the right order.' },
@@ -285,8 +320,9 @@ const TYPES = {
   table: { icon: '📊', name: 'Read the table', desc: 'Use data to answer questions.' },
   odd: { icon: '🔍', name: 'Odd one out', desc: 'Find the odd one out – and say why.' },
   sentence: { icon: '💬', name: 'Build a sentence', desc: 'Choose the words that make it true.' },
+  key: { icon: '🔑', name: 'Use a key', desc: 'Follow the branches of a key.' },
 };
-const PLACE_TYPES = new Set(['label', 'order', 'match', 'cloze', 'sort', 'venn', 'carroll']);
+const PLACE_TYPES = new Set(['label', 'order', 'match', 'cloze', 'sort', 'venn', 'carroll', 'key']);
 const HINTS = {
   label: 'Tap a label, then tap the box where it goes.',
   order: 'Tap an item, then tap the place in the list where it goes.',
@@ -296,6 +332,12 @@ const HINTS = {
   venn: 'Tap an item, then tap where it belongs. Things that fit both go in the middle. Things that fit neither go outside the circles.',
   carroll: 'Tap an item, then tap the box where its row and column are both true.',
 };
+const KEYHINT = {
+  name: 'Take one picture at a time. Start at the top of the key, answer each question and follow the Yes or No branch to an empty box. Tap the picture, then tap that box. The names appear when you check.',
+  finish: 'Some questions are missing. Look at the pictures and names under each gap. Tap a question, then tap the gap.',
+};
+// The Seed Lab drawings, for keys about seeds (pic: 'acorn')
+const KEYPICS = {"dandelion": "<svg viewBox=\"0 0 40 40\"><line x1=\"20\" y1=\"37\" x2=\"20\" y2=\"17\" stroke=\"#8a6a3a\" stroke-width=\"1.5\"/><ellipse cx=\"20\" cy=\"35\" rx=\"1.8\" ry=\"3.5\" fill=\"#6b4b22\"/><line x1=\"20\" y1=\"17\" x2=\"6.5\" y2=\"13.6\" stroke=\"#9aa3b5\" stroke-width=\"1\"/><circle cx=\"6.5\" cy=\"13.6\" r=\"1.6\" fill=\"#c9cfdc\"/><line x1=\"20\" y1=\"17\" x2=\"7.9\" y2=\"10.5\" stroke=\"#9aa3b5\" stroke-width=\"1\"/><circle cx=\"7.9\" cy=\"10.5\" r=\"1.6\" fill=\"#c9cfdc\"/><line x1=\"20\" y1=\"17\" x2=\"10.1\" y2=\"7.8\" stroke=\"#9aa3b5\" stroke-width=\"1\"/><circle cx=\"10.1\" cy=\"7.8\" r=\"1.6\" fill=\"#c9cfdc\"/><line x1=\"20\" y1=\"17\" x2=\"13.0\" y2=\"5.7\" stroke=\"#9aa3b5\" stroke-width=\"1\"/><circle cx=\"13.0\" cy=\"5.7\" r=\"1.6\" fill=\"#c9cfdc\"/><line x1=\"20\" y1=\"17\" x2=\"16.4\" y2=\"4.4\" stroke=\"#9aa3b5\" stroke-width=\"1\"/><circle cx=\"16.4\" cy=\"4.4\" r=\"1.6\" fill=\"#c9cfdc\"/><line x1=\"20\" y1=\"17\" x2=\"20.0\" y2=\"4.0\" stroke=\"#9aa3b5\" stroke-width=\"1\"/><circle cx=\"20.0\" cy=\"4.0\" r=\"1.6\" fill=\"#c9cfdc\"/><line x1=\"20\" y1=\"17\" x2=\"23.6\" y2=\"4.4\" stroke=\"#9aa3b5\" stroke-width=\"1\"/><circle cx=\"23.6\" cy=\"4.4\" r=\"1.6\" fill=\"#c9cfdc\"/><line x1=\"20\" y1=\"17\" x2=\"27.0\" y2=\"5.7\" stroke=\"#9aa3b5\" stroke-width=\"1\"/><circle cx=\"27.0\" cy=\"5.7\" r=\"1.6\" fill=\"#c9cfdc\"/><line x1=\"20\" y1=\"17\" x2=\"29.9\" y2=\"7.8\" stroke=\"#9aa3b5\" stroke-width=\"1\"/><circle cx=\"29.9\" cy=\"7.8\" r=\"1.6\" fill=\"#c9cfdc\"/><line x1=\"20\" y1=\"17\" x2=\"32.1\" y2=\"10.5\" stroke=\"#9aa3b5\" stroke-width=\"1\"/><circle cx=\"32.1\" cy=\"10.5\" r=\"1.6\" fill=\"#c9cfdc\"/><line x1=\"20\" y1=\"17\" x2=\"33.5\" y2=\"13.6\" stroke=\"#9aa3b5\" stroke-width=\"1\"/><circle cx=\"33.5\" cy=\"13.6\" r=\"1.6\" fill=\"#c9cfdc\"/></svg>", "sycamore": "<svg viewBox=\"0 0 40 40\"><path d=\"M19 27 C13 19 6 11 3 4 C10 5 18 13 21 25 Z\" fill=\"#d6b77a\" stroke=\"#8a6a3a\"/><path d=\"M21 27 C27 19 34 11 37 4 C30 5 22 13 19 25 Z\" fill=\"#d6b77a\" stroke=\"#8a6a3a\"/><circle cx=\"17\" cy=\"28\" r=\"4\" fill=\"#8a6a3a\"/><circle cx=\"23\" cy=\"28\" r=\"4\" fill=\"#8a6a3a\"/></svg>", "cherry": "<svg viewBox=\"0 0 40 40\"><path d=\"M21 3 Q14 13 12 24\" stroke=\"#5c7a2e\" stroke-width=\"2\" fill=\"none\"/><path d=\"M21 3 Q27 13 28 22\" stroke=\"#5c7a2e\" stroke-width=\"2\" fill=\"none\"/><path d=\"M21 4 Q29 1 33 6 Q26 8 21 4Z\" fill=\"#5fbf4f\"/><circle cx=\"12\" cy=\"29\" r=\"7.5\" fill=\"#d6283a\"/><circle cx=\"28\" cy=\"27\" r=\"7.5\" fill=\"#c41d30\"/><circle cx=\"9\" cy=\"26\" r=\"2\" fill=\"#fff\" opacity=\".6\"/></svg>", "burdock": "<svg viewBox=\"0 0 40 40\"><circle cx=\"20\" cy=\"20\" r=\"9\" fill=\"#8a6a3a\"/><path d=\"M29.0 20.0 L36.0 20.0 q-0.1 2.0 -1.5 0.0\" stroke=\"#6b4b22\" stroke-width=\"1.5\" fill=\"none\"/><path d=\"M27.8 24.5 L33.9 28.0 q-1.1 1.7 -1.3 -0.7\" stroke=\"#6b4b22\" stroke-width=\"1.5\" fill=\"none\"/><path d=\"M24.5 27.8 L28.0 33.9 q-1.8 0.9 -0.8 -1.3\" stroke=\"#6b4b22\" stroke-width=\"1.5\" fill=\"none\"/><path d=\"M20.0 29.0 L20.0 36.0 q-2.0 -0.1 -0.0 -1.5\" stroke=\"#6b4b22\" stroke-width=\"1.5\" fill=\"none\"/><path d=\"M15.5 27.8 L12.0 33.9 q-1.7 -1.1 0.7 -1.3\" stroke=\"#6b4b22\" stroke-width=\"1.5\" fill=\"none\"/><path d=\"M12.2 24.5 L6.1 28.0 q-0.9 -1.8 1.3 -0.7\" stroke=\"#6b4b22\" stroke-width=\"1.5\" fill=\"none\"/><path d=\"M11.0 20.0 L4.0 20.0 q0.1 -2.0 1.5 -0.0\" stroke=\"#6b4b22\" stroke-width=\"1.5\" fill=\"none\"/><path d=\"M12.2 15.5 L6.1 12.0 q1.1 -1.7 1.3 0.8\" stroke=\"#6b4b22\" stroke-width=\"1.5\" fill=\"none\"/><path d=\"M15.5 12.2 L12.0 6.1 q1.8 -0.9 0.8 1.3\" stroke=\"#6b4b22\" stroke-width=\"1.5\" fill=\"none\"/><path d=\"M20.0 11.0 L20.0 4.0 q2.0 0.1 0.0 1.5\" stroke=\"#6b4b22\" stroke-width=\"1.5\" fill=\"none\"/><path d=\"M24.5 12.2 L28.0 6.1 q1.7 1.1 -0.8 1.3\" stroke=\"#6b4b22\" stroke-width=\"1.5\" fill=\"none\"/><path d=\"M27.8 15.5 L33.9 12.0 q0.9 1.8 -1.3 0.8\" stroke=\"#6b4b22\" stroke-width=\"1.5\" fill=\"none\"/></svg>", "acorn": "<svg viewBox=\"0 0 40 40\"><line x1=\"20\" y1=\"3\" x2=\"20\" y2=\"10\" stroke=\"#6b4b22\" stroke-width=\"2\"/><ellipse cx=\"20\" cy=\"25\" rx=\"8.5\" ry=\"11\" fill=\"#c58b3f\"/><path d=\"M10 20 Q20 6 30 20 Z\" fill=\"#7a5a2e\"/><path d=\"M13 17 L27 17 M15 13 L25 13\" stroke=\"#5a4020\"/></svg>", "pea": "<svg viewBox=\"0 0 40 40\"><path d=\"M3 31 Q20 40 37 21 Q23 31 3 31 Z\" fill=\"#6cbf4a\" stroke=\"#3f8a2a\"/><path d=\"M5 29 Q20 18 35 19\" stroke=\"#3f8a2a\" stroke-width=\"3\" fill=\"none\"/><circle cx=\"13\" cy=\"31\" r=\"3.5\" fill=\"#a3e27f\"/><circle cx=\"20\" cy=\"30\" r=\"3.5\" fill=\"#a3e27f\"/><circle cx=\"27\" cy=\"27\" r=\"3.5\" fill=\"#a3e27f\"/><circle cx=\"10\" cy=\"12\" r=\"3\" fill=\"#a3e27f\"/><path d=\"M14 10 l5 -2 M14 14 l5 0\" stroke=\"#9aa3b5\"/></svg>"};
 const SESSION_LEN = 10;
 // Levels: Core and Look back questions are always used; Going further and Next year only when the toggle is on
 const OPTIONAL = new Set(['further', 'next']);
@@ -344,6 +386,19 @@ function prepare(item) {
     case 'venn':
       slots = ['a', 'ab', 'b', 'none'].map(id => ({ id, many: true }));
       tokens = item.items.map((it, k) => ({ id: 't' + k, text: it.t, em: it.em, answer: it.in[0] && it.in[1] ? 'ab' : it.in[0] ? 'a' : it.in[1] ? 'b' : 'none' })); break;
+    case 'key': {
+      // Questions get ids in the order kNodes() visits them; names (ends) are numbered left to right
+      const qs = [], ends = [];
+      (function walk(n) { if (typeof n === 'string') { ends.push(n); return; } qs.push(n); walk(n.yes); walk(n.no); })(item.key);
+      if (item.mode === 'finish') {
+        qs.forEach((n, k) => { if (n.gap) { slots.push({ id: 'n' + k, accept: n.q }); tokens.push({ id: 't' + k, text: n.q }); } });
+        tokens = tokens.concat(extras);
+      } else {
+        ends.forEach((nm, k) => slots.push({ id: 'e' + k, name: nm }));
+        tokens = item.things.map((th, k) => ({ id: 't' + k, text: '', img: th.img, pic: th.pic, em: th.em, alt: th.alt || '', answer: 'e' + ends.indexOf(th.at) }));
+      }
+      break;
+    }
     case 'carroll':
       item.rows.forEach((_, r) => item.cols.forEach((_, c) => slots.push({ id: `r${r}c${c}`, many: true })));
       tokens = item.items.map((it, k) => ({ id: 't' + k, text: it.t, em: it.em, answer: `r${it.r}c${it.c}` })); break;
@@ -380,6 +435,7 @@ function tokenRight(q, t) {
 function tokHTML(q, t) {
   const st = q.checked && q.placed[t.id] ? (q.revealed ? 'shown' : tokenRight(q, t) ? 'right' : 'wrong') : q.sel === t.id ? 'sel' : '';
   const mark = st === 'right' ? '<span class="mark">✔</span>' : st === 'wrong' ? '<span class="mark">✘</span>' : '';
+  if (t.img || t.pic) return `<button class="tok pic ${st}" data-act="tok" data-id="${t.id}" aria-label="${esc(t.alt)}">${t.img ? `<img src="${esc(t.img)}" alt="${esc(t.alt)}">` : KEYPICS[t.pic] || ''}${mark}</button>`;
   return `<button class="tok ${st}" data-act="tok" data-id="${t.id}">${t.em ? `<span${t.emSize ? ` style="font-size:${t.emSize}px;line-height:1"` : ''}>${t.em}</span>` : ''}${esc(t.text)}${mark}</button>`;
 }
 const pool = q => `<div class="pool" aria-label="Words to place">${q.tokens.filter(t => !q.placed[t.id]).map(t => tokHTML(q, t)).join('')}</div>`;
@@ -455,6 +511,52 @@ const DRAW = {
     return `<div class="odd">${q.itemOrder.map(v => `<button class="choice ${c('item', v, it.odd)}" data-act="pick" data-k="item" data-v="${v}">${esc(it.items[v])}</button>`).join('')}</div>
       <div class="prompt" style="font-size:18px;margin-top:14px">${pi == null ? 'Then choose the reason.' : 'Why is it the odd one out?'}</div>
       <div class="rows">${q.reasonOrder.map(v => `<button class="choice ${c('reason', v, it.reason)}" style="text-align:left" data-act="pick" data-k="reason" data-v="${v}">${esc(it.reasons[v])}</button>`).join('')}</div>`;
+  },
+  // A branching key, drawn as a tree. Widths are in % so it fits any screen; heights are fixed.
+  key(q) {
+    const it = q.item, fin = it.mode === 'finish', nodes = [];
+    let slot = 0, maxD = 0, qi = 0, ei = 0;
+    (function lay(n, d, o = {}) {
+      nodes.push(o); o.d = d;
+      if (typeof n === 'string') { Object.assign(o, { end: n, k: ei++, s0: slot, s1: slot + 1, x: slot + .5 }); slot++; return o; }
+      o.n = n; o.k = qi++; maxD = Math.max(maxD, d);
+      o.yes = lay(n.yes, d + 1, {}); o.no = lay(n.no, d + 1, {});
+      Object.assign(o, { x: (o.yes.x + o.no.x) / 2, s0: o.yes.s0, s1: o.no.s1 });
+      return o;
+    })(it.key, 0);
+    // Each name sits at the end of its own branch, so a short branch ends higher up the page
+    const pics = fin && it.things, BH = 62, RH = BH + 50, EH = fin ? (pics ? 104 : 48) : 118;
+    const X = v => v / slot * 100, yOf = o => o.d * RH;
+    const H = Math.max(...nodes.map(o => yOf(o) + (o.end != null ? EH : BH))) + 6;
+    let lines = '', html = '';
+    for (const o of nodes) {
+      const x = X(o.x), y = yOf(o), w = Math.min(X(o.s1 - o.s0) - 2, 48);
+      // Keep a question box inside its own branches, so it can't cover a name beside it
+      const bx = Math.min(Math.max(x, X(o.s0) + w / 2 + 1), X(o.s1) - w / 2 - 1);
+      if (o.end != null) {
+        let inner;
+        if (fin) {
+          const th = pics && it.things.find(t => t.at === o.end);
+          inner = (th ? `<span class="kpic">${th.img ? `<img src="${esc(th.img)}" alt="${esc(th.alt || '')}">` : KEYPICS[th.pic] || ''}</span>` : '') + `<b>${esc(o.end)}</b>`;
+        } else {
+          // The name stays hidden until Check, and then shows only where the right picture is
+          const s = slotById(q, 'e' + o.k), t = inSlot(q, s.id)[0];
+          const show = q.checked && (q.revealed || (t && tokenRight(q, t)));
+          inner = (show ? `<b>${esc(o.end)}</b>` : '') + slotHTML(q, s, 'kslot');
+        }
+        html += `<div class="kend${fin ? '' : ' kname'}" style="left:${x}%;top:${y}px;width:${X(1) - 1.5}%;height:${EH}px">${inner}</div>`;
+        continue;
+      }
+      const gap = fin && o.n.gap;
+      html += `<div class="kq${gap ? ' kgap' : ''}" style="left:${bx}%;top:${y}px;width:${w}%;height:${BH}px">${gap ? slotHTML(q, slotById(q, 'n' + o.k), 'kslot') : esc(o.n.q)}</div>`;
+      const ym = y + BH + 12;
+      for (const [c, a] of [[o.yes, 'Yes'], [o.no, 'No']]) {
+        lines += `<path d="M${x} ${y + BH} V${ym} H${X(c.x)} V${yOf(c)}" vector-effect="non-scaling-stroke"/>`;
+        html += `<span class="kyn ${a.toLowerCase()}" style="left:${X(c.x)}%;top:${ym + 19}px">${a}</span>`;
+      }
+    }
+    return { media: `<div class="ktree" style="height:${H}px;min-width:${slot * (fin ? 68 : 60)}px"><svg viewBox="0 0 100 ${H}" preserveAspectRatio="none" aria-hidden="true">${lines}</svg>${html}</div>
+      ${it.credit ? `<div class="credit">${esc(it.credit)}</div>` : ''}`, side: '' };
   },
   sentence(q) {
     const it = q.item, { gaps, combo } = bestCombo(q);
@@ -594,7 +696,7 @@ function questionHTML() {
       ${parts.media ? `<section class="card media">${parts.media}</section>` : ''}
       <section class="card qside${!parts.media && PLACE_TYPES.has(q.type) && !q.revealed ? ' sidepool' : ''}"><div class="qscroll">
         <div class="qhead"><span class="qtype">${T.icon} ${T.name}</span>${qTier(it) !== 'core' && window.HUB ? HUB.badge(qTier(it), true) : ''}<span class="muted">Question ${S.i + 1} of ${S.queue.length}</span></div>
-        <div class="prompt">${esc(it.prompt)}</div>${HINTS[q.type] && !q.checked ? `<div class="hint">${HINTS[q.type]}</div>` : ''}
+        <div class="prompt">${esc(it.prompt)}</div>${(q.type === 'key' ? KEYHINT[it.mode] : HINTS[q.type]) && !q.checked ? `<div class="hint">${q.type === 'key' ? KEYHINT[it.mode] : HINTS[q.type]}</div>` : ''}
         ${parts.side}${fb}</div>
         ${PLACE_TYPES.has(q.type) && !q.revealed ? `<div class="qpool">${pool(q)}</div>` : ''}
         <div class="actions">${actions}</div></section></div>`;

@@ -232,6 +232,50 @@
   .kgap.ok { border-style: solid; border-color: var(--green); background: #c9f2df; color: var(--ink); cursor: default; }
   .kgap.bad { border-style: solid; border-color: var(--coral); background: #ffe0e3; }
   .bank .chip { text-align: left; }
+  /* Branching key diagram */
+  .ktreewrap { position: absolute; inset: 0; padding: 54px 10px 14px; overflow: auto; }
+  .ktree { position: relative; margin: 0 auto; }
+  .ktree > svg { position: absolute; left: 0; top: 0; pointer-events: none; }
+  .kend svg, .kpend svg { display: block; flex: none; }
+  .kln { fill: none; stroke: #b4bed8; stroke-width: 3; stroke-linejoin: round; }
+  .kln.on { stroke: var(--green); stroke-width: 5; }
+  .kbox, .kend, .kpend { position: absolute; display: flex; align-items: center; justify-content: center; text-align: center; border-radius: 14px; background: #fff; box-shadow: 0 3px 0 rgba(0,0,0,.1); padding: 4px 8px; font-weight: 700; font-size: 14.5px; line-height: 1.2; }
+  .kbox { border: 2px solid #c9d3f0; }
+  .kbox.on { border-color: var(--green); background: #e8f8f0; }
+  .kbox.act { border: 3px solid var(--yellow); background: #fffbea; box-shadow: 0 0 0 4px rgba(255,200,61,.35), 0 3px 0 rgba(0,0,0,.1); }
+  .kend { flex-direction: column; gap: 2px; background: #f4f6ff; border: 2px solid #dfe5f7; font-size: 14px; }
+  .kend.on { background: var(--green); border-color: var(--green); color: #fff; }
+  .kname2 { line-height: 1.1; }
+  .ktick { color: var(--green); font-size: 13px; }
+  .kend.on .ktick { color: #fff; }
+  .kbl, .kbr { position: absolute; transform: translate(-50%, -50%); border-radius: 999px; font-weight: 700; white-space: nowrap; }
+  .kbl { background: #eef1fb; color: var(--muted); padding: 1px 9px; font-size: 13px; }
+  .kbl.on { background: var(--green); color: #fff; }
+  .kbr { border: 0; cursor: pointer; padding: 6px 14px; min-height: 40px; font: inherit; font-weight: 700; font-size: 16px; box-shadow: 0 3px 0 rgba(0,0,0,.18); z-index: 1; }
+  .kbr.yes { background: #c9f2df; color: #0b6644; } .kbr.no { background: #ffe0e3; color: #a3202c; }
+  .kbr:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
+  .kbr.wrong { background: #e3e6ef; color: #8a93ad; box-shadow: none; text-decoration: line-through; cursor: not-allowed; }
+  .kgapbox { border: 2px dashed #b7c3ea; background: #f7f9ff; color: var(--muted); cursor: pointer; }
+  .kgapbox.ready { border-color: #e0a800; background: #fffbea; color: var(--ink); }
+  .kgapbox.over { border-style: solid; border-color: var(--green); }
+  .kgapbox.ok { border-style: solid; border-color: var(--green); background: #c9f2df; color: var(--ink); cursor: default; }
+  .kgapbox.bad { border-style: solid; border-color: var(--coral); background: #ffe0e3; }
+  .kpend { flex-direction: column; gap: 2px; border: 2px dashed #b7c3ea; background: #f7f9ff; }
+  .kpend.act { border: 3px solid var(--yellow); background: #fffbea; }
+  .kseeds { display: flex; flex-wrap: wrap; justify-content: center; gap: 2px; }
+  .kpq { font-size: 13.5px; }
+  .kphotos.kd { flex: none; height: 170px; }
+  .kthumbs.four { grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 6px 0; }
+  .kown { display: flex; gap: 6px; } .kown input { flex: 1; min-width: 0; border: 2px solid #c9d3f0; border-radius: 12px; padding: 8px 10px; font: inherit; font-size: 16px; }
+  .kpool { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+  .kchip { display: inline-flex; align-items: center; gap: 4px; border: 2px solid #c9d3f0; background: #fff; border-radius: 12px; padding: 3px 8px 3px 4px; font: inherit; font-weight: 600; font-size: 15px; cursor: pointer; min-height: 44px; }
+  .kchip.sel { border-color: var(--yellow); box-shadow: 0 0 0 3px var(--yellow); }
+  .kchip.sm { min-height: 0; font-size: 13px; padding: 1px 6px 1px 2px; cursor: default; }
+  .kbins { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 6px 0; }
+  .kbin { min-height: 92px; border: 2px dashed #b7c3ea; border-radius: 14px; padding: 6px; background: #fff; }
+  .kbin.ready { border-color: #e0a800; background: #fffbea; } .kbin.over { border-style: solid; border-color: var(--green); }
+  .kbin h3 { margin: 0 0 4px; font-size: 16px; } .kbin.yes h3 { color: #0b6644; } .kbin.no h3 { color: #a3202c; }
+  .kbin .in { display: flex; flex-wrap: wrap; gap: 4px; }
   @media (max-width: 760px) {
     .keywrap, .keylist { padding: 64px 6px 6px; gap: 6px; } .sortwrap.ksort { padding-top: 64px; }
     .kthumbs { gap: 3px; } .kthumb { font-size: 12px; border-width: 2px; } .kthumb .kimg { height: 36px; }
@@ -240,6 +284,8 @@
     .kphotos { gap: 6px; } .kcap { font-size: 12px; padding: 1px 6px; }
     .kqt { font-size: 15px; } .kgo { font-size: 13.5px; } .kstep { padding: 6px 8px; gap: 8px; } .kgap { font-size: 14px; }
     .kq { font-size: 17px; }
+    .ktreewrap { padding: 66px 4px 10px; } .kbox, .kend, .kpend { font-size: 12.5px; padding: 3px 5px; border-radius: 11px; } .kbr { font-size: 14px; padding: 4px 10px; min-height: 36px; }
+    .kphotos.kd { height: 130px; }
   }
 
   /* ---------- Pictures drawn on the stage ---------- */
@@ -751,10 +797,15 @@ const BNAME = { dandelion: 'Dandelion', sycamore: 'Sycamore', burdock: 'Burdock'
 const BQ = {
   wings: ['Does it have wings or a parachute?', ['dandelion', 'sycamore']], fluffy: ['Is it fluffy?', ['dandelion']],
   hooks: ['Does it have tiny hooks?', ['burdock']], fruit: ['Is it inside a juicy fruit?', ['cherry']], red: ['Is it red?', ['cherry']],
-  cap: ['Does it have a little cap on top?', ['acorn']], pod: ['Is it inside a pod?', ['pea']], seed: ['Is it a seed?', BSEEDS], pretty: ['Is it pretty?', []]
+  cap: ['Does it have a little cap on top?', ['acorn']], pod: ['Is it inside a pod?', ['pea']],
+  eat: ['Do people eat it?', ['cherry', 'pea']], tree: ['Does it grow on a tree?', ['sycamore', 'cherry', 'acorn']],
+  seed: ['Is it a seed?', BSEEDS], pretty: ['Is it pretty?', []]
 };
+// Extra help when a seed is sorted the wrong way
+const BHINT = { acorn: { eat: 'People don\'t usually eat acorns. Squirrels do!', tree: 'Acorns grow on oak trees.' }, sycamore: { tree: 'Sycamore seeds grow on sycamore trees.' },
+  pea: { tree: 'Peas grow on small plants, not trees.' }, dandelion: { wings: 'The fluffy parachute counts!' } };
 const bHas = (id, q) => BQ[q][1].includes(id);
-const bNode = seeds => ({ seeds, q: null, put: {}, yes: null, no: null });
+const bNode = seeds => ({ seeds, q: null, own: '', put: {}, yes: null, no: null });
 // The next group that still needs a question (or still needs sorting), or null when the key is finished
 const bCur = n => n.seeds.length < 2 ? null : !n.yes ? n : bCur(n.yes) || bCur(n.no);
 // The finished steps, numbered top to bottom
@@ -762,11 +813,66 @@ const bSteps = root => { const out = [], q = [root]; while (q.length) { const n 
 const seedName = id => `${seedSvg(id, 26)} ${BNAME[id]}`;
 
 const freshFin = () => ({ chips: shuffle(KCHIPS), put: {}, sel: null, bad: null, mistakes: 0 });
-const freshBld = () => ({ root: bNode(BSEEDS.slice()), sel: null, msg: null });
+const freshBld = () => ({ root: bNode(BSEEDS.slice()), sel: null, msg: null, hist: [], draft: '' });
 const freshKey = () => ({ part: 1, cur: null, node: 1, wrong: [], named: {}, fin: freshFin(), bld: freshBld() });
 
-// One step of a key, written out like a real key
-const kStep = (num, qText, yes, no, qHtml) => `<div class="kstep"><span class="knum">${num}</span><div class="kbody">${qHtml || `<div class="kqt">${qText}</div>`}<div class="kgo"><span>✔ Yes → ${yes}</span><span>✖ No → ${no}</span></div></div></div>`;
+// ---------- Drawing a branching key ----------
+// A node is a question { q, yes, no }, an end { end } (a name at the bottom of the key),
+// or a group still to be split { pend, w } (Build only). Optional: id, cls (extra classes), drop (a gap that takes a question).
+// Ends sit in one row at the bottom, like a real key. Yes branches go left, No branches go right.
+function kLayout(root) {
+  let slot = 0, maxQ = -1, maxPend = 0; const all = [];
+  (function walk(n, d) {
+    n.d = d; all.push(n);
+    if (n.yes) { maxQ = Math.max(maxQ, d); walk(n.yes, d + 1); walk(n.no, d + 1); n.x = (n.yes.x + n.no.x) / 2; n.s0 = n.yes.s0; n.s1 = n.no.s1; }
+    else { const w = n.w || 1; n.s0 = slot; n.s1 = slot + w; n.x = slot + w / 2; slot += w; if (n.pend !== undefined) maxPend = Math.max(maxPend, d); }
+  })(root, 0);
+  return { all, slots: slot, bottom: Math.max(maxQ + 1, maxPend) };
+}
+// o: { slotW, taken: { id: 'yes'|'no' } (the route so far), act: id of the question to answer now, ans: data-act for its branches, wrong: [answers tried] }
+function kTree(root, o = {}) {
+  const narrow = stageSize().narrow, L = kLayout(root), SW = o.slotW || 100;
+  const BH = narrow ? 58 : 62, EH = narrow ? 52 : 58, P = 8, base = BH + (narrow ? 50 : 56), room = stageSize().h - (narrow ? 80 : 70) - EH - 2 * P;
+  const RH = L.bottom ? Math.max(base, Math.min(base * 1.45, room / L.bottom)) : base;
+  const W = L.slots * SW + 2 * P, yOf = n => P + (n.end !== undefined ? L.bottom : n.d) * RH, H = L.bottom * RH + EH + 2 * P;
+  const tk = o.taken || {}, xOf = n => P + n.x * SW;
+  let lines = '', boxes = '';
+  for (const n of L.all) {
+    const x = xOf(n), y = yOf(n), span = (n.s1 - n.s0) * SW - 10;
+    if (n.yes) {
+      const act = o.act != null && n.id === o.act, w = Math.min(o.boxMax || 210, span);
+      boxes += `<div class="kbox${act ? ' act kfocus' : ''}${tk[n.id] ? ' on' : ''}${n.cls ? ' ' + n.cls : ''}" style="left:${x - w / 2}px;top:${y}px;width:${w}px;height:${BH}px"${n.drop != null ? ` data-drop="${n.drop}"` : ''}>${n.q}</div>`;
+      const ym = y + BH + 12;
+      for (const [c, a] of [[n.yes, 'yes'], [n.no, 'no']]) {
+        const cx = xOf(c), on = tk[n.id] === a;
+        lines += `<path d="M${x} ${y + BH} V${ym} H${cx} V${yOf(c)}" class="kln${on ? ' on' : ''}"/>`;
+        const ly = ym + (narrow ? 20 : 22), wr = act && (o.wrong || []).includes(a);
+        boxes += act
+          ? `<button class="kbr ${a}${wr ? ' wrong' : ''}" style="left:${cx}px;top:${ly}px" data-act="${o.ans}" data-v="${a}"${wr ? ' disabled' : ''}>${a === 'yes' ? '✔ Yes' : '✖ No'}</button>`
+          : `<span class="kbl ${a}${on ? ' on' : ''}" style="left:${cx}px;top:${ly}px">${a === 'yes' ? 'Yes' : 'No'}</span>`;
+      }
+    } else if (n.end !== undefined) {
+      const w = Math.min(SW - 8, 150);
+      boxes += `<div class="kend${n.cls ? ' ' + n.cls : ''}" style="left:${x - w / 2}px;top:${y}px;width:${w}px;height:${EH}px">${n.end}</div>`;
+    } else {
+      boxes += `<div class="kpend${n.cls ? ' ' + n.cls : ''}" style="left:${x - span / 2}px;top:${y}px;width:${span}px;min-height:${BH}px">${n.pend}</div>`;
+    }
+  }
+  return `<div class="ktree" style="width:${W}px;height:${H}px"><svg width="${W}" height="${H}" aria-hidden="true">${lines}</svg>${boxes}</div>`;
+}
+// How wide each slot is: fill the stage, but never so narrow that the words don't fit (then the key scrolls sideways)
+const kSlot = (n, min, max) => Math.max(min, Math.min(max, (stageSize().w - 36) / n));
+// Keep the part of the key you are working on in view
+function kFocus(wrap) {
+  const a = wrap.querySelector('.kfocus'); if (!a) return;
+  const l = a.offsetLeft, t = a.offsetTop, r = l + a.offsetWidth, b = t + a.offsetHeight + 60;
+  if (l < wrap.scrollLeft || r > wrap.scrollLeft + wrap.clientWidth) wrap.scrollLeft = l - (wrap.clientWidth - a.offsetWidth) / 2;
+  if (t - 60 < wrap.scrollTop || b > wrap.scrollTop + wrap.clientHeight) wrap.scrollTop = Math.max(0, t - 70);
+}
+// A key from KEY1 or KEY2, ready to draw
+const kNodes = (K, t, end) => typeof t === 'number' ? { id: t, q: KQ[K[t][0]][0], yes: kNodes(K, K[t][1], end), no: kNodes(K, K[t][2], end) } : { id: t, end: end(t) };
+const kEndName = (named, reached) => id => `<span class="kname2">${KPLANTS[id].name}</span>${named[id] ? '<span class="ktick">✓</span>' : ''}`;
+const qText = n => n.q === 'own' ? esc(n.own) : BQ[n.q][0];
 
 const KEYV = {
   sel: () => state.key.part === 2 ? state.key.fin.sel : state.key.part === 3 ? state.key.bld.sel : null,
@@ -786,15 +892,22 @@ const KEYV = {
       if (KGAPS.every(g => f.put[g])) emit('keyfinished', { mistakes: f.mistakes });
     }
     if (k.part === 3) {
-      const b = k.bld, N = bCur(b.root); if (!N || !N.q || N.put[id] || !N.seeds.includes(id)) return;
-      if ((to === 'yes') !== bHas(id, N.q)) { b.msg = ['💡', `Look again at the ${lc(BNAME[id])}. ${BQ[N.q][0]}`]; render(); return; }
+      const b = k.bld, N = bCur(b.root); if (!N || !N.q || !N.seeds.includes(id) || (to !== 'yes' && to !== 'no')) return;
+      if (N.q !== 'own' && (to === 'yes') !== bHas(id, N.q)) { b.msg = ['💡', `Look again at the ${lc(BNAME[id])}. ${BQ[N.q][0]}${(BHINT[id] || {})[N.q] ? ' ' + BHINT[id][N.q] : ''}`]; render(); return; }
       N.put[id] = to; b.sel = null; b.msg = null;
-      if (N.seeds.every(s => N.put[s])) { N.yes = bNode(N.seeds.filter(s => N.put[s] === 'yes')); N.no = bNode(N.seeds.filter(s => N.put[s] === 'no')); }
+      if (N.seeds.every(s => N.put[s])) {
+        const Y = N.seeds.filter(s => N.put[s] === 'yes'), No = N.seeds.filter(s => N.put[s] === 'no');
+        if (!Y.length || !No.length) { b.msg = ['🤔', `Every seed went on the ${Y.length ? 'Yes' : 'No'} side. A key question must split them into two groups. Try another question.`]; N.q = null; N.own = ''; N.put = {}; }
+        else { N.yes = bNode(Y); N.no = bNode(No); b.hist.push(N); }
+      }
       render();
       if (!bCur(b.root)) emit('keybuilt');
     }
   },
-  stage() { return [KEYV.stage1, KEYV.stage2, KEYV.stage3][state.key.part - 1](); },
+  stage() {
+    const k = state.key, body = [KEYV.stage1, KEYV.stage2, KEYV.stage3][k.part - 1]();
+    return `<div class="lay-top"><span class="scaletag">${['🔑 Follow the key', '🧩 Finish the key', '🌱 Build a key'][k.part - 1]}</span><div class="readout">${body[0]}</div></div><div class="ktreewrap">${body[1]}</div>`;
+  },
   drawer() {
     const k = state.key;
     const parts = `<div class="card kparts">${[[1, '🔑 Follow'], [2, '🧩 Finish'], [3, '🌱 Build 🔭']].map(([p, t]) => `<button class="opt${k.part === p ? ' on' : ''}" data-act="kpart" data-v="${p}">${t}</button>`).join('')}</div>`;
@@ -803,45 +916,42 @@ const KEYV = {
   // ---------- Part 1: follow the key ----------
   stage1() {
     const k = state.key, P = k.cur && KPLANTS[k.cur], i = KORDER.indexOf(k.cur), done = P && typeof k.node === 'string';
-    const thumbs = KORDER.map((id, j) => { const Q = KPLANTS[id], nm = k.named[id];
-      return `<button class="kthumb${k.cur === id ? ' on' : ''}${nm ? ' named' : ''}" data-act="kplant" data-v="${id}" aria-label="${nm ? Q.name : `Plant ${KL[j]}`}"><span class="kimg">${kphoto(Q.img, Q.em)}</span>
-        <span class="kname">${P ? (nm ? Q.em : KL[j]) : nm ? `${Q.em} ${Q.name}` : `Plant ${KL[j]}`}</span>${nm ? '<span class="tick">✓</span>' : ''}</button>`; }).join('');
-    const say = !P ? 'Tap a plant to start.' : done ? `✅ Plant ${KL[i]} is ${P.a}!` : 'Look at both photos. Then answer the question.';
-    return `<div class="lay-top"><span class="scaletag">🔑 Follow the key</span><div class="readout">${say}</div></div>
-      <div class="keywrap${P ? '' : ' big'}"><div class="kthumbs">${thumbs}</div>
-      ${P ? `<div class="kphotos"><div class="photo">${kphoto(P.img, P.em, `Plant ${KL[i]}: the whole plant`)}<span class="kcap">Whole plant</span></div>
-        <div class="photo">${kphoto(P.clue, P.em, `Plant ${KL[i]}: a close-up`)}<span class="kcap">🔍 Close-up</span></div></div>` : ''}</div>`;
+    const taken = {}; if (P) kWalk(k.cur, k.node).forEach(([nd, y]) => taken[nd] = y ? 'yes' : 'no');
+    const root = kNodes(KEY1, 1, id => kEndName(k.named)(id));
+    if (done) (function mark(n) { if (n.yes) { mark(n.yes); mark(n.no); } else if (n.id === k.cur) n.cls = 'on kfocus'; })(root);
+    const say = !P ? 'Choose a plant in the panel. Then follow the key from the top.' : done ? `✅ Plant ${KL[i]} is ${P.a}!` : `Plant ${KL[i]}: look at the photos. Tap <b>Yes</b> or <b>No</b> under the yellow question.`;
+    return [say, kTree(root, { slotW: kSlot(8, 84, 150), taken, act: P && !done ? k.node : null, ans: 'kans', wrong: k.wrong })];
   },
   drawer1() {
     const k = state.key, n = Object.keys(k.named).length, P = k.cur && KPLANTS[k.cur], i = KORDER.indexOf(k.cur);
     let o = '';
     if (P) {
       const done = typeof k.node === 'string';
-      const trail = kWalk(k.cur, k.node).map(([nd, y]) => `<li><span class="knum sm">${nd}</span><span>${KQ[KEY1[nd][0]][0]}</span><b class="${y ? 'ky' : 'kn'}">${y ? 'Yes' : 'No'}</b></li>`).join('');
-      o += `<div class="card says${done ? ' good' : ''}"><h2>${done ? `${P.em} ${P.name}` : `🔑 Plant ${KL[i]}`}</h2>${trail ? `<ol class="ktrail">${trail}</ol>` : ''}`;
-      if (!done) {
-        const q = KEY1[k.node][0], right = has(k.cur, q) ? 'yes' : 'no';
-        o += `<p class="kq"><span class="knum">${k.node}</span>${KQ[q][0]}</p><p class="muted">💡 ${KQ[q][1]}</p>
-          <div class="navrow kyn">${choices('kans', [['yes', '✔ Yes'], ['no', '✖ No']], null, k.wrong, right)}</div>
-          ${k.wrong.length ? `<p class="spot">👀 ${P.hint[q]}</p>` : ''}`;
-      } else o += `<p class="job">✅ Plant ${KL[i]} is <b>${P.a}</b>. ${P.fact}</p>${n < KORDER.length ? '<div class="navrow"><button class="btn go" data-act="knext">Next plant ▶</button></div>' : ''}`;
-      o += '</div>';
+      o += `<div class="kphotos kd"><div class="photo">${kphoto(P.img, P.em, `Plant ${KL[i]}: the whole plant`)}<span class="kcap">Whole plant</span></div>
+        <div class="photo">${kphoto(P.clue, P.em, `Plant ${KL[i]}: a close-up`)}<span class="kcap">🔍 Close-up</span></div></div>`;
+      if (done) o += `<div class="card says good"><h2>${P.em} Plant ${KL[i]} is ${P.a}</h2><p>${P.fact}</p>${n < KORDER.length ? '<div class="navrow"><button class="btn go" data-act="knext">Next plant ▶</button></div>' : ''}</div>`;
+      else {
+        const q = KEY1[k.node][0];
+        o += `<div class="card says"><p class="kq">${KQ[q][0]}</p><p class="muted">💡 ${KQ[q][1]}</p>${k.wrong.length ? `<p class="spot">👀 ${P.hint[q]}</p>` : '<p>Tap <b>Yes</b> or <b>No</b> on the key.</p>'}</div>`;
+      }
     }
-    if (n === KORDER.length) o += `<div class="science"><b>🔬 The science</b>You named all 8 plants with one key! A <span class="term">key</span> asks yes/no questions about things you can see. Each answer takes you to the next question. At the end, only one name is left. Now try <b>🧩 Finish</b>.</div>`;
-    o += `<div class="card"><h2>🔑 Follow the key</h2><p>A <span class="term">key</span> is a set of yes/no questions. Answer them one by one to find a plant's name.</p>
-      <p class="muted">Named: ${n} of ${KORDER.length}${n ? ` · ${KORDER.filter(id => k.named[id]).map(id => KPLANTS[id].em).join(' ')}` : ''}</p>${n ? '<button class="linkbtn" data-act="kreset">↺ Start again</button>' : ''}</div>`;
-    return o;
+    if (n === KORDER.length) o += `<div class="science"><b>🔬 The science</b>You named all 8 plants with one key! A <span class="term">key</span> asks yes/no questions about things you can see. Each answer sends you down one branch. At the end, only one name is left. Now try <b>🧩 Finish</b>.</div>`;
+    const thumbs = KORDER.map((id, j) => { const Q = KPLANTS[id], nm = k.named[id];
+      return `<button class="kthumb${k.cur === id ? ' on' : ''}${nm ? ' named' : ''}" data-act="kplant" data-v="${id}" aria-label="${nm ? Q.name : `Plant ${KL[j]}`}"><span class="kimg">${kphoto(Q.img, Q.em)}</span>
+        <span class="kname">${nm ? Q.name : `Plant ${KL[j]}`}</span>${nm ? '<span class="tick">✓</span>' : ''}</button>`; }).join('');
+    o += `<div class="card"><h3>${P ? '🌿 Choose another plant' : '🌿 Choose a plant'}</h3><div class="kthumbs four">${thumbs}</div>
+      <p class="muted">Named: ${n} of ${KORDER.length}</p>${n ? '<button class="linkbtn" data-act="kreset">↺ Start again</button>' : ''}</div>`;
+    return o + `<div class="card"><h2>🔑 Follow the key</h2><p>A <span class="term">key</span> is a set of yes/no questions. Start at the top. Each answer sends you down a branch, until you reach a name.</p></div>`;
   },
   // ---------- Part 2: finish the key ----------
   stage2() {
     const f = state.key.fin, n = KGAPS.filter(g => f.put[g]).length;
-    const steps = Object.keys(KEY2).map(Number).map(nd => {
-      const [q, y, no] = KEY2[nd], put = f.put[nd];
-      const gap = KGAPS.includes(nd) ? `<div class="kgap${put ? ' ok' : f.sel ? ' ready' : ''}${f.bad && f.bad.gap === nd ? ' bad' : ''}"${put ? '' : ` data-drop="${nd}"`}>${put ? KQ[put][0] : '❓ A question is missing'}</div>` : '';
-      return kStep(nd, KQ[q][0], kTo(y), kTo(no), gap);
-    }).join('');
+    const root = kNodes(KEY2, 1, id => `<span class="kname2">${KPLANTS[id].name}</span>`);
+    (function gaps(nd) { if (!nd.yes) return; if (KGAPS.includes(nd.id)) { const put = f.put[nd.id];
+      nd.q = put ? KQ[put][0] : '❓ A question is missing'; nd.cls = `kgapbox${put ? ' ok' : f.sel ? ' ready kfocus' : ''}${f.bad && f.bad.gap === nd.id ? ' bad' : ''}`; if (!put) nd.drop = nd.id; }
+      gaps(nd.yes); gaps(nd.no); })(root);
     const say = n === 2 ? '✅ The key is finished!' : f.sel ? 'Now tap a gap in the key.' : 'Choose a question in the panel. Then tap a gap.';
-    return `<div class="lay-top"><span class="scaletag">🧩 Finish the key</span><div class="readout">${say}</div></div><div class="keylist">${steps}</div>`;
+    return [say, kTree(root, { slotW: kSlot(8, 84, 150) })];
   },
   drawer2() {
     const f = state.key.fin, n = KGAPS.filter(g => f.put[g]).length, left = f.chips.filter(c => !Object.values(f.put).includes(c));
@@ -852,35 +962,35 @@ const KEYV = {
     else o += `<div class="card"><h3>🧩 Choose a question</h3><p>Tap a question, then tap a gap in the key. Or drag it.</p>
       <div class="bank">${left.map(c => `<button class="chip${f.sel === c ? ' sel' : ''}" data-drag="${c}">${KQ[c][0]}</button>`).join('')}</div></div>`;
     return o + `<div class="card"><h2>🧩 Finish the key</h2><p>This key names the same 8 plants. But two questions are missing!</p>
-      <p>Check each gap. Do the plants on the <b>Yes</b> side all answer "yes"?</p><p class="muted">Gaps filled: ${n} of ${KGAPS.length} · Mistakes: ${f.mistakes}</p></div>`;
+      <p>Look under each gap. The plants on the <b>Yes</b> branch must all answer "yes". The plants on the <b>No</b> branch must all answer "no".</p><p class="muted">Gaps filled: ${n} of ${KGAPS.length} · Mistakes: ${f.mistakes}</p></div>`;
   },
   // ---------- Part 3: build your own key (Going further) ----------
   stage3() {
     const b = state.key.bld, N = bCur(b.root);
-    if (!N) {
-      const steps = bSteps(b.root), num = s => steps.indexOf(s) + 1, to = c => c.seeds.length === 1 ? `<b>${seedName(c.seeds[0])}</b>` : `go to <b>${num(c)}</b>`;
-      return `<div class="lay-top"><span class="scaletag">🌱 Your key</span><div class="readout">✅ Every seed has its own name at the end.</div></div>
-        <div class="keylist">${steps.map(s => kStep(num(s), BQ[s.q][0], to(s.yes), to(s.no))).join('')}</div>`;
-    }
-    if (!N.q) return `<div class="lay-top"><span class="scaletag">🌱 Build a key</span><div class="readout">Which question splits these seeds into two groups?</div></div>
-      <div class="sortwrap ksort"><div class="pool">${N.seeds.map(id => `<div class="pcard"><div class="ph">${seedSvg(id)}</div><span>${BNAME[id]}</span></div>`).join('')}</div></div>`;
-    const pool = N.seeds.filter(id => !N.put[id]).map(id => `<button class="pcard${b.sel === id ? ' sel' : ''}" data-drag="${id}"><div class="ph">${seedSvg(id)}</div><span>${BNAME[id]}</span></button>`).join('');
-    const bins = [['yes', '✔ Yes'], ['no', '✖ No']].map(([v, t]) => `<div class="bin${b.sel ? ' ready' : ''}" data-drop="${v}"><h3>${t}</h3><div class="bsub">${BQ[N.q][0]}</div>
-      <div class="in">${N.seeds.filter(id => N.put[id] === v).map(id => `<div class="mini"><div class="ph">${seedSvg(id, 34)}</div>${BNAME[id]}</div>`).join('')}</div></div>`).join('');
-    return `<div class="lay-top"><span class="scaletag">🌱 Build a key</span><div class="readout"><b>${BQ[N.q][0]}</b> ${b.sel ? 'Now tap Yes or No.' : 'Tap a seed.'}</div></div>
-      <div class="sortwrap ksort"><div class="pool">${pool}</div><div class="bins">${bins}</div></div>`;
+    const toNode = n => n.yes ? { id: n, q: qText(n), yes: toNode(n.yes), no: toNode(n.no) }
+      : n.seeds.length === 1 ? { end: `${seedSvg(n.seeds[0], 30)}<span class="kname2">${BNAME[n.seeds[0]]}</span>` }
+      : { w: n.seeds.length, cls: n === N ? 'act kfocus' : '',
+          pend: `<div class="kseeds">${n.seeds.map(id => `<span title="${BNAME[id]}">${seedSvg(id, 30)}</span>`).join('')}</div><div class="kpq">${n === N ? (n.q ? qText(n) : '❓ Choose a question') : '❓'}</div>` };
+    const say = !N ? '✅ Your key is finished! Every seed has its own name.' : N.q ? `<b>${qText(N)}</b> Sort the seeds in the panel.` : 'Choose a question to split the yellow group.';
+    return [say, kTree(toNode(b.root), { slotW: kSlot(6, 96, 160) })];
   },
   drawer3() {
-    const b = state.key.bld, N = bCur(b.root), steps = bSteps(b.root);
+    const b = state.key.bld, N = bCur(b.root);
     let o = HUB.note('further');
     if (b.msg) o += `<div class="card says"><p>${b.msg[0]} ${b.msg[1]}</p></div>`;
-    if (!N) o += `<div class="card says good"><h3>🎉 Your key works!</h3><p>Every seed has its own name at the end. Try it: choose a seed and follow your questions.</p><button class="btn" data-act="kreset">↺ Build another key</button></div>`;
-    else if (!N.q) o += `<div class="card wq"><h3>❓ Choose a question</h3><p>These seeds: <b>${N.seeds.map(id => BNAME[id]).join(', ')}</b>.</p><p>Which question splits them into two groups?</p>
-      ${Object.keys(BQ).map(q => `<button class="opt" data-act="kbq" data-v="${q}">${BQ[q][0]}</button>`).join('')}</div>`;
-    else o += `<div class="card"><h3>🗂️ Sort the seeds</h3><p><b>${BQ[N.q][0]}</b></p><p>Tap a seed, then tap Yes or No. Or drag it.</p></div>`;
-    if (N && steps.length) o += `<div class="card"><h3>🔑 Your key so far</h3><ol class="ktrail">${steps.map((s, j) => `<li><span class="knum sm">${j + 1}</span><span>${BQ[s.q][0]}</span></li>`).join('')}</ol></div>`;
-    return o + `<div class="card"><h2>🌱 Build your own key</h2><p>Make a key for 6 seeds from Seed Lab. Use yes/no questions about what you can see.</p>
-      <p class="muted">Keep going until every seed is on its own.</p></div>`;
+    if (!N) o += `<div class="card says good"><h3>🎉 Your key works!</h3><p>Every seed has its own name at the end. Try it: choose a seed and follow your branches from the top.</p><button class="btn" data-act="kreset">↺ Build another key</button></div>`;
+    else if (!N.q) o += `<div class="card wq"><h3>❓ Choose a question</h3><p>These seeds: <b>${N.seeds.map(id => BNAME[id]).join(', ')}</b>.</p><p>Which question splits them into two groups? The groups can be any size.</p>
+      ${Object.keys(BQ).map(q => `<button class="opt" data-act="kbq" data-v="${q}">${BQ[q][0]}</button>`).join('')}
+      <p style="margin-top:10px"><b>✏️ Or write your own:</b></p><div class="kown"><input id="kownq" type="text" maxlength="60" placeholder="Does it…?" value="${esc(b.draft || '')}" aria-label="Your own question"><button class="btn" data-act="kown">Use it</button></div></div>`;
+    else {
+      const pool = N.seeds.filter(id => !N.put[id]).map(id => `<button class="kchip${b.sel === id ? ' sel' : ''}" data-drag="${id}">${seedSvg(id, 30)}<span>${BNAME[id]}</span></button>`).join('');
+      const bins = [['yes', '✔ Yes'], ['no', '✖ No']].map(([v, t]) => `<div class="kbin ${v}${b.sel ? ' ready' : ''}" data-drop="${v}"><h3>${t}</h3><div class="in">${N.seeds.filter(id => N.put[id] === v).map(id => `<span class="kchip sm">${seedSvg(id, 24)}<span>${BNAME[id]}</span></span>`).join('')}</div></div>`).join('');
+      o += `<div class="card"><h3>🗂️ ${qText(N)}</h3><p>Tap a seed, then tap Yes or No. Or drag it.</p>${pool ? `<div class="kpool">${pool}</div>` : ''}<div class="kbins">${bins}</div>
+        <button class="linkbtn" data-act="kbqback">↩ Choose a different question</button></div>`;
+    }
+    if (b.hist.length) o += `<div class="navrow"><button class="btn" data-act="kundo">↩ Undo the last branch</button></div>`;
+    return o + `<div class="card"><h2>🌱 Build your own key</h2><p>Make a key for 6 seeds from Seed Lab. Use yes/no questions about what you can see or know.</p>
+      <p class="muted">Keep splitting the groups until every seed is on its own.</p></div>`;
   }
 };
 ACTIONS.kpart = el => { state.key.part = +el.dataset.v; render(); top0(); };
@@ -897,16 +1007,25 @@ ACTIONS.knext = () => { const k = state.key, i = KORDER.indexOf(k.cur), next = [
 ACTIONS.kbq = el => {
   const b = state.key.bld, N = bCur(b.root), q = el.dataset.v; if (!N || N.q) return;
   const yes = N.seeds.filter(s => bHas(s, q));
-  if (q === 'pretty') b.msg = ['💭', 'That is an opinion. People would give different answers. Choose a question about what you can see.'];
+  if (q === 'pretty') b.msg = ['💭', 'That is an opinion. People would give different answers. Choose a question with one true answer.'];
   else if (!yes.length || yes.length === N.seeds.length) b.msg = ['🤔', `Every seed here would answer "${yes.length ? 'yes' : 'no'}". Choose a question that splits them into two groups.`];
-  else { N.q = q; b.msg = null; }
-  render(); top0();
+  else { N.q = q; N.put = {}; b.msg = null; }
+  render();
 };
+ACTIONS.kown = () => {
+  const b = state.key.bld, N = bCur(b.root), t = ($('#kownq') || {}).value?.trim() || ''; if (!N || N.q) return;
+  if (t.length < 5) { b.msg = ['✏️', 'Write a question first. Start it with "Does it", "Is it" or "Can it".']; render(); return; }
+  N.q = 'own'; N.own = t.endsWith('?') ? t : t + '?'; N.put = {}; b.draft = ''; b.msg = ['✏️', 'Your own question! Make sure each seed has one true answer: yes or no.']; render();
+};
+ACTIONS.kbqback = () => { const b = state.key.bld, N = bCur(b.root); if (!N) return; N.q = null; N.own = ''; N.put = {}; b.sel = null; b.msg = null; render(); };
+ACTIONS.kundo = () => { const b = state.key.bld, N = b.hist.pop(); if (!N) return; Object.assign(N, { q: null, own: '', put: {}, yes: null, no: null }); b.sel = null; b.msg = null; render(); };
 ACTIONS.kreset = () => { const k = state.key;
   if (k.part === 1) { k.named = {}; k.cur = null; k.node = 1; k.wrong = []; }
   if (k.part === 2) k.fin = freshFin();
   if (k.part === 3) k.bld = freshBld();
   render(); top0(); };
+document.addEventListener('input', e => { if (e.target.id === 'kownq') state.key.bld.draft = e.target.value; });
+document.addEventListener('keydown', e => { if (e.target.id === 'kownq' && e.key === 'Enter') ACTIONS.kown(); });
 
 state.key = freshKey();
 
@@ -965,7 +1084,7 @@ const HELP = {
   which: { q: 'Which type of enquiry is best for each question?', steps: ['Tap a question.', 'Tap the type of enquiry that suits it best. Or drag it.'], look: 'Think about what you would actually <b>do</b> to find out.', codes: ['SC5-SKL-2', 'SC5-SKL-1'] },
   ask: { q: 'Which questions can science answer?', steps: ['Choose a place.', 'For each question: can science answer it?', 'If yes, choose the best type of enquiry.'], look: 'Questions about what people like or want can\'t be answered by science.', codes: ['SC5-SKL-1', 'SC5-SKL-2'] },
   facts: { q: 'Which sources can you trust?', steps: ['Read the question.', 'Tap every source you would use.', 'Check, then explain one choice.'], look: 'A good source answers the question, is up to date, and is not trying to sell you something.', codes: ['SC5-SKL-3'] },
-  key: { q: 'How can a key help you name a plant?', steps: ['Tap a plant.', 'Look at both photos.', 'Answer each yes/no question. The key takes you to its name.', 'Then try 🧩 Finish and 🌱 Build.'], look: 'The close-up photo often shows the answer.', codes: ['SC5-SKL-18'] }
+  key: { q: 'How can a key help you name a plant?', steps: ['Choose a plant in the panel. Look at both photos.', 'Start at the top of the key. Tap Yes or No under the question.', 'Follow the branch down to the next question, until you reach a name.', 'Then try 🧩 Finish and 🌱 Build.'], look: 'The close-up photo often shows the answer.', codes: ['SC5-SKL-18'] }
 };
 const MODEL = {
   types: [['📋', 'Real investigations often mix more than one type of enquiry.']],
@@ -1041,7 +1160,11 @@ function showHelp() {
 }
 function maybeHelp() { if (!autoHelp || helpSeen.has(state.view) || document.querySelector('.modal:not(.hidden)')) return; showHelp(); }
 
-function renderStage() { $('#stage').innerHTML = VIEWS[state.view].stage(); }
+function renderStage() {
+  const old = $('#stage .ktreewrap'), at = old && [old.scrollLeft, old.scrollTop];
+  $('#stage').innerHTML = VIEWS[state.view].stage();
+  const w = $('#stage .ktreewrap'); if (w) { if (at) [w.scrollLeft, w.scrollTop] = at; kFocus(w); }
+}
 function render() {
   const v = VIEWS[state.view];
   $('#tabs').innerHTML = Object.entries(VIEWS).map(([id, x]) =>

@@ -142,6 +142,20 @@ window.BANKS.push({
       { q: 'Which colour had the fewest bee visits?', options: ['White', 'Red', 'Yellow', 'Blue'], a: 1, why: 'Red had only 2 visits.' },
       { q: 'Why might red flowers get so few bee visits?', options: ['Bees see red poorly', 'Red flowers have no pollen', 'Bees are scared of red'], a: 0, why: 'Bees see blue, purple and yellow well, but red poorly.' },
     ] },
+
+  // ---------- Use a key (branching keys) ----------
+  { type: 'key', mode: 'name', prompt: 'Use the key to name each plant.',
+    key: { q: 'Does it have flowers?', yes: { q: 'Are the petals yellow?', yes: 'Sunflower', no: 'Apple tree' }, no: { q: 'Does it have cones?', yes: 'Pine tree', no: 'Moss' } },
+    things: [{ img: '../flower-lab/photos/sunflower-clue.jpg', alt: 'A big flower with yellow petals', at: 'Sunflower' }, { img: '../flower-lab/photos/apple-blossom.jpg', alt: 'A white and pink flower with petals', at: 'Apple tree' }, { img: '../flower-lab/photos/pine-cone.jpg', alt: 'Two brown cones among long thin leaves', at: 'Pine tree' }, { img: '../flower-lab/photos/moss.jpg', alt: 'A soft green cushion of tiny plants', at: 'Moss' }],
+    credit: 'Photos (Wikimedia Commons): Brandon Weeks CC BY 3.0; Billpowellisalive CC BY-SA 3.0; Wilfredor CC0; Tomas Pocius CC0',
+    explain: 'Not every plant has flowers. Pine trees make seeds in cones. Moss makes spores.' },
+  { type: 'key', mode: 'finish', prompt: 'Finish the key. Choose the missing questions.',
+    key: { q: 'Does it make flowers?', gap: true, yes: { q: 'Is it covered in sharp spines?', yes: 'Cactus', no: 'Grass' }, no: { q: 'Does it make cones?', gap: true, yes: 'Pine tree', no: 'Fern' } },
+    things: [{ img: '../flower-lab/photos/cactus-flower.jpg', alt: 'A spiny plant with flowers on top', at: 'Cactus' }, { img: '../flower-lab/photos/grass-flower.jpg', alt: 'A grass flower spike', at: 'Grass' }, { img: '../flower-lab/photos/pine-cone.jpg', alt: 'Two brown cones among long thin leaves', at: 'Pine tree' }, { img: '../flower-lab/photos/fern-spores.jpg', alt: 'A leaf with brown dots underneath', at: 'Fern' }],
+    credit: 'Photos (Wikimedia Commons): DataEcologist CC BY-SA 4.0; Hectonichus CC BY-SA 4.0; Wilfredor CC0; Krzysztof Ziarnek, Kenraiz CC BY-SA 4.0',
+    extra: ['Is it green?', 'Is it pretty?'],
+    explain: 'Cactus and grass both make flowers. Pine trees and ferns never do. A pine tree makes cones; a fern makes spores.' },
+
   ]
 });
 })();

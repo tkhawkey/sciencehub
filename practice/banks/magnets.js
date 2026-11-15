@@ -116,6 +116,14 @@ window.BANKS.push({
     items: [{ t: 'Iron nail', em: '🔩', r: 0, c: 0 }, { t: 'Paperclip', em: '📎', r: 0, c: 0 }, { t: 'Copper wire', em: '🟠', r: 0, c: 1 }, { t: 'Gold ring', em: '💍', r: 0, c: 1 }, { t: 'Aluminium drink can', em: '🥤', r: 0, c: 1 },
       { t: 'Plastic ruler', em: '📏', r: 1, c: 1 }, { t: 'Wooden pencil', em: '✏️', r: 1, c: 1 }, { t: 'Rubber', em: '🧽', r: 1, c: 1 }],
     explain: 'Not all metals are magnetic. Iron and steel are. Copper, gold and aluminium are not. Plastic, wood and rubber are not metals, and they are not magnetic.' },
+
+  // ---------- Use a key (branching keys) ----------
+  { type: 'key', mode: 'finish', prompt: 'Finish the key. Choose the missing questions.',
+    key: { q: 'Is it a metal?', yes: { q: 'Is it pulled by a magnet?', gap: true, yes: '📎 Paperclip', no: '🥤 Aluminium can' },
+      no: { q: 'Is it made of wood?', gap: true, yes: '✏️ Wooden pencil', no: '📏 Plastic ruler' } },
+    extra: ['Is it shiny?', 'Is it useful?'],
+    explain: 'The paperclip and the can are both shiny metals, but only the paperclip is pulled by a magnet. Not all metals are magnetic.' },
+
   ]
 });
 })();
